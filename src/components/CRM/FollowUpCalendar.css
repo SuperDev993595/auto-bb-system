@@ -1,0 +1,16 @@
+.react-calendar {
+    border: none;
+    font-family: 'Inter', sans-serif;
+}
+
+.react-calendar__tile--active {
+    background-color: #facc15 !important;
+    /* yellow-400 */
+    color: black !important;
+}
+
+.react-calendar__tile--now {
+    background: #d97706 !important;
+    /* orange-600 */
+    color: white;
+}
