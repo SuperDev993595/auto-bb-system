@@ -6,11 +6,17 @@ import DashboardLayout from "./pages/admin/DashboardLayout";
 // Dashboard Pages
 import AppointmentsPage from "./pages/AppointmentsPage";
 import TasksPage from "./pages/TasksPage";
-import CollectionsPage from "./pages/CollectionsPage";
 import PromotionsPage from "./pages/PromotionsPage";
-import WarrantySalesPage from "./pages/WarrantySalesPage";
 import ContactLogsPage from "./pages/ContactLogsPage";
-import FollowUpCalendar from "./components/CRM/FollowUpCalendar";
+
+// New CRM Pages
+import CustomerList from "./pages/customers/CustomerList";
+import CustomerDetail from "./pages/customers/CustomerDetail";
+import ServicesPage from "./pages/ServicesPage";
+import RemindersPage from "./pages/RemindersPage";
+import InventoryPage from "./pages/InventoryPage";
+import InvoicesPage from "./pages/InvoicesPage";
+import ReportsPage from "./pages/ReportsPage";
 
 export default function App() {
   return (
@@ -24,12 +30,16 @@ export default function App() {
       {/* Protected Admin Dashboard Layout */}
       <Route path="/admin/dashboard" element={<DashboardLayout />}>
         <Route path="appointments" element={<AppointmentsPage />} />
+        <Route path="customers" element={<CustomerList />} />
+        <Route path="customers/:id" element={<CustomerDetail />} />
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="invoices" element={<InvoicesPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reminders" element={<RemindersPage />} />
         <Route path="tasks" element={<TasksPage />} />
-        <Route path="collections" element={<CollectionsPage />} />
         <Route path="promotions" element={<PromotionsPage />} />
-        <Route path="warranty-sales" element={<WarrantySalesPage />} />
         <Route path="contact-logs" element={<ContactLogsPage />} />
-        <Route path="calendar" element={<FollowUpCalendar />} />
       </Route>
     </Routes>
   );

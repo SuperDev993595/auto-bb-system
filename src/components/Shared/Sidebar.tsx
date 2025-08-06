@@ -2,12 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import {
     CalendarCheck,
     ClipboardList,
-    DollarSign,
     MessageCircle,
-    User,
     PhoneCall,
-    Calendar,
     LogOut,
+    Users,
+    Wrench,
+    FileText,
+    Bell,
+    BarChart3,
+    Package
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -19,13 +22,23 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+    // Core CRM Functions
     { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
+    { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
+    { to: "/admin/dashboard/services", label: "Services", icon: <Wrench size={18} /> },
+    
+    // Financial & Inventory
+    { to: "/admin/dashboard/invoices", label: "Invoices", icon: <FileText size={18} /> },
+    { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
+    
+    // Analytics & Communication
+    { to: "/admin/dashboard/reports", label: "Reports", icon: <BarChart3 size={18} /> },
+    { to: "/admin/dashboard/reminders", label: "Reminders", icon: <Bell size={18} /> },
+    { to: "/admin/dashboard/contact-logs", label: "Communication", icon: <PhoneCall size={18} /> },
+    
+    // Operations & Marketing
     { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
-    { to: "/admin/dashboard/collections", label: "Collections", icon: <DollarSign size={18} />, roles: ["admin"] },
     { to: "/admin/dashboard/promotions", label: "Promotions", icon: <MessageCircle size={18} /> },
-    { to: "/admin/dashboard/warranty-sales", label: "Warranty Sales", icon: <User size={18} /> },
-    { to: "/admin/dashboard/contact-logs", label: "Contact Logs", icon: <PhoneCall size={18} /> },
-    { to: "/admin/dashboard/calendar", label: "Calendar", icon: <Calendar size={18} /> },
 ];
 
 export default function Sidebar() {
