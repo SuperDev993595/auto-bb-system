@@ -10,7 +10,8 @@ import {
     FileText,
     Bell,
     BarChart3,
-    Package
+    Package,
+    Home
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,6 +23,9 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+    // Dashboard Overview
+    { to: "/admin/dashboard", label: "Dashboard", icon: <Home size={18} /> },
+    
     // Core CRM Functions
     { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
     { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
@@ -52,7 +56,7 @@ export default function Sidebar() {
 
     return (
         <aside className="bg-gray-900 text-white w-64 flex flex-col min-h-screen p-4 space-y-4">
-            <div className="text-xl font-bold text-yellow-400 mb-6">Auto Secretary</div>
+            <div className="text-xl font-bold text-yellow-400 mb-6">🔧 AutoCRM Pro</div>
 
             <nav className="flex-1 space-y-2">
                 {navItems

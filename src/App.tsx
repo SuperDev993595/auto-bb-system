@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import DashboardLayout from "./pages/admin/DashboardLayout";
@@ -17,6 +17,7 @@ import RemindersPage from "./pages/RemindersPage";
 import InventoryPage from "./pages/InventoryPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import ReportsPage from "./pages/ReportsPage";
+import Dashboard from "./pages/dashboard/Dashboard";
 
 export default function App() {
   return (
@@ -24,11 +25,16 @@ export default function App() {
       {/* Public Landing Page */}
       <Route path="/" element={<HomePage />} />
 
+      {/* Admin redirect */}
+      <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+      
       {/* Login Page */}
       <Route path="/admin/login" element={<LoginPage />} />
 
       {/* Protected Admin Dashboard Layout */}
       <Route path="/admin/dashboard" element={<DashboardLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="overview" element={<Dashboard />} />
         <Route path="appointments" element={<AppointmentsPage />} />
         <Route path="customers" element={<CustomerList />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
@@ -41,6 +47,9 @@ export default function App() {
         <Route path="promotions" element={<PromotionsPage />} />
         <Route path="contact-logs" element={<ContactLogsPage />} />
       </Route>
+      
+      {/* Catch-all route for 404s */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
