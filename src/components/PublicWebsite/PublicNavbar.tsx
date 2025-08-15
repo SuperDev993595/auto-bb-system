@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaPhone } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 const PublicNavbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -60,12 +62,21 @@ const PublicNavbar: React.FC = () => {
               <FaPhone className="mr-2" />
               <span className="text-sm font-medium">(555) 123-4567</span>
             </div>
-            <Link
-              to="/admin/login"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
-            >
-              Admin Login
-            </Link>
+            {!isAuthenticated ? (
+              <Link
+                to="/admin/login"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
+              >
+                Admin Login
+              </Link>
+            ) : (
+              <Link
+                to="/admin/dashboard"
+                className="text-green-600 hover:text-green-700 px-3 py-2 text-sm font-medium transition duration-300"
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               to="/appointments"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
@@ -113,13 +124,23 @@ const PublicNavbar: React.FC = () => {
                 <FaPhone className="mr-2" />
                 <span className="text-sm font-medium">(555) 123-4567</span>
               </div>
-              <Link
-                to="/admin/login"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Admin Login
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  to="/admin/login"
+                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin Login
+                </Link>
+              ) : (
+                <Link
+                  to="/admin/dashboard"
+                  className="block px-3 py-2 text-green-600 hover:text-green-700 text-base font-medium transition duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
               <Link
                 to="/appointments"
                 className="block mt-2 mx-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center font-medium transition duration-300"

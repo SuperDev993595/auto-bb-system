@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../../components/Shared/Sidebar";
-import Header from "../../components/Shared/Header";
-import { AuthContext } from "../../context/AuthContext";
+import AdminHeader from "../../components/Shared/AdminHeader";
 import { useEffect, useState } from "react";
+import "../../components/Shared/Sidebar.css";
 
 export default function DashboardLayout() {
     const [role, setRole] = useState<string>("");
@@ -25,20 +25,18 @@ export default function DashboardLayout() {
     }
 
     return (
-        <AuthContext.Provider value={{ role, email: localStorage.getItem("email") || "" }}>
-            <div className="flex h-screen overflow-hidden">
-                {/* Sidebar */}
-                <Sidebar />
+        <div className="flex h-screen overflow-hidden">
+            {/* Sidebar */}
+            <Sidebar />
 
-                {/* Main content */}
-                <div className="flex flex-col flex-1 bg-gray-100">
-                    <Header />
+            {/* Main content */}
+            <div className="flex flex-col flex-1 bg-gray-100">
+                <AdminHeader />
 
-                    <main className="flex-1 p-6 overflow-y-auto">
-                        <Outlet />
-                    </main>
-                </div>
+                <main className="flex-1 p-6 overflow-y-auto">
+                    <Outlet />
+                </main>
             </div>
-        </AuthContext.Provider>
+        </div>
     );
 }

@@ -111,11 +111,78 @@ router.get('/', requireAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/customers/stats/overview
+// @desc    Get customer statistics
+// @access  Private
+router.get('/stats/overview', requireAdmin, async (req, res) => {
+  try {
+    const stats = await Customer.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalCustomers: { $sum: 1 },
+          activeCustomers: {
+            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
+          },
+          prospectCustomers: {
+            $sum: { $cond: [{ $eq: ['$status', 'prospect'] }, 1, 0] }
+          },
+          inactiveCustomers: {
+            $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const sourceStats = await Customer.aggregate([
+      {
+        $group: {
+          _id: '$source',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const stateStats = await Customer.aggregate([
+      {
+        $group: {
+          _id: '$address.state',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        overview: stats[0] || {
+          totalCustomers: 0,
+          activeCustomers: 0,
+          prospectCustomers: 0,
+          inactiveCustomers: 0
+        },
+        sourceStats,
+        stateStats
+      }
+    });
+
+  } catch (error) {
+    console.error('Get customer stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/customers/:id
 // @desc    Get single customer by ID
 // @access  Private
 router.get('/:id', requireAdmin, async (req, res) => {
   try {
+    console.log('req.params.id', req.params.id);
     const customer = await Customer.findById(req.params.id)
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name')
@@ -372,72 +439,6 @@ router.post('/:id/communication', requireAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Add communication log error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-});
-
-// @route   GET /api/customers/stats/overview
-// @desc    Get customer statistics
-// @access  Private
-router.get('/stats/overview', requireAdmin, async (req, res) => {
-  try {
-    const stats = await Customer.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalCustomers: { $sum: 1 },
-          activeCustomers: {
-            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
-          },
-          prospectCustomers: {
-            $sum: { $cond: [{ $eq: ['$status', 'prospect'] }, 1, 0] }
-          },
-          inactiveCustomers: {
-            $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] }
-          }
-        }
-      }
-    ]);
-
-    const sourceStats = await Customer.aggregate([
-      {
-        $group: {
-          _id: '$source',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    const stateStats = await Customer.aggregate([
-      {
-        $group: {
-          _id: '$address.state',
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        overview: stats[0] || {
-          totalCustomers: 0,
-          activeCustomers: 0,
-          prospectCustomers: 0,
-          inactiveCustomers: 0
-        },
-        sourceStats,
-        stateStats
-      }
-    });
-
-  } catch (error) {
-    console.error('Get customer stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

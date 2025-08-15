@@ -237,7 +237,7 @@ export const customerService = {
     success: boolean;
     data: CustomerStats;
   }> {
-    const response = await apiResponse(api.get('/customers/stats'));
+    const response = await apiResponse(api.get('/customers/stats/overview'));
     return response;
   },
 

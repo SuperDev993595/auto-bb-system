@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -5,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
+const connectDB = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -178,9 +180,23 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
-});
+// Connect to database and start server
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    
+    // Start server
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Dashboard: http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = { app, server, io };

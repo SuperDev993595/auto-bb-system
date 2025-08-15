@@ -36,6 +36,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('role');
+      localStorage.removeItem('email');
       window.location.href = '/admin/login';
       toast.error('Session expired. Please login again.');
     } else if (error.response?.status === 403) {

@@ -402,7 +402,7 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchServiceCatalog.fulfilled, (state, action) => {
         state.catalogLoading = false;
-        state.catalog = action.payload.data;
+        state.catalog = action.payload.data.services;
       })
       .addCase(fetchServiceCatalog.rejected, (state, action) => {
         state.catalogLoading = false;
@@ -440,7 +440,7 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchWorkOrders.fulfilled, (state, action) => {
         state.workOrdersLoading = false;
-        state.workOrders = action.payload.data;
+        state.workOrders = action.payload.data.workOrders;
       })
       .addCase(fetchWorkOrders.rejected, (state, action) => {
         state.workOrdersLoading = false;
@@ -490,7 +490,7 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchTechnicians.fulfilled, (state, action) => {
         state.techniciansLoading = false;
-        state.technicians = action.payload.data;
+        state.technicians = action.payload.data.technicians;
       })
       .addCase(fetchTechnicians.rejected, (state, action) => {
         state.techniciansLoading = false;
@@ -523,10 +523,10 @@ const servicesSlice = createSlice({
     // General reducers
     builder
       .addCase(fetchServiceCategories.fulfilled, (state, action) => {
-        state.categories = action.payload;
+        state.categories = action.payload.data;
       })
       .addCase(fetchSpecializations.fulfilled, (state, action) => {
-        state.specializations = action.payload;
+        state.specializations = action.payload.data;
       });
   },
 });

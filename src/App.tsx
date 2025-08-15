@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
 import PerformanceMonitor from "./components/Performance/PerformanceMonitor";
+import DashboardQuickAccess from "./components/Shared/DashboardQuickAccess";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -135,6 +136,9 @@ export default function App() {
       {process.env.NODE_ENV === 'development' && (
         <PerformanceMonitor enabled={true} showDetails={true} />
       )}
+      
+      {/* Dashboard Quick Access Button */}
+      <DashboardQuickAccess />
     </>
   );
 }

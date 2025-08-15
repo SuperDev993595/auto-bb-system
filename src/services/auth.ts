@@ -46,6 +46,9 @@ export const authService = {
     if (response.success) {
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Also set role and email separately for backward compatibility
+      localStorage.setItem('role', response.data.user.role);
+      localStorage.setItem('email', response.data.user.email);
     }
     return response;
   },
@@ -72,6 +75,8 @@ export const authService = {
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('email');
     window.location.href = '/admin/login';
   },
 

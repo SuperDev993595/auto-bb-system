@@ -4,7 +4,6 @@ import {
     ClipboardList,
     MessageCircle,
     PhoneCall,
-    LogOut,
     Users,
     Wrench,
     FileText,
@@ -20,6 +19,7 @@ import {
     Settings
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import "./Sidebar.css";
 
 type NavItem = {
     to: string;
@@ -65,16 +65,15 @@ export default function Sidebar() {
     const location = useLocation();
     const { user } = useAuth();
 
-    const handleLogout = () => {
-        localStorage.clear();
-        window.location.href = "/admin/login";
-    };
-
     return (
-        <aside className="bg-gray-900 text-white w-64 flex flex-col min-h-screen p-4 space-y-4">
-            <div className="text-xl font-bold text-yellow-400 mb-6">🔧 AutoCRM Pro</div>
+        <aside className="bg-gray-900 text-white w-64 flex flex-col h-screen">
+            {/* Fixed Header */}
+            <div className="p-4 border-b border-gray-700">
+                <div className="text-xl font-bold text-yellow-400">🔧 AutoCRM Pro</div>
+            </div>
 
-            <nav className="flex-1 space-y-2">
+            {/* Scrollable Navigation */}
+            <nav className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-nav">
                 {navItems
                     .filter(item => !item.roles || item.roles.includes(user?.role || ''))
                     .map(item => (
@@ -89,14 +88,6 @@ export default function Sidebar() {
                         </Link>
                     ))}
             </nav>
-
-            <button
-                onClick={handleLogout}
-                className="mt-auto flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
-            >
-                <LogOut size={16} />
-                Logout
-            </button>
         </aside>
     );
 }

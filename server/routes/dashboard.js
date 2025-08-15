@@ -5,8 +5,8 @@ const Customer = require('../models/Customer');
 const Appointment = require('../models/Appointment');
 const Task = require('../models/Task');
 const Invoice = require('../models/Invoice');
-const ServiceCatalog = require('../models/Service');
-const WorkOrder = require('../models/Service');
+const { ServiceCatalog } = require('../models/Service');
+// WorkOrder functionality is handled by Appointment model
 const moment = require('moment');
 
 // Get dashboard statistics with advanced filtering
@@ -83,7 +83,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
       Task.countDocuments({ status: 'pending' }),
       
       // Completed services
-      WorkOrder.countDocuments({ status: 'completed', ...dateFilter }),
+      Appointment.countDocuments({ status: 'completed', ...dateFilter }),
       
       // Average rating (from appointments)
       Appointment.aggregate([
@@ -96,7 +96,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
       
       // Top services
       ServiceCatalog.aggregate([
-        { $lookup: { from: 'workorders', localField: '_id', foreignField: 'serviceId', as: 'orders' } },
+        { $lookup: { from: 'appointments', localField: '_id', foreignField: 'serviceId', as: 'orders' } },
         { $unwind: '$orders' },
         { $match: { ...dateFilter } },
         { $group: { 
@@ -183,7 +183,7 @@ router.post('/reports', authenticateToken, async (req, res) => {
           break;
           
         case 'Services':
-          reportData.services = await WorkOrder.aggregate([
+          reportData.services = await Appointment.aggregate([
             { $match: { ...dateFilter, status: 'completed' } },
             { $group: { 
               _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },

@@ -1,7 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const User = require('../models/User');
-const { generateToken, hashPassword, comparePassword } = require('../middleware/auth');
+const { generateToken, hashPassword, comparePassword, authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: user.permissions,
+          permissions: Object.keys(user.permissions).filter(key => user.permissions[key]),
           avatar: user.avatar
         },
         token
@@ -150,7 +150,7 @@ router.post('/register', async (req, res) => {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          permissions: newUser.permissions
+          permissions: Object.keys(newUser.permissions).filter(key => newUser.permissions[key])
         },
         token
       }
@@ -168,8 +168,9 @@ router.post('/register', async (req, res) => {
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
-router.get('/me', async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
+    console.log(req.user);
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({
@@ -186,7 +187,7 @@ router.get('/me', async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: user.permissions,
+          permissions: Object.keys(user.permissions).filter(key => user.permissions[key]),
           avatar: user.avatar,
           phone: user.phone,
           lastLogin: user.lastLogin
@@ -206,7 +207,7 @@ router.get('/me', async (req, res) => {
 // @route   PUT /api/auth/change-password
 // @desc    Change user password
 // @access  Private
-router.put('/change-password', async (req, res) => {
+router.put('/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -262,7 +263,7 @@ router.put('/change-password', async (req, res) => {
 // @route   POST /api/auth/logout
 // @desc    Logout user
 // @access  Private
-router.post('/logout', (req, res) => {
+router.post('/logout', authenticateToken, (req, res) => {
   res.json({
     success: true,
     message: 'Logout successful'

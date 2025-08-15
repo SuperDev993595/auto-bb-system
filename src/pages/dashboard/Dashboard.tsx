@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
   
   // Real-time update state
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+  const [refreshInterval, setRefreshInterval] = useState(60000); // 60 seconds
   const [lastUpdate, setLastUpdate] = useState(new Date());
   
   // Custom report builder state

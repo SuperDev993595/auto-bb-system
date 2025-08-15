@@ -188,7 +188,7 @@ auto-bb-system/
 - `POST /api/customers` - Create new customer
 - `PUT /api/customers/:id` - Update customer
 - `DELETE /api/customers/:id` - Delete customer
-- `GET /api/customers/stats` - Get customer statistics
+- `GET /api/customers/stats/overview` - Get customer statistics
 
 ### Tasks
 - `GET /api/tasks` - Get all tasks with filtering
