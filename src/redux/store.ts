@@ -8,6 +8,7 @@ import inventoryReducer from "./actions/inventory";
 import invoicesReducer from "./actions/invoices";
 import dashboardReducer from "./actions/dashboard";
 import adminReducer from "./actions/admin";
+import emailReducer from "./actions/email";
 
 const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ const store = configureStore({
     invoices: invoicesReducer,
     dashboard: dashboardReducer,
     admin: adminReducer,
+    email: emailReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
