@@ -26,12 +26,14 @@ const PublicNavbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center">
+            <Link to={isAuthenticated ? "/admin/dashboard" : "/"} className="flex items-center">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                 <span className="text-white font-bold text-xl">A</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-gray-900">Auto Repair Pro</div>
+                <div className={`text-xl font-bold ${isAuthenticated ? 'text-yellow-600 hover:text-yellow-700' : 'text-gray-900'} transition-colors`}>
+                  Auto Repair Pro
+                </div>
                 <div className="text-xs text-gray-600">Professional Auto Care</div>
               </div>
             </Link>
@@ -62,19 +64,12 @@ const PublicNavbar: React.FC = () => {
               <FaPhone className="mr-2" />
               <span className="text-sm font-medium">(555) 123-4567</span>
             </div>
-            {!isAuthenticated ? (
+            {!isAuthenticated && (
               <Link
                 to="/admin/login"
                 className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
               >
                 Admin Login
-              </Link>
-            ) : (
-              <Link
-                to="/admin/dashboard"
-                className="text-green-600 hover:text-green-700 px-3 py-2 text-sm font-medium transition duration-300"
-              >
-                Dashboard
               </Link>
             )}
             <Link
@@ -124,21 +119,13 @@ const PublicNavbar: React.FC = () => {
                 <FaPhone className="mr-2" />
                 <span className="text-sm font-medium">(555) 123-4567</span>
               </div>
-              {!isAuthenticated ? (
+              {!isAuthenticated && (
                 <Link
                   to="/admin/login"
                   className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Admin Login
-                </Link>
-              ) : (
-                <Link
-                  to="/admin/dashboard"
-                  className="block px-3 py-2 text-green-600 hover:text-green-700 text-base font-medium transition duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
                 </Link>
               )}
               <Link

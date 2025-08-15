@@ -47,29 +47,33 @@ router.get('/', authenticateToken, async (req, res) => {
       ];
     }
 
-    const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      populate: [
-        { path: 'customer', select: 'name email phone' },
-        { path: 'appointment', select: 'date time service' },
-        { path: 'assignedTo', select: 'name email' }
-      ],
-      sort: { dueDate: 1 }
-    };
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const reminders = await Reminder.paginate(filter, options);
+    // Get total count for pagination
+    const totalDocs = await Reminder.countDocuments(filter);
+    const totalPages = Math.ceil(totalDocs / limitNum);
+
+    // Get reminders with pagination
+    const reminders = await Reminder.find(filter)
+      .populate('customer', 'name email phone')
+      .populate('appointment', 'date time service')
+      .populate('assignedTo', 'name email')
+      .sort({ dueDate: 1 })
+      .skip(skip)
+      .limit(limitNum);
     
     res.json({
       success: true,
-      data: reminders.docs,
+      data: reminders,
       pagination: {
-        page: reminders.page,
-        limit: reminders.limit,
-        totalDocs: reminders.totalDocs,
-        totalPages: reminders.totalPages,
-        hasNextPage: reminders.hasNextPage,
-        hasPrevPage: reminders.hasPrevPage
+        page: pageNum,
+        limit: limitNum,
+        totalDocs: totalDocs,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
       }
     });
   } catch (error) {
@@ -79,7 +83,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get single reminder by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/view/:id', authenticateToken, async (req, res) => {
   try {
     const reminder = await Reminder.findById(req.params.id)
       .populate('customer', 'name email phone address')
@@ -429,6 +433,241 @@ router.get('/stats/overview', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching reminder stats:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch reminder statistics' });
+  }
+});
+
+// Get notification settings
+router.get('/notification-settings', authenticateToken, async (req, res) => {
+  try {
+    // Get notification settings from database or return defaults
+    const settings = {
+      email: {
+        enabled: true,
+        templates: {
+          appointment: {
+            subject: 'Appointment Reminder',
+            body: 'Dear {{customerName}}, this is a reminder for your appointment on {{date}} at {{time}}.'
+          },
+          service_due: {
+            subject: 'Service Due Reminder',
+            body: 'Dear {{customerName}}, your vehicle is due for service. Please schedule an appointment.'
+          },
+          follow_up: {
+            subject: 'Follow-up Reminder',
+            body: 'Dear {{customerName}}, this is a follow-up reminder for {{description}}.'
+          },
+          payment: {
+            subject: 'Payment Reminder',
+            body: 'Dear {{customerName}}, please note that payment is due for invoice #{{invoiceNumber}}.'
+          }
+        }
+      },
+      sms: {
+        enabled: false,
+        templates: {
+          appointment: 'Reminder: Your appointment is scheduled for {{date}} at {{time}}.',
+          service_due: 'Your vehicle is due for service. Please call us to schedule.',
+          follow_up: 'Follow-up reminder: {{description}}',
+          payment: 'Payment reminder: Invoice #{{invoiceNumber}} is due.'
+        }
+      },
+      push: {
+        enabled: true,
+        templates: {
+          appointment: 'Appointment reminder: {{date}} at {{time}}',
+          service_due: 'Service due reminder',
+          follow_up: 'Follow-up: {{description}}',
+          payment: 'Payment due: Invoice #{{invoiceNumber}}'
+        }
+      },
+      in_app: {
+        enabled: true,
+        templates: {
+          appointment: 'Appointment reminder for {{date}}',
+          service_due: 'Service due reminder',
+          follow_up: 'Follow-up reminder',
+          payment: 'Payment reminder'
+        }
+      },
+      timing: {
+        appointment: {
+          advance_notice: 24, // hours
+          frequency: 'once'
+        },
+        service_due: {
+          advance_notice: 168, // 1 week
+          frequency: 'weekly'
+        },
+        follow_up: {
+          advance_notice: 72, // 3 days
+          frequency: 'once'
+        },
+        payment: {
+          advance_notice: 24, // 1 day
+          frequency: 'daily'
+        }
+      },
+      business_hours: {
+        start: '08:00',
+        end: '18:00',
+        timezone: 'America/New_York',
+        send_outside_hours: false
+      }
+    };
+
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Error fetching notification settings:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch notification settings' });
+  }
+});
+
+// Update notification settings
+router.put('/notification-settings', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      email,
+      sms,
+      push,
+      in_app,
+      timing,
+      business_hours
+    } = req.body;
+
+    // Validate the settings structure
+    const settingsSchema = Joi.object({
+      email: Joi.object({
+        enabled: Joi.boolean(),
+        templates: Joi.object({
+          appointment: Joi.object({
+            subject: Joi.string(),
+            body: Joi.string()
+          }),
+          service_due: Joi.object({
+            subject: Joi.string(),
+            body: Joi.string()
+          }),
+          follow_up: Joi.object({
+            subject: Joi.string(),
+            body: Joi.string()
+          }),
+          payment: Joi.object({
+            subject: Joi.string(),
+            body: Joi.string()
+          })
+        })
+      }),
+      sms: Joi.object({
+        enabled: Joi.boolean(),
+        templates: Joi.object({
+          appointment: Joi.string(),
+          service_due: Joi.string(),
+          follow_up: Joi.string(),
+          payment: Joi.string()
+        })
+      }),
+      push: Joi.object({
+        enabled: Joi.boolean(),
+        templates: Joi.object({
+          appointment: Joi.string(),
+          service_due: Joi.string(),
+          follow_up: Joi.string(),
+          payment: Joi.string()
+        })
+      }),
+      in_app: Joi.object({
+        enabled: Joi.boolean(),
+        templates: Joi.object({
+          appointment: Joi.string(),
+          service_due: Joi.string(),
+          follow_up: Joi.string(),
+          payment: Joi.string()
+        })
+      }),
+      timing: Joi.object({
+        appointment: Joi.object({
+          advance_notice: Joi.number(),
+          frequency: Joi.string().valid('once', 'daily', 'weekly', 'monthly')
+        }),
+        service_due: Joi.object({
+          advance_notice: Joi.number(),
+          frequency: Joi.string().valid('once', 'daily', 'weekly', 'monthly')
+        }),
+        follow_up: Joi.object({
+          advance_notice: Joi.number(),
+          frequency: Joi.string().valid('once', 'daily', 'weekly', 'monthly')
+        }),
+        payment: Joi.object({
+          advance_notice: Joi.number(),
+          frequency: Joi.string().valid('once', 'daily', 'weekly', 'monthly')
+        })
+      }),
+      business_hours: Joi.object({
+        start: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        end: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        timezone: Joi.string(),
+        send_outside_hours: Joi.boolean()
+      })
+    });
+
+    const { error } = settingsSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    // Here you would typically save the settings to a database
+    // For now, we'll just return the updated settings
+    const updatedSettings = {
+      email: email || {},
+      sms: sms || {},
+      push: push || {},
+      in_app: in_app || {},
+      timing: timing || {},
+      business_hours: business_hours || {}
+    };
+
+    res.json({ success: true, data: updatedSettings, message: 'Notification settings updated successfully' });
+  } catch (error) {
+    console.error('Error updating notification settings:', error);
+    res.status(500).json({ success: false, message: 'Failed to update notification settings' });
+  }
+});
+
+// Test notification settings
+router.post('/notification-settings/test', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { method, template, customerId } = req.body;
+
+    if (!method || !template) {
+      return res.status(400).json({ success: false, message: 'Method and template are required' });
+    }
+
+    // Validate method
+    const validMethods = ['email', 'sms', 'push', 'in_app'];
+    if (!validMethods.includes(method)) {
+      return res.status(400).json({ success: false, message: 'Invalid notification method' });
+    }
+
+    // Validate template
+    const validTemplates = ['appointment', 'service_due', 'follow_up', 'payment'];
+    if (!validTemplates.includes(template)) {
+      return res.status(400).json({ success: false, message: 'Invalid template type' });
+    }
+
+    // Here you would typically send a test notification
+    // For now, we'll just return a success response
+    res.json({ 
+      success: true, 
+      message: `Test ${method} notification sent successfully using ${template} template`,
+      data: {
+        method,
+        template,
+        sent_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error testing notification settings:', error);
+    res.status(500).json({ success: false, message: 'Failed to test notification settings' });
   }
 });
 

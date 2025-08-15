@@ -28,4 +28,11 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
+    .hero-banner {
+        background-image: url('../assets/images/banner.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
 }

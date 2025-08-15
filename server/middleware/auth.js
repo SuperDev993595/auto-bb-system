@@ -17,11 +17,14 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
+      console.error('JWT verification error:', err);
       return res.status(403).json({ 
         success: false, 
         message: 'Invalid or expired token' 
       });
     }
+    
+    console.log('JWT verified user:', user);
     req.user = user;
     next();
   });
@@ -29,6 +32,13 @@ const authenticateToken = (req, res, next) => {
 
 // Middleware to check if user is Super Admin
 const requireSuperAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
   if (req.user.role !== 'super_admin') {
     return res.status(403).json({ 
       success: false, 
@@ -40,6 +50,13 @@ const requireSuperAdmin = (req, res, next) => {
 
 // Middleware to check if user is Sub Admin
 const requireSubAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
   if (req.user.role !== 'sub_admin') {
     return res.status(403).json({ 
       success: false, 
@@ -51,6 +68,13 @@ const requireSubAdmin = (req, res, next) => {
 
 // Middleware to check if user is either Super Admin or Sub Admin
 const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
   if (req.user.role !== 'super_admin' && req.user.role !== 'sub_admin') {
     return res.status(403).json({ 
       success: false, 
@@ -75,7 +99,7 @@ const comparePassword = async (password, hashedPassword) => {
 const generateToken = (user) => {
   return jwt.sign(
     { 
-      id: user.id, 
+      id: user._id || user.id, 
       email: user.email, 
       role: user.role,
       name: user.name 

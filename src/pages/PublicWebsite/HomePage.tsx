@@ -12,8 +12,12 @@ import {
   FaShieldAlt,
   FaTools
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+
+
 
 const HomePage: React.FC = () => {
+  const { isAuthenticated } = useAuth();
   const services = [
     {
       icon: <FaCar className="text-4xl text-blue-600" />,
@@ -68,13 +72,30 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-900 to-blue-700 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+      <section 
+        className="relative text-white"
+        style={{
+          backgroundImage: 'url(/images/banner.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                Professional Auto Repair Services
+                {isAuthenticated ? (
+                  <Link
+                    to="/admin/dashboard"
+                    className="text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer"
+                  >
+                    Professional Auto Repair Services
+                  </Link>
+                ) : (
+                  "Professional Auto Repair Services"
+                )}
               </h1>
               <p className="text-xl mb-8 text-blue-100">
                 Expert mechanics, quality parts, and honest service. Your vehicle deserves the best care.

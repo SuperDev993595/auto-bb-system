@@ -55,33 +55,197 @@ router.get('/', authenticateToken, async (req, res) => {
       ];
     }
 
-    const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      populate: [
-        { path: 'customer', select: 'name email phone' },
-        { path: 'items.itemId', select: 'name description' }
-      ],
-      sort: { issueDate: -1 }
-    };
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const invoices = await Invoice.paginate(filter, options);
+    // Get total count for pagination
+    const totalDocs = await Invoice.countDocuments(filter);
+    const totalPages = Math.ceil(totalDocs / limitNum);
+
+    // Get invoices with pagination
+    const invoices = await Invoice.find(filter)
+      .populate('customer', 'name email phone')
+      .populate('items.reference', 'name description')
+      .sort({ issueDate: -1 })
+      .skip(skip)
+      .limit(limitNum);
     
     res.json({
       success: true,
-      data: invoices.docs,
+      data: invoices,
       pagination: {
-        page: invoices.page,
-        limit: invoices.limit,
-        totalDocs: invoices.totalDocs,
-        totalPages: invoices.totalPages,
-        hasNextPage: invoices.hasNextPage,
-        hasPrevPage: invoices.hasPrevPage
+        page: pageNum,
+        limit: limitNum,
+        totalDocs: totalDocs,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
       }
     });
   } catch (error) {
     console.error('Error fetching invoices:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch invoices' });
+  }
+});
+
+// Get invoice statistics
+router.get('/stats/overview', authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const filter = {};
+    if (startDate || endDate) {
+      filter.issueDate = {};
+      if (startDate) filter.issueDate.$gte = new Date(startDate);
+      if (endDate) filter.issueDate.$lte = new Date(endDate);
+    }
+
+    const stats = await Invoice.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          totalInvoices: { $sum: 1 },
+          totalAmount: { $sum: '$total' },
+          totalPaid: { $sum: '$paidAmount' },
+          totalOutstanding: { $sum: { $subtract: ['$total', '$paidAmount'] } },
+          avgInvoiceValue: { $avg: '$total' }
+        }
+      }
+    ]);
+
+    const statusStats = await Invoice.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$total' }
+        }
+      }
+    ]);
+
+    const monthlyStats = await Invoice.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$issueDate' },
+            month: { $month: '$issueDate' }
+          },
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$total' },
+          totalPaid: { $sum: '$paidAmount' }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        overview: stats[0] || {
+          totalInvoices: 0,
+          totalAmount: 0,
+          totalPaid: 0,
+          totalOutstanding: 0,
+          avgInvoiceValue: 0
+        },
+        byStatus: statusStats,
+        monthly: monthlyStats
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching invoice stats:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch invoice statistics' });
+  }
+});
+
+// Get invoice templates
+router.get('/templates', authenticateToken, async (req, res) => {
+  try {
+    // Sample invoice templates
+    const templates = [
+      {
+        id: 'standard',
+        name: 'Standard Invoice',
+        description: 'Basic invoice template for general services',
+        fields: [
+          { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
+          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
+          { name: 'customerId', type: 'select', required: true, label: 'Customer' },
+          { name: 'items', type: 'array', required: true, label: 'Items' },
+          { name: 'subtotal', type: 'number', required: true, label: 'Subtotal' },
+          { name: 'taxAmount', type: 'number', required: true, label: 'Tax Amount' },
+          { name: 'totalAmount', type: 'number', required: true, label: 'Total Amount' },
+          { name: 'notes', type: 'textarea', required: false, label: 'Notes' },
+          { name: 'terms', type: 'textarea', required: false, label: 'Terms & Conditions' }
+        ],
+        defaultValues: {
+          paymentTerms: 'Net 30',
+          status: 'draft',
+          taxRate: 0
+        }
+      },
+      {
+        id: 'detailed',
+        name: 'Detailed Invoice',
+        description: 'Comprehensive invoice template with detailed breakdown',
+        fields: [
+          { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
+          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
+          { name: 'customerId', type: 'select', required: true, label: 'Customer' },
+          { name: 'items', type: 'array', required: true, label: 'Items' },
+          { name: 'subtotal', type: 'number', required: true, label: 'Subtotal' },
+          { name: 'discountAmount', type: 'number', required: false, label: 'Discount Amount' },
+          { name: 'taxAmount', type: 'number', required: true, label: 'Tax Amount' },
+          { name: 'totalAmount', type: 'number', required: true, label: 'Total Amount' },
+          { name: 'paymentTerms', type: 'select', required: false, label: 'Payment Terms' },
+          { name: 'notes', type: 'textarea', required: false, label: 'Notes' },
+          { name: 'terms', type: 'textarea', required: false, label: 'Terms & Conditions' }
+        ],
+        defaultValues: {
+          paymentTerms: 'Net 30',
+          status: 'draft',
+          taxRate: 0,
+          discountType: 'fixed',
+          discountValue: 0
+        }
+      },
+      {
+        id: 'service',
+        name: 'Service Invoice',
+        description: 'Specialized template for service-based invoices',
+        fields: [
+          { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
+          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
+          { name: 'customerId', type: 'select', required: true, label: 'Customer' },
+          { name: 'items', type: 'array', required: true, label: 'Services' },
+          { name: 'subtotal', type: 'number', required: true, label: 'Subtotal' },
+          { name: 'taxAmount', type: 'number', required: true, label: 'Tax Amount' },
+          { name: 'totalAmount', type: 'number', required: true, label: 'Total Amount' },
+          { name: 'notes', type: 'textarea', required: false, label: 'Service Notes' }
+        ],
+        defaultValues: {
+          paymentTerms: 'Net 15',
+          status: 'draft',
+          taxRate: 0
+        }
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: templates
+    });
+  } catch (error) {
+    console.error('Error fetching invoice templates:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch invoice templates' });
   }
 });
 
@@ -313,77 +477,39 @@ router.post('/:id/send', authenticateToken, async (req, res) => {
   }
 });
 
-// Get invoice statistics
-router.get('/stats/overview', authenticateToken, async (req, res) => {
+// Mark overdue invoices
+router.post('/mark-overdue', authenticateToken, async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const today = new Date();
     
-    const filter = {};
-    if (startDate || endDate) {
-      filter.issueDate = {};
-      if (startDate) filter.issueDate.$gte = new Date(startDate);
-      if (endDate) filter.issueDate.$lte = new Date(endDate);
-    }
+    // Find all sent invoices that are past due date
+    const overdueInvoices = await Invoice.find({
+      status: 'sent',
+      dueDate: { $lt: today }
+    });
 
-    const stats = await Invoice.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: null,
-          totalInvoices: { $sum: 1 },
-          totalAmount: { $sum: '$totalAmount' },
-          totalPaid: { $sum: '$totalPaid' },
-          totalOutstanding: { $sum: { $subtract: ['$totalAmount', '$totalPaid'] } },
-          avgInvoiceValue: { $avg: '$totalAmount' }
-        }
-      }
-    ]);
+    // Update their status to overdue
+    const updatePromises = overdueInvoices.map(invoice => {
+      invoice.status = 'overdue';
+      return invoice.save();
+    });
 
-    const statusStats = await Invoice.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-          totalAmount: { $sum: '$totalAmount' }
-        }
-      }
-    ]);
+    await Promise.all(updatePromises);
 
-    const monthlyStats = await Invoice.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$issueDate' },
-            month: { $month: '$issueDate' }
-          },
-          count: { $sum: 1 },
-          totalAmount: { $sum: '$totalAmount' },
-          totalPaid: { $sum: '$totalPaid' }
-        }
-      },
-      { $sort: { '_id.year': -1, '_id.month': -1 } },
-      { $limit: 12 }
-    ]);
+    // Fetch updated invoices
+    const updatedInvoices = await Invoice.find()
+      .populate('customer', 'name email phone')
+      .populate('items.reference', 'name description')
+      .sort({ issueDate: -1 });
 
-    res.json({
-      success: true,
-      data: {
-        overview: stats[0] || {
-          totalInvoices: 0,
-          totalAmount: 0,
-          totalPaid: 0,
-          totalOutstanding: 0,
-          avgInvoiceValue: 0
-        },
-        byStatus: statusStats,
-        monthly: monthlyStats
-      }
+    res.json({ 
+      success: true, 
+      message: `${overdueInvoices.length} invoices marked as overdue`,
+      data: updatedInvoices
     });
   } catch (error) {
-    console.error('Error fetching invoice stats:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch invoice statistics' });
+    console.error('Error marking overdue invoices:', error);
+    res.status(500).json({ success: false, message: 'Failed to mark overdue invoices' });
   }
 });
 

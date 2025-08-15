@@ -437,11 +437,10 @@ async function setupDatabase() {
 
     // Create default Super Admin user
     console.log('👤 Creating default Super Admin user...');
-    const hashedPassword = await bcrypt.hash('admin123', 12);
     const superAdmin = await User.create({
       name: 'Super Admin',
       email: 'admin@autocrm.com',
-      password: hashedPassword,
+      password: 'admin123',
       role: 'super_admin',
       phone: '(555) 123-4567',
       permissions: {
@@ -463,7 +462,7 @@ async function setupDatabase() {
     const subAdmin = await User.create({
       name: 'Sub Admin',
       email: 'subadmin@autocrm.com',
-      password: hashedPassword,
+      password: 'admin123',
       role: 'sub_admin',
       phone: '(555) 123-4568',
       permissions: {

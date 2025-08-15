@@ -97,25 +97,72 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
       query.isActive = isActive === 'true';
     }
     
-    const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      select: '-password',
-      sort: { createdAt: -1 }
-    };
-    
-    const users = await User.paginate(query, options);
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination
+    const totalDocs = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalDocs / limitNum);
+
+    // Get users with pagination
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
     
     res.json({
       success: true,
-      data: users.docs,
+      data: users,
       pagination: {
-        page: users.page,
-        limit: users.limit,
-        totalDocs: users.totalDocs,
-        totalPages: users.totalPages,
-        hasNextPage: users.hasNextPage,
-        hasPrevPage: users.hasPrevPage
+        page: pageNum,
+        limit: limitNum,
+        totalDocs: totalDocs,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get user statistics (MUST come before /users/:id)
+router.get('/users/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const stats = await User.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          activeUsers: { $sum: { $cond: ['$isActive', 1, 0] } },
+          inactiveUsers: { $sum: { $cond: ['$isActive', 0, 1] } }
+        }
+      }
+    ]);
+    
+    const roleStats = await User.aggregate([
+      {
+        $group: {
+          _id: '$role',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    const recentUsers = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .limit(5);
+    
+    res.json({
+      success: true,
+      data: {
+        overview: stats[0] || { totalUsers: 0, activeUsers: 0, inactiveUsers: 0 },
+        roleDistribution: roleStats,
+        recentUsers
       }
     });
   } catch (error) {
@@ -262,46 +309,7 @@ router.patch('/users/:id/toggle-status', authenticateToken, requireAdmin, async 
   }
 });
 
-// Get user statistics
-router.get('/users/stats', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const stats = await User.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalUsers: { $sum: 1 },
-          activeUsers: { $sum: { $cond: ['$isActive', 1, 0] } },
-          inactiveUsers: { $sum: { $cond: ['$isActive', 0, 1] } }
-        }
-      }
-    ]);
-    
-    const roleStats = await User.aggregate([
-      {
-        $group: {
-          _id: '$role',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-    
-    const recentUsers = await User.find()
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .limit(5);
-    
-    res.json({
-      success: true,
-      data: {
-        overview: stats[0] || { totalUsers: 0, activeUsers: 0, inactiveUsers: 0 },
-        roleDistribution: roleStats,
-        recentUsers
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+
 
 // Get system settings
 router.get('/settings', authenticateToken, requireAdmin, async (req, res) => {

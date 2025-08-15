@@ -9,7 +9,8 @@ import {
   deleteInvoice,
   addPayment,
   sendInvoice,
-  createInvoice
+  createInvoice,
+  markAsOverdue
 } from '../redux/actions/invoices'
 import { Invoice } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
@@ -47,9 +48,8 @@ export default function InvoicesPage() {
     templates, 
     stats, 
     paymentStats,
-    invoicesLoading,
-    templatesLoading,
-    statsLoading
+    loading,
+    settings
   } = useAppSelector(state => state.invoices)
   const customers = useAppSelector(state => state.customers.list)
   const workOrders = useAppSelector(state => state.services.workOrders)
@@ -63,21 +63,21 @@ export default function InvoicesPage() {
     dispatch(fetchInvoiceTemplates())
   }, [dispatch])
 
-  // Filter invoices
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter invoices with safety check
+  const filteredInvoices = (invoices || []).filter(invoice => {
+    const matchesSearch = (invoice.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
-  // Calculate metrics
-  const totalInvoices = invoices.length
-  const paidInvoices = invoices.filter(inv => inv.status === 'paid').length
-  const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length
-  const totalRevenue = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0)
-  const outstandingAmount = invoices.filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled')
-    .reduce((sum, inv) => sum + (inv.total - (inv.paidAmount || 0)), 0)
+  // Calculate metrics with safety checks
+  const totalInvoices = (invoices || []).length
+  const paidInvoices = (invoices || []).filter(inv => inv.status === 'paid').length
+  const overdueInvoices = (invoices || []).filter(inv => inv.status === 'overdue').length
+  const totalRevenue = (invoices || []).filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (inv.total || 0), 0)
+  const outstandingAmount = (invoices || []).filter(inv => inv.status !== 'paid' && inv.status !== 'cancelled')
+    .reduce((sum, inv) => sum + ((inv.total || 0) - (inv.paidAmount || 0)), 0)
 
   const getStatusColor = (status: Invoice['status']) => {
     switch (status) {
@@ -281,11 +281,11 @@ export default function InvoicesPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInvoices.map(invoice => (
-                <tr key={invoice.id} className="hover:bg-gray-50">
+                <tr key={invoice._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">#{invoice.id}</div>
-                      <div className="text-sm text-gray-500">WO: {invoice.workOrderId}</div>
+                      <div className="text-sm font-medium text-gray-900">#{invoice.invoiceNumber}</div>
+                      <div className="text-sm text-gray-500">WO: {invoice.workOrder || 'N/A'}</div>
                       {invoice.notes && (
                         <div className="text-xs text-gray-400 mt-1 max-w-xs truncate">
                           {invoice.notes}
@@ -295,21 +295,21 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{invoice.customerName}</div>
-                      <div className="text-sm text-gray-500">{invoice.vehicleInfo}</div>
+                      <div className="text-sm font-medium text-gray-900">{invoice.customer?.name}</div>
+                      <div className="text-sm text-gray-500">{invoice.vehicle.year} {invoice.vehicle.make} {invoice.vehicle.model}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm text-gray-900">
-                        Created: {new Date(invoice.date).toLocaleDateString()}
+                        Created: {new Date(invoice.issueDate).toLocaleDateString()}
                       </div>
                       <div className="text-sm text-gray-500">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
                       </div>
-                      {invoice.paymentDate && (
+                      {invoice.paidDate && (
                         <div className="text-sm text-green-600">
-                          Paid: {new Date(invoice.paymentDate).toLocaleDateString()}
+                          Paid: {new Date(invoice.paidDate).toLocaleDateString()}
                         </div>
                       )}
                     </div>
@@ -375,7 +375,7 @@ export default function InvoicesPage() {
                         <HiPencil className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => handleDeleteInvoice(invoice.id)}
+                        onClick={() => handleDeleteInvoice(invoice._id)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete"
                       >
@@ -427,24 +427,24 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {invoices
-                .filter(inv => inv.status === 'paid' && inv.paymentDate)
-                .sort((a, b) => new Date(b.paymentDate!).getTime() - new Date(a.paymentDate!).getTime())
+              {(invoices || [])
+                .filter(inv => inv.status === 'paid' && inv.paidDate)
+                .sort((a, b) => new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime())
                 .map(invoice => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
+                  <tr key={invoice._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(invoice.paymentDate!).toLocaleDateString()}
+                        {new Date(invoice.paidDate!).toLocaleDateString()}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {new Date(invoice.paymentDate!).toLocaleTimeString()}
+                        {new Date(invoice.paidDate!).toLocaleTimeString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">#{invoice.id}</div>
+                      <div className="text-sm font-medium text-gray-900">#{invoice.invoiceNumber}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{invoice.customerName}</div>
+                      <div className="text-sm text-gray-900">{invoice.customer?.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-green-600">
@@ -705,8 +705,8 @@ export default function InvoicesPage() {
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { key: 'invoices', label: 'Invoices', count: invoices.length },
-              { key: 'payments', label: 'Payments', count: invoices.filter(i => i.status === 'paid').length },
+                      { key: 'invoices', label: 'Invoices', count: (invoices || []).length },
+        { key: 'payments', label: 'Payments', count: (invoices || []).filter(i => i.status === 'paid').length },
               { key: 'settings', label: 'Settings', count: 0 }
             ].map(tab => (
               <button
@@ -747,8 +747,8 @@ export default function InvoicesPage() {
             
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600">Invoice: #{selectedInvoice.id}</p>
-                <p className="text-sm text-gray-600">Customer: {selectedInvoice.customerName}</p>
+                <p className="text-sm text-gray-600">Invoice: #{selectedInvoice.invoiceNumber}</p>
+                <p className="text-sm text-gray-600">Customer: {selectedInvoice.customer?.name}</p>
                 <p className="text-sm font-medium">Amount Due: ${(selectedInvoice.total - (selectedInvoice.paidAmount || 0)).toFixed(2)}</p>
               </div>
               
@@ -781,7 +781,7 @@ export default function InvoicesPage() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handlePaymentRecord(selectedInvoice.id, 100, 'cash')}
+                  onClick={() => handlePaymentRecord(selectedInvoice._id, 100, 'cash')}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                 >
                   Record Payment

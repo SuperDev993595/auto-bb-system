@@ -1,5 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Invoice } from '../../utils/CustomerTypes'
+import { 
+  fetchInvoices, 
+  createInvoice, 
+  updateInvoice, 
+  deleteInvoice, 
+  sendInvoice, 
+  addPayment, 
+  fetchInvoiceStats, 
+  fetchPaymentStats, 
+  fetchInvoiceTemplates,
+  markAsOverdue
+} from '../actions/invoices'
 
 export interface InvoiceSettings {
   companyInfo: {
@@ -43,60 +55,13 @@ interface InvoicesState {
   settings: InvoiceSettings
   loading: boolean
   error: string | null
+  stats: any
+  paymentStats: any
+  templates: any[]
 }
 
 const initialState: InvoicesState = {
-  invoices: [
-    {
-      id: 'inv001',
-      workOrderId: 'wo1',
-      customerId: '1',
-      customerName: 'John Smith',
-      vehicleInfo: '2020 Toyota Camry',
-      date: '2025-08-01',
-      dueDate: '2025-08-31',
-      status: 'sent',
-      services: [],
-      parts: [
-        {
-          id: 'p1',
-          name: 'Oil Filter',
-          partNumber: 'OF-123',
-          quantity: 1,
-          unitPrice: 19.99,
-          totalPrice: 19.99
-        }
-      ],
-      laborHours: 0.5,
-      laborRate: 120,
-      subtotal: 79.99,
-      tax: 6.40,
-      total: 86.39,
-      paidAmount: 0,
-      notes: 'Regular maintenance service completed'
-    },
-    {
-      id: 'inv002',
-      workOrderId: 'wo2',
-      customerId: '2',
-      customerName: 'Lisa Brown',
-      vehicleInfo: '2019 Ford Escape',
-      date: '2025-07-28',
-      dueDate: '2025-08-27',
-      status: 'paid',
-      services: [],
-      parts: [],
-      laborHours: 0.75,
-      laborRate: 120,
-      subtotal: 90.00,
-      tax: 7.20,
-      total: 97.20,
-      paidAmount: 97.20,
-      paymentMethod: 'credit card',
-      paymentDate: '2025-07-28',
-      notes: 'Tire rotation service'
-    }
-  ],
+  invoices: [],
   settings: {
     companyInfo: {
       name: 'B&B Auto Repair Shop',
@@ -133,7 +98,10 @@ const initialState: InvoicesState = {
     }
   },
   loading: false,
-  error: null
+  error: null,
+  stats: null,
+  paymentStats: null,
+  templates: []
 }
 
 const invoicesSlice = createSlice({
@@ -146,17 +114,9 @@ const invoicesSlice = createSlice({
       // Increment next invoice number
       state.settings.invoiceDefaults.nextInvoiceNumber += 1
     },
-    updateInvoice: (state, action: PayloadAction<Invoice>) => {
-      const index = state.invoices.findIndex(inv => inv.id === action.payload.id)
-      if (index !== -1) {
-        state.invoices[index] = action.payload
-      }
-    },
-    deleteInvoice: (state, action: PayloadAction<string>) => {
-      state.invoices = state.invoices.filter(inv => inv.id !== action.payload)
-    },
+    
     updateInvoiceStatus: (state, action: PayloadAction<{id: string, status: Invoice['status']}>) => {
-      const invoice = state.invoices.find(inv => inv.id === action.payload.id)
+      const invoice = state.invoices.find(inv => inv._id === action.payload.id)
       if (invoice) {
         invoice.status = action.payload.status
       }
@@ -168,11 +128,11 @@ const invoicesSlice = createSlice({
       date: string
       reference?: string
     }>) => {
-      const invoice = state.invoices.find(inv => inv.id === action.payload.invoiceId)
+      const invoice = state.invoices.find(inv => inv._id === action.payload.invoiceId)
       if (invoice) {
         invoice.paidAmount = (invoice.paidAmount || 0) + action.payload.amount
-        invoice.paymentMethod = action.payload.method
-        invoice.paymentDate = action.payload.date
+        invoice.paymentMethod = action.payload.method as Invoice['paymentMethod']
+        invoice.paidDate = action.payload.date
         
         // Update status based on payment
         if (invoice.paidAmount >= invoice.total) {
@@ -184,14 +144,7 @@ const invoicesSlice = createSlice({
     },
     
     // Bulk Actions
-    markAsOverdue: (state) => {
-      const today = new Date()
-      state.invoices.forEach(invoice => {
-        if (invoice.status === 'sent' && new Date(invoice.dueDate) < today) {
-          invoice.status = 'overdue'
-        }
-      })
-    },
+
     
     // Settings Actions
     updateInvoiceSettings: (state, action: PayloadAction<Partial<InvoiceSettings>>) => {
@@ -215,10 +168,10 @@ const invoicesSlice = createSlice({
       const { workOrder, customer } = action.payload
       const vehicle = customer.vehicles?.find((v: any) => v.id === workOrder.vehicleId)
       
-      const newInvoice: Invoice = {
-        id: `${state.settings.invoiceDefaults.invoicePrefix}${state.settings.invoiceDefaults.nextInvoiceNumber.toString().padStart(3, '0')}`,
-        workOrderId: workOrder.id,
-        customerId: customer.id,
+             const newInvoice: Invoice = {
+         _id: `${state.settings.invoiceDefaults.invoicePrefix}${state.settings.invoiceDefaults.nextInvoiceNumber.toString().padStart(3, '0')}`,
+         workOrderId: workOrder.id,
+         customerId: customer.id,
         customerName: customer.name,
         vehicleInfo: vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle',
         date: new Date().toISOString().split('T')[0],
@@ -247,16 +200,176 @@ const invoicesSlice = createSlice({
       state.error = action.payload
       state.loading = false
     }
+  },
+  extraReducers: (builder) => {
+    // Fetch Invoices
+    builder
+      .addCase(fetchInvoices.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInvoices.fulfilled, (state, action) => {
+        state.loading = false
+        state.invoices = action.payload.data || []
+      })
+      .addCase(fetchInvoices.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch invoices'
+      })
+
+    // Create Invoice
+    builder
+      .addCase(createInvoice.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(createInvoice.fulfilled, (state, action) => {
+        state.loading = false
+        state.invoices.push(action.payload.data)
+      })
+      .addCase(createInvoice.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to create invoice'
+      })
+
+    // Update Invoice
+    builder
+      .addCase(updateInvoice.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateInvoice.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.invoices.findIndex(inv => inv._id === action.payload.data._id)
+        if (index !== -1) {
+          state.invoices[index] = action.payload.data
+        }
+      })
+      .addCase(updateInvoice.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to update invoice'
+      })
+
+    // Delete Invoice
+    builder
+      .addCase(deleteInvoice.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteInvoice.fulfilled, (state, action) => {
+        state.loading = false
+        state.invoices = state.invoices.filter(inv => inv._id !== action.payload)
+      })
+      .addCase(deleteInvoice.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to delete invoice'
+      })
+
+    // Send Invoice
+    builder
+      .addCase(sendInvoice.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(sendInvoice.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.invoices.findIndex(inv => inv._id === action.payload.data._id)
+        if (index !== -1) {
+          state.invoices[index] = action.payload.data
+        }
+      })
+      .addCase(sendInvoice.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to send invoice'
+      })
+
+    // Add Payment
+    builder
+      .addCase(addPayment.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(addPayment.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.invoices.findIndex(inv => inv._id === action.payload.data._id)
+        if (index !== -1) {
+          state.invoices[index] = action.payload.data
+        }
+      })
+      .addCase(addPayment.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to add payment'
+      })
+
+    // Fetch Invoice Stats
+    builder
+      .addCase(fetchInvoiceStats.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInvoiceStats.fulfilled, (state, action) => {
+        state.loading = false
+        state.stats = action.payload.data
+      })
+      .addCase(fetchInvoiceStats.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch invoice stats'
+      })
+
+    // Fetch Payment Stats
+    builder
+      .addCase(fetchPaymentStats.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchPaymentStats.fulfilled, (state, action) => {
+        state.loading = false
+        state.paymentStats = action.payload.data
+      })
+      .addCase(fetchPaymentStats.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch payment stats'
+      })
+
+    // Fetch Invoice Templates
+    builder
+      .addCase(fetchInvoiceTemplates.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInvoiceTemplates.fulfilled, (state, action) => {
+        state.loading = false
+        state.templates = action.payload.data || []
+      })
+      .addCase(fetchInvoiceTemplates.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch invoice templates'
+      })
+
+    // Mark As Overdue
+    builder
+      .addCase(markAsOverdue.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(markAsOverdue.fulfilled, (state, action) => {
+        state.loading = false
+        // Update the invoices in state with the new data
+        if (action.payload.data) {
+          state.invoices = action.payload.data
+        }
+      })
+      .addCase(markAsOverdue.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to update overdue invoices'
+      })
   }
 })
 
 export const {
   addInvoice,
-  updateInvoice,
-  deleteInvoice,
   updateInvoiceStatus,
   recordPayment,
-  markAsOverdue,
   updateInvoiceSettings,
   updateCompanyInfo,
   updateInvoiceDefaults,

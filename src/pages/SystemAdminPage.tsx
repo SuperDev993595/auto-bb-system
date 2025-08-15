@@ -30,14 +30,11 @@ const SystemAdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [userForm, setUserForm] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
     role: 'user' as 'super_admin' | 'sub_admin' | 'user',
-    firstName: '',
-    lastName: '',
     phone: '',
-    department: '',
     isActive: true
   });
 
@@ -64,14 +61,11 @@ const SystemAdminPage: React.FC = () => {
       toast.success('User created successfully');
       setShowCreateUserModal(false);
       setUserForm({
-        username: '',
+        name: '',
         email: '',
         password: '',
         role: 'user',
-        firstName: '',
-        lastName: '',
         phone: '',
-        department: '',
         isActive: true
       });
     } catch (error) {
@@ -224,13 +218,13 @@ const SystemAdminPage: React.FC = () => {
                             <div className="flex-shrink-0 h-10 w-10">
                               <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                 <span className="text-sm font-medium text-gray-700">
-                                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                                  {(user.name || '').charAt(0)}
                                 </span>
                               </div>
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {user.firstName} {user.lastName}
+                                {user.name || 'Unknown User'}
                               </div>
                               <div className="text-sm text-gray-500">{user.email}</div>
                             </div>
@@ -322,35 +316,13 @@ const SystemAdminPage: React.FC = () => {
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
               <form onSubmit={handleCreateUser} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">First Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={userForm.firstName}
-                      onChange={(e) => setUserForm({...userForm, firstName: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={userForm.lastName}
-                      onChange={(e) => setUserForm({...userForm, lastName: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Username</label>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
                   <input
                     type="text"
                     required
-                    value={userForm.username}
-                    onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                    value={userForm.name}
+                    onChange={(e) => setUserForm({...userForm, name: e.target.value})}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

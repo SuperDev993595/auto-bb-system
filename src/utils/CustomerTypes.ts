@@ -145,27 +145,58 @@ export interface WorkOrder {
     completedDate?: string
 }
 
+// Invoice Item
+export interface InvoiceItem {
+    type: 'service' | 'part' | 'labor' | 'other'
+    name: string
+    description?: string
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+    reference?: string
+    referenceModel?: 'ServiceCatalog' | 'InventoryItem' | 'WorkOrder'
+}
+
 // Invoice
 export interface Invoice {
-    id: string
-    workOrderId: string
-    customerId: string
-    customerName: string
-    vehicleInfo: string
-    date: string
-    dueDate: string
-    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
-    services: ServiceCatalogItem[]
-    parts: ServicePart[]
-    laborHours: number
-    laborRate: number
+    _id: string
+    invoiceNumber: string
+    customer: {
+        _id: string
+        name: string
+        email?: string
+        phone?: string
+    }
+    workOrder?: string
+    appointment?: string
+    vehicle: {
+        make: string
+        model: string
+        year: number
+        vin?: string
+        licensePlate?: string
+    }
+    items: InvoiceItem[]
     subtotal: number
-    tax: number
+    taxRate: number
+    taxAmount: number
+    discountType: 'percentage' | 'fixed' | 'none'
+    discountValue: number
+    discountAmount: number
     total: number
+    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'refunded'
+    issueDate: string
+    dueDate: string
+    paidDate?: string
+    paymentMethod?: 'cash' | 'check' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'online' | 'other'
+    paymentReference?: string
     paidAmount: number
-    paymentMethod?: string
-    paymentDate?: string
+    balance: number
     notes?: string
+    terms?: string
+    createdBy: string
+    createdAt: string
+    updatedAt: string
 }
 
 // Inventory Item

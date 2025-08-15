@@ -3,13 +3,10 @@ import api from './api';
 // Types
 export interface User {
   _id: string;
-  username: string;
+  name: string;
   email: string;
-  firstName: string;
-  lastName: string;
   role: 'super_admin' | 'sub_admin' | 'user';
   phone?: string;
-  department?: string;
   isActive: boolean;
   permissions?: Record<string, any>;
   createdAt: string;
@@ -17,27 +14,21 @@ export interface User {
 }
 
 export interface CreateUserData {
-  username: string;
+  name: string;
   email: string;
   password?: string;
   role: 'super_admin' | 'sub_admin' | 'user';
-  firstName: string;
-  lastName: string;
   phone?: string;
-  department?: string;
   isActive?: boolean;
   permissions?: Record<string, any>;
 }
 
 export interface UpdateUserData {
-  username?: string;
+  name?: string;
   email?: string;
   password?: string;
   role?: 'super_admin' | 'sub_admin' | 'user';
-  firstName?: string;
-  lastName?: string;
   phone?: string;
-  department?: string;
   isActive?: boolean;
   permissions?: Record<string, any>;
 }
