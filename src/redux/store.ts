@@ -7,6 +7,7 @@ import remindersReducer from "./actions/reminders";
 import inventoryReducer from "./actions/inventory";
 import invoicesReducer from "./actions/invoices";
 import dashboardReducer from "./actions/dashboard";
+import adminReducer from "./actions/admin";
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     inventory: inventoryReducer,
     invoices: invoicesReducer,
     dashboard: dashboardReducer,
+    admin: adminReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

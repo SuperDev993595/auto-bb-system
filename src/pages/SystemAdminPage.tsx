@@ -1,699 +1,401 @@
 import React, { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { 
-  FaUsers, 
-  FaCog, 
-  FaShieldAlt, 
-  FaDatabase, 
-  FaChartLine,
-  FaBell,
-  FaKey,
-  FaTrash,
-  FaEdit,
-  FaPlus,
-  FaEye,
-  FaEyeSlash,
-  FaDownload,
-  FaUpload,
-  FaSync,
-  FaExclamationTriangle
-} from 'react-icons/fa';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../redux/store';
+import {
+  fetchUsers,
+  fetchUserStats,
+  fetchSystemSettings,
+  updateSystemSettings,
+  createUser,
+  updateUser,
+  deleteUser,
+  toggleUserStatus,
+  clearError
+} from '../redux/actions/admin';
+import PageTitle from '../components/Shared/PageTitle';
+import { FaUsers, FaCog, FaPlus, FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: 'super_admin' | 'sub_admin' | 'technician' | 'receptionist';
-  status: 'active' | 'inactive';
-  lastLogin: string;
-  createdAt: string;
-}
-
-interface SystemSettings {
-  companyName: string;
-  emailSettings: {
-    smtpHost: string;
-    smtpPort: number;
-    smtpUser: string;
-    smtpPass: string;
-  };
-  notificationSettings: {
-    emailNotifications: boolean;
-    smsNotifications: boolean;
-    appointmentReminders: boolean;
-    taskReminders: boolean;
-  };
-  securitySettings: {
-    passwordMinLength: number;
-    sessionTimeout: number;
-    twoFactorAuth: boolean;
-    loginAttempts: number;
-  };
-}
-
 const SystemAdminPage: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    users,
+    userStats,
+    usersLoading,
+    systemSettings,
+    systemSettingsLoading,
+    error
+  } = useSelector((state: RootState) => state.admin);
+
   const [activeTab, setActiveTab] = useState('users');
-  const [users, setUsers] = useState<User[]>([]);
-  const [settings, setSettings] = useState<SystemSettings>({
-    companyName: 'Auto Repair Pro',
-    emailSettings: {
-      smtpHost: '',
-      smtpPort: 587,
-      smtpUser: '',
-      smtpPass: ''
-    },
-    notificationSettings: {
-      emailNotifications: true,
-      smsNotifications: false,
-      appointmentReminders: true,
-      taskReminders: true
-    },
-    securitySettings: {
-      passwordMinLength: 8,
-      sessionTimeout: 30,
-      twoFactorAuth: false,
-      loginAttempts: 5
-    }
-  });
-  const [loading, setLoading] = useState(false);
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [newUser, setNewUser] = useState({
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [userForm, setUserForm] = useState({
     username: '',
     email: '',
-    role: 'technician' as const,
-    password: ''
+    password: '',
+    role: 'user' as 'super_admin' | 'sub_admin' | 'user',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    department: '',
+    isActive: true
   });
 
-  // Mock data - in real app, this would come from API
   useEffect(() => {
-    setUsers([
-      {
-        id: '1',
-        username: 'admin',
-        email: 'admin@autorepair.com',
-        role: 'super_admin',
-        status: 'active',
-        lastLogin: '2024-01-15T10:30:00Z',
-        createdAt: '2023-01-01T00:00:00Z'
-      },
-      {
-        id: '2',
-        username: 'manager',
-        email: 'manager@autorepair.com',
-        role: 'sub_admin',
-        status: 'active',
-        lastLogin: '2024-01-14T15:45:00Z',
-        createdAt: '2023-02-01T00:00:00Z'
-      },
-      {
-        id: '3',
-        username: 'john_tech',
-        email: 'john@autorepair.com',
-        role: 'technician',
-        status: 'active',
-        lastLogin: '2024-01-15T08:20:00Z',
-        createdAt: '2023-03-01T00:00:00Z'
-      },
-      {
-        id: '4',
-        username: 'sarah_reception',
-        email: 'sarah@autorepair.com',
-        role: 'receptionist',
-        status: 'active',
-        lastLogin: '2024-01-15T09:15:00Z',
-        createdAt: '2023-04-01T00:00:00Z'
-      }
-    ]);
-  }, []);
-
-  const handleAddUser = () => {
-    if (!newUser.username || !newUser.email || !newUser.password) {
-      toast.error('Please fill in all required fields');
-      return;
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
     }
+  }, [error, dispatch]);
 
-    const user: User = {
-      id: Date.now().toString(),
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-      status: 'active',
-      lastLogin: '',
-      createdAt: new Date().toISOString()
-    };
+  useEffect(() => {
+    if (activeTab === 'users') {
+      dispatch(fetchUsers());
+      dispatch(fetchUserStats());
+    } else if (activeTab === 'settings') {
+      dispatch(fetchSystemSettings());
+    }
+  }, [activeTab, dispatch]);
 
-    setUsers([...users, user]);
-    setNewUser({ username: '', email: '', role: 'technician', password: '' });
-    setShowAddUser(false);
-    toast.success('User added successfully');
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await dispatch(createUser(userForm)).unwrap();
+      toast.success('User created successfully');
+      setShowCreateUserModal(false);
+      setUserForm({
+        username: '',
+        email: '',
+        password: '',
+        role: 'user',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        department: '',
+        isActive: true
+      });
+    } catch (error) {
+      toast.error('Failed to create user');
+    }
   };
 
-  const handleUpdateUser = (user: User) => {
-    setUsers(users.map(u => u.id === user.id ? user : u));
-    setEditingUser(null);
-    toast.success('User updated successfully');
-  };
-
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(u => u.id !== userId));
-      toast.success('User deleted successfully');
+      try {
+        await dispatch(deleteUser(userId)).unwrap();
+        toast.success('User deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete user');
+      }
     }
   };
 
-  const handleSaveSettings = () => {
-    // In real app, this would save to backend
-    toast.success('Settings saved successfully');
+  const handleToggleUserStatus = async (userId: string) => {
+    try {
+      await dispatch(toggleUserStatus(userId)).unwrap();
+      toast.success('User status updated');
+    } catch (error) {
+      toast.error('Failed to update user status');
+    }
   };
-
-  const handleBackup = () => {
-    // In real app, this would trigger backup
-    toast.success('Backup initiated successfully');
-  };
-
-  const handleRestore = () => {
-    // In real app, this would trigger restore
-    toast.success('Restore initiated successfully');
-  };
-
-  const tabs = [
-    { id: 'users', name: 'User Management', icon: FaUsers },
-    { id: 'settings', name: 'System Settings', icon: FaCog },
-    { id: 'security', name: 'Security', icon: FaShieldAlt },
-    { id: 'backup', name: 'Backup & Restore', icon: FaDatabase },
-    { id: 'monitoring', name: 'System Monitoring', icon: FaChartLine }
-  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">System Administration</h1>
-          <p className="text-gray-600">Manage users, settings, and system configuration</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setLoading(!loading)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            <FaSync className={loading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
+    <div className="p-6">
+      <PageTitle title="System Administration" icon={FaCog} />
+      
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                activeTab === 'users'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <tab.icon />
-              {tab.name}
+              <FaUsers className="w-4 h-4" />
+              <span>User Management</span>
             </button>
-          ))}
-        </nav>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                activeTab === 'settings'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FaCog className="w-4 h-4" />
+              <span>System Settings</span>
+            </button>
+          </nav>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="mt-6">
-        {/* User Management */}
-        {activeTab === 'users' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
-              <button
-                onClick={() => setShowAddUser(true)}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-              >
-                <FaPlus />
-                Add User
-              </button>
+      {/* User Management Tab */}
+      {activeTab === 'users' && (
+        <div className="space-y-6">
+          {/* User Stats */}
+          {userStats && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center">
+                  <FaUsers className="text-blue-500 text-2xl mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Users</p>
+                    <p className="text-2xl font-bold">{userStats.overview.totalUsers}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center">
+                  <FaToggleOn className="text-green-500 text-2xl mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Active Users</p>
+                    <p className="text-2xl font-bold">{userStats.overview.activeUsers}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center">
+                  <FaToggleOff className="text-red-500 text-2xl mr-3" />
+                  <div>
+                    <p className="text-sm text-gray-600">Inactive Users</p>
+                    <p className="text-2xl font-bold">{userStats.overview.inactiveUsers}</p>
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Users Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Last Login
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
-                          user.role === 'sub_admin' ? 'bg-blue-100 text-blue-800' :
-                          user.role === 'technician' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {user.role.replace('_', ' ').toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setEditingUser(user)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
-                      </td>
+          {/* Add User Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowCreateUserModal(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"
+            >
+              <FaPlus className="w-4 h-4" />
+              <span>Add User</span>
+            </button>
+          </div>
+
+          {/* Users Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {usersLoading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading users...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user: any) => (
+                      <tr key={user._id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.firstName} {user.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            user.role === 'super_admin' ? 'bg-red-100 text-red-800' :
+                            user.role === 'sub_admin' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {user.role.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleToggleUserStatus(user._id)}
+                            className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.isActive
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => handleDeleteUser(user._id)}
+                              className="text-red-600 hover:text-red-900"
+                              disabled={user.role === 'super_admin'}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* System Settings */}
-        {activeTab === 'settings' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">System Settings</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Company Settings */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.companyName}
-                      onChange={(e) => setSettings({...settings, companyName: e.target.value})}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Settings */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Email Settings</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      SMTP Host
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.emailSettings.smtpHost}
-                      onChange={(e) => setSettings({
-                        ...settings, 
-                        emailSettings: {...settings.emailSettings, smtpHost: e.target.value}
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      SMTP Port
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.emailSettings.smtpPort}
-                      onChange={(e) => setSettings({
-                        ...settings, 
-                        emailSettings: {...settings.emailSettings, smtpPort: parseInt(e.target.value)}
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notification Settings */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Notification Settings</h3>
-                <div className="space-y-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={settings.notificationSettings.emailNotifications}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        notificationSettings: {...settings.notificationSettings, emailNotifications: e.target.checked}
-                      })}
-                      className="mr-2"
-                    />
-                    Email Notifications
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={settings.notificationSettings.smsNotifications}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        notificationSettings: {...settings.notificationSettings, smsNotifications: e.target.checked}
-                      })}
-                      className="mr-2"
-                    />
-                    SMS Notifications
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={settings.notificationSettings.appointmentReminders}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        notificationSettings: {...settings.notificationSettings, appointmentReminders: e.target.checked}
-                      })}
-                      className="mr-2"
-                    />
-                    Appointment Reminders
-                  </label>
-                </div>
-              </div>
+      {/* System Settings Tab */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          {systemSettingsLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading settings...</p>
             </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={handleSaveSettings}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Save Settings
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Security */}
-        {activeTab === 'security' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Security Settings</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Password Policy</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Minimum Password Length
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.securitySettings.passwordMinLength}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        securitySettings: {...settings.securitySettings, passwordMinLength: parseInt(e.target.value)}
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Session Timeout (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.securitySettings.sessionTimeout}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        securitySettings: {...settings.securitySettings, sessionTimeout: parseInt(e.target.value)}
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Authentication</h3>
-                <div className="space-y-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={settings.securitySettings.twoFactorAuth}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        securitySettings: {...settings.securitySettings, twoFactorAuth: e.target.checked}
-                      })}
-                      className="mr-2"
-                    />
-                    Enable Two-Factor Authentication
-                  </label>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Max Login Attempts
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.securitySettings.loginAttempts}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        securitySettings: {...settings.securitySettings, loginAttempts: parseInt(e.target.value)}
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Backup & Restore */}
-        {activeTab === 'backup' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Backup & Restore</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Database Backup</h3>
-                <p className="text-gray-600 mb-4">
-                  Create a backup of your database to prevent data loss.
-                </p>
-                <div className="space-y-4">
-                  <button
-                    onClick={handleBackup}
-                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                  >
-                    <FaDownload />
-                    Create Backup
-                  </button>
-                  <div className="text-sm text-gray-500">
-                    Last backup: 2024-01-15 10:30 AM
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Restore Database</h3>
-                <p className="text-gray-600 mb-4">
-                  Restore your database from a previous backup.
-                </p>
-                <div className="space-y-4">
-                  <button
-                    onClick={handleRestore}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    <FaUpload />
-                    Restore from Backup
-                  </button>
-                  <div className="text-sm text-gray-500">
-                    Warning: This will overwrite current data
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* System Monitoring */}
-        {activeTab === 'monitoring' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">System Monitoring</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">CPU Usage</p>
-                    <p className="text-2xl font-bold text-gray-900">45%</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <FaChartLine className="text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Memory Usage</p>
-                    <p className="text-2xl font-bold text-gray-900">62%</p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <FaDatabase className="text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Disk Space</p>
-                    <p className="text-2xl font-bold text-gray-900">78%</p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-full">
-                    <FaExclamationTriangle className="text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          ) : systemSettings ? (
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent System Events</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">Database backup completed</p>
-                    <p className="text-sm text-gray-500">2024-01-15 10:30 AM</p>
-                  </div>
-                  <span className="text-green-600 text-sm">Success</span>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">System Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Company Name</label>
+                  <p className="text-sm text-gray-900">{systemSettings.companyName}</p>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">User login failed</p>
-                    <p className="text-sm text-gray-500">2024-01-15 09:15 AM</p>
-                  </div>
-                  <span className="text-red-600 text-sm">Warning</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Company Email</label>
+                  <p className="text-sm text-gray-900">{systemSettings.companyEmail}</p>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">System update completed</p>
-                    <p className="text-sm text-gray-500">2024-01-14 11:45 PM</p>
-                  </div>
-                  <span className="text-green-600 text-sm">Success</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Company Phone</label>
+                  <p className="text-sm text-gray-900">{systemSettings.companyPhone}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Company Address</label>
+                  <p className="text-sm text-gray-900">{systemSettings.companyAddress}</p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          ) : null}
+        </div>
+      )}
 
-      {/* Add User Modal */}
-      {showAddUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add New User</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={newUser.username}
-                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value as any})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="technician">Technician</option>
-                  <option value="receptionist">Receptionist</option>
-                  <option value="sub_admin">Sub Admin</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-6">
-              <button
-                onClick={handleAddUser}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Add User
-              </button>
-              <button
-                onClick={() => setShowAddUser(false)}
-                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.firstName}
+                      onChange={(e) => setUserForm({...userForm, firstName: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.lastName}
+                      onChange={(e) => setUserForm({...userForm, lastName: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Username</label>
+                  <input
+                    type="text"
+                    required
+                    value={userForm.username}
+                    onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={userForm.email}
+                    onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Role</label>
+                  <select
+                    required
+                    value={userForm.role}
+                    onChange={(e) => setUserForm({...userForm, role: e.target.value as any})}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="user">User</option>
+                    <option value="sub_admin">Sub Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateUserModal(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    Create User
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

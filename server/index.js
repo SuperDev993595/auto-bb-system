@@ -25,6 +25,7 @@ const inventoryRoutes = require('./routes/inventory');
 const invoicesRoutes = require('./routes/invoices');
 const remindersRoutes = require('./routes/reminders');
 const dashboardRoutes = require('./routes/dashboard');
+const adminRoutes = require('./routes/admin');
 
 // Import models for Socket.io
 const Chat = require('./models/Chat');
@@ -158,6 +159,7 @@ app.use('/api/inventory', authenticateToken, inventoryRoutes);
 app.use('/api/invoices', authenticateToken, invoicesRoutes);
 app.use('/api/reminders', authenticateToken, remindersRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
+app.use('/api/admin', authenticateToken, adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
