@@ -69,7 +69,11 @@ export default function Sidebar() {
         <aside className="bg-gray-900 text-white w-64 flex flex-col h-screen">
             {/* Fixed Header */}
             <div className="p-4 border-b border-gray-700">
-                <div className="text-xl font-bold text-yellow-400">🔧 AutoCRM Pro</div>
+                <Link to="/" className="block">
+                    <div className="text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer">
+                        🔧 AutoCRM Pro
+                    </div>
+                </Link>
             </div>
 
             {/* Scrollable Navigation */}

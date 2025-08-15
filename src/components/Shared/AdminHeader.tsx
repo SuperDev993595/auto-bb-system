@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaUser, FaSignOutAlt } from 'react-icons/fa';
 
@@ -14,7 +15,9 @@ export default function AdminHeader() {
         return (
             <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
                 <div className="flex items-center">
-                    <h1 className="text-xl font-bold text-yellow-400">Virtual Auto Secretary</h1>
+                    <Link to="/" className="hover:text-yellow-300 transition-colors">
+                        <h1 className="text-xl font-bold text-yellow-400">Virtual Auto Secretary</h1>
+                    </Link>
                     <span className="ml-4 text-sm text-gray-300">Admin Dashboard</span>
                 </div>
                 <div className="text-gray-300 text-sm">Loading...</div>
@@ -25,7 +28,9 @@ export default function AdminHeader() {
     return (
         <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
             <div className="flex items-center">
-                <h1 className="text-xl font-bold text-yellow-400">Virtual Auto Secretary</h1>
+                <Link to="/" className="hover:text-yellow-300 transition-colors">
+                    <h1 className="text-xl font-bold text-yellow-400">Virtual Auto Secretary</h1>
+                </Link>
                 <span className="ml-4 text-sm text-gray-300">Admin Dashboard</span>
             </div>
             
