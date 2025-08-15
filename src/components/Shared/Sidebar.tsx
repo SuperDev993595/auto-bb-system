@@ -16,7 +16,8 @@ import {
     MessageSquare,
     Search,
     Upload,
-    File
+    File,
+    Settings
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -55,6 +56,9 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
     { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
     { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <File size={18} /> },
+    
+    // System Administration (Super Admin Only)
+    { to: "/admin/dashboard/system-admin", label: "System Administration", icon: <Settings size={18} />, roles: ['super_admin'] },
 ];
 
 export default function Sidebar() {

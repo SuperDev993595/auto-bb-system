@@ -170,7 +170,14 @@ const SystemAdminPage: React.FC = () => {
           )}
 
           {/* Add User Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-4">
+            <a
+              href="/admin/register"
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center space-x-2"
+            >
+              <FaPlus className="w-4 h-4" />
+              <span>Register New User</span>
+            </a>
             <button
               onClick={() => setShowCreateUserModal(true)}
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"

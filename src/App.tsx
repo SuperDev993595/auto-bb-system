@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/Shared/ProtectedRoute";
 import PerformanceMonitor from "./components/Performance/PerformanceMonitor";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import DashboardLayout from "./pages/admin/DashboardLayout";
 
 // Dashboard Pages
@@ -25,6 +26,7 @@ import InventoryPage from "./pages/InventoryPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import ReportsPage from "./pages/ReportsPage";
 import PDFGenerationPage from "./pages/PDFGenerationPage";
+import SystemAdminPage from "./pages/SystemAdminPage";
 import Dashboard from "./pages/dashboard/Dashboard";
 
 // Public Website Pages
@@ -71,6 +73,16 @@ export default function App() {
         } 
       />
 
+      {/* Register Page - Super Admin Only */}
+      <Route 
+        path="/admin/register" 
+        element={
+          <ProtectedRoute requireSuperAdmin>
+            <RegisterPage />
+          </ProtectedRoute>
+        } 
+      />
+
       {/* Protected Admin Dashboard Layout */}
       <Route 
         path="/admin/dashboard" 
@@ -105,6 +117,14 @@ export default function App() {
         <Route path="yellowpages" element={<YellowPagesPage />} />
         <Route path="files" element={<FileUploadPage />} />
         <Route path="pdf-generation" element={<PDFGenerationPage />} />
+        <Route 
+          path="system-admin" 
+          element={
+            <ProtectedRoute requireSuperAdmin>
+              <SystemAdminPage />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
       
         {/* Catch-all route for 404s */}

@@ -61,6 +61,12 @@ const PublicNavbar: React.FC = () => {
               <span className="text-sm font-medium">(555) 123-4567</span>
             </div>
             <Link
+              to="/admin/login"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
+            >
+              Admin Login
+            </Link>
+            <Link
               to="/appointments"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
             >
@@ -107,6 +113,13 @@ const PublicNavbar: React.FC = () => {
                 <FaPhone className="mr-2" />
                 <span className="text-sm font-medium">(555) 123-4567</span>
               </div>
+              <Link
+                to="/admin/login"
+                className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Login
+              </Link>
               <Link
                 to="/appointments"
                 className="block mt-2 mx-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center font-medium transition duration-300"
