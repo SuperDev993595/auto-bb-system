@@ -12,7 +12,7 @@ import {
   FaDownload,
   FaFilter,
   FaCog,
-  FaRefresh,
+  FaSync,
   FaEye,
   FaEyeSlash
 } from 'react-icons/fa';
@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
               className="p-2 text-blue-600 hover:text-blue-700"
               title="Refresh now"
             >
-              <FaRefresh />
+                                      <FaSync />
             </button>
           </div>
 

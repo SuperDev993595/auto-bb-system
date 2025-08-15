@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const nodemailer = require('nodemailer');
 
 // Email validation schemas
@@ -39,10 +39,10 @@ let emailTemplates = [
     subject: 'Your appointment has been confirmed',
     content: `
       <h2>Appointment Confirmation</h2>
-      <p>Dear {{customerName}},</p>
-      <p>Your appointment has been confirmed for {{appointmentDate}} at {{appointmentTime}}.</p>
-      <p>Service: {{serviceName}}</p>
-      <p>Location: {{location}}</p>
+      <p>Dear \${customerName},</p>
+      <p>Your appointment has been confirmed for \${appointmentDate} at \${appointmentTime}.</p>
+      <p>Service: \${serviceName}</p>
+      <p>Location: \${location}</p>
       <p>Please arrive 10 minutes before your scheduled time.</p>
       <p>Best regards,<br>Auto Repair Service Team</p>
     `,
@@ -55,12 +55,12 @@ let emailTemplates = [
   {
     id: '2',
     name: 'Payment Reminder',
-    subject: 'Payment reminder for invoice #{{invoiceNumber}}',
+    subject: 'Payment reminder for invoice #\${invoiceNumber}',
     content: `
       <h2>Payment Reminder</h2>
-      <p>Dear {{customerName}},</p>
-      <p>This is a friendly reminder that payment for invoice #{{invoiceNumber}} is due on {{dueDate}}.</p>
-      <p>Amount: ${{amount}}</p>
+      <p>Dear \${customerName},</p>
+      <p>This is a friendly reminder that payment for invoice #\${invoiceNumber} is due on \${dueDate}.</p>
+      <p>Amount: $\${amount}</p>
       <p>Please contact us if you have any questions.</p>
       <p>Best regards,<br>Auto Repair Service Team</p>
     `,
@@ -76,13 +76,13 @@ let emailTemplates = [
     subject: 'Your vehicle service is complete',
     content: `
       <h2>Service Completion</h2>
-      <p>Dear {{customerName}},</p>
+      <p>Dear \${customerName},</p>
       <p>Your vehicle service has been completed successfully.</p>
       <p>Service Details:</p>
       <ul>
-        <li>Service: {{serviceName}}</li>
-        <li>Technician: {{technicianName}}</li>
-        <li>Completion Date: {{completionDate}}</li>
+        <li>Service: \${serviceName}</li>
+        <li>Technician: \${technicianName}</li>
+        <li>Completion Date: \${completionDate}</li>
       </ul>
       <p>Your vehicle is ready for pickup.</p>
       <p>Best regards,<br>Auto Repair Service Team</p>
@@ -128,7 +128,7 @@ let emailCampaigns = [
 ];
 
 // Get email templates
-router.get('/templates', requireAuth, async (req, res) => {
+router.get('/templates', authenticateToken, async (req, res) => {
   try {
     const { category, isActive } = req.query;
     
@@ -152,7 +152,7 @@ router.get('/templates', requireAuth, async (req, res) => {
 });
 
 // Get email template by ID
-router.get('/templates/:id', requireAuth, async (req, res) => {
+router.get('/templates/:id', authenticateToken, async (req, res) => {
   try {
     const template = emailTemplates.find(t => t.id === req.params.id);
     if (!template) {
@@ -169,7 +169,7 @@ router.get('/templates/:id', requireAuth, async (req, res) => {
 });
 
 // Create email template
-router.post('/templates', requireAuth, requireAdmin, async (req, res) => {
+router.post('/templates', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { error, value } = emailTemplateSchema.validate(req.body);
     if (error) {
@@ -195,7 +195,7 @@ router.post('/templates', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Update email template
-router.put('/templates/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/templates/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { error, value } = emailTemplateSchema.validate(req.body);
     if (error) {
@@ -223,7 +223,7 @@ router.put('/templates/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Delete email template
-router.delete('/templates/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/templates/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const templateIndex = emailTemplates.findIndex(t => t.id === req.params.id);
     if (templateIndex === -1) {
@@ -242,7 +242,7 @@ router.delete('/templates/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Send email
-router.post('/send', requireAuth, async (req, res) => {
+router.post('/send', authenticateToken, async (req, res) => {
   try {
     const { error, value } = emailSchema.validate(req.body);
     if (error) {
@@ -279,7 +279,7 @@ router.post('/send', requireAuth, async (req, res) => {
 });
 
 // Get email campaigns
-router.get('/campaigns', requireAuth, async (req, res) => {
+router.get('/campaigns', authenticateToken, async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     
@@ -310,7 +310,7 @@ router.get('/campaigns', requireAuth, async (req, res) => {
 });
 
 // Get email campaign by ID
-router.get('/campaigns/:id', requireAuth, async (req, res) => {
+router.get('/campaigns/:id', authenticateToken, async (req, res) => {
   try {
     const campaign = emailCampaigns.find(c => c.id === req.params.id);
     if (!campaign) {
@@ -327,7 +327,7 @@ router.get('/campaigns/:id', requireAuth, async (req, res) => {
 });
 
 // Create email campaign
-router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
+router.post('/campaigns', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, subject, content, recipients, scheduledAt } = req.body;
     
@@ -362,7 +362,7 @@ router.post('/campaigns', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Send email campaign
-router.post('/campaigns/:id/send', requireAuth, requireAdmin, async (req, res) => {
+router.post('/campaigns/:id/send', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const campaign = emailCampaigns.find(c => c.id === req.params.id);
     if (!campaign) {
@@ -392,7 +392,7 @@ router.post('/campaigns/:id/send', requireAuth, requireAdmin, async (req, res) =
 });
 
 // Get email analytics
-router.get('/analytics', requireAuth, async (req, res) => {
+router.get('/analytics', authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     

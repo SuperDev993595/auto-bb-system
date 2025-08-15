@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers, fetchCustomerStats } from '../../redux/actions/customers'
-import { FaThLarge, FaList, FaPlus, FaSearch, FaCar, FaCalendarAlt } from 'react-icons/fa'
+import { FaTh, FaList, FaPlus, FaSearch, FaCar, FaCalendarAlt } from 'react-icons/fa'
 import PageTitle from '../../components/Shared/PageTitle'
 
 function CustomerList() {
@@ -103,7 +103,7 @@ function CustomerList() {
               onClick={() => setView('grid')}
               className={`p-2 rounded ${view === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
-              <FaThLarge className="w-4 h-4" />
+                              <FaTh className="w-4 h-4" />
             </button>
             <button
               onClick={() => setView('list')}
@@ -133,7 +133,7 @@ function CustomerList() {
               <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <FaThLarge className="w-6 h-6 text-blue-600" />
+              <FaTh className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>

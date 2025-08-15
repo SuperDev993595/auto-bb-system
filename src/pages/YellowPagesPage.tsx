@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { HiSearch, HiPhone, HiMail, HiGlobe, HiMapPin, HiStar, HiUserAdd, HiEye, HiPencil } from 'react-icons/hi';
+import { HiSearch, HiPhone, HiMail, HiGlobe, HiLocationMarker, HiStar, HiUserAdd, HiEye, HiPencil } from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
 import api from '../services/api';
 
@@ -315,7 +315,7 @@ export default function YellowPagesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-900">
-                        <HiMapPin className="h-4 w-4 mr-1" />
+                                                        <HiLocationMarker className="h-4 w-4 mr-1" />
                         {record.address.city}, {record.address.state}
                       </div>
                     </td>

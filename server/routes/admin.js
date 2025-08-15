@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const User = require('../models/User');
 
 // Validation schemas
@@ -74,7 +74,7 @@ const systemSettingsSchema = Joi.object({
 });
 
 // Get all users (admin only)
-router.get('/users', requireAuth, requireAdmin, async (req, res) => {
+router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', role = '', isActive = '' } = req.query;
     
@@ -124,7 +124,7 @@ router.get('/users', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Get user by ID
-router.get('/users/:id', requireAuth, requireAdmin, async (req, res) => {
+router.get('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
@@ -137,7 +137,7 @@ router.get('/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Create new user
-router.post('/users', requireAuth, requireAdmin, async (req, res) => {
+router.post('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { error, value } = userSchema.validate(req.body);
     if (error) {
@@ -174,7 +174,7 @@ router.post('/users', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Update user
-router.put('/users/:id', requireAuth, requireAdmin, async (req, res) => {
+router.put('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { error, value } = updateUserSchema.validate(req.body);
     if (error) {
@@ -219,7 +219,7 @@ router.put('/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Delete user
-router.delete('/users/:id', requireAuth, requireAdmin, async (req, res) => {
+router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -242,7 +242,7 @@ router.delete('/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Toggle user active status
-router.patch('/users/:id/toggle-status', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/users/:id/toggle-status', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -263,7 +263,7 @@ router.patch('/users/:id/toggle-status', requireAuth, requireAdmin, async (req, 
 });
 
 // Get user statistics
-router.get('/users/stats', requireAuth, requireAdmin, async (req, res) => {
+router.get('/users/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const stats = await User.aggregate([
       {
@@ -304,7 +304,7 @@ router.get('/users/stats', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Get system settings
-router.get('/settings', requireAuth, requireAdmin, async (req, res) => {
+router.get('/settings', authenticateToken, requireAdmin, async (req, res) => {
   try {
     // In a real application, you'd store these in a database
     // For now, we'll return default settings
@@ -356,7 +356,7 @@ router.get('/settings', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Update system settings
-router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
+router.put('/settings', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { error, value } = systemSettingsSchema.validate(req.body);
     if (error) {
@@ -372,7 +372,7 @@ router.put('/settings', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Get system logs (mock data)
-router.get('/logs', requireAuth, requireAdmin, async (req, res) => {
+router.get('/logs', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 20, level = '', search = '' } = req.query;
     
@@ -441,7 +441,7 @@ router.get('/logs', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Get system health
-router.get('/health', requireAuth, requireAdmin, async (req, res) => {
+router.get('/health', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const health = {
       status: 'healthy',

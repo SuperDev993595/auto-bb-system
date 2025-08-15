@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import PageTitle from '../components/Shared/PageTitle';
-import { FaFilePdf, FaDownload, FaEnvelope, FaCog, FaPlus, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { FaFileAlt, FaDownload, FaEnvelope, FaCog, FaPlus, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 interface PDFTemplate {
@@ -179,7 +179,7 @@ const PDFGenerationPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <PageTitle title="PDF Generation" icon={FaFilePdf} />
+      <PageTitle title="PDF Generation" icon={FaFileAlt} />
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
@@ -203,7 +203,7 @@ const PDFGenerationPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            <FaFilePdf className="w-4 h-4" />
+                            <FaFileAlt className="w-4 h-4" />
             <span>Generated Reports</span>
           </button>
         </nav>
@@ -292,7 +292,7 @@ const PDFGenerationPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden">
               {reports.length === 0 ? (
                 <div className="p-8 text-center">
-                  <FaFilePdf className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <FaFileAlt className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No reports generated yet</p>
                   <button
                     onClick={() => setShowGenerateReportModal(true)}

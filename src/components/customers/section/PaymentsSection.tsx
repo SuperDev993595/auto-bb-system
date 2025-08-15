@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { HiCash } from 'react-icons/hi'
+import { HiCurrencyDollar } from 'react-icons/hi'
 import { Customer } from '../../../utils/CustomerTypes'
 import Pagination from '../../../utils/Pagination'
 import PostPaymentModal from '../modal/PostPaymentModal'
@@ -23,7 +23,7 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
             {open && <PostPaymentModal onClose={() => setOpen(false)} />}
 
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2"><HiCash className="text-blue-600" /> Payment History</h3>
+                <h3 className="text-lg font-semibold flex items-center gap-2"><HiCurrencyDollar className="text-blue-600" /> Payment History</h3>
                 <button onClick={() => setOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded text-sm">+ Add Payment</button>
             </div>
 

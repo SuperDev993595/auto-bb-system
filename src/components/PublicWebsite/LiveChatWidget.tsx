@@ -5,7 +5,7 @@ import {
   FaPaperPlane, 
   FaUser, 
   FaRobot,
-  FaMinimize
+  FaWindowMinimize
 } from 'react-icons/fa';
 
 interface Message {
@@ -140,7 +140,7 @@ const LiveChatWidget: React.FC = () => {
                 onClick={() => setIsMinimized(true)}
                 className="hover:bg-blue-700 p-1 rounded"
               >
-                <FaMinimize className="text-sm" />
+                <FaWindowMinimize className="text-sm" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}

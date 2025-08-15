@@ -13,7 +13,7 @@ import {
   clearError
 } from '../redux/actions/admin';
 import PageTitle from '../components/Shared/PageTitle';
-import { FaUsers, FaCog, FaPlus, FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import { FaUsers, FaCog, FaPlus, FaEdit, FaTrash, FaEye, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const SystemAdminPage: React.FC = () => {
@@ -150,7 +150,7 @@ const SystemAdminPage: React.FC = () => {
               </div>
               <div className="bg-white p-4 rounded-lg shadow">
                 <div className="flex items-center">
-                  <FaToggleOn className="text-green-500 text-2xl mr-3" />
+                  <FaCheckCircle className="text-green-500 text-2xl mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Active Users</p>
                     <p className="text-2xl font-bold">{userStats.overview.activeUsers}</p>
@@ -159,7 +159,7 @@ const SystemAdminPage: React.FC = () => {
               </div>
               <div className="bg-white p-4 rounded-lg shadow">
                 <div className="flex items-center">
-                  <FaToggleOff className="text-red-500 text-2xl mr-3" />
+                  <FaTimesCircle className="text-red-500 text-2xl mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Inactive Users</p>
                     <p className="text-2xl font-bold">{userStats.overview.inactiveUsers}</p>

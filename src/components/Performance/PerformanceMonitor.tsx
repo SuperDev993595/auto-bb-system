@@ -86,7 +86,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       clearInterval(interval);
       window.fetch = originalFetch;
     };
-  }, [enabled, cacheHits, cacheMisses, networkCount]);
+  }, [enabled]);
 
   useEffect(() => {
     renderStartTime.current = performance.now();
@@ -95,7 +95,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       const renderTime = performance.now() - renderStartTime.current;
       setMetrics(prev => ({ ...prev, renderTime }));
     };
-  });
+  }, []);
 
   const getPerformanceColor = (value: number, thresholds: { good: number; warning: number }) => {
     if (value <= thresholds.good) return 'text-green-500';

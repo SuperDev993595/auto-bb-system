@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const Appointment = require('../models/Appointment');
 const Task = require('../models/Task');
@@ -10,7 +10,7 @@ const WorkOrder = require('../models/Service');
 const moment = require('moment');
 
 // Get dashboard statistics with advanced filtering
-router.get('/stats', requireAuth, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const { dateRange, serviceType, technician, status } = req.query;
     
@@ -132,7 +132,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 });
 
 // Generate custom reports
-router.post('/reports', requireAuth, async (req, res) => {
+router.post('/reports', authenticateToken, async (req, res) => {
   try {
     const { metrics, dateRange, chartType } = req.body;
     
@@ -211,7 +211,7 @@ router.post('/reports', requireAuth, async (req, res) => {
 });
 
 // Export dashboard data
-router.get('/export', requireAuth, async (req, res) => {
+router.get('/export', authenticateToken, async (req, res) => {
   try {
     const { format } = req.query;
     const { dateRange } = req.query;
@@ -285,7 +285,7 @@ router.get('/export', requireAuth, async (req, res) => {
 });
 
 // Real-time updates endpoint
-router.get('/realtime', requireAuth, async (req, res) => {
+router.get('/realtime', authenticateToken, async (req, res) => {
   try {
     // Get real-time updates (last 5 minutes)
     const fiveMinutesAgo = moment().subtract(5, 'minutes').toDate();
