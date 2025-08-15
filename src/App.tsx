@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
+import PerformanceMonitor from "./components/Performance/PerformanceMonitor";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import DashboardLayout from "./pages/admin/DashboardLayout";
@@ -23,6 +24,7 @@ import RemindersPage from "./pages/RemindersPage";
 import InventoryPage from "./pages/InventoryPage";
 import InvoicesPage from "./pages/InvoicesPage";
 import ReportsPage from "./pages/ReportsPage";
+import PDFGenerationPage from "./pages/PDFGenerationPage";
 import Dashboard from "./pages/dashboard/Dashboard";
 
 // Public Website Pages
@@ -45,16 +47,17 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      {/* Public Website Routes */}
-      <Route path="/" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
-      <Route path="/services" element={<PublicLayout><PublicServicesPage /></PublicLayout>} />
-      <Route path="/about" element={<PublicLayout><PublicAboutPage /></PublicLayout>} />
-      <Route path="/contact" element={<PublicLayout><PublicContactPage /></PublicLayout>} />
-      <Route path="/appointments" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
+    <>
+      <Routes>
+        {/* Public Website Routes */}
+        <Route path="/" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
+        <Route path="/services" element={<PublicLayout><PublicServicesPage /></PublicLayout>} />
+        <Route path="/about" element={<PublicLayout><PublicAboutPage /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><PublicContactPage /></PublicLayout>} />
+        <Route path="/appointments" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
 
-      {/* Admin redirect */}
-      <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        {/* Admin redirect */}
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
       
       {/* Login Page */}
       <Route 
@@ -101,10 +104,17 @@ export default function App() {
         <Route path="live-chat" element={<LiveChatPage />} />
         <Route path="yellowpages" element={<YellowPagesPage />} />
         <Route path="files" element={<FileUploadPage />} />
+        <Route path="pdf-generation" element={<PDFGenerationPage />} />
       </Route>
       
-      {/* Catch-all route for 404s */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Catch-all route for 404s */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      
+      {/* Performance Monitor - Only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <PerformanceMonitor enabled={true} showDetails={true} />
+      )}
+    </>
   );
 }

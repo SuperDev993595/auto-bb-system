@@ -15,7 +15,8 @@ import {
     Mail,
     MessageSquare,
     Search,
-    Upload
+    Upload,
+    FilePdf
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -53,6 +54,7 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <MessageSquare size={18} /> },
     { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
     { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
+    { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <FilePdf size={18} /> },
 ];
 
 export default function Sidebar() {
