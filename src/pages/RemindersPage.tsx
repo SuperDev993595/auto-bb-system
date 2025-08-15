@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
-import { 
-  updateReminderStatus, 
-  deleteReminder, 
-  toggleTemplate,
+import {
+  fetchReminders,
+  fetchReminderTemplates,
+  fetchNotificationSettings,
+  fetchReminderStats,
+  fetchUpcomingReminders,
+  fetchOverdueReminders,
+  updateReminder,
+  deleteReminder,
+  markReminderSent,
+  markReminderAcknowledged,
+  markReminderCompleted,
+  cancelReminder,
   updateNotificationSettings,
-  type ReminderTemplate,
-  type NotificationSettings
-} from '../redux/reducer/remindersReducer'
+  createReminderTemplate,
+  updateReminderTemplate,
+  deleteReminderTemplate
+} from '../redux/actions/reminders'
+import { ReminderTemplate, NotificationSettings } from '../redux/actions/reminders'
 import { Reminder } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
 import {
@@ -34,8 +45,29 @@ export default function RemindersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   
-  const { reminders, templates, settings } = useAppSelector(state => state.reminders)
+  const { 
+    reminders, 
+    templates, 
+    notificationSettings, 
+    upcomingReminders,
+    overdueReminders,
+    stats,
+    remindersLoading,
+    templatesLoading,
+    settingsLoading,
+    statsLoading
+  } = useAppSelector(state => state.reminders)
   const dispatch = useAppDispatch()
+
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchReminders())
+    dispatch(fetchReminderTemplates())
+    dispatch(fetchNotificationSettings())
+    dispatch(fetchReminderStats())
+    dispatch(fetchUpcomingReminders())
+    dispatch(fetchOverdueReminders())
+  }, [dispatch])
 
   // Filter reminders
   const filteredReminders = reminders.filter(reminder => {
@@ -45,10 +77,12 @@ export default function RemindersPage() {
   })
 
   const handleStatusUpdate = (id: string, status: Reminder['status']) => {
-    dispatch(updateReminderStatus({ 
+    dispatch(updateReminder({ 
       id, 
-      status, 
-      sentDate: status === 'sent' ? new Date().toISOString() : undefined 
+      reminderData: { 
+        status, 
+        sentDate: status === 'sent' ? new Date().toISOString() : undefined 
+      }
     }))
   }
 
@@ -59,7 +93,15 @@ export default function RemindersPage() {
   }
 
   const handleToggleTemplate = (id: string) => {
-    dispatch(toggleTemplate(id))
+    // This would need to be implemented with a modal or form
+    // For now, we'll just update the template
+    const template = templates.find(t => t.id === id)
+    if (template) {
+      dispatch(updateReminderTemplate({ 
+        id, 
+        templateData: { isActive: !template.isActive } 
+      }))
+    }
   }
 
   const getStatusColor = (status: Reminder['status']) => {

@@ -1,274 +1,624 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAppSelector, useAppDispatch } from '../../redux/hooks';
+import { fetchDashboardStats } from '../../redux/actions/dashboard';
+import { 
+  FaUsers, 
+  FaCalendarAlt, 
+  FaDollarSign, 
+  FaWrench,
+  FaChartLine,
+  FaChartBar,
+  FaChartPie,
+  FaDownload,
+  FaFilter,
+  FaCog,
+  FaRefresh,
+  FaEye,
+  FaEyeSlash
+} from 'react-icons/fa';
+import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
   CategoryScale,
   LinearScale,
-  BarElement,
-  LineElement,
   PointElement,
-} from 'chart.js'
-import { Doughnut, Bar, Line } from 'react-chartjs-2'
-import {
-  CircularProgressbar,
-  buildStyles
-} from 'react-circular-progressbar'
-import 'react-circular-progressbar/dist/styles.css'
-import { useAppSelector } from '../../redux'
-import { 
-  HiCurrencyDollar, 
-  HiUsers, 
-  HiCalendar, 
-  HiCog, 
-  HiTrendingUp,
-  HiClock
-} from 'react-icons/hi'
-
-ChartJS.register(
+  LineElement,
+  BarElement,
   ArcElement,
+  Title,
   Tooltip,
   Legend,
+  Filler,
+} from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
   LineElement,
-  PointElement
-)
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
-export default function Dashboard() {
-  const customers = useAppSelector(state => state.customers.list)
-  const appointments = useAppSelector(state => state.appointments.data)
-  const { catalog, workOrders, technicians } = useAppSelector(state => state.services)
+const Dashboard: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { stats, loading, error } = useAppSelector((state) => state.dashboard);
+  
+  // Real-time update state
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  
+  // Custom report builder state
+  const [showReportBuilder, setShowReportBuilder] = useState(false);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie' | 'doughnut'>('line');
+  
+  // Advanced filtering state
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    dateRange: '7d',
+    serviceType: 'all',
+    technician: 'all',
+    status: 'all'
+  });
 
-  // Calculate metrics
-  const totalCustomers = customers.length
-  const totalVehicles = customers.reduce((sum, customer) => sum + (customer.vehicles?.length || 0), 0)
-  const todayAppointments = appointments.filter(apt => apt.date === new Date().toISOString().split('T')[0]).length
-  const completedServices = workOrders.filter(wo => wo.status === 'completed').length
-  const totalRevenue = workOrders.reduce((sum, wo) => sum + wo.total, 0)
-  const avgServiceValue = totalRevenue / Math.max(workOrders.length, 1)
+  // Fetch dashboard data
+  const fetchData = useCallback(() => {
+    dispatch(fetchDashboardStats(filters));
+    setLastUpdate(new Date());
+  }, [dispatch, filters]);
 
-  // Service distribution data
-  const serviceDistribution = {
-    labels: ['Oil Change', 'Brake Service', 'Tire Service', 'Engine Repair', 'Other'],
-    datasets: [
-      {
-        data: [35, 20, 15, 18, 12],
-        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-        borderWidth: 0,
-      },
-    ],
-  }
+  // Initial data fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  // Monthly revenue data
-  const monthlyRevenue = {
+  // Auto-refresh setup
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      fetchData();
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  // Real-time data simulation
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const wsInterval = setInterval(() => {
+      // Simulate real-time updates
+      if (stats) {
+        // Update stats with small random changes to simulate real-time data
+        const updatedStats = {
+          ...stats,
+          totalCustomers: stats.totalCustomers + Math.floor(Math.random() * 3) - 1,
+          totalAppointments: stats.totalAppointments + Math.floor(Math.random() * 2),
+          totalRevenue: stats.totalRevenue + Math.floor(Math.random() * 100),
+          pendingTasks: stats.pendingTasks + Math.floor(Math.random() * 2) - 1
+        };
+        
+        // In a real app, this would come from WebSocket or Server-Sent Events
+        console.log('Real-time update:', updatedStats);
+      }
+    }, 5000);
+
+    return () => clearInterval(wsInterval);
+  }, [autoRefresh, stats]);
+
+  // Chart data for revenue trends
+  const revenueData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
-        label: 'Revenue ($)',
-        data: [12000, 15000, 18000, 16000, 22000, 25000],
-        backgroundColor: '#3b82f6',
-        borderRadius: 6,
+        label: 'Revenue',
+        data: [12000, 19000, 15000, 25000, 22000, 30000],
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
       },
     ],
-  }
+  };
 
-  // Customer growth data
-  const customerGrowth = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+  // Chart data for service distribution
+  const serviceData = {
+    labels: ['Oil Change', 'Brake Service', 'Engine Repair', 'AC Service', 'Tire Service'],
     datasets: [
       {
-        label: 'New Customers',
-        data: [5, 8, 12, 15],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4,
-        fill: true,
+        data: [30, 25, 20, 15, 10],
+        backgroundColor: [
+          '#3B82F6',
+          '#EF4444',
+          '#10B981',
+          '#F59E0B',
+          '#8B5CF6',
+        ],
       },
     ],
+  };
+
+  // Chart data for appointment trends
+  const appointmentData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Appointments',
+        data: [12, 19, 15, 25, 22, 18, 8],
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Custom report builder
+  const generateCustomReport = () => {
+    const reportData = {
+      metrics: selectedMetrics,
+      dateRange,
+      chartType,
+      data: revenueData, // This would be filtered based on selections
+      generatedAt: new Date().toISOString()
+    };
+    
+    // Export report
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+      type: 'application/json'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Advanced filtering
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  const efficiency = 85
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        Error loading dashboard: {error}
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      {/* Header with controls */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">🔧 Auto Repair Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </p>
         </div>
-        <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
-          Updated: {new Date().toLocaleDateString()}
-        </span>
-      </div>
+        
+        <div className="flex flex-wrap gap-2">
+          {/* Real-time controls */}
+          <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border">
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`p-2 rounded ${autoRefresh ? 'text-green-600' : 'text-gray-400'}`}
+              title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+            >
+              {autoRefresh ? <FaEye /> : <FaEyeSlash />}
+            </button>
+            <select
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Number(e.target.value))}
+              className="text-sm border rounded px-2 py-1"
+            >
+              <option value={10000}>10s</option>
+              <option value={30000}>30s</option>
+              <option value={60000}>1m</option>
+              <option value={300000}>5m</option>
+            </select>
+            <button
+              onClick={fetchData}
+              className="p-2 text-blue-600 hover:text-blue-700"
+              title="Refresh now"
+            >
+              <FaRefresh />
+            </button>
+          </div>
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Customers</p>
-              <p className="text-3xl font-bold text-gray-900">{totalCustomers}</p>
-              <p className="text-sm text-green-600 mt-1">+12% from last month</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiUsers className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Today's Appointments</p>
-              <p className="text-3xl font-bold text-gray-900">{todayAppointments}</p>
-              <p className="text-sm text-blue-600 mt-1">3 confirmed, 2 pending</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiCalendar className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">${totalRevenue.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">+18% from last month</p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <HiCurrencyDollar className="w-8 h-8 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Avg Service Value</p>
-              <p className="text-3xl font-bold text-gray-900">${avgServiceValue.toFixed(0)}</p>
-              <p className="text-sm text-purple-600 mt-1">+5% from last month</p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <HiTrendingUp className="w-8 h-8 text-purple-600" />
-            </div>
-          </div>
+          {/* Advanced filters */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border hover:bg-gray-50"
+          >
+            <FaFilter />
+            <span>Filters</span>
+          </button>
+
+          {/* Custom report builder */}
+          <button
+            onClick={() => setShowReportBuilder(!showReportBuilder)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            <FaCog />
+            <span>Custom Report</span>
+          </button>
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Service Distribution */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Service Distribution</h2>
-          <div className="h-64">
-            <Doughnut data={serviceDistribution} options={{ maintainAspectRatio: false }} />
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4">Advanced Filters</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date Range
+              </label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="1d">Last 24 hours</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="1y">Last year</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service Type
+              </label>
+              <select
+                value={filters.serviceType}
+                onChange={(e) => handleFilterChange('serviceType', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="all">All Services</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="repair">Repair</option>
+                <option value="diagnostic">Diagnostic</option>
+                <option value="emergency">Emergency</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Technician
+              </label>
+              <select
+                value={filters.technician}
+                onChange={(e) => handleFilterChange('technician', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="all">All Technicians</option>
+                <option value="john">John Smith</option>
+                <option value="sarah">Sarah Johnson</option>
+                <option value="mike">Mike Davis</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Monthly Revenue */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Monthly Revenue</h2>
-          <div className="h-64">
-            <Bar data={monthlyRevenue} options={{ maintainAspectRatio: false }} />
-          </div>
-        </div>
-
-        {/* Customer Growth */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Customer Growth</h2>
-          <div className="h-64">
-            <Line data={customerGrowth} options={{ maintainAspectRatio: false }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Shop Efficiency */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Shop Efficiency</h2>
-          <div className="flex items-center justify-center">
-            <div className="w-32 h-32">
-              <CircularProgressbar
-                value={efficiency}
-                text={`${efficiency}%`}
-                styles={buildStyles({
-                  textColor: "#059669",
-                  pathColor: "#059669",
-                  trailColor: "#e5e7eb",
-                  textSize: "18px",
-                  strokeLinecap: "round",
-                })}
+      {/* Custom Report Builder */}
+      {showReportBuilder && (
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold mb-4">Custom Report Builder</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Metrics
+              </label>
+              <div className="space-y-2">
+                {['Revenue', 'Appointments', 'Customers', 'Services'].map(metric => (
+                  <label key={metric} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedMetrics.includes(metric)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedMetrics([...selectedMetrics, metric]);
+                        } else {
+                          setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    {metric}
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
               />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chart Type
+              </label>
+              <select
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value as any)}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+                <option value="pie">Pie Chart</option>
+                <option value="doughnut">Doughnut Chart</option>
+              </select>
+            </div>
           </div>
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">Technician utilization</p>
-            <p className="text-xs text-green-600 mt-1">Above target (80%)</p>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={generateCustomReport}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              <FaDownload />
+              Generate Report
+            </button>
+            <button
+              onClick={() => setShowReportBuilder(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <FaUsers className="text-blue-600 text-xl" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="text-sm text-green-600">+12% from last month</span>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Recent Activity</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Oil change completed</p>
-                <p className="text-xs text-gray-500">John Smith - 2020 Toyota Camry</p>
-                <p className="text-xs text-gray-400">2 hours ago</p>
-              </div>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Appointments</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalAppointments || 0}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">New appointment scheduled</p>
-                <p className="text-xs text-gray-500">Lisa Brown - Brake inspection</p>
-                <p className="text-xs text-gray-400">4 hours ago</p>
-              </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <FaCalendarAlt className="text-green-600 text-xl" />
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium">Parts order pending</p>
-                <p className="text-xs text-gray-500">Brake pads for Honda Civic</p>
-                <p className="text-xs text-gray-400">6 hours ago</p>
-              </div>
-            </div>
+          </div>
+          <div className="mt-4">
+            <span className="text-sm text-green-600">+8% from last month</span>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800">Quick Stats</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Active Technicians</span>
-              <span className="font-semibold">{technicians.filter(t => t.isActive).length}</span>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">${stats?.totalRevenue?.toLocaleString() || 0}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Vehicles Serviced</span>
-              <span className="font-semibold">{totalVehicles}</span>
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <FaDollarSign className="text-yellow-600 text-xl" />
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Services Available</span>
-              <span className="font-semibold">{catalog.filter(s => s.isActive).length}</span>
+          </div>
+          <div className="mt-4">
+            <span className="text-sm text-green-600">+15% from last month</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.pendingTasks || 0}</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Completed Services</span>
-              <span className="font-semibold">{completedServices}</span>
+            <div className="p-3 bg-red-100 rounded-full">
+              <FaWrench className="text-red-600 text-xl" />
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Avg Service Time</span>
-              <span className="font-semibold">2.5 hrs</span>
+          </div>
+          <div className="mt-4">
+            <span className="text-sm text-red-600">-5% from last month</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Trends */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Revenue Trends</h3>
+            <div className="flex items-center gap-2">
+              <FaChartLine className="text-blue-600" />
+              <span className="text-sm text-gray-600">Last 6 months</span>
             </div>
+          </div>
+          <div className="h-64">
+            <Line 
+              data={revenueData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return '$' + value.toLocaleString();
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Service Distribution */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Service Distribution</h3>
+            <div className="flex items-center gap-2">
+              <FaChartPie className="text-blue-600" />
+              <span className="text-sm text-gray-600">This month</span>
+            </div>
+          </div>
+          <div className="h-64">
+            <Doughnut 
+              data={serviceData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'bottom',
+                  },
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Appointment Trends */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Weekly Appointments</h3>
+            <div className="flex items-center gap-2">
+              <FaChartBar className="text-blue-600" />
+              <span className="text-sm text-gray-600">This week</span>
+            </div>
+          </div>
+          <div className="h-64">
+            <Bar 
+              data={appointmentData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="space-y-3">
+            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">View Today's Appointments</span>
+                <FaCalendarAlt className="text-blue-600" />
+              </div>
+            </button>
+            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Generate Monthly Report</span>
+                <FaDownload className="text-green-600" />
+              </div>
+            </button>
+            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">View Pending Tasks</span>
+                <FaWrench className="text-red-600" />
+              </div>
+            </button>
+            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Customer Analytics</span>
+                <FaUsers className="text-purple-600" />
+              </div>
+            </button>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Dashboard;

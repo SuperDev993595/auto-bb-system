@@ -1,12 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
-import { 
-  adjustInventoryQuantity,
-  updatePurchaseOrderStatus,
-  addPurchaseOrder,
-  type Supplier,
-  type PurchaseOrder
-} from '../redux/reducer/inventoryReducer'
+import {
+  fetchInventoryItems,
+  fetchInventoryTransactions,
+  fetchSuppliers,
+  fetchPurchaseOrders,
+  fetchInventoryStats,
+  fetchTransactionStats,
+  fetchPurchaseOrderStats,
+  fetchInventoryCategories,
+  fetchInventoryLocations,
+  adjustStock,
+  updatePurchaseOrder,
+  createPurchaseOrder,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem
+} from '../redux/actions/inventory'
+import { Supplier, PurchaseOrder } from '../redux/actions/inventory'
 import { InventoryItem, InventoryTransaction } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
 import {
@@ -39,8 +53,35 @@ export default function InventoryPage() {
   const [locationFilter, setLocationFilter] = useState('all')
   const [stockFilter, setStockFilter] = useState('all')
   
-  const { items, transactions, suppliers, purchaseOrders, categories, locations } = useAppSelector(state => state.inventory)
+  const { 
+    items, 
+    transactions, 
+    suppliers, 
+    purchaseOrders, 
+    categories, 
+    locations,
+    itemsLoading,
+    transactionsLoading,
+    suppliersLoading,
+    purchaseOrdersLoading,
+    stats,
+    transactionStats,
+    purchaseOrderStats
+  } = useAppSelector(state => state.inventory)
   const dispatch = useAppDispatch()
+
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchInventoryItems())
+    dispatch(fetchInventoryTransactions())
+    dispatch(fetchSuppliers())
+    dispatch(fetchPurchaseOrders())
+    dispatch(fetchInventoryStats())
+    dispatch(fetchTransactionStats())
+    dispatch(fetchPurchaseOrderStats())
+    dispatch(fetchInventoryCategories())
+    dispatch(fetchInventoryLocations())
+  }, [dispatch])
 
   // Filter inventory items
   const filteredItems = items.filter(item => {
@@ -70,7 +111,14 @@ export default function InventoryPage() {
   }
 
   const handleQuantityAdjustment = (itemId: string, newQuantity: number, reason: string) => {
-    dispatch(adjustInventoryQuantity({ itemId, newQuantity, reason }))
+    // This would need to be implemented with a modal or form
+    // For now, we'll use the adjustStock action
+    const currentItem = items.find(item => item.id === itemId)
+    if (currentItem) {
+      const difference = newQuantity - currentItem.quantityOnHand
+      const type = difference > 0 ? 'add' : 'remove'
+      dispatch(adjustStock({ itemId, quantity: Math.abs(difference), type, reason }))
+    }
   }
 
   const renderInventory = () => (
@@ -209,116 +257,122 @@ export default function InventoryPage() {
       </div>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Part Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category & Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock Levels
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pricing
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredItems.map(item => {
-                const stockStatus = getStockStatus(item)
-                return (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                        <div className="text-sm text-gray-500">#{item.partNumber}</div>
-                        <div className="text-xs text-gray-400 mt-1">{item.description}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-sm text-gray-900">
-                          <HiTag className="w-3 h-3" />
-                          {item.category}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <HiLocationMarker className="w-3 h-3" />
-                          {item.location}
-                        </div>
-                        <div className="text-xs text-gray-400">{item.supplier}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          On Hand: {item.quantityOnHand}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Min: {item.minStockLevel} | Max: {item.maxStockLevel}
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              item.quantityOnHand <= item.minStockLevel ? 'bg-red-500' :
-                              item.quantityOnHand > item.maxStockLevel ? 'bg-purple-500' :
-                              'bg-green-500'
-                            }`}
-                            style={{ 
-                              width: `${Math.min((item.quantityOnHand / item.maxStockLevel) * 100, 100)}%` 
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-900">
-                          Cost: ${item.costPrice.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-900">
-                          Sell: ${item.sellPrice.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Value: ${(item.quantityOnHand * item.costPrice).toFixed(2)}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${stockStatus.color}`}>
-                        {stockStatus.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <button className="text-blue-600 hover:text-blue-900" title="View details">
-                          <HiEye className="w-4 h-4" />
-                        </button>
-                        <button className="text-gray-600 hover:text-gray-900" title="Edit">
-                          <HiPencil className="w-4 h-4" />
-                        </button>
-                        <button className="text-green-600 hover:text-green-900" title="Adjust quantity">
-                          <HiRefresh className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+      {itemsLoading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Part Details
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category & Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock Levels
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Pricing
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredItems.map(item => {
+                  const stockStatus = getStockStatus(item)
+                  return (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                          <div className="text-sm text-gray-500">#{item.partNumber}</div>
+                          <div className="text-xs text-gray-400 mt-1">{item.description}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-sm text-gray-900">
+                            <HiTag className="w-3 h-3" />
+                            {item.category}
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <HiLocationMarker className="w-3 h-3" />
+                            {item.location}
+                          </div>
+                          <div className="text-xs text-gray-400">{item.supplier}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            On Hand: {item.quantityOnHand}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Min: {item.minStockLevel} | Max: {item.maxStockLevel}
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                item.quantityOnHand <= item.minStockLevel ? 'bg-red-500' :
+                                item.quantityOnHand > item.maxStockLevel ? 'bg-purple-500' :
+                                'bg-green-500'
+                              }`}
+                              style={{ 
+                                width: `${Math.min((item.quantityOnHand / item.maxStockLevel) * 100, 100)}%` 
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-900">
+                            Cost: ${item.costPrice.toFixed(2)}
+                          </div>
+                          <div className="text-sm text-gray-900">
+                            Sell: ${item.sellPrice.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Value: ${(item.quantityOnHand * item.costPrice).toFixed(2)}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${stockStatus.color}`}>
+                          {stockStatus.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <button className="text-blue-600 hover:text-blue-900" title="View details">
+                            <HiEye className="w-4 h-4" />
+                          </button>
+                          <button className="text-gray-600 hover:text-gray-900" title="Edit">
+                            <HiPencil className="w-4 h-4" />
+                          </button>
+                          <button className="text-green-600 hover:text-green-900" title="Adjust quantity">
+                            <HiRefresh className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 

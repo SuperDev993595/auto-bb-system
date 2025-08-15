@@ -1,7 +1,17 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAppSelector, useAppDispatch } from "../redux"
 import { ServiceCatalogItem, WorkOrder, Technician } from "../utils/CustomerTypes"
 import PageTitle from "../components/Shared/PageTitle"
+import {
+  fetchServiceCatalog,
+  fetchWorkOrders,
+  fetchTechnicians,
+  fetchServiceCatalogStats,
+  fetchWorkOrderStats,
+  fetchTechnicianStats,
+  fetchServiceCategories,
+  fetchSpecializations
+} from "../redux/actions/services"
 import {
   HiPlus,
   HiPencil,
@@ -22,8 +32,32 @@ export default function ServicesPage() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
 
-  const { catalog, workOrders, technicians } = useAppSelector(state => state.services)
+  const { 
+    catalog, 
+    workOrders, 
+    technicians, 
+    catalogLoading, 
+    workOrdersLoading, 
+    techniciansLoading,
+    catalogStats,
+    workOrderStats,
+    technicianStats,
+    categories,
+    specializations
+  } = useAppSelector(state => state.services)
   const dispatch = useAppDispatch()
+
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchServiceCatalog())
+    dispatch(fetchWorkOrders())
+    dispatch(fetchTechnicians())
+    dispatch(fetchServiceCatalogStats())
+    dispatch(fetchWorkOrderStats())
+    dispatch(fetchTechnicianStats())
+    dispatch(fetchServiceCategories())
+    dispatch(fetchSpecializations())
+  }, [dispatch])
 
   // Filter service catalog
   const filteredCatalog = catalog.filter(service => {
@@ -39,8 +73,8 @@ export default function ServicesPage() {
     return matchesStatus
   })
 
-  // Get unique categories
-  const categories = Array.from(new Set(catalog.map(service => service.category)))
+  // Use categories from API
+  const availableCategories = categories.length > 0 ? categories : Array.from(new Set(catalog.map(service => service.category)))
 
   const renderServiceCatalog = () => (
     <div className="space-y-6">
@@ -75,7 +109,7 @@ export default function ServicesPage() {
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
             <option value="all">All Categories</option>
-            {categories.map(category => (
+            {availableCategories.map(category => (
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
@@ -83,8 +117,13 @@ export default function ServicesPage() {
       </div>
 
       {/* Service Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCatalog.map(service => (
+      {catalogLoading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCatalog.map(service => (
           <div key={service.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -139,7 +178,8 @@ export default function ServicesPage() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   )
 

@@ -11,7 +11,11 @@ import {
     Bell,
     BarChart3,
     Package,
-    Home
+    Home,
+    Mail,
+    MessageSquare,
+    Search,
+    Upload
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -43,6 +47,12 @@ const navItems: NavItem[] = [
     // Operations & Marketing
     { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
     { to: "/admin/dashboard/promotions", label: "Promotions", icon: <MessageCircle size={18} /> },
+    
+    // Advanced Features
+    { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <Mail size={18} /> },
+    { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <MessageSquare size={18} /> },
+    { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
+    { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
 ];
 
 export default function Sidebar() {

@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
-import { 
-  updateInvoiceStatus,
-  recordPayment,
+import {
+  fetchInvoices,
+  fetchInvoiceStats,
+  fetchPaymentStats,
+  fetchInvoiceTemplates,
+  updateInvoice,
   deleteInvoice,
-  markAsOverdue,
-  generateInvoiceFromWorkOrder
-} from '../redux/reducer/invoicesReducer'
+  addPayment,
+  sendInvoice,
+  createInvoice
+} from '../redux/actions/invoices'
 import { Invoice } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
 import {
@@ -38,10 +42,26 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   
-  const { invoices, settings } = useAppSelector(state => state.invoices)
+  const { 
+    invoices, 
+    templates, 
+    stats, 
+    paymentStats,
+    invoicesLoading,
+    templatesLoading,
+    statsLoading
+  } = useAppSelector(state => state.invoices)
   const customers = useAppSelector(state => state.customers.list)
   const workOrders = useAppSelector(state => state.services.workOrders)
   const dispatch = useAppDispatch()
+
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchInvoices())
+    dispatch(fetchInvoiceStats())
+    dispatch(fetchPaymentStats())
+    dispatch(fetchInvoiceTemplates())
+  }, [dispatch])
 
   // Filter invoices
   const filteredInvoices = invoices.filter(invoice => {
@@ -71,15 +91,17 @@ export default function InvoicesPage() {
   }
 
   const handleStatusUpdate = (id: string, status: Invoice['status']) => {
-    dispatch(updateInvoiceStatus({ id, status }))
+    dispatch(updateInvoice({ id, invoiceData: { status } }))
   }
 
   const handlePaymentRecord = (invoiceId: string, amount: number, method: string) => {
-    dispatch(recordPayment({
+    dispatch(addPayment({
       invoiceId,
-      amount,
-      method,
-      date: new Date().toISOString()
+      paymentData: {
+        amount,
+        method,
+        date: new Date().toISOString()
+      }
     }))
     setShowPaymentModal(false)
     setSelectedInvoice(null)
@@ -96,7 +118,23 @@ export default function InvoicesPage() {
     const customer = customers.find(c => c.id === workOrder?.customerId)
     
     if (workOrder && customer) {
-      dispatch(generateInvoiceFromWorkOrder({ workOrder, customer }))
+      // Create invoice from work order
+      const invoiceData = {
+        customerId: customer.id,
+        customerName: customer.name,
+        workOrderId: workOrder.id,
+        items: workOrder.services.map(service => ({
+          description: service.name,
+          quantity: 1,
+          unitPrice: service.price,
+          total: service.price
+        })),
+        subtotal: workOrder.services.reduce((sum, service) => sum + service.price, 0),
+        tax: 0,
+        total: workOrder.services.reduce((sum, service) => sum + service.price, 0),
+        status: 'draft' as const
+      }
+      dispatch(createInvoice(invoiceData))
     }
   }
 

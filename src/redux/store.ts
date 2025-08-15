@@ -1,11 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import appointmentsReducer from "./reducer/appointmentsReducer";
-import tasksReducer from "./reducer/tasksReducer";
-import customersReducer from "./reducer/customersReducer";
-import servicesReducer from "./reducer/servicesReducer";
-import remindersReducer from "./reducer/remindersReducer";
-import inventoryReducer from "./reducer/inventoryReducer";
-import invoicesReducer from "./reducer/invoicesReducer";
+import tasksReducer from "./actions/tasks";
+import customersReducer from "./actions/customers";
+import servicesReducer from "./actions/services";
+import remindersReducer from "./actions/reminders";
+import inventoryReducer from "./actions/inventory";
+import invoicesReducer from "./actions/invoices";
+import dashboardReducer from "./actions/dashboard";
 
 const store = configureStore({
   reducer: {
@@ -16,7 +17,15 @@ const store = configureStore({
     reminders: remindersReducer,
     inventory: inventoryReducer,
     invoices: invoicesReducer,
+    dashboard: dashboardReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['persist/PERSIST'],
+      },
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
