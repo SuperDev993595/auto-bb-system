@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const Task = require('../models/Task');
 const User = require('../models/User');
-const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ router.get('/', requireAdmin, async (req, res) => {
     const query = {};
     
     // Filter by assigned user (Sub Admins can only see their own tasks)
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -136,7 +136,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this task
-    if (req.user.role === 'sub_admin' && task.assignedTo.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && task.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -160,7 +160,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/tasks
 // @desc    Create new task (Super Admin only)
 // @access  Private (Super Admin)
-router.post('/', requireSuperAdmin, async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = taskSchema.validate(req.body);
@@ -234,7 +234,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to update this task
-    if (req.user.role === 'sub_admin' && task.assignedTo.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && task.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -278,7 +278,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/tasks/:id
 // @desc    Delete task (Super Admin only)
 // @access  Private (Super Admin)
-router.delete('/:id', requireSuperAdmin, async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) {
@@ -327,7 +327,7 @@ router.post('/:id/notes', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this task
-    if (req.user.role === 'sub_admin' && task.assignedTo.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && task.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -383,7 +383,7 @@ router.put('/:id/progress', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this task
-    if (req.user.role === 'sub_admin' && task.assignedTo.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && task.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -424,7 +424,7 @@ router.get('/stats/overview', requireAdmin, async (req, res) => {
     
     // Build query
     const query = {};
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -518,7 +518,7 @@ router.get('/overdue', requireAdmin, async (req, res) => {
     };
 
     // Filter by assigned user
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     }
 

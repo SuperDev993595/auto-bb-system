@@ -30,43 +30,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware to check if user is Super Admin
-const requireSuperAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Authentication required' 
-    });
-  }
-  
-  if (req.user.role !== 'super_admin') {
-    return res.status(403).json({ 
-      success: false, 
-      message: 'Super Admin access required' 
-    });
-  }
-  next();
-};
-
-// Middleware to check if user is Sub Admin
-const requireSubAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Authentication required' 
-    });
-  }
-  
-  if (req.user.role !== 'sub_admin') {
-    return res.status(403).json({ 
-      success: false, 
-      message: 'Sub Admin access required' 
-    });
-  }
-  next();
-};
-
-// Middleware to check if user is either Super Admin or Sub Admin
+// Middleware to check if user is Admin
 const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ 
@@ -75,13 +39,51 @@ const requireAdmin = (req, res, next) => {
     });
   }
   
-  if (req.user.role !== 'super_admin' && req.user.role !== 'sub_admin') {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false, 
       message: 'Admin access required' 
     });
   }
   next();
+};
+
+// Middleware to check if user is Customer
+const requireCustomer = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
+  if (req.user.role !== 'customer') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Customer access required' 
+    });
+  }
+  next();
+};
+
+// Middleware to check if user has specific role(s)
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+    
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Access denied. Required roles: ${allowedRoles.join(', ')}` 
+      });
+    }
+    next();
+  };
 };
 
 // Hash password utility
@@ -111,9 +113,9 @@ const generateToken = (user) => {
 
 module.exports = {
   authenticateToken,
-  requireSuperAdmin,
-  requireSubAdmin,
   requireAdmin,
+  requireCustomer,
+  requireRole,
   hashPassword,
   comparePassword,
   generateToken,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaPhone } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth';
 
 const PublicNavbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -64,17 +65,32 @@ const PublicNavbar: React.FC = () => {
               <FaPhone className="mr-2" />
               <span className="text-sm font-medium">(555) 123-4567</span>
             </div>
-            {!isAuthenticated && (
+            {!isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/auth/login"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/auth/register"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            ) : (
               <Link
-                to="/admin/login"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition duration-300"
+                to={authService.isAdmin() ? "/admin/dashboard" : "/customer/dashboard"}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
               >
-                Admin Login
+                Dashboard
               </Link>
             )}
             <Link
               to="/appointments"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
             >
               Book Now
             </Link>
@@ -119,18 +135,35 @@ const PublicNavbar: React.FC = () => {
                 <FaPhone className="mr-2" />
                 <span className="text-sm font-medium">(555) 123-4567</span>
               </div>
-              {!isAuthenticated && (
-                <Link
-                  to="/admin/login"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Admin Login
-                </Link>
+              {!isAuthenticated ? (
+                <>
+                  <Link
+                    to="/auth/login"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600 text-base font-medium transition duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/auth/register"
+                    className="block px-3 py-2 text-blue-600 hover:text-blue-700 text-base font-medium transition duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              ) : (
+                                 <Link
+                   to={authService.isAdmin() ? "/admin/dashboard" : "/customer/dashboard"}
+                   className="block px-3 py-2 text-green-600 hover:text-green-700 text-base font-medium transition duration-300"
+                   onClick={() => setIsMenuOpen(false)}
+                 >
+                   Dashboard
+                 </Link>
               )}
               <Link
                 to="/appointments"
-                className="block mt-2 mx-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center font-medium transition duration-300"
+                className="block mt-2 mx-3 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-center font-medium transition duration-300"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Book Appointment

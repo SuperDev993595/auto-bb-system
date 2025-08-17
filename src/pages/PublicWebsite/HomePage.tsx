@@ -107,6 +107,14 @@ const HomePage: React.FC = () => {
                 >
                   Book Appointment
                 </Link>
+                {!isAuthenticated && (
+                  <Link
+                    to="/auth/register"
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold text-center transition duration-300"
+                  >
+                    Join Now
+                  </Link>
+                )}
                 <Link
                   to="/services"
                   className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 rounded-lg font-semibold text-center transition duration-300"
@@ -276,6 +284,37 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Login/Register CTA Section */}
+      {!isAuthenticated && (
+        <section className="py-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Join Our Community
+            </h2>
+            <p className="text-xl mb-8 text-purple-100">
+              Create an account to manage your vehicles, track service history, and book appointments easily.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/auth/register"
+                className="bg-white hover:bg-gray-100 text-purple-600 px-8 py-3 rounded-lg font-semibold transition duration-300"
+              >
+                Create Account
+              </Link>
+              <Link
+                to="/auth/login"
+                className="border-2 border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3 rounded-lg font-semibold transition duration-300"
+              >
+                Sign In
+              </Link>
+            </div>
+            <div className="mt-6 text-sm text-purple-200">
+              <p>For business owners and staff, create an admin account to manage operations.</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-16 bg-blue-900 text-white">

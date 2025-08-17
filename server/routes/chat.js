@@ -51,7 +51,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     const query = {};
 
     // Filter by assigned user (Sub Admins can only see their own chats)
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.$or = [
         { assignedTo: req.user.id },
         { status: 'waiting' }
@@ -128,7 +128,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this chat
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         chat.assignedTo && 
         chat.assignedTo._id.toString() !== req.user.id &&
         chat.status !== 'waiting') {
@@ -235,7 +235,7 @@ router.post('/:id/messages', authenticateToken, requireAdmin, async (req, res) =
     }
 
     // Check if user has access to this chat
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         chat.assignedTo && 
         chat.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
@@ -377,7 +377,7 @@ router.put('/:id/resolve', authenticateToken, requireAdmin, async (req, res) => 
     }
 
     // Check if user has access to this chat
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         chat.assignedTo && 
         chat.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
@@ -439,7 +439,7 @@ router.put('/:id/close', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this chat
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         chat.assignedTo && 
         chat.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({

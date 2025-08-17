@@ -41,7 +41,7 @@ router.get('/', requireAdmin, async (req, res) => {
     const query = { type: 'sales' };
 
     // Filter by assigned user (Sub Admins can only see their own tasks)
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -158,7 +158,7 @@ router.get('/pipeline', requireAdmin, async (req, res) => {
     const query = { type: 'sales' };
 
     // Filter by assigned user
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;

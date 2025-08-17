@@ -9,11 +9,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'sub_admin';
+  role: 'super_admin' | 'admin' | 'business_client' | 'customer';
   permissions: string[];
   avatar?: string;
   phone?: string;
   lastLogin?: string;
+  // Customer-specific fields
+  customerId?: string; // For customer users
+  vehicles?: string[]; // Vehicle IDs for customer users
+  // Business client fields
+  businessClientId?: string; // For business client users
+  businessName?: string;
 }
 
 export interface AuthResponse {
@@ -29,8 +35,10 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-  role: 'super_admin' | 'sub_admin';
+  role: 'super_admin' | 'admin' | 'business_client' | 'customer';
   permissions?: string[];
+  phone?: string;
+  businessName?: string;
 }
 
 export interface ChangePasswordData {
@@ -73,11 +81,16 @@ export const authService = {
 
   // Logout user
   logout(): void {
+    const user = this.getCurrentUserFromStorage();
+    const isCustomer = user?.role === 'customer';
+    
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
-    window.location.href = '/admin/login';
+    
+    // Redirect to unified auth page
+    window.location.href = '/auth/login';
   },
 
   // Check if user is authenticated
@@ -99,7 +112,10 @@ export const authService = {
   // Check if user has permission
   hasPermission(permission: string): boolean {
     const user = this.getCurrentUserFromStorage();
-    return user?.permissions?.includes(permission) || user?.role === 'super_admin' || false;
+    return user?.permissions?.includes(permission) || 
+           user?.role === 'super_admin' || 
+           user?.role === 'admin' || 
+           false;
   },
 
   // Check if user is Super Admin
@@ -108,9 +124,27 @@ export const authService = {
     return user?.role === 'super_admin';
   },
 
-  // Check if user is Sub Admin
-  isSubAdmin(): boolean {
+  // Check if user is Admin
+  isAdmin(): boolean {
     const user = this.getCurrentUserFromStorage();
-    return user?.role === 'sub_admin';
+    return user?.role === 'admin' || user?.role === 'super_admin';
+  },
+
+  // Check if user is Business Client
+  isBusinessClient(): boolean {
+    const user = this.getCurrentUserFromStorage();
+    return user?.role === 'business_client';
+  },
+
+  // Check if user is Customer
+  isCustomer(): boolean {
+    const user = this.getCurrentUserFromStorage();
+    return user?.role === 'customer';
+  },
+
+  // Check if user has any admin role
+  isAnyAdmin(): boolean {
+    const user = this.getCurrentUserFromStorage();
+    return user?.role === 'super_admin' || user?.role === 'admin';
   }
 };

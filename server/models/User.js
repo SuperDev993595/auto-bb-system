@@ -22,19 +22,29 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['super_admin', 'sub_admin'],
-    default: 'sub_admin'
+    enum: ['super_admin', 'admin', 'business_client', 'customer'],
+    default: 'customer'
   },
   permissions: {
-    customers: { type: Boolean, default: true },
-    appointments: { type: Boolean, default: true },
-    marketing: { type: Boolean, default: true },
-    sales: { type: Boolean, default: true },
-    collections: { type: Boolean, default: true },
-    tasks: { type: Boolean, default: true },
-    reports: { type: Boolean, default: true },
-    users: { type: Boolean, default: false } // Only super admin can manage users
+    type: [String],
+    default: ['customer_access']
   },
+  businessName: {
+    type: String,
+    trim: true
+  },
+  businessClientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'BusinessClient'
+  },
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer'
+  },
+  vehicles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vehicle'
+  }],
   isActive: {
     type: Boolean,
     default: true

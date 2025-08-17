@@ -12,7 +12,10 @@ interface AuthContextType {
   changePassword: (passwordData: ChangePasswordData) => Promise<boolean>;
   hasPermission: (permission: string) => boolean;
   isSuperAdmin: () => boolean;
-  isSubAdmin: () => boolean;
+  isAdmin: () => boolean;
+  isBusinessClient: () => boolean;
+  isCustomer: () => boolean;
+  isAnyAdmin: () => boolean;
   refreshUser: () => Promise<void>;
 }
 
@@ -58,15 +61,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.login(credentials);
       
       if (response.success) {
+        console.log('AuthContext: Login successful, setting user:', response.data.user);
         setUser(response.data.user);
         toast.success('Login successful!');
         return true;
       } else {
+        console.log('AuthContext: Login failed:', response.message);
         toast.error(response.message || 'Login failed');
         return false;
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('AuthContext: Login error:', error);
       toast.error('Login failed. Please try again.');
       return false;
     } finally {
@@ -130,8 +135,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return authService.isSuperAdmin();
   };
 
-  const isSubAdmin = (): boolean => {
-    return authService.isSubAdmin();
+  const isAdmin = (): boolean => {
+    return authService.isAdmin();
+  };
+
+  const isBusinessClient = (): boolean => {
+    return authService.isBusinessClient();
+  };
+
+  const isCustomer = (): boolean => {
+    return authService.isCustomer();
+  };
+
+  const isAnyAdmin = (): boolean => {
+    return authService.isAnyAdmin();
   };
 
   const refreshUser = async (): Promise<void> => {
@@ -157,7 +174,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     changePassword,
     hasPermission,
     isSuperAdmin,
-    isSubAdmin,
+    isAdmin,
+    isBusinessClient,
+    isCustomer,
+    isAnyAdmin,
     refreshUser,
   };
 

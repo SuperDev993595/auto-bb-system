@@ -10,7 +10,7 @@ const userSchema = Joi.object({
   username: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).optional(),
-  role: Joi.string().valid('super_admin', 'sub_admin', 'user').required(),
+  role: Joi.string().valid('admin', 'customer').required(),
   firstName: Joi.string().min(2).max(50).required(),
   lastName: Joi.string().min(2).max(50).required(),
   phone: Joi.string().optional(),
@@ -23,7 +23,7 @@ const updateUserSchema = Joi.object({
   username: Joi.string().min(3).max(30).optional(),
   email: Joi.string().email().optional(),
   password: Joi.string().min(6).optional(),
-  role: Joi.string().valid('super_admin', 'sub_admin', 'user').optional(),
+  role: Joi.string().valid('admin', 'customer').optional(),
   firstName: Joi.string().min(2).max(50).optional(),
   lastName: Joi.string().min(2).max(50).optional(),
   phone: Joi.string().optional(),
@@ -273,11 +273,11 @@ router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) =>
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    // Prevent deleting super admin
-    if (user.role === 'super_admin') {
+    // Prevent deleting admin
+    if (user.role === 'admin') {
       return res.status(400).json({ 
         success: false, 
-        message: 'Cannot delete super admin user' 
+        message: 'Cannot delete admin user' 
       });
     }
     

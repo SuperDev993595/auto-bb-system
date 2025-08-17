@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react'
-import { useAppSelector } from '../../redux'
+import { useAppSelector, useAppDispatch } from '../../redux'
 import { Appointment } from '../../utils/CustomerTypes'
+import AppointmentModal from './AppointmentModal'
+import { addAppointment } from '../../redux/reducer/appointmentsReducer'
+import { toast } from 'react-hot-toast'
 import {
   HiChevronLeft,
   HiChevronRight,
@@ -13,11 +16,15 @@ import {
 type CalendarView = 'month' | 'week' | 'day'
 
 export default function AppointmentCalendar() {
+  const dispatch = useAppDispatch()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<CalendarView>('month')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
+  const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
   
   const appointments = useAppSelector(state => state.appointments.data)
+  const technicians = useAppSelector(state => state.services.technicians)
 
   // Calendar navigation
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -97,6 +104,54 @@ export default function AppointmentCalendar() {
     const ampm = hour >= 12 ? 'PM' : 'AM'
     const displayHour = hour % 12 || 12
     return `${displayHour}:${minutes} ${ampm}`
+  }
+
+  // Handle new appointment creation
+  const handleCreateAppointment = async (appointmentData: any) => {
+    try {
+      setIsCreatingAppointment(true)
+      
+      // Validate required fields
+      if (!appointmentData.customer || !appointmentData.vehicle || !appointmentData.date || !appointmentData.serviceType) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      const newAppointment = {
+        id: `apt${Date.now()}`, // Generate unique ID
+        customerId: `customer${Date.now()}`,
+        customerName: appointmentData.customer,
+        vehicleId: `vehicle${Date.now()}`,
+        vehicleInfo: appointmentData.vehicle,
+        date: appointmentData.date.split('T')[0], // Extract date part
+        time: appointmentData.date.split('T')[1]?.substring(0, 5) || '09:00', // Extract time part
+        estimatedDuration: 60, // Default duration
+        serviceType: appointmentData.serviceType,
+        description: appointmentData.serviceType,
+        status: 'scheduled' as const,
+        priority: 'medium' as const,
+        createdDate: new Date().toISOString().split('T')[0],
+        notes: appointmentData.notes || '',
+        technicianId: technicians.length > 0 ? technicians[0].id : undefined,
+        technicianName: technicians.length > 0 ? technicians[0].name : undefined,
+      }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      dispatch(addAppointment(newAppointment))
+      toast.success('Appointment created successfully!')
+      setShowNewAppointmentModal(false)
+    } catch (error) {
+      console.error('Error creating appointment:', error)
+      toast.error('Failed to create appointment. Please try again.')
+    } finally {
+      setIsCreatingAppointment(false)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setShowNewAppointmentModal(false)
   }
 
   const renderMonthView = () => (
@@ -282,7 +337,12 @@ export default function AppointmentCalendar() {
           </div>
           
           {/* Add Appointment Button */}
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+          <button 
+            onClick={() => {
+              setShowNewAppointmentModal(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+          >
             + New Appointment
           </button>
         </div>
@@ -316,6 +376,15 @@ export default function AppointmentCalendar() {
           ))}
         </div>
       </div>
+
+      {/* New Appointment Modal */}
+      {showNewAppointmentModal && (
+        <AppointmentModal
+          onClose={handleCloseModal}
+          onSave={handleCreateAppointment}
+          isLoading={isCreatingAppointment}
+        />
+      )}
     </div>
   )
 }

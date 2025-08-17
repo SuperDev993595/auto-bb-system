@@ -15,8 +15,10 @@ const registerSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid('super_admin', 'sub_admin').default('sub_admin'),
-  phone: Joi.string().optional()
+  role: Joi.string().valid('admin', 'customer').default('customer'),
+  phone: Joi.string().allow('').optional(),
+  businessName: Joi.string().allow('').optional(),
+  permissions: Joi.array().items(Joi.string()).optional()
 });
 
 // @route   POST /api/auth/login
@@ -78,7 +80,7 @@ router.post('/login', async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: Object.keys(user.permissions).filter(key => user.permissions[key]),
+          permissions: user.permissions || [],
           avatar: user.avatar
         },
         token
@@ -95,17 +97,10 @@ router.post('/login', async (req, res) => {
 });
 
 // @route   POST /api/auth/register
-// @desc    Register new user (Super Admin only)
-// @access  Private (Super Admin)
+// @desc    Register new user (Public registration)
+// @access  Public
 router.post('/register', async (req, res) => {
   try {
-    // Check if user is Super Admin
-    if (req.user.role !== 'super_admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Only Super Admin can register new users'
-      });
-    }
 
     // Validate input
     const { error, value } = registerSchema.validate(req.body);
@@ -116,7 +111,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const { name, email, password, role, phone } = value;
+    const { name, email, password, role, phone, businessName, permissions } = value;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -133,8 +128,10 @@ router.post('/register', async (req, res) => {
       email,
       password,
       role,
-      phone,
-      createdBy: req.user.id
+      phone: phone || undefined,
+      businessName: businessName || undefined,
+      permissions: permissions || (role === 'admin' ? ['admin_access'] : ['customer_access']),
+      createdBy: null // Self-registration
     });
 
     await newUser.save();
@@ -151,7 +148,7 @@ router.post('/register', async (req, res) => {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
-          permissions: Object.keys(newUser.permissions).filter(key => newUser.permissions[key])
+          permissions: newUser.permissions || []
         },
         token
       }
@@ -188,7 +185,7 @@ router.get('/me', authenticateToken, async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          permissions: Object.keys(user.permissions).filter(key => user.permissions[key]),
+          permissions: user.permissions || [],
           avatar: user.avatar,
           phone: user.phone,
           lastLogin: user.lastLogin

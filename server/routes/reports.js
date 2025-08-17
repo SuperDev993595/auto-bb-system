@@ -28,7 +28,7 @@ router.get('/daily-progress', requireAdmin, async (req, res) => {
     };
 
     // Filter by assigned user
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -157,7 +157,7 @@ router.get('/sub-admin-performance', requireAdmin, async (req, res) => {
     };
 
     // Get all Sub Admins
-    const subAdmins = await require('mongoose').model('User').find({ role: 'sub_admin', isActive: true });
+    const subAdmins = await require('mongoose').model('User').find({ role: 'admin', isActive: true });
 
     const performanceData = [];
 
@@ -266,7 +266,7 @@ router.get('/daily-summary', requireAdmin, async (req, res) => {
       }
     };
 
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -375,7 +375,7 @@ router.get('/weekly-progress', requireAdmin, async (req, res) => {
       }
     };
 
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -462,7 +462,7 @@ router.get('/activity-log', requireAdmin, async (req, res) => {
     }
 
     // Assigned user filter
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
@@ -513,7 +513,7 @@ router.get('/pdf/daily-activity/:userId', requireAdmin, async (req, res) => {
     const { date } = req.query;
 
     // Check if user has access
-    if (req.user.role === 'sub_admin' && req.user.id !== userId) {
+    if (req.user.role === 'admin' && req.user.id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -603,7 +603,7 @@ router.get('/pdf/super-admin-daily', requireAdmin, async (req, res) => {
     const { date } = req.query;
 
     // Only Super Admin can access this
-    if (req.user.role !== 'super_admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Super Admin only.'
@@ -638,7 +638,7 @@ router.post('/email/daily-activity', requireAdmin, async (req, res) => {
     const { userId, date, email } = req.body;
 
     // Check if user has access
-    if (req.user.role === 'sub_admin' && req.user.id !== userId) {
+    if (req.user.role === 'admin' && req.user.id !== userId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'

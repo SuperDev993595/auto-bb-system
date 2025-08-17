@@ -16,7 +16,8 @@ import {
     Search,
     Upload,
     File,
-    Settings
+    Settings,
+    Building
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
     // Core CRM Functions
     { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
     { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
+    { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/services", label: "Services", icon: <Wrench size={18} /> },
     
     // Financial & Inventory
@@ -42,7 +44,7 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
     
     // Analytics & Communication
-    { to: "/admin/dashboard/reports", label: "Reports", icon: <BarChart3 size={18} /> },
+    { to: "/admin/dashboard/reports", label: "Reports", icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/reminders", label: "Reminders", icon: <Bell size={18} /> },
     { to: "/admin/dashboard/contact-logs", label: "Communication", icon: <PhoneCall size={18} /> },
     
@@ -51,7 +53,9 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard/promotions", label: "Promotions", icon: <MessageCircle size={18} /> },
     
     // Advanced Features
-    { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <Mail size={18} /> },
+    { to: "/admin/dashboard/marketing", label: "Marketing", icon: <Mail size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/sms", label: "SMS", icon: <PhoneCall size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <Mail size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <MessageSquare size={18} /> },
     { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
     { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },

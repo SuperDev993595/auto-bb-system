@@ -124,7 +124,7 @@ router.get('/campaigns', requireAdmin, async (req, res) => {
     const query = {};
 
     // Filter by created user (Sub Admins can only see their own campaigns)
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.createdBy = req.user.id;
     }
 
@@ -193,7 +193,7 @@ router.get('/campaigns/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this campaign
-    if (req.user.role === 'sub_admin' && campaign.createdBy.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && campaign.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -281,7 +281,7 @@ router.put('/campaigns/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this campaign
-    if (req.user.role === 'sub_admin' && campaign.createdBy.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && campaign.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -324,7 +324,7 @@ router.delete('/campaigns/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this campaign
-    if (req.user.role === 'sub_admin' && campaign.createdBy.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && campaign.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -361,7 +361,7 @@ router.post('/campaigns/:id/send', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this campaign
-    if (req.user.role === 'sub_admin' && campaign.createdBy.toString() !== req.user.id) {
+    if (req.user.role === 'admin' && campaign.createdBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -465,7 +465,7 @@ router.get('/stats/overview', requireAdmin, async (req, res) => {
     }
 
     // Filter by created user for Sub Admins
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.createdBy = req.user.id;
     }
 

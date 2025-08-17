@@ -357,8 +357,220 @@ workOrderSchema.pre('save', function(next) {
   next();
 });
 
+const serviceSchema = new mongoose.Schema({
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  vehicleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vehicle',
+    required: true
+  },
+  appointmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment'
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  serviceType: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 1000
+  },
+  technician: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  mileage: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  cost: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  parts: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100
+    },
+    partNumber: {
+      type: String,
+      trim: true,
+      maxlength: 50
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+      min: 0
+    }
+  }],
+  laborHours: {
+    type: Number,
+    min: 0
+  },
+  laborRate: {
+    type: Number,
+    min: 0
+  },
+  laborCost: {
+    type: Number,
+    min: 0
+  },
+  subtotal: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  tax: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  discount: {
+    type: Number,
+    min: 0
+  },
+  total: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  status: {
+    type: String,
+    enum: ['completed', 'in-progress', 'scheduled', 'cancelled'],
+    default: 'completed'
+  },
+  nextServiceDate: {
+    type: Date
+  },
+  nextServiceMileage: {
+    type: Number,
+    min: 0
+  },
+  warranty: {
+    type: String,
+    trim: true,
+    maxlength: 100
+  },
+  notes: {
+    type: String,
+    maxlength: 1000
+  },
+  customerNotes: {
+    type: String,
+    maxlength: 1000
+  },
+  recommendations: [{
+    service: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium'
+    },
+    estimatedCost: {
+      type: Number,
+      min: 0
+    },
+    description: {
+      type: String,
+      maxlength: 500
+    }
+  }],
+  photos: [{
+    url: {
+      type: String,
+      required: true
+    },
+    caption: {
+      type: String,
+      maxlength: 200
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+// Index for efficient queries
+serviceSchema.index({ customerId: 1, date: -1 });
+serviceSchema.index({ vehicleId: 1, date: -1 });
+serviceSchema.index({ appointmentId: 1 });
+serviceSchema.index({ status: 1 });
+
+// Virtual for service summary
+serviceSchema.virtual('summary').get(function() {
+  return `${this.serviceType} - ${this.date.toLocaleDateString()} - $${this.total.toFixed(2)}`;
+});
+
+// Ensure virtual fields are serialized
+serviceSchema.set('toJSON', { virtuals: true });
+serviceSchema.set('toObject', { virtuals: true });
+
+// Pre-save middleware to calculate totals
+serviceSchema.pre('save', function(next) {
+  // Calculate parts total
+  const partsTotal = this.parts.reduce((sum, part) => sum + part.totalPrice, 0);
+  
+  // Calculate labor cost
+  this.laborCost = (this.laborHours || 0) * (this.laborRate || 0);
+  
+  // Calculate subtotal
+  this.subtotal = partsTotal + this.laborCost;
+  
+  // Calculate total with tax and discount
+  this.total = this.subtotal + this.tax - (this.discount || 0);
+  
+  this.updatedAt = new Date();
+  next();
+});
+
 module.exports = {
   ServiceCatalog: mongoose.model('ServiceCatalog', serviceCatalogSchema),
   WorkOrder: mongoose.model('WorkOrder', workOrderSchema),
-  Technician: mongoose.model('Technician', technicianSchema)
+  Technician: mongoose.model('Technician', technicianSchema),
+  Service: mongoose.model('Service', serviceSchema)
 };

@@ -11,6 +11,10 @@ const connectDB = require('./config/database');
 // Import routes
 const authRoutes = require('./routes/auth');
 const customerRoutes = require('./routes/customers');
+const businessClientRoutes = require('./routes/businessClients');
+
+// Initialize cron service for automated notifications
+require('./services/cronService');
 const appointmentRoutes = require('./routes/appointments');
 const marketingRoutes = require('./routes/marketing');
 const salesRoutes = require('./routes/sales');
@@ -29,6 +33,8 @@ const remindersRoutes = require('./routes/reminders');
 const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
 const emailRoutes = require('./routes/email');
+const smsRoutes = require('./routes/sms');
+const systemAdminRoutes = require('./routes/systemAdmin');
 
 // Import models for Socket.io
 const Chat = require('./models/Chat');
@@ -145,7 +151,8 @@ app.set('io', io);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/customers', authenticateToken, customerRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/business-clients', businessClientRoutes);
 app.use('/api/appointments', authenticateToken, appointmentRoutes);
 app.use('/api/marketing', authenticateToken, marketingRoutes);
 app.use('/api/sales', authenticateToken, salesRoutes);
@@ -164,6 +171,8 @@ app.use('/api/reminders', authenticateToken, remindersRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/sms', smsRoutes);
+app.use('/api/system-admin', authenticateToken, systemAdminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

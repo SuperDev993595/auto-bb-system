@@ -377,7 +377,7 @@ class PDFGenerator {
     const endDate = moment(targetDate).endOf('day');
 
     // Get all Sub Admins
-    const subAdmins = await User.find({ role: 'sub_admin', isActive: true });
+    const subAdmins = await User.find({ role: 'admin', isActive: true });
 
     // Get all tasks for the day
     const allTasks = await Task.find({

@@ -70,7 +70,7 @@ router.get('/', requireAdmin, async (req, res) => {
     const query = {};
 
     // Filter by assigned user (Sub Admins can only see their own leads)
-    if (req.user.role === 'sub_admin') {
+    if (req.user.role === 'admin') {
       query.$or = [
         { 'leadInfo.assignedTo': req.user.id },
         { 'leadInfo.status': 'new' }
@@ -148,7 +148,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this record
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         record.leadInfo.assignedTo && 
         record.leadInfo.assignedTo._id.toString() !== req.user.id &&
         record.leadInfo.status !== 'new') {
@@ -330,7 +330,7 @@ router.put('/:id/lead', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this record
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         record.leadInfo.assignedTo && 
         record.leadInfo.assignedTo.toString() !== req.user.id &&
         record.leadInfo.status !== 'new') {
@@ -400,7 +400,7 @@ router.post('/:id/contact-attempt', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this record
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         record.leadInfo.assignedTo && 
         record.leadInfo.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({
@@ -464,7 +464,7 @@ router.post('/:id/convert-to-customer', requireAdmin, async (req, res) => {
     }
 
     // Check if user has access to this record
-    if (req.user.role === 'sub_admin' && 
+    if (req.user.role === 'admin' && 
         record.leadInfo.assignedTo && 
         record.leadInfo.assignedTo.toString() !== req.user.id) {
       return res.status(403).json({

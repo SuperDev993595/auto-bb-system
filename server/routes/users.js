@@ -1,7 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const User = require('../models/User');
-const { requireSuperAdmin } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const userSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid('super_admin', 'sub_admin').default('sub_admin'),
+  role: Joi.string().valid('admin', 'customer').default('customer'),
   phone: Joi.string().optional(),
   permissions: Joi.object({
     customers: Joi.boolean().default(true),
@@ -27,7 +27,7 @@ const userUpdateSchema = Joi.object({
   name: Joi.string().min(2).max(50).optional(),
   email: Joi.string().email().optional(),
   phone: Joi.string().optional(),
-  role: Joi.string().valid('super_admin', 'sub_admin').optional(),
+  role: Joi.string().valid('admin', 'customer').optional(),
   isActive: Joi.boolean().optional(),
   permissions: Joi.object({
     customers: Joi.boolean(),
@@ -43,7 +43,7 @@ const userUpdateSchema = Joi.object({
 // @route   GET /api/users
 // @desc    Get all users (Super Admin only)
 // @access  Private (Super Admin)
-router.get('/', requireSuperAdmin, async (req, res) => {
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -109,7 +109,7 @@ router.get('/', requireSuperAdmin, async (req, res) => {
 // @route   GET /api/users/:id
 // @desc    Get single user (Super Admin only)
 // @access  Private (Super Admin)
-router.get('/:id', requireSuperAdmin, async (req, res) => {
+router.get('/:id', requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
 
@@ -137,7 +137,7 @@ router.get('/:id', requireSuperAdmin, async (req, res) => {
 // @route   POST /api/users
 // @desc    Create new user (Super Admin only)
 // @access  Private (Super Admin)
-router.post('/', requireSuperAdmin, async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = userSchema.validate(req.body);
@@ -183,7 +183,7 @@ router.post('/', requireSuperAdmin, async (req, res) => {
 // @route   PUT /api/users/:id
 // @desc    Update user (Super Admin only)
 // @access  Private (Super Admin)
-router.put('/:id', requireSuperAdmin, async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = userUpdateSchema.validate(req.body);
@@ -239,7 +239,7 @@ router.put('/:id', requireSuperAdmin, async (req, res) => {
 // @route   DELETE /api/users/:id
 // @desc    Delete user (Super Admin only)
 // @access  Private (Super Admin)
-router.delete('/:id', requireSuperAdmin, async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -249,13 +249,13 @@ router.delete('/:id', requireSuperAdmin, async (req, res) => {
       });
     }
 
-    // Prevent deleting the last Super Admin
-    if (user.role === 'super_admin') {
-      const superAdminCount = await User.countDocuments({ role: 'super_admin' });
-      if (superAdminCount <= 1) {
+    // Prevent deleting the last Admin
+    if (user.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
         return res.status(400).json({
           success: false,
-          message: 'Cannot delete the last Super Admin'
+          message: 'Cannot delete the last Admin'
         });
       }
     }
@@ -279,7 +279,7 @@ router.delete('/:id', requireSuperAdmin, async (req, res) => {
 // @route   PUT /api/users/:id/password
 // @desc    Change user password (Super Admin only)
 // @access  Private (Super Admin)
-router.put('/:id/password', requireSuperAdmin, async (req, res) => {
+router.put('/:id/password', requireAdmin, async (req, res) => {
   try {
     const { newPassword } = req.body;
 
@@ -319,7 +319,7 @@ router.put('/:id/password', requireSuperAdmin, async (req, res) => {
 // @route   GET /api/users/stats/overview
 // @desc    Get user statistics (Super Admin only)
 // @access  Private (Super Admin)
-router.get('/stats/overview', requireSuperAdmin, async (req, res) => {
+router.get('/stats/overview', requireAdmin, async (req, res) => {
   try {
     const stats = await User.aggregate([
       {
@@ -327,10 +327,10 @@ router.get('/stats/overview', requireSuperAdmin, async (req, res) => {
           _id: null,
           totalUsers: { $sum: 1 },
           superAdmins: {
-            $sum: { $cond: [{ $eq: ['$role', 'super_admin'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] }
           },
           subAdmins: {
-            $sum: { $cond: [{ $eq: ['$role', 'sub_admin'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] }
           },
           activeUsers: {
             $sum: { $cond: ['$isActive', 1, 0] }
