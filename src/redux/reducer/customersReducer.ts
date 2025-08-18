@@ -54,8 +54,18 @@ const customersSlice = createSlice({
       })
       .addCase(fetchCustomers.fulfilled, (state, action) => {
         state.loading = false
-        state.list = action.payload.customers
-        state.pagination = action.payload.pagination
+        console.log('fetchCustomers.fulfilled payload:', action.payload)
+        const payload: any = action.payload as any
+        const normalized = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.customers)
+          ? payload.customers
+          : Array.isArray(payload?.data?.customers)
+          ? payload.data.customers
+          : []
+        console.log('fetchCustomers.fulfilled normalized:', normalized)
+        state.list = normalized
+        state.pagination = payload?.pagination || payload?.data?.pagination || null
         state.error = null
       })
       .addCase(fetchCustomers.rejected, (state, action) => {

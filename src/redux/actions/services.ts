@@ -25,7 +25,7 @@ export const fetchServiceCatalog = createAsyncThunk(
   async (filters: ServiceCatalogFilters = {}, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getServiceCatalog(filters);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service catalog');
     }
@@ -37,7 +37,7 @@ export const fetchServiceCatalogItem = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getServiceCatalogItem(id);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service item');
     }
@@ -50,7 +50,7 @@ export const createServiceCatalogItem = createAsyncThunk(
     try {
       const response = await serviceManagementService.createServiceCatalogItem(data);
       toast.success('Service created successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create service');
       return rejectWithValue(error.response?.data?.message || 'Failed to create service');
@@ -64,7 +64,7 @@ export const updateServiceCatalogItem = createAsyncThunk(
     try {
       const response = await serviceManagementService.updateServiceCatalogItem(id, data);
       toast.success('Service updated successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update service');
       return rejectWithValue(error.response?.data?.message || 'Failed to update service');
@@ -91,7 +91,7 @@ export const fetchServiceCatalogStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getServiceCatalogStats();
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service stats');
     }
@@ -104,7 +104,7 @@ export const fetchWorkOrders = createAsyncThunk(
   async (filters: WorkOrderFilters = {}, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getWorkOrders(filters);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch work orders');
     }
@@ -116,7 +116,7 @@ export const fetchWorkOrder = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getWorkOrder(id);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch work order');
     }
@@ -129,7 +129,7 @@ export const createWorkOrder = createAsyncThunk(
     try {
       const response = await serviceManagementService.createWorkOrder(data);
       toast.success('Work order created successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create work order');
       return rejectWithValue(error.response?.data?.message || 'Failed to create work order');
@@ -143,7 +143,7 @@ export const updateWorkOrder = createAsyncThunk(
     try {
       const response = await serviceManagementService.updateWorkOrder(id, data);
       toast.success('Work order updated successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update work order');
       return rejectWithValue(error.response?.data?.message || 'Failed to update work order');
@@ -171,7 +171,7 @@ export const updateWorkOrderStatus = createAsyncThunk(
     try {
       const response = await serviceManagementService.updateWorkOrderStatus(id, status);
       toast.success('Work order status updated successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update work order status');
       return rejectWithValue(error.response?.data?.message || 'Failed to update work order status');
@@ -185,7 +185,7 @@ export const assignTechnician = createAsyncThunk(
     try {
       const response = await serviceManagementService.assignTechnician(workOrderId, technicianId);
       toast.success('Technician assigned successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to assign technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to assign technician');
@@ -198,7 +198,7 @@ export const fetchWorkOrderStats = createAsyncThunk(
   async ({ startDate, endDate }: { startDate?: string; endDate?: string } = {}, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getWorkOrderStats(startDate, endDate);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch work order stats');
     }
@@ -211,7 +211,7 @@ export const fetchTechnicians = createAsyncThunk(
   async (filters: TechnicianFilters = {}, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getTechnicians(filters);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch technicians');
     }
@@ -223,7 +223,7 @@ export const fetchTechnician = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getTechnician(id);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch technician');
     }
@@ -236,7 +236,7 @@ export const createTechnician = createAsyncThunk(
     try {
       const response = await serviceManagementService.createTechnician(data);
       toast.success('Technician created successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to create technician');
@@ -250,7 +250,7 @@ export const updateTechnician = createAsyncThunk(
     try {
       const response = await serviceManagementService.updateTechnician(id, data);
       toast.success('Technician updated successfully');
-      return response.data;
+      return response;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to update technician');
@@ -277,7 +277,7 @@ export const fetchTechnicianStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getTechnicianStats();
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch technician stats');
     }
@@ -289,20 +289,20 @@ export const fetchAvailableTechnicians = createAsyncThunk(
   async ({ date, timeSlot }: { date: string; timeSlot?: string }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getAvailableTechnicians(date, timeSlot);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch available technicians');
     }
   }
 );
 
-// General service methods
+// Async thunks for General Services
 export const fetchServiceCategories = createAsyncThunk(
   'services/fetchServiceCategories',
   async (_, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getServiceCategories();
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service categories');
     }
@@ -314,7 +314,7 @@ export const fetchSpecializations = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.getSpecializations();
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch specializations');
     }
@@ -402,34 +402,53 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchServiceCatalog.fulfilled, (state, action) => {
         state.catalogLoading = false;
-        state.catalog = action.payload.data.services;
+        const payload: any = action.payload as any;
+        console.log('fetchServiceCatalog.fulfilled payload:', payload);
+        const normalized = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data?.services)
+          ? payload.data.services
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload?.services)
+          ? payload.services
+          : [];
+        console.log('fetchServiceCatalog.fulfilled normalized:', normalized);
+        state.catalog = normalized;
       })
       .addCase(fetchServiceCatalog.rejected, (state, action) => {
         state.catalogLoading = false;
         state.catalogError = action.payload as string;
       })
       .addCase(fetchServiceCatalogItem.fulfilled, (state, action) => {
-        const index = state.catalog.findIndex(item => item._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const service = payload?.data?.service || payload;
+        const index = state.catalog.findIndex(item => item._id === service._id);
         if (index !== -1) {
-          state.catalog[index] = action.payload;
+          state.catalog[index] = service;
         } else {
-          state.catalog.push(action.payload);
+          state.catalog.push(service);
         }
       })
       .addCase(createServiceCatalogItem.fulfilled, (state, action) => {
-        state.catalog.push(action.payload);
+        const payload: any = action.payload as any;
+        const service = payload?.data?.service || payload;
+        state.catalog.push(service);
       })
       .addCase(updateServiceCatalogItem.fulfilled, (state, action) => {
-        const index = state.catalog.findIndex(item => item._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const service = payload?.data?.service || payload;
+        const index = state.catalog.findIndex(item => item._id === service._id);
         if (index !== -1) {
-          state.catalog[index] = action.payload;
+          state.catalog[index] = service;
         }
       })
       .addCase(deleteServiceCatalogItem.fulfilled, (state, action) => {
         state.catalog = state.catalog.filter(item => item._id !== action.payload);
       })
       .addCase(fetchServiceCatalogStats.fulfilled, (state, action) => {
-        state.catalogStats = action.payload;
+        const payload: any = action.payload as any;
+        state.catalogStats = payload?.data || payload;
       });
 
     // Work Orders reducers
@@ -440,46 +459,69 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchWorkOrders.fulfilled, (state, action) => {
         state.workOrdersLoading = false;
-        state.workOrders = action.payload.data.workOrders;
+        const payload: any = action.payload as any;
+        console.log('fetchWorkOrders.fulfilled payload:', payload);
+        const normalized = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data?.workOrders)
+          ? payload.data.workOrders
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload?.workOrders)
+          ? payload.workOrders
+          : [];
+        console.log('fetchWorkOrders.fulfilled normalized:', normalized);
+        state.workOrders = normalized;
       })
       .addCase(fetchWorkOrders.rejected, (state, action) => {
         state.workOrdersLoading = false;
         state.workOrdersError = action.payload as string;
       })
       .addCase(fetchWorkOrder.fulfilled, (state, action) => {
-        const index = state.workOrders.findIndex(order => order._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const workOrder = payload?.data?.workOrder || payload;
+        const index = state.workOrders.findIndex(order => order._id === workOrder._id);
         if (index !== -1) {
-          state.workOrders[index] = action.payload;
+          state.workOrders[index] = workOrder;
         } else {
-          state.workOrders.push(action.payload);
+          state.workOrders.push(workOrder);
         }
       })
       .addCase(createWorkOrder.fulfilled, (state, action) => {
-        state.workOrders.push(action.payload);
+        const payload: any = action.payload as any;
+        const workOrder = payload?.data?.workOrder || payload;
+        state.workOrders.push(workOrder);
       })
       .addCase(updateWorkOrder.fulfilled, (state, action) => {
-        const index = state.workOrders.findIndex(order => order._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const workOrder = payload?.data?.workOrder || payload;
+        const index = state.workOrders.findIndex(order => order._id === workOrder._id);
         if (index !== -1) {
-          state.workOrders[index] = action.payload;
+          state.workOrders[index] = workOrder;
         }
       })
       .addCase(deleteWorkOrder.fulfilled, (state, action) => {
         state.workOrders = state.workOrders.filter(order => order._id !== action.payload);
       })
       .addCase(updateWorkOrderStatus.fulfilled, (state, action) => {
-        const index = state.workOrders.findIndex(order => order._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const workOrder = payload?.data?.workOrder || payload;
+        const index = state.workOrders.findIndex(order => order._id === workOrder._id);
         if (index !== -1) {
-          state.workOrders[index] = action.payload;
+          state.workOrders[index] = workOrder;
         }
       })
       .addCase(assignTechnician.fulfilled, (state, action) => {
-        const index = state.workOrders.findIndex(order => order._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const workOrder = payload?.data?.workOrder || payload;
+        const index = state.workOrders.findIndex(order => order._id === workOrder._id);
         if (index !== -1) {
-          state.workOrders[index] = action.payload;
+          state.workOrders[index] = workOrder;
         }
       })
       .addCase(fetchWorkOrderStats.fulfilled, (state, action) => {
-        state.workOrderStats = action.payload;
+        const payload: any = action.payload as any;
+        state.workOrderStats = payload?.data || payload;
       });
 
     // Technicians reducers
@@ -490,43 +532,71 @@ const servicesSlice = createSlice({
       })
       .addCase(fetchTechnicians.fulfilled, (state, action) => {
         state.techniciansLoading = false;
-        state.technicians = action.payload.data.technicians;
+        const payload: any = action.payload as any;
+        console.log('fetchTechnicians.fulfilled payload:', payload);
+        const normalized = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data?.technicians)
+          ? payload.data.technicians
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload?.technicians)
+          ? payload.technicians
+          : [];
+        console.log('fetchTechnicians.fulfilled normalized:', normalized);
+        state.technicians = normalized;
       })
       .addCase(fetchTechnicians.rejected, (state, action) => {
         state.techniciansLoading = false;
         state.techniciansError = action.payload as string;
       })
       .addCase(fetchTechnician.fulfilled, (state, action) => {
-        const index = state.technicians.findIndex(tech => tech._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const technician = payload?.data?.technician || payload;
+        const index = state.technicians.findIndex(tech => tech._id === technician._id);
         if (index !== -1) {
-          state.technicians[index] = action.payload;
+          state.technicians[index] = technician;
         } else {
-          state.technicians.push(action.payload);
+          state.technicians.push(technician);
         }
       })
       .addCase(createTechnician.fulfilled, (state, action) => {
-        state.technicians.push(action.payload);
+        const payload: any = action.payload as any;
+        const technician = payload?.data?.technician || payload;
+        state.technicians.push(technician);
       })
       .addCase(updateTechnician.fulfilled, (state, action) => {
-        const index = state.technicians.findIndex(tech => tech._id === action.payload._id);
+        const payload: any = action.payload as any;
+        const technician = payload?.data?.technician || payload;
+        const index = state.technicians.findIndex(tech => tech._id === technician._id);
         if (index !== -1) {
-          state.technicians[index] = action.payload;
+          state.technicians[index] = technician;
         }
       })
       .addCase(deleteTechnician.fulfilled, (state, action) => {
         state.technicians = state.technicians.filter(tech => tech._id !== action.payload);
       })
       .addCase(fetchTechnicianStats.fulfilled, (state, action) => {
-        state.technicianStats = action.payload;
+        const payload: any = action.payload as any;
+        state.technicianStats = payload?.data || payload;
+      })
+      .addCase(fetchAvailableTechnicians.fulfilled, (state, action) => {
+        // This could be used to update a separate availableTechnicians state
+        // For now, we'll just log it
+        const payload: any = action.payload as any;
+        const technicians = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        console.log('Available technicians:', technicians);
       });
 
     // General reducers
     builder
       .addCase(fetchServiceCategories.fulfilled, (state, action) => {
-        state.categories = action.payload.data;
+        const payload: any = action.payload as any;
+        state.categories = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
       })
       .addCase(fetchSpecializations.fulfilled, (state, action) => {
-        state.specializations = action.payload.data;
+        const payload: any = action.payload as any;
+        state.specializations = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
       });
   },
 });

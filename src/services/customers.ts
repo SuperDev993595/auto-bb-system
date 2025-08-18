@@ -152,7 +152,9 @@ export const customerService = {
       }
     });
     
+    console.log('customerService.getCustomers: Making API call to /customers with params:', params.toString())
     const response = await apiResponse(api.get(`/customers?${params.toString()}`));
+    console.log('customerService.getCustomers: API response:', response)
     return response;
   },
 

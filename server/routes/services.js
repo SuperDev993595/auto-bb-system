@@ -49,12 +49,41 @@ const workOrderSchema = Joi.object({
     })).optional(),
     totalCost: Joi.number().min(0).required()
   })).min(1).required(),
-  technician: Joi.string().required(),
+  technician: Joi.string().optional(),
+  status: Joi.string().valid('pending', 'in_progress', 'completed', 'cancelled', 'on_hold').default('pending'),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
   estimatedStartDate: Joi.date().optional(),
   estimatedCompletionDate: Joi.date().optional(),
   notes: Joi.string().optional(),
   customerNotes: Joi.string().optional()
+});
+
+const workOrderUpdateSchema = Joi.object({
+  services: Joi.array().items(Joi.object({
+    service: Joi.string().required(),
+    description: Joi.string().allow('', null).optional(),
+    laborHours: Joi.number().min(0).required(),
+    laborRate: Joi.number().min(0).required(),
+    parts: Joi.array().items(Joi.object({
+      name: Joi.string().required(),
+      partNumber: Joi.string().allow('', null).optional(),
+      quantity: Joi.number().min(1).required(),
+      unitPrice: Joi.number().min(0).required(),
+      totalPrice: Joi.number().min(0).required(),
+      inStock: Joi.boolean().default(true)
+    })).optional(),
+    totalCost: Joi.number().min(0).required()
+  })).min(1).optional(),
+  technician: Joi.string().allow('', null).optional(),
+  technicianId: Joi.string().allow('', null).optional(),
+  status: Joi.string().valid('pending', 'in_progress', 'completed', 'cancelled', 'on_hold').optional(),
+  priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
+  estimatedStartDate: Joi.alternatives().try(Joi.date(), Joi.string().allow('', null)).optional(),
+  estimatedCompletionDate: Joi.alternatives().try(Joi.date(), Joi.string().allow('', null)).optional(),
+  actualStartDate: Joi.alternatives().try(Joi.date(), Joi.string().allow('', null)).optional(),
+  actualCompletionDate: Joi.alternatives().try(Joi.date(), Joi.string().allow('', null)).optional(),
+  notes: Joi.string().allow('', null).optional(),
+  customerNotes: Joi.string().allow('', null).optional()
 });
 
 const technicianSchema = Joi.object({
@@ -293,7 +322,7 @@ router.get('/workorders', requireAnyAdmin, async (req, res) => {
 
     // Execute query with pagination
     const workOrders = await WorkOrder.find(query)
-      .populate('customer', 'businessName contactPerson')
+      .populate('customer', 'name email phone')
       .populate('technician', 'name email')
       .populate('services.service', 'name description')
       .populate('createdBy', 'name email')
@@ -351,26 +380,33 @@ router.post('/workorders', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    // Check if technician exists
-    const technician = await Technician.findById(value.technician);
-    if (!technician) {
-      return res.status(400).json({
-        success: false,
-        message: 'Technician not found'
-      });
+    // Check if technician exists (if provided)
+    if (value.technician) {
+      const technician = await Technician.findById(value.technician);
+      if (!technician) {
+        return res.status(400).json({
+          success: false,
+          message: 'Technician not found'
+        });
+      }
     }
 
     // Create work order
+    console.log('Creating work order with data:', value);
     const workOrder = new WorkOrder({
       ...value,
       createdBy: req.user.id
     });
 
+    console.log('Work order before save:', workOrder);
     await workOrder.save();
+    console.log('Work order after save:', workOrder);
 
     // Populate references
-    await workOrder.populate('customer', 'businessName contactPerson');
-    await workOrder.populate('technician', 'name email');
+    await workOrder.populate('customer', 'name email phone');
+    if (workOrder.technician) {
+      await workOrder.populate('technician', 'name email');
+    }
     await workOrder.populate('services.service', 'name description');
     await workOrder.populate('createdBy', 'name email');
 
@@ -382,6 +418,79 @@ router.post('/workorders', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Create work order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/workorders/:id
+// @desc    Update work order
+// @access  Private
+router.put('/workorders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    // Clean up the request body - convert empty strings to null for dates
+    const cleanedBody = { ...req.body };
+    const requestDateFields = ['estimatedStartDate', 'estimatedCompletionDate', 'actualStartDate', 'actualCompletionDate'];
+    requestDateFields.forEach(field => {
+      if (cleanedBody[field] === '') {
+        cleanedBody[field] = null;
+      }
+    });
+
+    // Validate input
+    const { error, value } = workOrderUpdateSchema.validate(cleanedBody);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const workOrder = await WorkOrder.findById(req.params.id);
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    // Convert string dates to Date objects if they exist
+    const updateData = { ...value };
+    const updateDateFields = ['estimatedStartDate', 'estimatedCompletionDate', 'actualStartDate', 'actualCompletionDate'];
+    updateDateFields.forEach(field => {
+      if (updateData[field] && typeof updateData[field] === 'string' && updateData[field] !== '') {
+        updateData[field] = new Date(updateData[field]);
+      }
+    });
+
+    // Map technicianId to technician if provided
+    if (updateData.technicianId !== undefined) {
+      updateData.technician = updateData.technicianId;
+      delete updateData.technicianId;
+    }
+
+    // Update work order
+    Object.assign(workOrder, updateData);
+    await workOrder.save();
+
+    // Populate references
+    await workOrder.populate('customer', 'name email phone');
+    if (workOrder.technician) {
+      await workOrder.populate('technician', 'name email');
+    }
+    await workOrder.populate('services.service', 'name description');
+    await workOrder.populate('createdBy', 'name email');
+
+    res.json({
+      success: true,
+      message: 'Work order updated successfully',
+      data: { workOrder }
+    });
+
+  } catch (error) {
+    console.error('Update work order error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -407,7 +516,7 @@ router.put('/workorders/:id/status', requireAnyAdmin, async (req, res) => {
     await workOrder.updateStatus(status, notes);
 
     // Populate references
-    await workOrder.populate('customer', 'businessName contactPerson');
+    await workOrder.populate('customer', 'name email phone');
     await workOrder.populate('technician', 'name email');
     await workOrder.populate('services.service', 'name description');
     await workOrder.populate('createdBy', 'name email');
@@ -420,6 +529,53 @@ router.put('/workorders/:id/status', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Update work order status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/services/workorders/:id/assign-technician
+// @desc    Assign technician to work order
+// @access  Private
+router.post('/workorders/:id/assign-technician', requireAnyAdmin, async (req, res) => {
+  try {
+    const { technicianId } = req.body;
+
+    const workOrder = await WorkOrder.findById(req.params.id);
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    const technician = await Technician.findById(technicianId);
+    if (!technician) {
+      return res.status(404).json({
+        success: false,
+        message: 'Technician not found'
+      });
+    }
+
+    workOrder.technician = technicianId;
+    await workOrder.save();
+
+    // Populate references
+    await workOrder.populate('customer', 'name email phone');
+    await workOrder.populate('technician', 'name email');
+    await workOrder.populate('services.service', 'name description');
+    await workOrder.populate('createdBy', 'name email');
+
+    res.json({
+      success: true,
+      message: 'Technician assigned successfully',
+      data: { workOrder }
+    });
+
+  } catch (error) {
+    console.error('Assign technician error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -599,6 +755,306 @@ router.delete('/technicians/:id', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Delete technician error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/catalog/:id
+// @desc    Get single service catalog item
+// @access  Private
+router.get('/catalog/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const service = await ServiceCatalog.findById(req.params.id)
+      .populate('createdBy', 'name email');
+    
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { service }
+    });
+
+  } catch (error) {
+    console.error('Get service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/workorders/:id
+// @desc    Get single work order
+// @access  Private
+router.get('/workorders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const workOrder = await WorkOrder.findById(req.params.id)
+      .populate('customer', 'name email phone')
+      .populate('technician', 'name email')
+      .populate('services.service', 'name description')
+      .populate('createdBy', 'name email');
+    
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { workOrder }
+    });
+
+  } catch (error) {
+    console.error('Get work order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/technicians/:id
+// @desc    Get single technician
+// @access  Private
+router.get('/technicians/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const technician = await Technician.findById(req.params.id)
+      .populate('createdBy', 'name email');
+    
+    if (!technician) {
+      return res.status(404).json({
+        success: false,
+        message: 'Technician not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { technician }
+    });
+
+  } catch (error) {
+    console.error('Get technician error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/catalog/stats/overview
+// @desc    Get service catalog statistics
+// @access  Private
+router.get('/catalog/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const totalServices = await ServiceCatalog.countDocuments();
+    const activeServices = await ServiceCatalog.countDocuments({ isActive: true });
+    const inactiveServices = await ServiceCatalog.countDocuments({ isActive: false });
+    
+    const byCategory = await ServiceCatalog.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const avgLaborRate = await ServiceCatalog.aggregate([
+      { $group: { _id: null, avgRate: { $avg: '$laborRate' } } }
+    ]);
+
+    const totalEstimatedDuration = await ServiceCatalog.aggregate([
+      { $group: { _id: null, totalDuration: { $sum: '$estimatedDuration' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalServices,
+        activeServices,
+        inactiveServices,
+        byCategory: byCategory.map(item => ({ category: item._id, count: item.count })),
+        avgLaborRate: avgLaborRate[0]?.avgRate || 0,
+        totalEstimatedDuration: totalEstimatedDuration[0]?.totalDuration || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get service catalog stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/workorders/stats/overview
+// @desc    Get work order statistics
+// @access  Private
+router.get('/workorders/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const query = {};
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+
+    const totalWorkOrders = await WorkOrder.countDocuments(query);
+    const pendingCount = await WorkOrder.countDocuments({ ...query, status: 'pending' });
+    const inProgressCount = await WorkOrder.countDocuments({ ...query, status: 'in_progress' });
+    const completedCount = await WorkOrder.countDocuments({ ...query, status: 'completed' });
+    const cancelledCount = await WorkOrder.countDocuments({ ...query, status: 'cancelled' });
+    const onHoldCount = await WorkOrder.countDocuments({ ...query, status: 'on_hold' });
+
+    const byStatus = await WorkOrder.aggregate([
+      { $match: query },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const byPriority = await WorkOrder.aggregate([
+      { $match: query },
+      { $group: { _id: '$priority', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const totalRevenue = await WorkOrder.aggregate([
+      { $match: { ...query, status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$totalCost' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalWorkOrders,
+        pendingCount,
+        inProgressCount,
+        completedCount,
+        cancelledCount,
+        onHoldCount,
+        avgCompletionTime: 0, // TODO: Calculate based on actual completion times
+        totalRevenue: totalRevenue[0]?.total || 0,
+        byStatus: byStatus.map(item => ({ status: item._id, count: item.count })),
+        byPriority: byPriority.map(item => ({ priority: item._id, count: item.count }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Get work order stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/technicians/stats/overview
+// @desc    Get technician statistics
+// @access  Private
+router.get('/technicians/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const totalTechnicians = await Technician.countDocuments();
+    const activeTechnicians = await Technician.countDocuments({ isActive: true });
+    const inactiveTechnicians = await Technician.countDocuments({ isActive: false });
+    
+    const avgHourlyRate = await Technician.aggregate([
+      { $group: { _id: null, avgRate: { $avg: '$hourlyRate' } } }
+    ]);
+
+    const bySpecialization = await Technician.aggregate([
+      { $unwind: '$specializations' },
+      { $group: { _id: '$specializations', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalTechnicians,
+        activeTechnicians,
+        inactiveTechnicians,
+        avgHourlyRate: avgHourlyRate[0]?.avgRate || 0,
+        totalExperience: 0, // TODO: Calculate based on experience data
+        bySpecialization: bySpecialization.map(item => ({ specialization: item._id, count: item.count }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Get technician stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/categories
+// @desc    Get all service categories
+// @access  Private
+router.get('/categories', requireAnyAdmin, async (req, res) => {
+  try {
+    const categories = await ServiceCatalog.distinct('category');
+    res.json({
+      success: true,
+      data: categories
+    });
+  } catch (error) {
+    console.error('Get categories error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/specializations
+// @desc    Get all technician specializations
+// @access  Private
+router.get('/specializations', requireAnyAdmin, async (req, res) => {
+  try {
+    const specializations = await Technician.distinct('specializations');
+    res.json({
+      success: true,
+      data: specializations
+    });
+  } catch (error) {
+    console.error('Get specializations error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/technicians/available
+// @desc    Get available technicians for a date/time
+// @access  Private
+router.get('/technicians/available', requireAnyAdmin, async (req, res) => {
+  try {
+    const { date, timeSlot } = req.query;
+    
+    // For now, return all active technicians
+    // TODO: Implement actual availability logic based on work orders and schedules
+    const technicians = await Technician.find({ isActive: true })
+      .populate('createdBy', 'name email')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: technicians
+    });
+  } catch (error) {
+    console.error('Get available technicians error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

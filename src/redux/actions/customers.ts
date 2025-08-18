@@ -14,9 +14,12 @@ export const fetchCustomers = createAsyncThunk(
   'customers/fetchCustomers',
   async (filters: CustomerFilters = {}, { rejectWithValue }) => {
     try {
+      console.log('fetchCustomers: Calling customerService.getCustomers with filters:', filters)
       const response = await customerService.getCustomers(filters);
+      console.log('fetchCustomers: Response from API:', response)
       return response.data;
     } catch (error: any) {
+      console.error('fetchCustomers: Error:', error)
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch customers');
     }
   }

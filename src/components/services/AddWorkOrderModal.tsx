@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClipboardList } from 'react-icons/hi'
 import { createWorkOrder } from '../../redux/actions/services'
+import { fetchCustomers } from '../../redux/actions/customers'
 import { useAppDispatch, useAppSelector } from '../../redux'
 import { WorkOrderFormData, CreateWorkOrderData, ServiceCatalogItem, Technician } from '../../services/services'
 
@@ -14,7 +15,7 @@ interface Props {
 export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
   const dispatch = useAppDispatch()
   const { catalog, technicians } = useAppSelector(state => state.services)
-  const { list: customers } = useAppSelector(state => state.customers)
+  const { list: customers, loading: customersLoading } = useAppSelector(state => state.customers)
   
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<WorkOrderFormData>({
@@ -30,6 +31,28 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
     partsCost: 0,
     notes: ''
   })
+
+  // Load customers when modal opens
+  useEffect(() => {
+    console.log('AddWorkOrderModal: customers.length =', customers.length)
+    console.log('AddWorkOrderModal: customersLoading =', customersLoading)
+    if (customers.length === 0) {
+      console.log('AddWorkOrderModal: Dispatching fetchCustomers')
+      dispatch(fetchCustomers({ limit: 100 }))
+    }
+  }, [dispatch, customers.length])
+
+  // Add a timeout to show error if customers don't load
+  useEffect(() => {
+    if (customersLoading) {
+      const timeout = setTimeout(() => {
+        if (customers.length === 0) {
+          console.error('AddWorkOrderModal: Customers failed to load after timeout')
+        }
+      }, 5000)
+      return () => clearTimeout(timeout)
+    }
+  }, [customersLoading, customers.length])
 
   // Get selected customer's vehicles
   const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
@@ -120,14 +143,23 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
             onChange={(e) => handleInputChange('customerId', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
+            disabled={customersLoading}
           >
-            <option value="">Select Customer</option>
+            <option value="">
+              {customersLoading ? 'Loading customers...' : 'Select Customer'}
+            </option>
             {customers?.map(customer => (
               <option key={customer._id} value={customer._id}>
                 {customer.name} - {customer.email}
               </option>
             ))}
           </select>
+          {customersLoading && (
+            <p className="text-sm text-gray-500 mt-1">Loading customers...</p>
+          )}
+          {!customersLoading && customers.length === 0 && (
+            <p className="text-sm text-gray-500 mt-1">No customers found. Please add customers first.</p>
+          )}
         </div>
 
         <div>

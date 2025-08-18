@@ -83,7 +83,6 @@ const serviceCatalogSchema = new mongoose.Schema({
 const workOrderSchema = new mongoose.Schema({
   workOrderNumber: {
     type: String,
-    required: true,
     unique: true
   },
   customer: {
@@ -148,13 +147,12 @@ const workOrderSchema = new mongoose.Schema({
   }],
   technician: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Technician',
-    required: true
+    ref: 'Technician'
   },
   status: {
     type: String,
-    enum: ['created', 'in-progress', 'waiting-parts', 'completed', 'invoiced', 'cancelled'],
-    default: 'created'
+    enum: ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'],
+    default: 'pending'
   },
   priority: {
     type: String,
@@ -321,7 +319,7 @@ workOrderSchema.methods.calculateTotals = function() {
 workOrderSchema.methods.updateStatus = function(newStatus, notes = '') {
   this.status = newStatus;
   
-  if (newStatus === 'in-progress' && !this.actualStartDate) {
+  if (newStatus === 'in_progress' && !this.actualStartDate) {
     this.actualStartDate = new Date();
   }
   

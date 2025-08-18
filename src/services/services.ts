@@ -44,22 +44,39 @@ export interface UpdateServiceCatalogData {
 // Work Order Interfaces
 export interface WorkOrder {
   _id: string;
+  workOrderNumber: string;
   customer: {
     _id: string;
     name: string;
     email: string;
     phone: string;
   };
-  service: {
-    _id: string;
-    name: string;
-    description: string;
-  };
+  services: Array<{
+    service: {
+      _id: string;
+      name: string;
+      description: string;
+    };
+    description?: string;
+    laborHours: number;
+    laborRate: number;
+    parts: Array<{
+      name: string;
+      partNumber?: string;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+      inStock: boolean;
+    }>;
+    totalCost: number;
+  }>;
   vehicle: {
     make: string;
     model: string;
-    year: string;
-    vin: string;
+    year: number;
+    vin?: string;
+    licensePlate?: string;
+    mileage?: number;
   };
   technician?: {
     _id: string;
@@ -68,15 +85,16 @@ export interface WorkOrder {
   };
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  estimatedStartDate: string;
-  estimatedEndDate: string;
+  estimatedStartDate?: string;
+  estimatedCompletionDate?: string;
   actualStartDate?: string;
-  actualEndDate?: string;
-  laborHours: number;
-  laborRate: number;
-  partsCost: number;
+  actualCompletionDate?: string;
+  totalLaborHours: number;
+  totalLaborCost: number;
+  totalPartsCost: number;
   totalCost: number;
   notes?: string;
+  customerNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -129,18 +147,30 @@ export interface CreateWorkOrderData {
 }
 
 export interface UpdateWorkOrderData {
-  serviceId?: string;
+  services?: Array<{
+    service: string;
+    description?: string;
+    laborHours: number;
+    laborRate: number;
+    parts?: Array<{
+      name: string;
+      partNumber?: string;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+      inStock: boolean;
+    }>;
+    totalCost: number;
+  }>;
   technicianId?: string;
   status?: WorkOrder['status'];
   priority?: WorkOrder['priority'];
   estimatedStartDate?: string;
-  estimatedEndDate?: string;
+  estimatedCompletionDate?: string;
   actualStartDate?: string;
-  actualEndDate?: string;
-  laborHours?: number;
-  laborRate?: number;
-  partsCost?: number;
+  actualCompletionDate?: string;
   notes?: string;
+  customerNotes?: string;
 }
 
 // Technician Interfaces
@@ -264,7 +294,9 @@ class ServiceManagementService {
         params.append(key, value.toString());
       }
     });
-    return apiResponse(api.get(`/services/catalog?${params.toString()}`));
+    const response = await apiResponse(api.get(`/services/catalog?${params.toString()}`));
+    console.log('getServiceCatalog API response:', response);
+    return response;
   }
 
   async getServiceCatalogItem(id: string): Promise<ServiceCatalogItem> {
@@ -284,95 +316,111 @@ class ServiceManagementService {
   }
 
   async getServiceCatalogStats(): Promise<ServiceStats> {
-    return apiResponse(api.get('/services/catalog/stats/overview'));
+    const response = await apiResponse(api.get('/services/catalog/stats/overview'));
+    console.log('getServiceCatalogStats API response:', response);
+    return response;
   }
 
   // Work Order Methods
-  async getWorkOrders(filters: WorkOrderFilters = {}): Promise<apiResponse<{ data: WorkOrder[]; pagination: any }>> {
+  async getWorkOrders(filters: WorkOrderFilters = {}): Promise<{ data: WorkOrder[]; pagination: any }> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, value.toString());
       }
     });
-    return api.get(`/services/workorders?${params.toString()}`);
+    const response = await apiResponse(api.get(`/services/workorders?${params.toString()}`));
+    console.log('getWorkOrders API response:', response);
+    return response;
   }
 
-  async getWorkOrder(id: string): Promise<apiResponse<WorkOrder>> {
-    return api.get(`/services/workorders/${id}`);
+  async getWorkOrder(id: string): Promise<WorkOrder> {
+    return apiResponse(api.get(`/services/workorders/${id}`));
   }
 
   async createWorkOrder(data: CreateWorkOrderData): Promise<WorkOrder> {
     return apiResponse(api.post('/services/workorders', data));
   }
 
-  async updateWorkOrder(id: string, data: UpdateWorkOrderData): Promise<apiResponse<WorkOrder>> {
-    return api.put(`/services/workorders/${id}`, data);
+  async updateWorkOrder(id: string, data: UpdateWorkOrderData): Promise<WorkOrder> {
+    return apiResponse(api.put(`/services/workorders/${id}`, data));
   }
 
-  async deleteWorkOrder(id: string): Promise<apiResponse<{ message: string }>> {
-    return api.delete(`/services/workorders/${id}`);
+  async deleteWorkOrder(id: string): Promise<{ message: string }> {
+    return apiResponse(api.delete(`/services/workorders/${id}`));
   }
 
-  async updateWorkOrderStatus(id: string, status: WorkOrder['status']): Promise<apiResponse<WorkOrder>> {
-    return api.patch(`/services/workorders/${id}/status`, { status });
+  async updateWorkOrderStatus(id: string, status: WorkOrder['status']): Promise<WorkOrder> {
+    return apiResponse(api.patch(`/services/workorders/${id}/status`, { status }));
   }
 
-  async assignTechnician(id: string, technicianId: string): Promise<apiResponse<WorkOrder>> {
-    return api.post(`/services/workorders/${id}/assign-technician`, { technicianId });
+  async assignTechnician(id: string, technicianId: string): Promise<WorkOrder> {
+    return apiResponse(api.post(`/services/workorders/${id}/assign-technician`, { technicianId }));
   }
 
-  async getWorkOrderStats(startDate?: string, endDate?: string): Promise<apiResponse<WorkOrderStats>> {
+  async getWorkOrderStats(startDate?: string, endDate?: string): Promise<WorkOrderStats> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
-    return api.get(`/services/workorders/stats/overview?${params.toString()}`);
+    const response = await apiResponse(api.get(`/services/workorders/stats/overview?${params.toString()}`));
+    console.log('getWorkOrderStats API response:', response);
+    return response;
   }
 
   // Technician Methods
-  async getTechnicians(filters: TechnicianFilters = {}): Promise<apiResponse<{ data: Technician[]; pagination: any }>> {
+  async getTechnicians(filters: TechnicianFilters = {}): Promise<{ data: Technician[]; pagination: any }> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, value.toString());
       }
     });
-    return api.get(`/services/technicians?${params.toString()}`);
+    const response = await apiResponse(api.get(`/services/technicians?${params.toString()}`));
+    console.log('getTechnicians API response:', response);
+    return response;
   }
 
-  async getTechnician(id: string): Promise<apiResponse<Technician>> {
-    return api.get(`/services/technicians/${id}`);
+  async getTechnician(id: string): Promise<Technician> {
+    return apiResponse(api.get(`/services/technicians/${id}`));
   }
 
-  async createTechnician(data: CreateTechnicianData): Promise<apiResponse<Technician>> {
-    return api.post('/services/technicians', data);
+  async createTechnician(data: CreateTechnicianData): Promise<Technician> {
+    return apiResponse(api.post('/services/technicians', data));
   }
 
-  async updateTechnician(id: string, data: UpdateTechnicianData): Promise<apiResponse<Technician>> {
-    return api.put(`/services/technicians/${id}`, data);
+  async updateTechnician(id: string, data: UpdateTechnicianData): Promise<Technician> {
+    return apiResponse(api.put(`/services/technicians/${id}`, data));
   }
 
-  async deleteTechnician(id: string): Promise<apiResponse<{ message: string }>> {
-    return api.delete(`/services/technicians/${id}`);
+  async deleteTechnician(id: string): Promise<{ message: string }> {
+    return apiResponse(api.delete(`/services/technicians/${id}`));
   }
 
-  async getTechnicianStats(): Promise<apiResponse<TechnicianStats>> {
-    return api.get('/services/technicians/stats/overview');
+  async getTechnicianStats(): Promise<TechnicianStats> {
+    const response = await apiResponse(api.get('/services/technicians/stats/overview'));
+    console.log('getTechnicianStats API response:', response);
+    return response;
   }
 
-  async getAvailableTechnicians(date: string, timeSlot?: string): Promise<apiResponse<Technician[]>> {
+  async getAvailableTechnicians(date: string, timeSlot?: string): Promise<Technician[]> {
     const params = new URLSearchParams({ date });
     if (timeSlot) params.append('timeSlot', timeSlot);
-    return api.get(`/services/technicians/available?${params.toString()}`);
+    const response = await apiResponse(api.get(`/services/technicians/available?${params.toString()}`));
+    console.log('getAvailableTechnicians API response:', response);
+    return response;
   }
 
   // General Service Methods
-  async getServiceCategories(): Promise<apiResponse<string[]>> {
-    return api.get('/services/categories');
+  async getServiceCategories(): Promise<string[]> {
+    const response = await apiResponse(api.get('/services/categories'));
+    console.log('getServiceCategories API response:', response);
+    return response;
   }
 
-  async getSpecializations(): Promise<apiResponse<string[]>> {
-    return api.get('/services/specializations');
+  async getSpecializations(): Promise<string[]> {
+    const response = await apiResponse(api.get('/services/specializations'));
+    console.log('getSpecializations API response:', response);
+    return response;
   }
 }
 

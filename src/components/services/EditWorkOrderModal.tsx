@@ -19,33 +19,36 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
   
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<UpdateWorkOrderData>({
-    serviceId: '',
+    services: [],
     technicianId: '',
     priority: 'medium',
     estimatedStartDate: '',
-    estimatedEndDate: '',
+    estimatedCompletionDate: '',
     actualStartDate: '',
-    actualEndDate: '',
-    laborHours: 1,
-    laborRate: 120,
-    partsCost: 0,
-    notes: ''
+    actualCompletionDate: '',
+    notes: '',
+    customerNotes: ''
   })
 
   useEffect(() => {
     if (workOrder) {
       setFormData({
-        serviceId: workOrder.service._id,
+        services: workOrder.services.map(service => ({
+          service: service.service._id,
+          description: service.description || '',
+          laborHours: service.laborHours,
+          laborRate: service.laborRate,
+          parts: service.parts || [],
+          totalCost: service.totalCost
+        })),
         technicianId: workOrder.technician?._id || '',
         priority: workOrder.priority,
-        estimatedStartDate: workOrder.estimatedStartDate,
-        estimatedEndDate: workOrder.estimatedEndDate,
+        estimatedStartDate: workOrder.estimatedStartDate || '',
+        estimatedCompletionDate: workOrder.estimatedCompletionDate || '',
         actualStartDate: workOrder.actualStartDate || '',
-        actualEndDate: workOrder.actualEndDate || '',
-        laborHours: workOrder.laborHours,
-        laborRate: workOrder.laborRate,
-        partsCost: workOrder.partsCost,
-        notes: workOrder.notes || ''
+        actualCompletionDate: workOrder.actualCompletionDate || '',
+        notes: workOrder.notes || '',
+        customerNotes: workOrder.customerNotes || ''
       })
     }
   }, [workOrder])
@@ -54,14 +57,44 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleServiceChange = (index: number, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services?.map((service, i) => 
+        i === index ? { ...service, [field]: value } : service
+      ) || []
+    }))
+  }
+
+  const addService = () => {
+    setFormData(prev => ({
+      ...prev,
+      services: [...(prev.services || []), {
+        service: '',
+        description: '',
+        laborHours: 1,
+        laborRate: 120,
+        parts: [],
+        totalCost: 0
+      }]
+    }))
+  }
+
+  const removeService = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services?.filter((_, i) => i !== index) || []
+    }))
+  }
+
   const handleSubmit = async () => {
     if (!workOrder?._id) {
       toast.error('Work order ID is missing')
       return
     }
 
-    if (!formData.serviceId) {
-      toast.error('Please select a service')
+    if (!formData.services || formData.services.length === 0) {
+      toast.error('Please add at least one service')
       return
     }
 
@@ -103,30 +136,104 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Service *
-          </label>
-          <select
-            value={formData.serviceId}
-            onChange={(e) => handleInputChange('serviceId', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-          >
-            <option value="">Select Service</option>
-            {catalog?.filter(service => service.isActive).map(service => (
-              <option key={service._id} value={service._id}>
-                {service.name} - ${service.laborRate}/hr
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
             Vehicle
           </label>
           <div className="px-3 py-2 bg-gray-100 rounded-lg text-sm">
             {workOrder.vehicle.make} {workOrder.vehicle.model} ({workOrder.vehicle.year})
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Services *
+          </label>
+          {formData.services?.map((service, index) => (
+            <div key={index} className="border border-gray-300 rounded-lg p-3 mb-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Service {index + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => removeService(index)}
+                  className="text-red-600 hover:text-red-800 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Service</label>
+                  <select
+                    value={service.service}
+                    onChange={(e) => handleServiceChange(index, 'service', e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    required
+                  >
+                    <option value="">Select Service</option>
+                    {catalog?.filter(cat => cat.isActive).map(cat => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name} - ${cat.laborRate}/hr
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Labor Hours</label>
+                  <input
+                    type="number"
+                    value={service.laborHours}
+                    onChange={(e) => handleServiceChange(index, 'laborHours', parseFloat(e.target.value) || 0)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    min="0"
+                    step="0.5"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Labor Rate ($/hr)</label>
+                  <input
+                    type="number"
+                    value={service.laborRate}
+                    onChange={(e) => handleServiceChange(index, 'laborRate', parseFloat(e.target.value) || 0)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Total Cost</label>
+                  <input
+                    type="number"
+                    value={service.totalCost}
+                    onChange={(e) => handleServiceChange(index, 'totalCost', parseFloat(e.target.value) || 0)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-2">
+                <label className="block text-xs text-gray-600 mb-1">Description</label>
+                <textarea
+                  value={service.description}
+                  onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  rows={2}
+                />
+              </div>
+            </div>
+          ))}
+          
+          <button
+            type="button"
+            onClick={addService}
+            className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-800"
+          >
+            + Add Service
+          </button>
         </div>
 
         <div>
@@ -138,22 +245,13 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
             onChange={(e) => handleInputChange('technicianId', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">Select Technician (Optional)</option>
+            <option value="">Select Technician</option>
             {technicians?.filter(tech => tech.isActive).map(technician => (
               <option key={technician._id} value={technician._id}>
                 {technician.name} - ${technician.hourlyRate}/hr
               </option>
             ))}
           </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Status
-          </label>
-          <div className="px-3 py-2 bg-gray-100 rounded-lg text-sm">
-            {workOrder.status.replace('_', ' ')}
-          </div>
         </div>
 
         <div>
@@ -175,97 +273,25 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estimated Start Date *
+              Estimated Start Date
             </label>
             <input
               type="datetime-local"
               value={formData.estimatedStartDate}
               onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
             />
           </div>
-
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estimated End Date *
+              Estimated Completion Date
             </label>
             <input
               type="datetime-local"
-              value={formData.estimatedEndDate}
-              onChange={(e) => handleInputChange('estimatedEndDate', e.target.value)}
+              value={formData.estimatedCompletionDate}
+              onChange={(e) => handleInputChange('estimatedCompletionDate', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Actual Start Date
-            </label>
-            <input
-              type="datetime-local"
-              value={formData.actualStartDate}
-              onChange={(e) => handleInputChange('actualStartDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Actual End Date
-            </label>
-            <input
-              type="datetime-local"
-              value={formData.actualEndDate}
-              onChange={(e) => handleInputChange('actualEndDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Labor Hours
-            </label>
-            <input
-              type="number"
-              value={formData.laborHours}
-              onChange={(e) => handleInputChange('laborHours', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              min="0.5"
-              step="0.5"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Labor Rate ($/hr)
-            </label>
-            <input
-              type="number"
-              value={formData.laborRate}
-              onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Parts Cost ($)
-            </label>
-            <input
-              type="number"
-              value={formData.partsCost}
-              onChange={(e) => handleInputChange('partsCost', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              min="0"
-              step="0.01"
             />
           </div>
         </div>
@@ -279,7 +305,18 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
             onChange={(e) => handleInputChange('notes', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             rows={3}
-            placeholder="Additional notes about the work order"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Customer Notes
+          </label>
+          <textarea
+            value={formData.customerNotes}
+            onChange={(e) => handleInputChange('customerNotes', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows={3}
           />
         </div>
       </div>

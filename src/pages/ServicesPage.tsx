@@ -84,7 +84,12 @@ export default function ServicesPage() {
       techniciansLoading,
       catalogError,
       workOrdersError,
-      techniciansError
+      techniciansError,
+      workOrdersType: typeof workOrders,
+      workOrdersIsArray: Array.isArray(workOrders),
+      workOrdersValue: workOrders,
+      catalogValue: catalog,
+      techniciansValue: technicians
     })
   }, [catalog, workOrders, technicians, catalogLoading, workOrdersLoading, techniciansLoading, catalogError, workOrdersError, techniciansError])
   const dispatch = useAppDispatch()
@@ -102,16 +107,16 @@ export default function ServicesPage() {
     dispatch(fetchSpecializations())
   }, [dispatch])
 
-  // Filter service catalog
-  const filteredCatalog = (catalog || []).filter(service => {
+  // Filter service catalog with safety check
+  const filteredCatalog = (Array.isArray(catalog) ? catalog : []).filter(service => {
     const matchesSearch = (service.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (service.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
     return matchesSearch && matchesCategory && service.isActive
   })
 
-  // Filter work orders
-  const filteredWorkOrders = (workOrders || []).filter(order => {
+  // Filter work orders with safety check
+  const filteredWorkOrders = (Array.isArray(workOrders) ? workOrders : []).filter(order => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
     return matchesStatus
   })
@@ -176,13 +181,13 @@ export default function ServicesPage() {
     dispatch(fetchWorkOrderStats({}))
   }
 
-  // Statistics calculations
-  const totalServices = catalog?.length || 0
-  const activeServices = catalog?.filter(s => s && s.isActive).length || 0
-  const totalWorkOrders = workOrders?.length || 0
-  const completedWorkOrders = workOrders?.filter(w => w && w.status === 'completed').length || 0
-  const totalTechnicians = technicians?.length || 0
-  const activeTechnicians = technicians?.filter(t => t && t.isActive).length || 0
+  // Statistics calculations with safety checks
+  const totalServices = (Array.isArray(catalog) ? catalog.length : 0)
+  const activeServices = (Array.isArray(catalog) ? catalog.filter(s => s && s.isActive).length : 0)
+  const totalWorkOrders = (Array.isArray(workOrders) ? workOrders.length : 0)
+  const completedWorkOrders = (Array.isArray(workOrders) ? workOrders.filter(w => w && w.status === 'completed').length : 0)
+  const totalTechnicians = (Array.isArray(technicians) ? technicians.length : 0)
+  const activeTechnicians = (Array.isArray(technicians) ? technicians.filter(t => t && t.isActive).length : 0)
 
   const renderStatistics = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
