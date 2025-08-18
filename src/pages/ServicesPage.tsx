@@ -12,6 +12,9 @@ import {
   fetchServiceCategories,
   fetchSpecializations
 } from "../redux/actions/services"
+import AddServiceModal from "../components/services/AddServiceModal"
+import EditServiceModal from "../components/services/EditServiceModal"
+import DeleteServiceModal from "../components/services/DeleteServiceModal"
 import {
   HiPlus,
   HiPencil,
@@ -37,6 +40,12 @@ export default function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
 
   const { 
     catalog, 
@@ -98,6 +107,26 @@ export default function ServicesPage() {
   
   // Final safety check to ensure availableCategories is always an array
   const safeAvailableCategories = Array.isArray(availableCategories) ? availableCategories : []
+
+  // Modal handlers
+  const handleAddService = () => {
+    setShowAddModal(true)
+  }
+
+  const handleEditService = (service: ServiceCatalogItem) => {
+    setSelectedService(service)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteService = (service: ServiceCatalogItem) => {
+    setSelectedService(service)
+    setShowDeleteModal(true)
+  }
+
+  const handleServiceSuccess = () => {
+    dispatch(fetchServiceCatalog({}))
+    dispatch(fetchServiceCatalogStats())
+  }
 
   // Statistics calculations
   const totalServices = catalog?.length || 0
@@ -161,7 +190,10 @@ export default function ServicesPage() {
           <h2 className="text-xl font-semibold text-gray-800">Service Catalog</h2>
           <p className="text-gray-600">Manage your service offerings and pricing</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddService}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Add Service
         </button>
@@ -226,10 +258,18 @@ export default function ServicesPage() {
                 </span>
               </div>
               <div className="flex gap-2">
-                <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                <button 
+                  onClick={() => handleEditService(service)}
+                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                  title="Edit service"
+                >
                   <HiPencil className="w-4 h-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                <button 
+                  onClick={() => handleDeleteService(service)}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Delete service"
+                >
                   <HiTrash className="w-4 h-4" />
                 </button>
               </div>
@@ -533,6 +573,36 @@ export default function ServicesPage() {
           {activeTab === 'technicians' && renderTechnicians()}
         </div>
       </div>
+
+      {/* Service Modals */}
+      {showAddModal && (
+        <AddServiceModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={handleServiceSuccess}
+        />
+      )}
+
+      {showEditModal && (
+        <EditServiceModal
+          service={selectedService}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedService(null)
+          }}
+          onSuccess={handleServiceSuccess}
+        />
+      )}
+
+      {showDeleteModal && (
+        <DeleteServiceModal
+          service={selectedService}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setSelectedService(null)
+          }}
+          onSuccess={handleServiceSuccess}
+        />
+      )}
     </div>
   )
 }

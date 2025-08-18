@@ -1,0 +1,156 @@
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import ModalWrapper from '../../utils/ModalWrapper'
+import { HiCog } from 'react-icons/hi'
+import { createServiceCatalogItem } from '../../redux/actions/services'
+import { useAppDispatch } from '../../redux'
+import { CreateServiceCatalogData } from '../../services/services'
+
+interface Props {
+  onClose: () => void
+  onSuccess: () => void
+}
+
+export default function AddServiceModal({ onClose, onSuccess }: Props) {
+  const dispatch = useAppDispatch()
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState<CreateServiceCatalogData>({
+    name: '',
+    description: '',
+    category: 'maintenance',
+    estimatedDuration: 60,
+    laborRate: 120,
+    parts: [],
+    isActive: true
+  })
+
+  const handleInputChange = (field: keyof CreateServiceCatalogData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.description) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      await dispatch(createServiceCatalogItem(formData)).unwrap()
+      toast.success('Service created successfully')
+      onSuccess()
+      onClose()
+    } catch (error: any) {
+      console.error('Failed to create service:', error)
+      toast.error(error.message || 'Failed to create service')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <ModalWrapper
+      title="Add New Service"
+      icon={<HiCog className="w-5 h-5" />}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      submitLabel={loading ? 'Creating...' : 'Create Service'}
+      submitColor="bg-blue-600"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Service Name *
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="e.g., Oil Change, Brake Inspection"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description *
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            rows={3}
+            placeholder="Describe the service in detail"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Category *
+          </label>
+          <select
+            value={formData.category}
+            onChange={(e) => handleInputChange('category', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="maintenance">Maintenance</option>
+            <option value="repair">Repair</option>
+            <option value="diagnostic">Diagnostic</option>
+            <option value="inspection">Inspection</option>
+            <option value="emergency">Emergency</option>
+            <option value="preventive">Preventive</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estimated Duration (minutes) *
+            </label>
+            <input
+              type="number"
+              value={formData.estimatedDuration}
+              onChange={(e) => handleInputChange('estimatedDuration', parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min="15"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Labor Rate ($/hour) *
+            </label>
+            <input
+              type="number"
+              value={formData.laborRate}
+              onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isActive"
+            checked={formData.isActive}
+            onChange={(e) => handleInputChange('isActive', e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
+            Service is active and available
+          </label>
+        </div>
+      </div>
+    </ModalWrapper>
+  )
+}
