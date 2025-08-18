@@ -528,10 +528,10 @@ export default function ServicesPage() {
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <HiUser className="w-6 h-6 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{technician.name}</h3>
-                    <p className="text-gray-600 text-sm">{technician.email}</p>
-                  </div>
+                                     <div>
+                     <h3 className="text-lg font-semibold text-gray-800">{technician.name || 'Unknown'}</h3>
+                     <p className="text-gray-600 text-sm">{technician.email || 'No email'}</p>
+                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
@@ -541,30 +541,30 @@ export default function ServicesPage() {
               </div>
               
               <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Phone</span>
-                  <span className="font-medium">{technician.phone}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Hourly Rate</span>
-                  <span className="font-medium">${technician.hourlyRate}/hr</span>
-                </div>
+                                 <div className="flex items-center justify-between">
+                   <span className="text-gray-500">Phone</span>
+                   <span className="font-medium">{technician.phone || 'N/A'}</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-gray-500">Hourly Rate</span>
+                   <span className="font-medium">${technician.hourlyRate || 0}/hr</span>
+                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Specializations</span>
-                  <span className="font-medium">{technician.specialization.length} areas</span>
+                  <span className="font-medium">{(technician.specialization || []).length} areas</span>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex flex-wrap gap-1">
-                  {technician.specialization.slice(0, 3).map((spec: string) => (
+                  {(technician.specialization || []).slice(0, 3).map((spec: string) => (
                     <span key={spec} className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
                       {spec}
                     </span>
                   ))}
-                  {technician.specialization.length > 3 && (
+                  {(technician.specialization || []).length > 3 && (
                     <span className="inline-block text-gray-500 text-xs px-2 py-1">
-                      +{technician.specialization.length - 3} more
+                      +{(technician.specialization || []).length - 3} more
                     </span>
                   )}
                 </div>
