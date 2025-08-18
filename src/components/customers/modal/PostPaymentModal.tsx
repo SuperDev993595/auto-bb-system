@@ -1,31 +1,58 @@
 import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../../utils/ModalWrapper'
 import { HiCreditCard } from 'react-icons/hi'
+import { customerService } from '../../../services/customers'
 
-export default function PostPaymentModal({ onClose }: { onClose: () => void }) {
+interface Props {
+    customerId: string
+    onClose: () => void
+    onSuccess: () => void
+}
+
+export default function PostPaymentModal({ customerId, onClose, onSuccess }: Props) {
     const [amount, setAmount] = useState('')
-    const [date, setDate] = useState('')
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0])
     const [method, setMethod] = useState('')
     const [notes, setNotes] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    const handleSubmit = () => {
-        if (!amount || !date || !method) {
-            alert('Please fill all required fields')
+    const handleSubmit = async () => {
+        if (!amount || !method) {
+            toast.error('Please fill all required fields')
             return
         }
 
-        console.log({ amount, date, method, notes })
-        onClose()
+        setLoading(true)
+
+        try {
+            await customerService.addPayment(customerId, {
+                amount: parseFloat(amount),
+                date: date || new Date().toISOString(),
+                method: method as 'cash' | 'card' | 'check' | 'bank_transfer' | 'online' | 'other',
+                notes: notes || undefined
+            })
+            
+            toast.success('Payment added successfully!')
+            onSuccess()
+            onClose()
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to add payment'
+            toast.error(message)
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
         <ModalWrapper
             title="Post New Payment"
             icon={<HiCreditCard className="text-blue-600 w-5 h-5" />}
-            submitLabel="Save Payment"
+            submitLabel={loading ? "Saving..." : "Save Payment"}
             submitColor="bg-blue-600"
             onClose={onClose}
             onSubmit={handleSubmit}
+            disabled={loading}
         >
             <div className="grid gap-4">
                 <label className="block">
@@ -56,9 +83,12 @@ export default function PostPaymentModal({ onClose }: { onClose: () => void }) {
                         onChange={(e) => setMethod(e.target.value)}
                     >
                         <option value="">Select Method</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="Check">Check</option>
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="check">Check</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="online">Online</option>
+                        <option value="other">Other</option>
                     </select>
                 </label>
 

@@ -1,10 +1,13 @@
 import { Customer } from '../../../services/customers'
+import { FaEdit, FaTrash } from 'react-icons/fa'
 
 type Props = {
     customer: Customer
+    onEditVehicle?: (vehicle: any) => void
+    onDeleteVehicle?: (vehicle: any) => void
 }
 
-export default function OverviewSection({ customer }: Props) {
+export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle }: Props) {
     return (
         <div className="space-y-6">
             {/* Contact & Basic Info */}
@@ -99,17 +102,52 @@ export default function OverviewSection({ customer }: Props) {
                         {customer.vehicles.map((vehicle) => (
                             <div key={vehicle._id} className="border border-gray-200 rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-medium text-gray-800">
-                                        {vehicle.year} {vehicle.make} {vehicle.model}
-                                    </h4>
-                                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                        {vehicle.color}
-                                    </span>
+                                    <div className="flex-1">
+                                        <h4 className="font-medium text-gray-800">
+                                            {vehicle.year} {vehicle.make} {vehicle.model}
+                                        </h4>
+                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                            {vehicle.color}
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-2 ml-2">
+                                        {onEditVehicle && (
+                                            <button
+                                                onClick={() => onEditVehicle(vehicle)}
+                                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                                title="Edit Vehicle"
+                                            >
+                                                <FaEdit className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        {onDeleteVehicle && (
+                                            <button
+                                                onClick={() => onDeleteVehicle(vehicle)}
+                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                title="Delete Vehicle"
+                                            >
+                                                <FaTrash className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="space-y-1 text-sm text-gray-600">
                                     <p><span className="font-medium">VIN:</span> {vehicle.vin}</p>
                                     <p><span className="font-medium">License:</span> {vehicle.licensePlate}</p>
                                     <p><span className="font-medium">Mileage:</span> {vehicle.mileage.toLocaleString()} miles</p>
+                                    {vehicle.status && (
+                                        <p><span className="font-medium">Status:</span> 
+                                            <span className={`ml-1 px-2 py-1 text-xs rounded-full ${
+                                                vehicle.status === 'active' 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : vehicle.status === 'inactive'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                                {vehicle.status}
+                                            </span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ))}

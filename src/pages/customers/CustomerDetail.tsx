@@ -10,6 +10,12 @@ import AppointmentsSection from '../../components/customers/section/Appointments
 import TowingSection from '../../components/customers/section/TowingSection'
 import CallLogsSection from '../../components/customers/section/CallLogsSection'
 
+import EditCustomerModal from '../../components/customers/modal/EditCustomerModal'
+import DeleteCustomerModal from '../../components/customers/modal/DeleteCustomerModal'
+import AddVehicleModal from '../../components/customers/modal/AddVehicleModal'
+import EditVehicleModal from '../../components/customers/modal/EditVehicleModal'
+import DeleteVehicleModal from '../../components/customers/modal/DeleteVehicleModal'
+
 import {
   HiOutlineUserCircle,
   HiOutlineCash,
@@ -18,6 +24,7 @@ import {
   HiOutlineTruck,
   HiOutlinePhone
 } from 'react-icons/hi'
+import { FaEdit, FaTrash, FaCar } from 'react-icons/fa'
 
 const tabs = [
   { key: 'Overview', label: 'Overview', icon: HiOutlineUserCircle },
@@ -32,6 +39,12 @@ export default function CustomerDetail() {
   const { id } = useParams()
   const dispatch = useAppDispatch()
   const [activeTab, setActiveTab] = useState('Overview')
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
+  const [showEditVehicleModal, setShowEditVehicleModal] = useState(false)
+  const [showDeleteVehicleModal, setShowDeleteVehicleModal] = useState(false)
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
 
   const { selectedCustomer: customer, loading, error } = useAppSelector(state => state.customers)
 
@@ -82,8 +95,27 @@ export default function CustomerDetail() {
           <p className="text-sm text-gray-500">Customer ID: {customer._id}</p>
         </div>
         <div className="flex gap-2 mt-4 md:mt-0">
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow-sm">✏️ Edit</button>
-          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-sm">🗑️ Delete</button>
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+          >
+            <FaEdit className="w-4 h-4" />
+            Edit
+          </button>
+          <button 
+            onClick={() => setShowAddVehicleModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+          >
+            <FaCar className="w-4 h-4" />
+            Add Vehicle
+          </button>
+          <button 
+            onClick={() => setShowDeleteModal(true)}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+          >
+            <FaTrash className="w-4 h-4" />
+            Delete
+          </button>
         </div>
       </div>
 
@@ -108,13 +140,96 @@ export default function CustomerDetail() {
 
       {/* Tab Content */}
       <div className="bg-white border rounded-xl shadow p-6">
-        {activeTab === 'Overview' && <OverviewSection customer={customer} />}
+        {activeTab === 'Overview' && (
+          <OverviewSection 
+            customer={customer} 
+            onEditVehicle={(vehicle) => {
+              setSelectedVehicle(vehicle)
+              setShowEditVehicleModal(true)
+            }}
+            onDeleteVehicle={(vehicle) => {
+              setSelectedVehicle(vehicle)
+              setShowDeleteVehicleModal(true)
+            }}
+          />
+        )}
         {activeTab === 'Payments' && <PaymentsSection customer={customer} />}
         {activeTab === 'Arrangements' && <ArrangementsSection customer={customer} />}
         {activeTab === 'Appointments' && <AppointmentsSection customer={customer} />}
         {activeTab === 'Towing' && <TowingSection customer={customer} />}
         {activeTab === 'Call Logs' && <CallLogsSection customer={customer} />}
       </div>
+
+      {/* Modals */}
+      {customer && (
+        <>
+          <EditCustomerModal
+            customer={customer}
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            onSuccess={() => {
+              // Refresh customer data after successful edit
+              if (id) {
+                dispatch(fetchCustomer(id))
+              }
+            }}
+          />
+          
+          <DeleteCustomerModal
+            customer={customer}
+            isOpen={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+          />
+          
+          <AddVehicleModal
+            customer={customer}
+            isOpen={showAddVehicleModal}
+            onClose={() => setShowAddVehicleModal(false)}
+            onSuccess={() => {
+              // Refresh customer data after successful vehicle addition
+              if (id) {
+                dispatch(fetchCustomer(id))
+              }
+            }}
+          />
+          
+          {selectedVehicle && (
+            <>
+              <EditVehicleModal
+                customer={customer}
+                vehicle={selectedVehicle}
+                isOpen={showEditVehicleModal}
+                onClose={() => {
+                  setShowEditVehicleModal(false)
+                  setSelectedVehicle(null)
+                }}
+                onSuccess={() => {
+                  // Refresh customer data after successful vehicle edit
+                  if (id) {
+                    dispatch(fetchCustomer(id))
+                  }
+                }}
+              />
+              
+              <DeleteVehicleModal
+                customer={customer}
+                vehicle={selectedVehicle}
+                isOpen={showDeleteVehicleModal}
+                onClose={() => {
+                  setShowDeleteVehicleModal(false)
+                  setSelectedVehicle(null)
+                }}
+                onSuccess={() => {
+                  // Refresh customer data after successful vehicle deletion
+                  if (id) {
+                    dispatch(fetchCustomer(id))
+                  }
+                }}
+              />
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }

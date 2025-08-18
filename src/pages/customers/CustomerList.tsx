@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../redux'
-import { fetchCustomers, fetchCustomerStats } from '../../redux/actions/customers'
-import { FaTh, FaList, FaPlus, FaSearch, FaCar, FaCalendarAlt } from 'react-icons/fa'
+import { fetchCustomers, fetchCustomerStats, deleteCustomer } from '../../redux/actions/customers'
+import { FaTh, FaList, FaPlus, FaSearch, FaCar, FaCalendarAlt, FaEdit, FaTrash, FaCarSide } from 'react-icons/fa'
 import PageTitle from '../../components/Shared/PageTitle'
+import { toast } from 'react-hot-toast'
 
 function CustomerList() {
   const dispatch = useAppDispatch();
@@ -45,6 +46,21 @@ function CustomerList() {
   // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Handle delete customer
+  const handleDeleteCustomer = async (customerId: string, customerName: string) => {
+    if (window.confirm(`Are you sure you want to delete ${customerName}? This action cannot be undone.`)) {
+      try {
+        await dispatch(deleteCustomer(customerId)).unwrap();
+        toast.success('Customer deleted successfully');
+        // Refresh the list
+        dispatch(fetchCustomers({ page: currentPage, limit: 8, ...filters }));
+        dispatch(fetchCustomerStats());
+      } catch (error) {
+        toast.error('Failed to delete customer');
+      }
+    }
   };
 
   // Helper function to format address
@@ -207,20 +223,41 @@ function CustomerList() {
           {view === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCustomers.map((customer) => (
-                <Link
-                  key={customer._id}
-                  to={`/admin/dashboard/customers/${customer._id}`}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-                >
-                                     <div className="flex items-center justify-between mb-4">
-                     <h3 className="font-semibold text-gray-900 truncate">{customer.businessName || customer.name}</h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      customer.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {customer.status}
-                    </span>
+                <div key={customer._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <Link
+                      to={`/admin/dashboard/customers/${customer._id}`}
+                      className="flex-1"
+                    >
+                      <h3 className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
+                        {customer.businessName || customer.name}
+                      </h3>
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        customer.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {customer.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <Link
+                          to={`/admin/dashboard/customers/${customer._id}`}
+                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                          title="View Details"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteCustomer(customer._id, customer.name)}
+                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          title="Delete Customer"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="space-y-2 text-sm text-gray-600">
@@ -236,12 +273,12 @@ function CustomerList() {
                       <span className="font-medium">Vehicles:</span>
                       {customer.vehicles?.length || 0}
                     </p>
-                                         <p className="flex items-center gap-2">
-                       <span className="font-medium">Address:</span>
-                       {formatAddress(customer.address)}
-                     </p>
+                    <p className="flex items-center gap-2">
+                      <span className="font-medium">Address:</span>
+                      {formatAddress(customer.address)}
+                    </p>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
@@ -264,18 +301,21 @@ function CustomerList() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredCustomers.map((customer) => (
                     <tr key={customer._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                                                 <Link
-                           to={`/admin/dashboard/customers/${customer._id}`}
-                           className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                         >
-                           {customer.businessName || customer.name}
-                         </Link>
+                        <Link
+                          to={`/admin/dashboard/customers/${customer._id}`}
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                        >
+                          {customer.businessName || customer.name}
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {customer.name || 'N/A'}
@@ -283,9 +323,9 @@ function CustomerList() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {customer.vehicles?.length || 0}
                       </td>
-                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                         {formatAddress(customer.address)}
-                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatAddress(customer.address)}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           customer.status === 'active' 
@@ -294,6 +334,24 @@ function CustomerList() {
                         }`}>
                           {customer.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex gap-2">
+                          <Link
+                            to={`/admin/dashboard/customers/${customer._id}`}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="View Details"
+                          >
+                            <FaEdit className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteCustomer(customer._id, customer.name)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Delete Customer"
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

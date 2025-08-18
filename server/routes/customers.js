@@ -11,6 +11,10 @@ const { Technician } = require('../models/Service');
 const Invoice = require('../models/Invoice');
 const Message = require('../models/Message');
 const Notification = require('../models/Notification');
+const Payment = require('../models/Payment');
+const Arrangement = require('../models/Arrangement');
+const Towing = require('../models/Towing');
+const CallLog = require('../models/CallLog');
 const notificationService = require('../services/notificationService');
 
 const router = express.Router();
@@ -20,7 +24,7 @@ const vehicleSchema = Joi.object({
   year: Joi.number().integer().min(1900).max(new Date().getFullYear() + 1).required(),
   make: Joi.string().min(1).max(50).required(),
   model: Joi.string().min(1).max(50).required(),
-  vin: Joi.string().min(17).max(17).required(),
+  vin: Joi.string().min(8).max(17).required(),
   licensePlate: Joi.string().min(1).max(20).required(),
   color: Joi.string().min(1).max(30).required(),
   mileage: Joi.number().integer().min(0).required(),
@@ -92,6 +96,47 @@ const customerCreateSchema = Joi.object({
   notes: Joi.string().max(1000).allow('').optional()
 });
 
+const paymentSchema = Joi.object({
+  amount: Joi.number().positive().required(),
+  date: Joi.date().max('now').optional(),
+  method: Joi.string().valid('cash', 'card', 'check', 'bank_transfer', 'online', 'other').required(),
+  reference: Joi.string().max(100).allow('').optional(),
+  notes: Joi.string().max(500).allow('').optional(),
+  status: Joi.string().valid('pending', 'completed', 'failed', 'refunded').default('completed'),
+  invoice: Joi.string().optional(),
+  appointment: Joi.string().optional()
+});
+
+const arrangementSchema = Joi.object({
+  date: Joi.date().max('now').optional(),
+  amount: Joi.number().positive().required(),
+  notes: Joi.string().max(500).allow('').optional(),
+  status: Joi.string().valid('pending', 'active', 'completed', 'cancelled').default('pending'),
+  type: Joi.string().valid('installment', 'payment_plan', 'deferred', 'other').default('installment'),
+  dueDate: Joi.date().required()
+});
+
+const towingSchema = Joi.object({
+  date: Joi.date().max('now').optional(),
+  location: Joi.string().max(200).required(),
+  destination: Joi.string().max(200).allow('').optional(),
+  status: Joi.string().valid('scheduled', 'in_progress', 'completed', 'cancelled').default('scheduled'),
+  notes: Joi.string().max(500).allow('').optional(),
+  cost: Joi.number().min(0).default(0),
+  vehicle: Joi.string().max(100).allow('').optional()
+});
+
+const callLogSchema = Joi.object({
+  date: Joi.date().max('now').optional(),
+  type: Joi.string().valid('inbound', 'outbound', 'missed', 'voicemail').required(),
+  duration: Joi.number().min(0).default(0),
+  notes: Joi.string().max(1000).allow('').optional(),
+  summary: Joi.string().max(200).allow('').optional(),
+  followUpDate: Joi.date().optional(),
+  followUpRequired: Joi.boolean().default(false),
+  phoneNumber: Joi.string().max(20).allow('').optional()
+});
+
 // Get customers (admin access) - allows admins to search customers, or users to find their own customer record
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -158,8 +203,19 @@ router.get('/', authenticateToken, async (req, res) => {
       .skip((page - 1) * limit)
       .exec();
 
+    // Get vehicles for each customer
+    const customersWithVehicles = await Promise.all(
+      customers.map(async (customer) => {
+        const vehicles = await Vehicle.find({ customer: customer._id });
+        return {
+          ...customer.toObject(),
+          vehicles: vehicles
+        };
+      })
+    );
+
     // Transform customers to match frontend expectations
-    const transformedCustomers = customers.map(customer => ({
+    const transformedCustomers = customersWithVehicles.map(customer => ({
       _id: customer._id,
       id: customer._id,
       name: customer.name,
@@ -168,6 +224,7 @@ router.get('/', authenticateToken, async (req, res) => {
       businessName: customer.businessName,
       address: customer.address,
       status: customer.status,
+      vehicles: customer.vehicles || [],
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt
     }));
@@ -245,6 +302,7 @@ router.post('/', authenticateToken, requireAnyAdmin, async (req, res) => {
       businessName: customer.businessName,
       address: customer.address,
       status: customer.status,
+      vehicles: [],
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt
     };
@@ -256,6 +314,123 @@ router.post('/', authenticateToken, requireAnyAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating customer:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update customer (admin only)
+router.put('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate customer ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(id);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Validate request body (using same schema as create, but all fields optional)
+    const customerUpdateSchema = Joi.object({
+      name: Joi.string().min(2).max(100).optional(),
+      email: Joi.string().email().optional(),
+      phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
+      businessName: Joi.string().max(100).optional(),
+      address: Joi.object({
+        street: Joi.string().max(200).optional(),
+        city: Joi.string().max(100).optional(),
+        state: Joi.string().max(50).optional(),
+        zipCode: Joi.string().max(20).optional()
+      }).optional(),
+      status: Joi.string().valid('active', 'inactive', 'prospect').optional(),
+      notes: Joi.string().max(1000).optional()
+    });
+
+    const { error, value } = customerUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ 
+        success: false, 
+        message: error.details[0].message 
+      });
+    }
+
+    // Check if email is being updated and if it already exists
+    if (value.email && value.email !== customer.email) {
+      const existingCustomer = await Customer.findOne({ email: value.email });
+      if (existingCustomer) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'A customer with this email address already exists' 
+        });
+      }
+    }
+
+    // Update customer
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      id,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    // Get vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: updatedCustomer._id });
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: updatedCustomer._id,
+      id: updatedCustomer._id,
+      name: updatedCustomer.name,
+      email: updatedCustomer.email,
+      phone: updatedCustomer.phone,
+      businessName: updatedCustomer.businessName,
+      address: updatedCustomer.address,
+      status: updatedCustomer.status,
+      notes: updatedCustomer.notes,
+      vehicles: vehicles || [],
+      createdAt: updatedCustomer.createdAt,
+      updatedAt: updatedCustomer.updatedAt
+    };
+
+    res.json({
+      success: true,
+      message: 'Customer updated successfully',
+      data: { customer: transformedCustomer }
+    });
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete customer (admin only)
+router.delete('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate customer ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(id);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Delete customer
+    await Customer.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: 'Customer deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting customer:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -503,7 +678,7 @@ router.get('/vehicles/all', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
-// Add new vehicle
+// Add new vehicle (for customers to add their own vehicles)
 router.post('/vehicles', authenticateToken, requireCustomer, async (req, res) => {
   try {
     const { error, value } = vehicleSchema.validate(req.body);
@@ -1403,6 +1578,9 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
       });
     }
 
+    // Get vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: customer._id });
+
     // Transform customer for response
     const transformedCustomer = {
       _id: customer._id,
@@ -1414,6 +1592,7 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
       address: customer.address,
       status: customer.status,
       notes: customer.notes,
+      vehicles: vehicles || [],
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt
     };
@@ -1424,6 +1603,985 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching customer:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Add new vehicle to specific customer (admin only) - Must be after /:id route
+router.post('/:customerId/vehicles', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    // Validate customer ID
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const { error, value } = vehicleSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    // Check for duplicate VIN within customer's vehicles
+    const existingVehicle = await Vehicle.findOne({ 
+      customer: customer._id, 
+      vin: value.vin 
+    });
+    if (existingVehicle) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
+
+    // Create new vehicle in separate collection
+    const newVehicle = new Vehicle({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id
+    });
+    await newVehicle.save();
+
+    // Get updated vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: customer._id });
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      notes: customer.notes,
+      vehicles: vehicles || [],
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'Vehicle added successfully',
+      data: { customer: transformedCustomer }
+    });
+  } catch (error) {
+    console.error('Error adding vehicle:', error);
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update vehicle for specific customer (admin only)
+router.put('/:customerId/vehicles/:vehicleId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, vehicleId } = req.params;
+    
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(vehicleId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Find vehicle
+    const vehicle = await Vehicle.findById(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    // Check if vehicle belongs to this customer
+    if (vehicle.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Vehicle does not belong to this customer' });
+    }
+
+    // Validate update data
+    const vehicleUpdateSchema = Joi.object({
+      year: Joi.number().integer().min(1900).max(new Date().getFullYear() + 1).optional(),
+      make: Joi.string().min(1).max(50).optional(),
+      model: Joi.string().min(1).max(50).optional(),
+      vin: Joi.string().min(8).max(17).optional(),
+      licensePlate: Joi.string().min(1).max(20).optional(),
+      color: Joi.string().min(1).max(30).optional(),
+      mileage: Joi.number().integer().min(0).optional(),
+      status: Joi.string().valid('active', 'inactive', 'maintenance').optional()
+    });
+
+    const { error, value } = vehicleUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    // Check for duplicate VIN if VIN is being updated
+    if (value.vin && value.vin !== vehicle.vin) {
+      const existingVehicle = await Vehicle.findOne({ 
+        customer: customer._id, 
+        vin: value.vin,
+        _id: { $ne: vehicleId }
+      });
+      if (existingVehicle) {
+        return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+      }
+    }
+
+    // Update vehicle
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(
+      vehicleId,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    // Get updated vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: customer._id });
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      notes: customer.notes,
+      vehicles: vehicles || [],
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    };
+
+    res.json({
+      success: true,
+      message: 'Vehicle updated successfully',
+      data: { customer: transformedCustomer }
+    });
+  } catch (error) {
+    console.error('Error updating vehicle:', error);
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete vehicle for specific customer (admin only)
+router.delete('/:customerId/vehicles/:vehicleId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, vehicleId } = req.params;
+    
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(vehicleId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Find vehicle
+    const vehicle = await Vehicle.findById(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    // Check if vehicle belongs to this customer
+    if (vehicle.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Vehicle does not belong to this customer' });
+    }
+
+    // Delete vehicle
+    await Vehicle.findByIdAndDelete(vehicleId);
+
+    // Get updated vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: customer._id });
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      notes: customer.notes,
+      vehicles: vehicles || [],
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    };
+
+    res.json({
+      success: true,
+      message: 'Vehicle deleted successfully',
+      data: { customer: transformedCustomer }
+    });
+  } catch (error) {
+    console.error('Error deleting vehicle:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get payments for specific customer (admin only)
+router.get('/:customerId/payments', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc' } = req.query;
+    
+    // Validate customer ID
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const payments = await Payment.find({ customer: customerId })
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Get total count
+    const total = await Payment.countDocuments({ customer: customerId });
+
+    res.json({
+      success: true,
+      data: {
+        payments,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalPayments: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Add payment for specific customer (admin only)
+router.post('/:customerId/payments', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    // Validate customer ID
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Validate payment data
+    const { error, value } = paymentSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    // Create new payment
+    const payment = new Payment({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id,
+      date: value.date || new Date()
+    });
+
+    await payment.save();
+
+    // Get updated payments for this customer
+    const payments = await Payment.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.status(201).json({
+      success: true,
+      message: 'Payment added successfully',
+      data: { payment, payments }
+    });
+  } catch (error) {
+    console.error('Error adding payment:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update payment for specific customer (admin only)
+router.put('/:customerId/payments/:paymentId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, paymentId } = req.params;
+    
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Find payment
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+
+    // Check if payment belongs to this customer
+    if (payment.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Payment does not belong to this customer' });
+    }
+
+    // Validate update data
+    const paymentUpdateSchema = Joi.object({
+      amount: Joi.number().positive().optional(),
+      date: Joi.date().max('now').optional(),
+      method: Joi.string().valid('cash', 'card', 'check', 'bank_transfer', 'online', 'other').optional(),
+      reference: Joi.string().max(100).allow('').optional(),
+      notes: Joi.string().max(500).allow('').optional(),
+      status: Joi.string().valid('pending', 'completed', 'failed', 'refunded').optional()
+    });
+
+    const { error, value } = paymentUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    // Update payment
+    const updatedPayment = await Payment.findByIdAndUpdate(
+      paymentId,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    // Get updated payments for this customer
+    const payments = await Payment.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Payment updated successfully',
+      data: { payment: updatedPayment, payments }
+    });
+  } catch (error) {
+    console.error('Error updating payment:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete payment for specific customer (admin only)
+router.delete('/:customerId/payments/:paymentId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, paymentId } = req.params;
+    
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Find customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // Find payment
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+
+    // Check if payment belongs to this customer
+    if (payment.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Payment does not belong to this customer' });
+    }
+
+    // Delete payment
+    await Payment.findByIdAndDelete(paymentId);
+
+    // Get updated payments for this customer
+    const payments = await Payment.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Payment deleted successfully',
+      data: { payments }
+    });
+  } catch (error) {
+    console.error('Error deleting payment:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// ==================== ARRANGEMENTS ROUTES ====================
+
+// Get arrangements for specific customer (admin only)
+router.get('/:customerId/arrangements', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc' } = req.query;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const arrangements = await Arrangement.find({ customer: customerId })
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const total = await Arrangement.countDocuments({ customer: customerId });
+
+    res.json({
+      success: true,
+      data: {
+        arrangements,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalArrangements: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching arrangements:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Add arrangement for specific customer (admin only)
+router.post('/:customerId/arrangements', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const { error, value } = arrangementSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const arrangement = new Arrangement({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id,
+      date: value.date || new Date()
+    });
+
+    await arrangement.save();
+
+    const arrangements = await Arrangement.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.status(201).json({
+      success: true,
+      message: 'Arrangement added successfully',
+      data: { arrangement, arrangements }
+    });
+  } catch (error) {
+    console.error('Error adding arrangement:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update arrangement for specific customer (admin only)
+router.put('/:customerId/arrangements/:arrangementId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, arrangementId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(arrangementId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const arrangement = await Arrangement.findById(arrangementId);
+    if (!arrangement) {
+      return res.status(404).json({ success: false, message: 'Arrangement not found' });
+    }
+
+    if (arrangement.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Arrangement does not belong to this customer' });
+    }
+
+    const arrangementUpdateSchema = Joi.object({
+      date: Joi.date().max('now').optional(),
+      amount: Joi.number().positive().optional(),
+      notes: Joi.string().max(500).allow('').optional(),
+      status: Joi.string().valid('pending', 'active', 'completed', 'cancelled').optional(),
+      type: Joi.string().valid('installment', 'payment_plan', 'deferred', 'other').optional(),
+      dueDate: Joi.date().optional()
+    });
+
+    const { error, value } = arrangementUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const updatedArrangement = await Arrangement.findByIdAndUpdate(
+      arrangementId,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    const arrangements = await Arrangement.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Arrangement updated successfully',
+      data: { arrangement: updatedArrangement, arrangements }
+    });
+  } catch (error) {
+    console.error('Error updating arrangement:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete arrangement for specific customer (admin only)
+router.delete('/:customerId/arrangements/:arrangementId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, arrangementId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(arrangementId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const arrangement = await Arrangement.findById(arrangementId);
+    if (!arrangement) {
+      return res.status(404).json({ success: false, message: 'Arrangement not found' });
+    }
+
+    if (arrangement.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Arrangement does not belong to this customer' });
+    }
+
+    await Arrangement.findByIdAndDelete(arrangementId);
+
+    const arrangements = await Arrangement.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Arrangement deleted successfully',
+      data: { arrangements }
+    });
+  } catch (error) {
+    console.error('Error deleting arrangement:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// ==================== TOWING ROUTES ====================
+
+// Get towing records for specific customer (admin only)
+router.get('/:customerId/towing', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc' } = req.query;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const towingRecords = await Towing.find({ customer: customerId })
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const total = await Towing.countDocuments({ customer: customerId });
+
+    res.json({
+      success: true,
+      data: {
+        towingRecords,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalTowingRecords: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching towing records:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Add towing record for specific customer (admin only)
+router.post('/:customerId/towing', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const { error, value } = towingSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const towingRecord = new Towing({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id,
+      date: value.date || new Date()
+    });
+
+    await towingRecord.save();
+
+    const towingRecords = await Towing.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.status(201).json({
+      success: true,
+      message: 'Towing record added successfully',
+      data: { towingRecord, towingRecords }
+    });
+  } catch (error) {
+    console.error('Error adding towing record:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update towing record for specific customer (admin only)
+router.put('/:customerId/towing/:towingId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, towingId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(towingId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const towingRecord = await Towing.findById(towingId);
+    if (!towingRecord) {
+      return res.status(404).json({ success: false, message: 'Towing record not found' });
+    }
+
+    if (towingRecord.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Towing record does not belong to this customer' });
+    }
+
+    const towingUpdateSchema = Joi.object({
+      date: Joi.date().max('now').optional(),
+      location: Joi.string().max(200).optional(),
+      destination: Joi.string().max(200).allow('').optional(),
+      status: Joi.string().valid('scheduled', 'in_progress', 'completed', 'cancelled').optional(),
+      notes: Joi.string().max(500).allow('').optional(),
+      cost: Joi.number().min(0).optional(),
+      vehicle: Joi.string().max(100).allow('').optional()
+    });
+
+    const { error, value } = towingUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const updatedTowingRecord = await Towing.findByIdAndUpdate(
+      towingId,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    const towingRecords = await Towing.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Towing record updated successfully',
+      data: { towingRecord: updatedTowingRecord, towingRecords }
+    });
+  } catch (error) {
+    console.error('Error updating towing record:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete towing record for specific customer (admin only)
+router.delete('/:customerId/towing/:towingId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, towingId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(towingId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const towingRecord = await Towing.findById(towingId);
+    if (!towingRecord) {
+      return res.status(404).json({ success: false, message: 'Towing record not found' });
+    }
+
+    if (towingRecord.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Towing record does not belong to this customer' });
+    }
+
+    await Towing.findByIdAndDelete(towingId);
+
+    const towingRecords = await Towing.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Towing record deleted successfully',
+      data: { towingRecords }
+    });
+  } catch (error) {
+    console.error('Error deleting towing record:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// ==================== CALL LOGS ROUTES ====================
+
+// Get call logs for specific customer (admin only)
+router.get('/:customerId/call-logs', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc' } = req.query;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const callLogs = await CallLog.find({ customer: customerId })
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const total = await CallLog.countDocuments({ customer: customerId });
+
+    res.json({
+      success: true,
+      data: {
+        callLogs,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalCallLogs: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching call logs:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Add call log for specific customer (admin only)
+router.post('/:customerId/call-logs', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const { error, value } = callLogSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const callLog = new CallLog({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id,
+      date: value.date || new Date()
+    });
+
+    await callLog.save();
+
+    const callLogs = await CallLog.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.status(201).json({
+      success: true,
+      message: 'Call log added successfully',
+      data: { callLog, callLogs }
+    });
+  } catch (error) {
+    console.error('Error adding call log:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Update call log for specific customer (admin only)
+router.put('/:customerId/call-logs/:callLogId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, callLogId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(callLogId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const callLog = await CallLog.findById(callLogId);
+    if (!callLog) {
+      return res.status(404).json({ success: false, message: 'Call log not found' });
+    }
+
+    if (callLog.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Call log does not belong to this customer' });
+    }
+
+    const callLogUpdateSchema = Joi.object({
+      date: Joi.date().max('now').optional(),
+      type: Joi.string().valid('inbound', 'outbound', 'missed', 'voicemail').optional(),
+      duration: Joi.number().min(0).optional(),
+      notes: Joi.string().max(1000).allow('').optional(),
+      summary: Joi.string().max(200).allow('').optional(),
+      followUpDate: Joi.date().optional(),
+      followUpRequired: Joi.boolean().optional(),
+      phoneNumber: Joi.string().max(20).allow('').optional()
+    });
+
+    const { error, value } = callLogUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const updatedCallLog = await CallLog.findByIdAndUpdate(
+      callLogId,
+      { ...value, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    const callLogs = await CallLog.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Call log updated successfully',
+      data: { callLog: updatedCallLog, callLogs }
+    });
+  } catch (error) {
+    console.error('Error updating call log:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete call log for specific customer (admin only)
+router.delete('/:customerId/call-logs/:callLogId', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId, callLogId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(callLogId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const callLog = await CallLog.findById(callLogId);
+    if (!callLog) {
+      return res.status(404).json({ success: false, message: 'Call log not found' });
+    }
+
+    if (callLog.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Call log does not belong to this customer' });
+    }
+
+    await CallLog.findByIdAndDelete(callLogId);
+
+    const callLogs = await CallLog.find({ customer: customer._id }).sort({ date: -1 });
+
+    res.json({
+      success: true,
+      message: 'Call log deleted successfully',
+      data: { callLogs }
+    });
+  } catch (error) {
+    console.error('Error deleting call log:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

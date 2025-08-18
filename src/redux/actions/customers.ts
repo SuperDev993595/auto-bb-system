@@ -106,7 +106,7 @@ export const searchCustomers = createAsyncThunk(
 // Customer slice
 interface CustomerState {
   list: Customer[];
-  currentCustomer: Customer | null;
+  selectedCustomer: Customer | null;
   stats: CustomerStats | null;
   loading: boolean;
   error: string | null;
@@ -123,7 +123,7 @@ interface CustomerState {
 
 const initialState: CustomerState = {
   list: [],
-  currentCustomer: null,
+  selectedCustomer: null,
   stats: null,
   loading: false,
   error: null,
@@ -139,14 +139,14 @@ const customerSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    clearCurrentCustomer: (state) => {
-      state.currentCustomer = null;
+    clearSelectedCustomer: (state) => {
+      state.selectedCustomer = null;
     },
     clearSearchResults: (state) => {
       state.searchResults = [];
     },
-    setCurrentCustomer: (state, action: PayloadAction<Customer>) => {
-      state.currentCustomer = action.payload;
+    setSelectedCustomer: (state, action: PayloadAction<Customer>) => {
+      state.selectedCustomer = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -174,7 +174,7 @@ const customerSlice = createSlice({
       })
       .addCase(fetchCustomer.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentCustomer = action.payload;
+        state.selectedCustomer = action.payload;
       })
       .addCase(fetchCustomer.rejected, (state, action) => {
         state.loading = false;
@@ -211,8 +211,8 @@ const customerSlice = createSlice({
         if (index !== -1) {
           state.list[index] = action.payload;
         }
-        if (state.currentCustomer?._id === action.payload._id) {
-          state.currentCustomer = action.payload;
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
         }
       })
       .addCase(updateCustomer.rejected, (state, action) => {
@@ -232,8 +232,8 @@ const customerSlice = createSlice({
         if (state.pagination) {
           state.pagination.totalCustomers -= 1;
         }
-        if (state.currentCustomer?._id === action.payload) {
-          state.currentCustomer = null;
+        if (state.selectedCustomer?._id === action.payload) {
+          state.selectedCustomer = null;
         }
       })
       .addCase(deleteCustomer.rejected, (state, action) => {
@@ -273,5 +273,5 @@ const customerSlice = createSlice({
   },
 });
 
-export const { clearError, clearCurrentCustomer, clearSearchResults, setCurrentCustomer } = customerSlice.actions;
+export const { clearError, clearSelectedCustomer, clearSearchResults, setSelectedCustomer } = customerSlice.actions;
 export default customerSlice.reducer;
