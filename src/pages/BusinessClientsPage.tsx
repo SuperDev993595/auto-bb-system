@@ -28,6 +28,7 @@ import businessClientService, {
   CreateBusinessClientData 
 } from '../services/businessClients';
 import ConfirmDialog from '../components/Shared/ConfirmDialog';
+import AddBusinessClientModal from '../components/businessClients/AddBusinessClientModal';
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -49,6 +50,7 @@ export default function BusinessClientsPage() {
     monthlyRecurringRevenue: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<BusinessClientFilters>({
     page: 1,
     limit: 10,
@@ -70,6 +72,7 @@ export default function BusinessClientsPage() {
     type: 'danger',
     onConfirm: () => {}
   });
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadBusinessClients();
@@ -79,11 +82,13 @@ export default function BusinessClientsPage() {
   const loadBusinessClients = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await businessClientService.getBusinessClients(filters);
       setBusinessClients(response.businessClients);
       setPagination(response.pagination);
     } catch (error) {
       console.error('Error loading business clients:', error);
+      setError('Failed to load business clients');
       toast.error('Failed to load business clients');
     } finally {
       setLoading(false);
@@ -96,6 +101,7 @@ export default function BusinessClientsPage() {
       setStats(statsData);
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Don't show error toast for stats as it's not critical
     }
   };
 
@@ -145,6 +151,20 @@ export default function BusinessClientsPage() {
       console.error('Error deleting business client:', error);
       toast.error('Failed to delete business client');
     }
+  };
+
+  const handleViewClient = (clientId: string) => {
+    // TODO: Implement view client functionality
+    toast('View functionality coming soon', { icon: '👁️' });
+  };
+
+  const handleEditClient = (clientId: string) => {
+    // TODO: Implement edit client functionality
+    toast('Edit functionality coming soon', { icon: '✏️' });
+  };
+
+  const handleAddClient = () => {
+    setShowAddModal(true);
   };
 
   const showConfirmDialog = (title: string, message: string, type: 'danger' | 'warning' | 'info' | 'success', onConfirm: () => void) => {
@@ -258,6 +278,27 @@ export default function BusinessClientsPage() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  loadBusinessClients();
+                }}
+                className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-6 border-b border-gray-200">
@@ -316,7 +357,10 @@ export default function BusinessClientsPage() {
               </select>
             </div>
 
-            <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button 
+              onClick={handleAddClient}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <Plus className="h-5 w-5 mr-2" />
               Add Business Client
             </button>
@@ -341,7 +385,25 @@ export default function BusinessClientsPage() {
               {businessClients.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    No business clients found. Create your first business client to get started.
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                        Loading business clients...
+                      </div>
+                    ) : (
+                      <div>
+                        <Building className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-lg font-medium text-gray-900 mb-2">No business clients found</p>
+                        <p className="text-gray-500 mb-4">Get started by creating your first business client.</p>
+                        <button
+                          onClick={handleAddClient}
+                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          <Plus className="h-5 w-5 mr-2" />
+                          Add Business Client
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -394,10 +456,18 @@ export default function BusinessClientsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          onClick={() => handleViewClient(client._id)}
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                          title="View details"
+                        >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleEditClient(client._id)}
+                          className="text-gray-600 hover:text-gray-900 transition-colors"
+                          title="Edit client"
+                        >
                           <Pencil className="w-4 h-4" />
                         </button>
                         {client.subscription.status === 'trial' && (
@@ -408,7 +478,8 @@ export default function BusinessClientsPage() {
                               'success',
                               () => handleActivateClient(client._id)
                             )}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 hover:text-green-900 transition-colors"
+                            title="Activate client"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </button>
@@ -421,7 +492,8 @@ export default function BusinessClientsPage() {
                               'warning',
                               () => handleSuspendClient(client._id)
                             )}
-                            className="text-yellow-600 hover:text-yellow-900"
+                            className="text-yellow-600 hover:text-yellow-900 transition-colors"
+                            title="Suspend client"
                           >
                             <XCircle className="w-4 h-4" />
                           </button>
@@ -433,7 +505,8 @@ export default function BusinessClientsPage() {
                             'danger',
                             () => handleDeleteClient(client._id)
                           )}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 transition-colors"
+                          title="Delete client"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -459,7 +532,7 @@ export default function BusinessClientsPage() {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
@@ -469,7 +542,7 @@ export default function BusinessClientsPage() {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
@@ -490,6 +563,16 @@ export default function BusinessClientsPage() {
           setConfirmDialog(prev => ({ ...prev, isOpen: false }));
         }}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Add Business Client Modal */}
+      <AddBusinessClientModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={() => {
+          loadBusinessClients();
+          loadStats();
+        }}
       />
     </div>
   );

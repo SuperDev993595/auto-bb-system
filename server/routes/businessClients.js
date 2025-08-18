@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAnyAdmin } = require('../middleware/auth');
 const BusinessClient = require('../models/BusinessClient');
 const User = require('../models/User');
 
@@ -120,7 +120,7 @@ const updateBusinessClientSchema = Joi.object({
 // @route   GET /api/business-clients
 // @desc    Get all business clients with filtering and pagination
 // @access  Private (Admin only)
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -201,7 +201,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 // @route   GET /api/business-clients/:id
 // @desc    Get business client by ID
 // @access  Private (Admin only)
-router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const businessClient = await BusinessClient.findById(req.params.id)
       .populate('assignedTo', 'name email')
@@ -231,7 +231,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
 // @route   POST /api/business-clients
 // @desc    Create new business client
 // @access  Private (Admin only)
-router.post('/', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const { error, value } = businessClientSchema.validate(req.body);
     if (error) {
@@ -290,7 +290,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 // @route   PUT /api/business-clients/:id
 // @desc    Update business client
 // @access  Private (Admin only)
-router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const { error, value } = updateBusinessClientSchema.validate(req.body);
     if (error) {
@@ -332,7 +332,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
 // @route   DELETE /api/business-clients/:id
 // @desc    Delete business client
 // @access  Private (Admin only)
-router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const businessClient = await BusinessClient.findById(req.params.id);
 
@@ -371,7 +371,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
 // @route   POST /api/business-clients/:id/activate
 // @desc    Activate business client subscription
 // @access  Private (Admin only)
-router.post('/:id/activate', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/:id/activate', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const { subscriptionEndDate, plan, monthlyFee } = req.body;
 
@@ -417,7 +417,7 @@ router.post('/:id/activate', authenticateToken, requireAdmin, async (req, res) =
 // @route   POST /api/business-clients/:id/suspend
 // @desc    Suspend business client subscription
 // @access  Private (Admin only)
-router.post('/:id/suspend', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/:id/suspend', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const businessClient = await BusinessClient.findById(req.params.id);
     if (!businessClient) {
@@ -449,7 +449,7 @@ router.post('/:id/suspend', authenticateToken, requireAdmin, async (req, res) =>
 // @route   GET /api/business-clients/stats/overview
 // @desc    Get business clients statistics
 // @access  Private (Admin only)
-router.get('/stats/overview', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/stats/overview', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const [
       totalClients,
