@@ -67,12 +67,31 @@ export default function ServicesPage() {
     workOrderStats,
     technicianStats,
     categories,
-    specializations
+    specializations,
+    catalogError,
+    workOrdersError,
+    techniciansError
   } = useAppSelector(state => state.services)
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Services state:', {
+      catalog: catalog?.length || 0,
+      workOrders: workOrders?.length || 0,
+      technicians: technicians?.length || 0,
+      catalogLoading,
+      workOrdersLoading,
+      techniciansLoading,
+      catalogError,
+      workOrdersError,
+      techniciansError
+    })
+  }, [catalog, workOrders, technicians, catalogLoading, workOrdersLoading, techniciansLoading, catalogError, workOrdersError, techniciansError])
   const dispatch = useAppDispatch()
 
   // Load data on component mount
   useEffect(() => {
+    console.log('Loading services data...')
     dispatch(fetchServiceCatalog({}))
     dispatch(fetchWorkOrders({}))
     dispatch(fetchTechnicians({}))
@@ -579,6 +598,25 @@ export default function ServicesPage() {
   return (
     <div className="p-6 space-y-6">
       <PageTitle title="Service Management" />
+
+      {/* Error Display */}
+      {(catalogError || workOrdersError || techniciansError) && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <HiXCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">API Errors</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {catalogError && <p>Service Catalog: {catalogError}</p>}
+                {workOrdersError && <p>Work Orders: {workOrdersError}</p>}
+                {techniciansError && <p>Technicians: {techniciansError}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistics Cards */}
       {renderStatistics()}
