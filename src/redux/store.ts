@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import appointmentsReducer from "./reducer/appointmentsReducer";
 import tasksReducer from "./reducer/tasksReducer";
 import customersReducer from "./reducer/customersReducer";
-import servicesReducer from "./reducer/servicesReducer";
+import servicesReducer from "./actions/services";
 import remindersReducer from "./reducer/remindersReducer";
 import inventoryReducer from "./reducer/inventoryReducer";
 import invoicesReducer from "./reducer/invoicesReducer";
