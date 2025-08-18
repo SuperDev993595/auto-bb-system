@@ -76,7 +76,7 @@ export default function ServicesPage() {
 
   // Filter service catalog
   const filteredCatalog = (catalog || []).filter(service => {
-    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (service.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (service.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter
     return matchesSearch && matchesCategory && service.isActive
@@ -130,11 +130,11 @@ export default function ServicesPage() {
 
   // Statistics calculations
   const totalServices = catalog?.length || 0
-  const activeServices = catalog?.filter(s => s.isActive).length || 0
+  const activeServices = catalog?.filter(s => s && s.isActive).length || 0
   const totalWorkOrders = workOrders?.length || 0
-  const completedWorkOrders = workOrders?.filter(w => w.status === 'completed').length || 0
+  const completedWorkOrders = workOrders?.filter(w => w && w.status === 'completed').length || 0
   const totalTechnicians = technicians?.length || 0
-  const activeTechnicians = technicians?.filter(t => t.isActive).length || 0
+  const activeTechnicians = technicians?.filter(t => t && t.isActive).length || 0
 
   const renderStatistics = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -470,7 +470,7 @@ export default function ServicesPage() {
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : (technicians || []).filter(tech => tech.isActive).length === 0 ? (
+             ) : (technicians || []).filter(tech => tech && tech.isActive).length === 0 ? (
         <div className="text-center py-12">
           <HiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No technicians found</h3>
@@ -480,8 +480,8 @@ export default function ServicesPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(technicians || []).filter(tech => tech.isActive).map(technician => (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {(technicians || []).filter(tech => tech && tech.isActive).map(technician => (
             <div key={technician._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
@@ -547,11 +547,11 @@ export default function ServicesPage() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
-            {[
-              { key: 'catalog', label: 'Service Catalog', count: (catalog || []).filter(s => s.isActive).length },
-              { key: 'workorders', label: 'Work Orders', count: (workOrders || []).length },
-              { key: 'technicians', label: 'Technicians', count: (technicians || []).filter(t => t.isActive).length }
-            ].map(tab => (
+                         {[
+               { key: 'catalog', label: 'Service Catalog', count: (catalog || []).filter(s => s && s.isActive).length },
+               { key: 'workorders', label: 'Work Orders', count: (workOrders || []).length },
+               { key: 'technicians', label: 'Technicians', count: (technicians || []).filter(t => t && t.isActive).length }
+             ].map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as TabType)}
