@@ -15,6 +15,9 @@ import {
 import AddServiceModal from "../components/services/AddServiceModal"
 import EditServiceModal from "../components/services/EditServiceModal"
 import DeleteServiceModal from "../components/services/DeleteServiceModal"
+import AddWorkOrderModal from "../components/services/AddWorkOrderModal"
+import EditWorkOrderModal from "../components/services/EditWorkOrderModal"
+import DeleteWorkOrderModal from "../components/services/DeleteWorkOrderModal"
 import {
   HiPlus,
   HiPencil,
@@ -46,6 +49,12 @@ export default function ServicesPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
+  
+  // Work Order modal states
+  const [showAddWorkOrderModal, setShowAddWorkOrderModal] = useState(false)
+  const [showEditWorkOrderModal, setShowEditWorkOrderModal] = useState(false)
+  const [showDeleteWorkOrderModal, setShowDeleteWorkOrderModal] = useState(false)
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
 
   const { 
     catalog, 
@@ -126,6 +135,26 @@ export default function ServicesPage() {
   const handleServiceSuccess = () => {
     dispatch(fetchServiceCatalog({}))
     dispatch(fetchServiceCatalogStats())
+  }
+
+  // Work Order modal handlers
+  const handleAddWorkOrder = () => {
+    setShowAddWorkOrderModal(true)
+  }
+
+  const handleEditWorkOrder = (workOrder: WorkOrder) => {
+    setSelectedWorkOrder(workOrder)
+    setShowEditWorkOrderModal(true)
+  }
+
+  const handleDeleteWorkOrder = (workOrder: WorkOrder) => {
+    setSelectedWorkOrder(workOrder)
+    setShowDeleteWorkOrderModal(true)
+  }
+
+  const handleWorkOrderSuccess = () => {
+    dispatch(fetchWorkOrders({}))
+    dispatch(fetchWorkOrderStats({}))
   }
 
   // Statistics calculations
@@ -324,7 +353,10 @@ export default function ServicesPage() {
           <h2 className="text-xl font-semibold text-gray-800">Work Orders</h2>
           <p className="text-gray-600">Track and manage ongoing service work</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddWorkOrder}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Create Work Order
         </button>
@@ -434,11 +466,19 @@ export default function ServicesPage() {
                       <div className="text-sm font-medium text-gray-900">${order.totalCost.toFixed(2)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3 transition-colors">
-                        <HiEye className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-600 hover:text-gray-900 transition-colors">
+                      <button 
+                        onClick={() => handleEditWorkOrder(order)}
+                        className="text-blue-600 hover:text-blue-900 mr-3 transition-colors"
+                        title="Edit work order"
+                      >
                         <HiPencil className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteWorkOrder(order)}
+                        className="text-red-600 hover:text-red-900 transition-colors"
+                        title="Delete work order"
+                      >
+                        <HiTrash className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -601,6 +641,36 @@ export default function ServicesPage() {
             setSelectedService(null)
           }}
           onSuccess={handleServiceSuccess}
+        />
+      )}
+
+      {/* Work Order Modals */}
+      {showAddWorkOrderModal && (
+        <AddWorkOrderModal
+          onClose={() => setShowAddWorkOrderModal(false)}
+          onSuccess={handleWorkOrderSuccess}
+        />
+      )}
+
+      {showEditWorkOrderModal && (
+        <EditWorkOrderModal
+          workOrder={selectedWorkOrder}
+          onClose={() => {
+            setShowEditWorkOrderModal(false)
+            setSelectedWorkOrder(null)
+          }}
+          onSuccess={handleWorkOrderSuccess}
+        />
+      )}
+
+      {showDeleteWorkOrderModal && (
+        <DeleteWorkOrderModal
+          workOrder={selectedWorkOrder}
+          onClose={() => {
+            setShowDeleteWorkOrderModal(false)
+            setSelectedWorkOrder(null)
+          }}
+          onSuccess={handleWorkOrderSuccess}
         />
       )}
     </div>
