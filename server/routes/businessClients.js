@@ -42,8 +42,8 @@ const businessClientSchema = Joi.object({
     logo: Joi.string().optional(),
     primaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).default('#3B82F6'),
     secondaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).default('#1F2937'),
-    companyName: Joi.string().max(100).optional(),
-    tagline: Joi.string().max(200).optional(),
+    companyName: Joi.string().max(100).allow('').optional(),
+    tagline: Joi.string().max(200).allow('').optional(),
     customDomain: Joi.string().domain().optional()
   }).optional(),
   settings: Joi.object({
@@ -98,8 +98,8 @@ const updateBusinessClientSchema = Joi.object({
     logo: Joi.string().optional(),
     primaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).optional(),
     secondaryColor: Joi.string().pattern(/^#[0-9A-F]{6}$/i).optional(),
-    companyName: Joi.string().max(100).optional(),
-    tagline: Joi.string().max(200).optional(),
+    companyName: Joi.string().max(100).allow('').optional(),
+    tagline: Joi.string().max(200).allow('').optional(),
     customDomain: Joi.string().domain().optional()
   }).optional(),
   settings: Joi.object({

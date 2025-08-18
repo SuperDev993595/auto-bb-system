@@ -100,9 +100,26 @@ export default function AddBusinessClientModal({ isOpen, onClose, onSuccess }: A
       return;
     }
 
+    // Clean up empty strings for optional fields
+    const cleanedFormData = {
+      ...formData,
+      businessInfo: {
+        ...formData.businessInfo,
+        website: formData.businessInfo?.website || undefined,
+        hours: formData.businessInfo?.hours || undefined
+      },
+      branding: {
+        ...formData.branding,
+        companyName: formData.branding?.companyName || undefined,
+        tagline: formData.branding?.tagline || undefined,
+        customDomain: formData.branding?.customDomain || undefined
+      },
+      notes: formData.notes || undefined
+    };
+
     try {
       setLoading(true);
-      await businessClientService.createBusinessClient(formData);
+      await businessClientService.createBusinessClient(cleanedFormData);
       toast.success('Business client created successfully');
       onSuccess();
       onClose();
