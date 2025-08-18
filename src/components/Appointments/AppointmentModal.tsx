@@ -21,8 +21,8 @@ type AppointmentData = {
         state: string;
         zipCode: string;
     };
-    date: string;
-    time: string;
+    scheduledDate: string;
+    scheduledTime: string;
     serviceType: string;
     notes: string;
     priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -100,8 +100,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             state: "",
             zipCode: ""
         },
-        date: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
-        time: selectedTime || "09:00",
+        scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
+        scheduledTime: selectedTime || "09:00",
         serviceType: "",
         notes: "",
         priority: 'medium',
@@ -135,7 +135,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     useEffect(() => {
         if (isEditing && appointment) {
             // Populate form with existing appointment data
-            const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+            const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
             setForm({
                 customer: appointment.customerName,
                 email: "", // Will be populated from customer data
@@ -151,8 +151,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                     state: "",
                     zipCode: ""
                 },
-                                date: appointmentDate.toISOString().split('T')[0],
-                time: appointmentDate.toTimeString().slice(0, 5),
+                                scheduledDate: appointmentDate.toISOString().split('T')[0],
+                scheduledTime: appointmentDate.toTimeString().slice(0, 5),
                 serviceType: appointment.serviceType,
                 notes: appointment.notes || "",
                 priority: appointment.priority,
@@ -181,8 +181,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             
         setForm(prev => ({
             ...prev,
-                date: targetDate.toISOString().split('T')[0],
-                time: selectedTime || targetDate.toTimeString().slice(0, 5)
+                scheduledDate: targetDate.toISOString().split('T')[0],
+                scheduledTime: selectedTime || targetDate.toTimeString().slice(0, 5)
         }));
         }
     }, [isEditing, appointment, selectedDate, selectedTime]);

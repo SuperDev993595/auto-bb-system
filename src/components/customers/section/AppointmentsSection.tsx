@@ -9,8 +9,8 @@ import api, { apiResponse } from '../../../services/api'
 
 interface Appointment {
     _id: string
-    date: string
-    time: string
+    scheduledDate: string
+    scheduledTime: string
     status: string
     serviceType?: string
     notes?: string
@@ -104,11 +104,25 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
         }
     }
 
-    const formatDateTime = (date: string, time: string) => {
-        const dateObj = new Date(date)
-        return {
-            date: dateObj.toLocaleDateString(),
-            time: time || 'TBD'
+    const formatDateTime = (scheduledDate: string, scheduledTime: string) => {
+        try {
+            const dateObj = new Date(scheduledDate)
+            if (isNaN(dateObj.getTime())) {
+                return {
+                    date: 'Invalid Date',
+                    time: scheduledTime || 'TBD'
+                }
+            }
+            return {
+                date: dateObj.toLocaleDateString(),
+                time: scheduledTime || 'TBD'
+            }
+        } catch (error) {
+            console.error('Error formatting date/time:', error)
+            return {
+                date: 'Invalid Date',
+                time: scheduledTime || 'TBD'
+            }
         }
     }
 
@@ -148,7 +162,7 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                         {appointments.map((appointment) => {
-                            const { date, time } = formatDateTime(appointment.date, appointment.time)
+                            const { date, time } = formatDateTime(appointment.scheduledDate, appointment.scheduledTime)
                             return (
                                 <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
                                     <div className="flex justify-between items-start mb-2">

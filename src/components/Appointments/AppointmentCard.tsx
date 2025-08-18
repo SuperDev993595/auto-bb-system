@@ -93,7 +93,7 @@ export default function AppointmentCard({
             <div className="space-y-2">
                 <div className="flex justify-between items-center">
                     <span className="text-gray-600">Date & Time:</span>
-                    <span className="font-medium">{appointment.date} at {appointment.time}</span>
+                    <span className="font-medium">{appointment.scheduledDate} at {appointment.scheduledTime}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">

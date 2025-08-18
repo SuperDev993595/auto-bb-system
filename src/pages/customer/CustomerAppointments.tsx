@@ -8,8 +8,8 @@ import { useAppSelector, useAppDispatch } from '../../redux';
 
 interface Appointment {
   id: string;
-  date: string;
-  time: string;
+  scheduledDate: string;
+  scheduledTime: string;
   serviceType: string;
   vehicleId: string;
   vehicleInfo?: string;
@@ -23,8 +23,8 @@ interface Appointment {
 }
 
 interface AppointmentFormData {
-  date: string;
-  time: string;
+  scheduledDate: string;
+  scheduledTime: string;
   serviceType: string;
   vehicleId: string;
   notes: string;
@@ -46,8 +46,8 @@ export default function CustomerAppointments() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [smartSuggestions, setSmartSuggestions] = useState<any[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>({
-    date: '',
-    time: '',
+    scheduledDate: '',
+    scheduledTime: '',
     serviceType: '',
     vehicleId: '',
     notes: '',
@@ -171,7 +171,7 @@ export default function CustomerAppointments() {
     // Check for upcoming appointments that need confirmation
     appointments.forEach(appointment => {
       if (appointment.status === 'scheduled') {
-        const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+        const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
         const daysUntil = Math.ceil((appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysUntil <= 2 && daysUntil > 0) {
@@ -179,7 +179,7 @@ export default function CustomerAppointments() {
             id: `confirm_${appointment.id}`,
             type: 'confirmation_needed',
             title: 'Confirm Appointment',
-            description: `Please confirm your appointment for ${appointment.date}`,
+            description: `Please confirm your appointment for ${appointment.scheduledDate}`,
             priority: 'medium',
             action: 'Confirm',
             appointmentId: appointment.id
@@ -200,7 +200,7 @@ export default function CustomerAppointments() {
   };
 
   const validateForm = () => {
-    if (!formData.date || !formData.time || !formData.serviceType || !formData.vehicleId) {
+    if (!formData.scheduledDate || !formData.scheduledTime || !formData.serviceType || !formData.vehicleId) {
       toast.error('Please fill in all required fields');
       return false;
     }
@@ -210,7 +210,7 @@ export default function CustomerAppointments() {
       return false;
     }
     
-    const selectedDate = new Date(`${formData.date}T${formData.time}`);
+    const selectedDate = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`);
     const now = new Date();
     
     if (selectedDate <= now) {
@@ -235,8 +235,8 @@ export default function CustomerAppointments() {
 
     try {
       const appointmentData = {
-        date: formData.date,
-        time: formData.time,
+        scheduledDate: formData.scheduledDate,
+        scheduledTime: formData.scheduledTime,
         serviceType: formData.serviceType,
         vehicleId: formData.vehicleId,
         notes: formData.notes.trim() || undefined,
@@ -275,8 +275,8 @@ export default function CustomerAppointments() {
   const handleEdit = (appointment: AppointmentType) => {
     setEditingAppointment(appointment);
     setFormData({
-      date: appointment.date.split('T')[0],
-      time: appointment.time,
+      scheduledDate: appointment.scheduledDate.split('T')[0],
+      scheduledTime: appointment.scheduledTime,
       serviceType: appointment.serviceType,
       vehicleId: appointment.vehicleId,
       notes: appointment.notes || '',
@@ -318,8 +318,8 @@ export default function CustomerAppointments() {
         case 'service_due':
           // Navigate to appointment creation with pre-filled vehicle
           setFormData({
-            date: '',
-            time: '',
+            scheduledDate: '',
+            scheduledTime: '',
             serviceType: '',
             vehicleId: suggestion.vehicleId,
             notes: `Service due for ${vehicles.find(v => v.id === suggestion.vehicleId)?.year} ${vehicles.find(v => v.id === suggestion.vehicleId)?.make} ${vehicles.find(v => v.id === suggestion.vehicleId)?.model}`,
@@ -373,8 +373,8 @@ export default function CustomerAppointments() {
     setShowAddModal(false);
     setEditingAppointment(null);
     setFormData({
-      date: '',
-      time: '',
+      scheduledDate: '',
+      scheduledTime: '',
       serviceType: '',
       vehicleId: '',
       notes: '',
@@ -410,7 +410,7 @@ export default function CustomerAppointments() {
   };
 
   const filteredAppointments = appointments.filter(appointment => {
-    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+    const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
     const now = new Date();
     
     switch (activeTab) {
@@ -426,12 +426,12 @@ export default function CustomerAppointments() {
   });
 
   const upcomingAppointments = appointments.filter(a => {
-    const appointmentDate = new Date(`${a.date}T${a.time}`);
+    const appointmentDate = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
     return appointmentDate > new Date() && a.status !== 'cancelled';
   });
 
   const pastAppointments = appointments.filter(a => {
-    const appointmentDate = new Date(`${a.date}T${a.time}`);
+    const appointmentDate = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
     return appointmentDate <= new Date() || a.status === 'completed';
   });
 
@@ -646,10 +646,10 @@ export default function CustomerAppointments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div>
                       <div className="font-medium">
-                        {new Date(appointment.date).toLocaleDateString()}
+                        {new Date(appointment.scheduledDate).toLocaleDateString()}
                       </div>
                       <div className="text-gray-500">
-                        {appointment.time}
+                        {appointment.scheduledTime}
                       </div>
                     </div>
                   </td>
@@ -755,8 +755,8 @@ export default function CustomerAppointments() {
                   </label>
                   <input
                     type="date"
-                    name="date"
-                    value={formData.date}
+                    name="scheduledDate"
+                    value={formData.scheduledDate}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     min={new Date().toISOString().split('T')[0]}
@@ -769,8 +769,8 @@ export default function CustomerAppointments() {
                   </label>
                   <input
                     type="time"
-                    name="time"
-                    value={formData.time}
+                    name="scheduledTime"
+                    value={formData.scheduledTime}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />

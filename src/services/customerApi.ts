@@ -56,8 +56,8 @@ export interface Vehicle {
 
 export interface Appointment {
   id: string;
-  date: string;
-  time: string;
+  scheduledDate: string;
+  scheduledTime: string;
   serviceType: string;
   vehicleId: string;
   vehicleInfo?: string;
