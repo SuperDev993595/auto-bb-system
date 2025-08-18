@@ -29,6 +29,8 @@ import businessClientService, {
 } from '../services/businessClients';
 import ConfirmDialog from '../components/Shared/ConfirmDialog';
 import AddBusinessClientModal from '../components/businessClients/AddBusinessClientModal';
+import ViewBusinessClientModal from '../components/businessClients/ViewBusinessClientModal';
+import EditBusinessClientModal from '../components/businessClients/EditBusinessClientModal';
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -73,6 +75,9 @@ export default function BusinessClientsPage() {
     onConfirm: () => {}
   });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<BusinessClient | null>(null);
 
   useEffect(() => {
     loadBusinessClients();
@@ -154,13 +159,19 @@ export default function BusinessClientsPage() {
   };
 
   const handleViewClient = (clientId: string) => {
-    // TODO: Implement view client functionality
-    toast('View functionality coming soon', { icon: '👁️' });
+    const client = businessClients.find(c => c._id === clientId);
+    if (client) {
+      setSelectedClient(client);
+      setShowViewModal(true);
+    }
   };
 
   const handleEditClient = (clientId: string) => {
-    // TODO: Implement edit client functionality
-    toast('Edit functionality coming soon', { icon: '✏️' });
+    const client = businessClients.find(c => c._id === clientId);
+    if (client) {
+      setSelectedClient(client);
+      setShowEditModal(true);
+    }
   };
 
   const handleAddClient = () => {
@@ -573,6 +584,32 @@ export default function BusinessClientsPage() {
           loadBusinessClients();
           loadStats();
         }}
+      />
+
+      {/* View Business Client Modal */}
+      <ViewBusinessClientModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedClient(null);
+        }}
+        businessClient={selectedClient}
+      />
+
+      {/* Edit Business Client Modal */}
+      <EditBusinessClientModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedClient(null);
+        }}
+        onSuccess={() => {
+          setShowEditModal(false);
+          setSelectedClient(null);
+          loadBusinessClients();
+          loadStats();
+        }}
+        businessClient={selectedClient}
       />
     </div>
   );
