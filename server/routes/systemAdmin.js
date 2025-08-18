@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
+const mongoose = require('mongoose');
+const os = require('os');
 const SystemLog = require('../models/SystemLog');
 const Backup = require('../models/Backup');
 const SystemHealth = require('../models/SystemHealth');
@@ -455,9 +457,6 @@ router.put('/monitoring/thresholds', authenticateToken, requireSuperAdmin, async
 // Get system information
 router.get('/system/info', authenticateToken, requireSuperAdmin, async (req, res) => {
   try {
-    const os = require('os');
-    const process = require('process');
-
     const systemInfo = {
       platform: os.platform(),
       arch: os.arch(),

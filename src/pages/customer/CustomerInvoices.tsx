@@ -35,12 +35,22 @@ export default function CustomerInvoices() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [invoicesData, vehiclesData] = await Promise.all([
+      const [invoicesResponse, vehiclesResponse] = await Promise.all([
         customerApiService.getInvoices(),
         customerApiService.getVehicles()
       ]);
-      setInvoices(invoicesData);
-      setVehicles(vehiclesData);
+      
+      if (invoicesResponse.success) {
+        setInvoices(invoicesResponse.data.invoices);
+      } else {
+        toast.error(invoicesResponse.message || 'Failed to load invoices');
+      }
+      
+      if (vehiclesResponse.success) {
+        setVehicles(vehiclesResponse.data.vehicles);
+      } else {
+        toast.error(vehiclesResponse.message || 'Failed to load vehicles');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load invoice data');
@@ -69,7 +79,12 @@ export default function CustomerInvoices() {
     if (!selectedInvoice) return;
 
     try {
-      await customerApiService.payInvoice(selectedInvoice.id, paymentData);
+      const response = await customerApiService.payInvoice(selectedInvoice.id, paymentData);
+      
+      if (!response.success) {
+        toast.error(response.message || 'Failed to process payment');
+        return;
+      }
       
       // Update local state
       setInvoices(prev => 
@@ -92,12 +107,16 @@ export default function CustomerInvoices() {
 
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
-      const result = await customerApiService.downloadInvoice(invoiceId);
-      toast.success('Invoice download initiated');
+      const response = await customerApiService.downloadInvoice(invoiceId);
       
-      // In a real implementation, you would trigger the actual download here
-      // For now, we'll just show a success message
-      console.log('Download URL:', result.downloadUrl);
+      if (response.success) {
+        toast.success('Invoice download initiated');
+        // In a real implementation, you would trigger the actual download here
+        // For now, we'll just show a success message
+        console.log('Download URL:', response.data.downloadUrl);
+      } else {
+        toast.error(response.message || 'Failed to download invoice');
+      }
     } catch (error) {
       console.error('Error downloading invoice:', error);
       toast.error('Failed to download invoice');

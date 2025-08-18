@@ -2,11 +2,17 @@ import { useState, ChangeEvent, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { API_ENDPOINTS, getAuthHeaders } from "../../services/api";
 import { authService } from "../../services/auth";
+import { Appointment } from "../../utils/CustomerTypes";
+import { useAppDispatch, useAppSelector } from "../../redux";
+import { deleteAppointment } from "../../redux/actions/appointments";
 
 type AppointmentData = {
     customer: string;
+    email: string;
     phone: string;
+    businessName?: string;
     vehicle: string;
+    vehicleId?: string; // Add vehicle ID for existing vehicles
     vin: string;
     licensePlate: string;
     address: {
@@ -16,14 +22,35 @@ type AppointmentData = {
         zipCode: string;
     };
     date: string;
+    time: string;
     serviceType: string;
     notes: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    estimatedDuration: number;
+    status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+    technicianId?: string;
+    technicianName?: string;
+    customerType: 'existing' | 'new';
+    existingCustomerId?: string;
+};
+
+type Vehicle = {
+    id: string;
+    year: number;
+    make: string;
+    model: string;
+    vin: string;
+    licensePlate: string;
 };
 
 type Props = {
     onClose: () => void;
     onSave: (data: AppointmentData) => void;
     isLoading?: boolean;
+    appointment?: Appointment;
+    isEditing?: boolean;
+    selectedDate?: Date;
+    selectedTime?: string;
 };
 
 // Common service types for auto-suggestions
@@ -57,11 +84,14 @@ const VEHICLE_MAKES = [
     'Dodge', 'Chrysler', 'Lexus', 'Acura', 'Infiniti', 'Volvo', 'Porsche'
 ];
 
-export default function AppointmentModal({ onClose, onSave, isLoading = false }: Props) {
+export default function AppointmentModal({ onClose, onSave, isLoading = false, appointment, isEditing = false, selectedDate, selectedTime }: Props) {
     const [form, setForm] = useState<AppointmentData>({
         customer: "",
+        email: "",
         phone: "",
+        businessName: "",
         vehicle: "",
+        vehicleId: "",
         vin: "",
         licensePlate: "",
         address: {
@@ -70,32 +100,171 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             state: "",
             zipCode: ""
         },
-        date: "",
+        date: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
+        time: selectedTime || "09:00",
         serviceType: "",
         notes: "",
+        priority: 'medium',
+        estimatedDuration: 60,
+        status: 'scheduled',
+        technicianId: "",
+        technicianName: "",
+        customerType: 'new',
+        existingCustomerId: ""
     });
 
     const [errors, setErrors] = useState<Partial<AppointmentData>>({});
     const [addressError, setAddressError] = useState<string>('');
-    const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
     const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
-    const [filteredServices, setFilteredServices] = useState<string[]>([]);
     const [filteredVehicles, setFilteredVehicles] = useState<string[]>([]);
     const [isSavingToDatabase, setIsSavingToDatabase] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [availableVehicles, setAvailableVehicles] = useState<Vehicle[]>([]);
     
-    const serviceInputRef = useRef<HTMLInputElement>(null);
+    const dispatch = useAppDispatch();
+    const [technicians, setTechnicians] = useState<any[]>([]);
+
+    const [useExistingVehicle, setUseExistingVehicle] = useState(false);
+    const [availableCustomers, setAvailableCustomers] = useState<Array<{id: string, name: string, email: string, phone?: string}>>([]);
+    const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState<Vehicle[]>([]);
+    const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'exists'>('idle');
+    
     const vehicleInputRef = useRef<HTMLInputElement>(null);
 
-    // Set default date to tomorrow at 9 AM
+    // Set default date to tomorrow at 9 AM or populate form for editing
     useEffect(() => {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(9, 0, 0, 0);
+        if (isEditing && appointment) {
+            // Populate form with existing appointment data
+            const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
+            setForm({
+                customer: appointment.customerName,
+                email: "", // Will be populated from customer data
+                phone: "", // Will be populated from customer data
+                businessName: "",
+                vehicle: appointment.vehicleInfo,
+                vehicleId: appointment.vehicleId,
+                vin: "",
+                licensePlate: "",
+                address: {
+                    street: "",
+                    city: "",
+                    state: "",
+                    zipCode: ""
+                },
+                                date: appointmentDate.toISOString().split('T')[0],
+                time: appointmentDate.toTimeString().slice(0, 5),
+                serviceType: appointment.serviceType,
+                notes: appointment.notes || "",
+                priority: appointment.priority,
+                estimatedDuration: appointment.estimatedDuration,
+                status: appointment.status,
+                technicianId: appointment.technicianId || "",
+                technicianName: appointment.technicianName || "",
+                customerType: 'existing',
+                existingCustomerId: appointment.customerId
+            });
+        } else {
+            // Set date based on selected date from calendar or default to tomorrow
+            let targetDate: Date;
+            if (selectedDate) {
+                // Use the selected date from calendar
+                targetDate = new Date(selectedDate);
+                // Set the time to the selected time or default to 9:00 AM
+                const [hours, minutes] = (selectedTime || '09:00').split(':').map(Number);
+                targetDate.setHours(hours, minutes, 0, 0);
+            } else {
+                // Default to tomorrow at 9 AM
+                targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() + 1);
+                targetDate.setHours(9, 0, 0, 0);
+            }
+            
         setForm(prev => ({
             ...prev,
-            date: tomorrow.toISOString().slice(0, 16)
+                date: targetDate.toISOString().split('T')[0],
+                time: selectedTime || targetDate.toTimeString().slice(0, 5)
         }));
+        }
+    }, [isEditing, appointment, selectedDate, selectedTime]);
+
+    // Load available vehicles and customers
+    useEffect(() => {
+        loadAvailableVehicles();
+        loadAvailableCustomers();
     }, []);
+
+    // Fetch technicians when modal loads
+    useEffect(() => {
+        const loadTechnicians = async () => {
+            try {
+                const response = await fetch(`${API_ENDPOINTS.CUSTOMERS}/technicians`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setTechnicians(data.data.technicians || []);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading technicians:', error);
+                setTechnicians([]);
+            }
+        };
+
+        if (technicians.length === 0) {
+            loadTechnicians();
+        }
+    }, [technicians.length]);
+
+    const loadAvailableVehicles = async () => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setAvailableVehicles(data.data.vehicles || []);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load vehicles:', error);
+        }
+    };
+
+    const loadAvailableCustomers = async () => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/customers?limit=100`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setAvailableCustomers(data.data.customers || []);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load customers:', error);
+        }
+    };
+
+    const loadCustomerVehicles = async (customerId: string) => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles?customer=${customerId}`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setSelectedCustomerVehicles(data.data.vehicles || []);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load customer vehicles:', error);
+            setSelectedCustomerVehicles([]);
+        }
+    };
 
     // Handle escape key to close modal
     useEffect(() => {
@@ -109,22 +278,11 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
-    // Filter services based on input
-    useEffect(() => {
-        if (form.serviceType) {
-            const filtered = COMMON_SERVICES.filter(service =>
-                service.toLowerCase().includes(form.serviceType.toLowerCase())
-            );
-            setFilteredServices(filtered);
-            setShowServiceSuggestions(filtered.length > 0 && filtered.length < COMMON_SERVICES.length);
-        } else {
-            setShowServiceSuggestions(false);
-        }
-    }, [form.serviceType]);
+
 
     // Filter vehicles based on input
     useEffect(() => {
-        if (form.vehicle) {
+        if (form.vehicle && !useExistingVehicle) {
             const input = form.vehicle.toLowerCase().trim();
             
             // First, filter makes that match the input
@@ -154,23 +312,52 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             ));
             
             // Remove duplicates and limit suggestions
-            const uniqueSuggestions = [...new Set(suggestions)].slice(0, 15);
+            const uniqueSuggestions = Array.from(new Set(suggestions)).slice(0, 15);
             
             setFilteredVehicles(uniqueSuggestions);
             setShowVehicleSuggestions(uniqueSuggestions.length > 0);
         } else {
             setShowVehicleSuggestions(false);
         }
-    }, [form.vehicle]);
+    }, [form.vehicle, useExistingVehicle]);
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        
+        // Handle datetime-local input
+        if (name === 'date' && e.target.type === 'datetime-local') {
+            const [datePart, timePart] = value.split('T');
+            setForm(prev => ({ 
+                ...prev, 
+                date: datePart,
+                time: timePart || '09:00'
+            }));
+        }
+        // Handle number fields
+        else if (name === 'estimatedDuration') {
+            const numValue = parseInt(value) || 0;
+            setForm(prev => ({ ...prev, [name]: numValue }));
+        } else {
+            setForm(prev => ({ ...prev, [name]: value }));
+        }
         
         // Clear error when user starts typing
         if (errors[name as keyof AppointmentData]) {
             setErrors(prev => ({ ...prev, [name]: undefined }));
         }
+    };
+
+    const handleVehicleSelection = (vehicle: Vehicle) => {
+        setForm(prev => ({
+            ...prev,
+            vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+            vehicleId: vehicle.id,
+            vin: vehicle.vin,
+            licensePlate: vehicle.licensePlate
+        }));
+        setUseExistingVehicle(false);
     };
 
     const validateForm = (): boolean => {
@@ -182,10 +369,23 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             newErrors.customer = 'Customer name must be at least 2 characters';
         }
 
+        // Email validation for new customers
+        if (form.customerType === 'new') {
+            if (!form.email.trim()) {
+                newErrors.email = 'Email address is required';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+                newErrors.email = 'Please enter a valid email address';
+            } else if (emailStatus === 'exists') {
+                newErrors.email = 'This email is already registered. Please use a different email or select "Existing Customer" instead.';
+            } else if (emailStatus === 'checking') {
+                newErrors.email = 'Checking email availability...';
+            }
+        }
+
         if (!form.vehicle.trim()) {
             newErrors.vehicle = 'Vehicle information is required';
-        } else {
-            // Basic vehicle validation
+        } else if (form.customerType === 'new' || !useExistingVehicle) {
+            // Basic vehicle validation for new vehicles
             const vehicleText = form.vehicle.trim();
             const parts = vehicleText.split(' ').filter(part => part.length > 0);
             
@@ -221,14 +421,18 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             newErrors.serviceType = 'Service type is required';
         }
 
+        if (form.estimatedDuration < 15 || form.estimatedDuration > 480) {
+            newErrors.estimatedDuration = 'Estimated duration must be between 15 and 480 minutes' as any;
+        }
+
         // Phone validation (optional but if provided, validate format)
         if (form.phone.trim() && !/^[\+]?[1-9][\d]{0,15}$/.test(form.phone.replace(/[\s\-\(\)]/g, ''))) {
             newErrors.phone = 'Please enter a valid phone number';
         }
 
         // VIN validation (optional but if provided, validate format)
-        if (form.vin.trim() && form.vin.trim().length !== 17) {
-            newErrors.vin = 'VIN must be exactly 17 characters long';
+        if (form.vin.trim() && (form.vin.trim().length < 8 || form.vin.trim().length > 17)) {
+            newErrors.vin = 'VIN must be between 8 and 17 characters long';
         }
 
         // Address validation (optional but if any field is provided, validate format)
@@ -264,101 +468,211 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                 throw new Error('Backend server is not running. Please start the server with: npm run server');
             }
 
-            // First, create or find customer
+            // Handle customer creation/finding based on customer type
             let customerId = null;
+            let userId = null;
+            
             try {
-                // Try to find existing customer first
-                const searchResponse = await fetch(`${API_ENDPOINTS.CUSTOMERS}?search=${encodeURIComponent(appointmentData.customer)}`, {
-                    headers: getAuthHeaders()
-                });
-                
-                if (searchResponse.ok) {
-                    const searchData = await searchResponse.json();
-                    if (searchData.success && searchData.data.customers && searchData.data.customers.length > 0) {
-                        customerId = searchData.data.customers[0]._id || searchData.data.customers[0].id;
-                    }
-                }
-
-                // If no existing customer found, create a new one
-                if (!customerId) {
-                    // Get current user's email for contact person
+                if (appointmentData.customerType === 'existing' && appointmentData.existingCustomerId) {
+                    // Use existing customer
+                    customerId = appointmentData.existingCustomerId;
+                } else {
+                    // Create new customer and user
                     const currentUser = authService.getCurrentUserFromStorage();
-                    const contactEmail = currentUser?.email || 'admin@autobb.com'; // Fallback email
                     
-                                         const customerResponse = await fetch(API_ENDPOINTS.CUSTOMERS, {
+                                         // Check if email already exists before creating user
+                     const emailCheckResponse = await fetch(`${API_ENDPOINTS.AUTH}/check-email`, {
                          method: 'POST',
-                         headers: getAuthHeaders(),
+                         headers: {
+                             'Content-Type': 'application/json'
+                         },
                          body: JSON.stringify({
-                             businessName: appointmentData.customer,
-                             contactPerson: {
-                                 name: appointmentData.customer,
-                                 phone: appointmentData.phone || '',
-                                 email: contactEmail
-                             },
-                             address: {
-                                 street: appointmentData.address.street.trim() || 'N/A',
-                                 city: appointmentData.address.city.trim() || 'N/A',
-                                 state: appointmentData.address.state.trim() || 'N/A',
-                                 zipCode: appointmentData.address.zipCode.trim() || 'N/A'
-                             },
-                             notes: ''
+                             email: appointmentData.email
                          })
                      });
 
-                    if (customerResponse.ok) {
+                     if (emailCheckResponse.ok) {
+                         const emailCheckData = await emailCheckResponse.json();
+                         if (emailCheckData.exists) {
+                             throw new Error(`A user with email ${appointmentData.email} already exists. Please use a different email or select "Existing Customer" instead.`);
+                         }
+                     }
+
+                     // First, create a new user account
+                     const userResponse = await fetch(`${API_ENDPOINTS.AUTH}/register`, {
+                        method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json'
+                         },
+                        body: JSON.stringify({
+                            name: appointmentData.customer,
+                             email: appointmentData.email,
+                             password: 'customer123', // Default password
+                             role: 'customer',
+                            phone: appointmentData.phone || '',
+                             businessName: appointmentData.businessName || ''
+                        })
+                    });
+
+                     if (userResponse.ok) {
+                         const userData = await userResponse.json();
+                         if (userData.success) {
+                             userId = userData.data.user._id || userData.data.user.id;
+                         } 
+                     } else {
+                         const errorData = await userResponse.json().catch(() => ({}));
+                         if (errorData.message && errorData.message.includes('already exists')) {
+                             throw new Error(`A user with email ${appointmentData.email} already exists. Please use a different email or select "Existing Customer" instead.`);
+                         }
+                         throw new Error(errorData.message || `Failed to create user account (${userResponse.status})`);
+                     }
+
+                                         // Customer record is automatically created during user registration
+                     // We need to fetch the customer ID that was created
+                     const customerResponse = await fetch(`${API_ENDPOINTS.CUSTOMERS}?email=${encodeURIComponent(appointmentData.email)}`, {
+                         headers: getAuthHeaders()
+                     });
+
+                     if (!customerResponse.ok) {
+                         throw new Error(`Failed to fetch customer data after user registration (${customerResponse.status})`);
+                     }
+
                         const customerData = await customerResponse.json();
-                        if (customerData.success) {
-                            customerId = customerData.data.customer._id || customerData.data.customer.id;
-                        }
+                     if (!customerData.success) {
+                         throw new Error(customerData.message || 'Failed to fetch customer data after user registration');
+                     }
+
+                     if (!customerData.data.customers || customerData.data.customers.length === 0) {
+                         throw new Error('Customer record was not found after user registration. Please try again or contact support.');
+                     }
+
+                     customerId = customerData.data.customers[0]._id || customerData.data.customers[0].id;
+                     
+                     if (!customerId) {
+                         throw new Error('Customer ID is missing from the customer record. Please try again or contact support.');
                     }
                 }
             } catch (error) {
                 console.warn('Customer creation/finding failed:', error);
-                // Continue with appointment creation using customer name
+                throw new Error('Failed to create or find customer. Please try again.');
             }
 
-            // Parse vehicle info with improved validation
-            const vehicleText = appointmentData.vehicle.trim();
+            // Handle vehicle - use existing vehicle ID if available, otherwise create new vehicle
+            let vehicleId = appointmentData.vehicleId;
             
-            // More flexible vehicle parsing
-            let make = '';
-            let model = '';
-            let year = new Date().getFullYear(); // Default to current year
+            // Create new vehicle if:
+            // 1. No vehicle ID is provided AND
+            // 2. Either it's a new customer (who must have new vehicles) OR
+            // 3. It's an existing customer who selected "New Vehicle" option
+            // 4. OR if we're editing and the user changed to "New Vehicle" option
+            const shouldCreateNewVehicle = !vehicleId && (appointmentData.customerType === 'new' || !useExistingVehicle);
             
-            // Try to extract year from anywhere in the string
-            const yearMatch = vehicleText.match(/\b(19|20)\d{2}\b/);
-            if (yearMatch) {
-                year = parseInt(yearMatch[0]);
-                // Remove year from text for make/model parsing
-                const vehicleWithoutYear = vehicleText.replace(/\b(19|20)\d{2}\b/, '').trim();
-                const parts = vehicleWithoutYear.split(' ').filter(part => part.length > 0);
+            if (shouldCreateNewVehicle) {
+                // Validate that we have vehicle information
+                if (!appointmentData.vehicle.trim()) {
+                    throw new Error('Vehicle information is required when creating a new vehicle');
+                }
                 
-                if (parts.length >= 2) {
-                    make = parts[0];
-                    model = parts.slice(1).join(' ');
-                } else if (parts.length === 1) {
-                    make = parts[0];
-                    model = 'Unknown Model';
+                // Parse vehicle info for new vehicle creation
+                const vehicleText = appointmentData.vehicle.trim();
+                
+                let make = '';
+                let model = '';
+                let year = new Date().getFullYear();
+                
+                const yearMatch = vehicleText.match(/\b(19|20)\d{2}\b/);
+                if (yearMatch) {
+                    year = parseInt(yearMatch[0]);
+                    const vehicleWithoutYear = vehicleText.replace(/\b(19|20)\d{2}\b/, '').trim();
+                    const parts = vehicleWithoutYear.split(' ').filter(part => part.length > 0);
+                    
+                    if (parts.length >= 2) {
+                        make = parts[0];
+                        model = parts.slice(1).join(' ');
+                    } else if (parts.length === 1) {
+                        make = parts[0];
+                        model = 'Unknown Model';
+                    }
+                } else {
+                    const parts = vehicleText.split(' ').filter(part => part.length > 0);
+                    if (parts.length >= 2) {
+                        make = parts[0];
+                        model = parts.slice(1).join(' ');
+                    } else if (parts.length === 1) {
+                        make = parts[0];
+                        model = 'Unknown Model';
+                    }
                 }
-            } else {
-                // No year found, parse as make/model only
-                const parts = vehicleText.split(' ').filter(part => part.length > 0);
-                if (parts.length >= 2) {
-                    make = parts[0];
-                    model = parts.slice(1).join(' ');
-                } else if (parts.length === 1) {
-                    make = parts[0];
-                    model = 'Unknown Model';
+
+                if (!make.trim()) {
+                    throw new Error('Please enter a vehicle make (e.g., Toyota, Honda, Ford)');
                 }
-            }
 
-            // Validate vehicle data
-            if (!make.trim()) {
-                throw new Error('Please enter a vehicle make (e.g., Toyota, Honda, Ford)');
-            }
+                if (year < 1900 || year > new Date().getFullYear() + 1) {
+                    throw new Error(`Invalid vehicle year: ${year}. Please enter a year between 1900 and ${new Date().getFullYear() + 1}`);
+                }
 
-            if (year < 1900 || year > new Date().getFullYear() + 1) {
-                throw new Error(`Invalid vehicle year: ${year}. Please enter a year between 1900 and ${new Date().getFullYear() + 1}`);
+                // Create new vehicle
+                try {
+                    console.log('Creating new vehicle for customer:', customerId);
+                    console.log('Vehicle data:', {
+                        year,
+                        make: make.trim(),
+                        model: model.trim(),
+                        vin: appointmentData.vin.trim() || 'N/A',
+                        licensePlate: appointmentData.licensePlate.trim() || 'N/A',
+                        customer: customerId
+                    });
+
+                    const vehicleResponse = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({
+                            year,
+                            make: make.trim(),
+                            model: model.trim(),
+                            vin: appointmentData.vin.trim() || 'N/A',
+                            licensePlate: appointmentData.licensePlate.trim() || 'N/A',
+                            color: 'Unknown',
+                            mileage: 0,
+                            status: 'active',
+                            customer: customerId // Associate with the customer (new or existing)
+                        })
+                    });
+
+                        const vehicleData = await vehicleResponse.json();
+                    console.log('Vehicle response status:', vehicleResponse.status);
+                    console.log('Vehicle response data:', vehicleData);
+                    
+                    if (vehicleResponse.ok && vehicleData.success) {
+                        // Both HTTP status and business logic are successful
+                            vehicleId = vehicleData.data.vehicle._id || vehicleData.data.vehicle.id;
+                        console.log('Vehicle created successfully with ID:', vehicleId);
+                    } else {
+                        // Either HTTP error or business logic error
+                        console.error('Vehicle creation failed:', {
+                            status: vehicleResponse.status,
+                            ok: vehicleResponse.ok,
+                            success: vehicleData.success,
+                            message: vehicleData.message
+                        });
+                        
+                        // Handle specific VIN duplicate error
+                        if (vehicleData.message && vehicleData.message.includes('already exists')) {
+                            throw new Error(`Vehicle with this VIN already exists. Please use a different VIN or leave it blank to generate one automatically.`);
+                        }
+                        
+                        throw new Error(vehicleData.message || `Failed to create vehicle (${vehicleResponse.status})`);
+                    }
+                } catch (error) {
+                    console.warn('Vehicle creation failed:', error);
+                    // Show specific error message and re-throw to cancel appointment creation
+                    if (error instanceof Error) {
+                        throw new Error(`Vehicle creation failed: ${error.message}. Appointment creation cancelled.`);
+                    } else {
+                        throw new Error('Vehicle creation failed. Appointment creation cancelled.');
+                    }
+                }
             }
 
             // Map service type to backend enum
@@ -396,32 +710,34 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                 throw new Error('Failed to create or find customer. Please try again.');
             }
 
+            if (!vehicleId) {
+                throw new Error('Failed to create or find vehicle. Please try again.');
+            }
+
             if (!assignedTo) {
                 throw new Error('User authentication required. Please login again.');
             }
 
             // Prepare appointment data
             const appointmentPayload: any = {
-                customer: customerId, // Must be a valid ObjectId
-                vehicle: {
-                    make: make.trim(),
-                    model: model.trim(),
-                    year: year,
-                    vin: appointmentData.vin.trim() || 'N/A', // Use provided VIN or 'N/A'
-                    licensePlate: appointmentData.licensePlate.trim() || 'N/A', // Use provided license plate or 'N/A'
-                    mileage: 0
-                },
+                customer: customerId,
+                vehicle: vehicleId,
                 serviceType: mappedServiceType,
                 serviceDescription: appointmentData.serviceType,
                 scheduledDate: appointmentData.date.split('T')[0],
-                scheduledTime: appointmentData.date.split('T')[1]?.substring(0, 5) || '09:00',
-                estimatedDuration: 60,
+                scheduledTime: appointmentData.date.split('T')[1]?.substring(0, 5) || appointmentData.time || '09:00',
+                estimatedDuration: appointmentData.estimatedDuration,
                 assignedTo: assignedTo,
-                priority: 'medium',
-                status: 'scheduled'
+                priority: appointmentData.priority,
+                status: appointmentData.status
             };
 
-            // Only include notes if they have content
+            // Add technician if selected
+            if (appointmentData.technicianId && appointmentData.technicianId.trim()) {
+                appointmentPayload.technician = appointmentData.technicianId;
+            }
+
+            // Add optional fields
             if (appointmentData.notes && appointmentData.notes.trim()) {
                 appointmentPayload.notes = appointmentData.notes.trim();
                 appointmentPayload.customerNotes = appointmentData.notes.trim();
@@ -446,12 +762,47 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
 
             const savedAppointment = await response.json();
             console.log('Appointment saved successfully:', savedAppointment);
+            
+            // Show appropriate success message
+            if (shouldCreateNewVehicle) {
+                toast.success('Appointment saved and new vehicle created successfully!');
+            } else {
             toast.success('Appointment saved to database successfully!');
+            }
+            
             return savedAppointment;
         } catch (error) {
             console.error('Error saving appointment to database:', error);
+            
+            // Show specific error message for vehicle creation failures
+            if (error instanceof Error && error.message.includes('Vehicle creation failed')) {
+                toast.error(error.message);
+            } else {
             toast.error(error instanceof Error ? error.message : 'Failed to save appointment to database');
+            }
+            
             throw error;
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!appointment?.id) {
+            toast.error('No appointment to delete');
+            return;
+        }
+
+        if (!window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            await dispatch(deleteAppointment(appointment.id)).unwrap();
+            onClose();
+        } catch (error) {
+            console.error('Failed to delete appointment:', error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -460,6 +811,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             return;
         }
 
+
+
         try {
             setIsSavingToDatabase(true);
             
@@ -467,8 +820,20 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
             try {
                 const savedAppointment = await saveAppointmentToDatabase(form);
                 toast.success('Appointment created and saved to database!');
+                
+                // Pass the saved appointment data (with real database ID) to the calendar
+                onSave(savedAppointment.data.appointment);
+                
             } catch (dbError) {
-                console.warn('Database save failed, falling back to local storage:', dbError);
+                console.warn('Database save failed:', dbError);
+                
+                // Check if it's a vehicle creation failure - don't save locally
+                if (dbError instanceof Error && dbError.message.includes('Vehicle creation failed')) {
+                    // Vehicle creation failed - don't save appointment locally
+                    console.log('Vehicle creation failed - appointment creation cancelled');
+                    return; // Exit without saving locally
+                }
+                
                 // Check if it's an authentication error
                 if (dbError instanceof Error && dbError.message.includes('login')) {
                     toast.error('Please login to save appointments to the database');
@@ -476,16 +841,16 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                     setTimeout(() => {
                         window.location.href = '/admin/login';
                     }, 2000);
+                    return; // Exit without saving locally
                 } else if (dbError instanceof Error && dbError.message.includes('Backend server')) {
                     toast.error('Backend server is not running. Please start the server and try again.');
+                    return; // Exit without saving locally
                 } else {
-                    // Fallback: save to local storage or just continue with local state
+                    // For other database errors, fallback to local storage
                     toast.error('Database unavailable. Appointment saved locally.');
+                    onSave(form); // Pass form data for local storage
                 }
             }
-            
-            // Always call the parent's onSave to update local state
-            onSave(form);
             
         } catch (error) {
             console.error('Error in handleSubmit:', error);
@@ -495,16 +860,26 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
         }
     };
 
-    const selectService = (service: string) => {
-        setForm(prev => ({ ...prev, serviceType: service }));
-        setShowServiceSuggestions(false);
-        serviceInputRef.current?.focus();
-    };
+
 
     const selectVehicle = (vehicle: string) => {
         setForm(prev => ({ ...prev, vehicle: vehicle }));
         setShowVehicleSuggestions(false);
         vehicleInputRef.current?.focus();
+    };
+
+    const selectCustomer = (customer: {id: string, name: string, email: string, phone?: string}) => {
+        setForm(prev => ({ 
+            ...prev, 
+            customer: customer.name,
+            email: customer.email,
+            phone: customer.phone || '',
+            existingCustomerId: customer.id,
+            customerType: 'existing'
+        }));
+        
+        // Load vehicles for the selected customer
+        loadCustomerVehicles(customer.id);
     };
 
     const formatPhoneNumber = (value: string) => {
@@ -530,6 +905,49 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
         }
     };
 
+    // Check email availability
+    const checkEmailAvailability = async (email: string) => {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setEmailStatus('idle');
+            return;
+        }
+
+        setEmailStatus('checking');
+        
+        try {
+            const response = await fetch(`${API_ENDPOINTS.AUTH}/check-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setEmailStatus(data.exists ? 'exists' : 'available');
+            } else {
+                setEmailStatus('idle');
+            }
+        } catch (error) {
+            console.warn('Email check failed:', error);
+            setEmailStatus('idle');
+        }
+    };
+
+    // Debounced email check
+    useEffect(() => {
+        if (form.customerType === 'new' && form.email) {
+            const timeoutId = setTimeout(() => {
+                checkEmailAvailability(form.email);
+            }, 500); // Wait 500ms after user stops typing
+
+            return () => clearTimeout(timeoutId);
+        } else {
+            setEmailStatus('idle');
+        }
+    }, [form.email, form.customerType]);
+
     return (
         <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
@@ -540,16 +958,92 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-800">New Appointment</h2>
-                    <p className="text-sm text-gray-600 mt-1">Schedule a new appointment for a customer</p>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {isEditing ? 'Edit Appointment' : 'New Appointment'}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                        {isEditing ? 'Update appointment details' : 'Schedule a new appointment for a customer'}
+                    </p>
                 </div>
 
-                <div className="p-6 space-y-4">
-                    {/* Customer Name */}
+                <div className="p-6 space-y-6">
+                    {/* Customer Type Selection */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Customer Information</h3>
+                        
+                        {/* Customer Type Toggle */}
+                        <div className="flex gap-4 mb-4">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="customerType"
+                                    checked={form.customerType === 'new'}
+                                    onChange={() => {
+                                        setForm(prev => ({ 
+                                            ...prev, 
+                                            customerType: 'new',
+                                            existingCustomerId: '',
+                                            customer: '',
+                                            email: '',
+                                            phone: ''
+                                        }));
+                                        setUseExistingVehicle(false);
+                                        setSelectedCustomerVehicles([]);
+                                    }}
+                                    className="mr-2"
+                                />
+                                <span className="font-medium">New Customer</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="customerType"
+                                    checked={form.customerType === 'existing'}
+                                    onChange={() => {
+                                        setForm(prev => ({ 
+                                            ...prev, 
+                                            customerType: 'existing',
+                                            customer: '',
+                                            email: '',
+                                            phone: ''
+                                        }));
+                                        setUseExistingVehicle(false);
+                                        setSelectedCustomerVehicles([]);
+                                    }}
+                                    className="mr-2"
+                                />
+                                <span className="font-medium">Existing Customer</span>
+                            </label>
+                        </div>
+
+                        {/* Customer Name/Selection */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Customer Name *
+                                {form.customerType === 'existing' ? 'Select Customer *' : 'Customer Name *'}
                         </label>
+                            {form.customerType === 'existing' ? (
+                                <select
+                                    name="customer"
+                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        errors.customer ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    onChange={(e) => {
+                                        const selectedCustomer = availableCustomers.find(c => c.id === e.target.value);
+                                        if (selectedCustomer) {
+                                            selectCustomer(selectedCustomer);
+                                        }
+                                    }}
+                                    value={form.existingCustomerId || ''}
+                                    disabled={isLoading || isSavingToDatabase}
+                                >
+                                    <option value="">Select a customer</option>
+                                    {availableCustomers.map((customer) => (
+                                        <option key={customer.id} value={customer.id}>
+                                            {customer.name} - {customer.email}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
                         <input
                             name="customer"
                             placeholder="Enter customer name"
@@ -560,13 +1054,86 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                             value={form.customer}
                             disabled={isLoading || isSavingToDatabase}
                         />
+                            )}
                         {errors.customer && (
                             <p className="text-red-500 text-sm mt-1">{errors.customer}</p>
                         )}
                     </div>
                     
-                    {/* Phone Number */}
-                    <div>
+                                                 {/* Email Field (for new customers) */}
+                         {form.customerType === 'new' && (
+                             <div className="mt-4">
+                                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                                     Email Address *
+                                 </label>
+                                 <div className="relative">
+                                     <input
+                                         name="email"
+                                         type="email"
+                                         placeholder="customer@example.com"
+                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                             errors.email ? 'border-red-500' : 
+                                             emailStatus === 'available' ? 'border-green-500' :
+                                             emailStatus === 'exists' ? 'border-red-500' :
+                                             emailStatus === 'checking' ? 'border-yellow-500' :
+                                             'border-gray-300'
+                                         }`}
+                                         onChange={handleChange}
+                                         value={form.email}
+                                         disabled={isLoading || isSavingToDatabase}
+                                     />
+                                     {/* Email status indicator */}
+                                     {emailStatus === 'checking' && (
+                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                         </div>
+                                     )}
+                                     {emailStatus === 'available' && (
+                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                             </svg>
+                                         </div>
+                                     )}
+                                     {emailStatus === 'exists' && (
+                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                             <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                             </svg>
+                                         </div>
+                                     )}
+                                 </div>
+                                 {errors.email && (
+                                     <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                 )}
+                                 {emailStatus === 'available' && !errors.email && (
+                                     <p className="text-green-600 text-sm mt-1">✓ Email is available</p>
+                                 )}
+                                 {emailStatus === 'exists' && !errors.email && (
+                                     <p className="text-red-500 text-sm mt-1">⚠ This email is already registered</p>
+                                 )}
+                             </div>
+                         )}
+
+                        {/* Business Name Field (for new customers) */}
+                        {form.customerType === 'new' && (
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Business Name (Optional)
+                                </label>
+                                <input
+                                    name="businessName"
+                                    placeholder="Company or business name"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onChange={handleChange}
+                                    value={form.businessName}
+                                    disabled={isLoading || isSavingToDatabase}
+                                />
+                            </div>
+                        )}
+                        {/* Phone Number (only for new customers) */}
+                        {form.customerType === 'new' && (
+                            <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Phone Number
                         </label>
@@ -583,164 +1150,262 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                         />
                         {errors.phone && (
                             <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                                )}
+                            </div>
                         )}
                     </div>
-                    
-                                         {/* Vehicle */}
-                     <div className="relative">
-                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                             Vehicle (Make/Model/Year) *
-                         </label>
-                                                  <input
-                              ref={vehicleInputRef}
-                              name="vehicle"
-                              placeholder="e.g., Toyota Camry 2020, 2020 Honda Civic, Ford F-150, BMW X5"
-                              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                  errors.vehicle ? 'border-red-500' : 'border-gray-300'
-                              }`}
-                              onChange={handleChange}
-                              value={form.vehicle}
-                              disabled={isLoading || isSavingToDatabase}
-                          />
-                         {errors.vehicle && (
-                             <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
-                         )}
-                         
-                         {/* Vehicle Suggestions */}
-                         {showVehicleSuggestions && (
-                             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                 {filteredVehicles.map((vehicle, index) => (
-                                     <button
-                                         key={index}
-                                         className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                         onClick={() => selectVehicle(vehicle)}
-                                     >
-                                         {vehicle}
-                                     </button>
-                                 ))}
-                             </div>
-                         )}
-                     </div>
 
-                     {/* VIN Number */}
-                     <div>
-                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                             VIN Number (Optional)
-                         </label>
-                         <input
-                             name="vin"
-                             placeholder="17-character VIN (e.g., 1HGBH41JXMN109186)"
-                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                             onChange={handleChange}
-                             value={form.vin}
-                             disabled={isLoading || isSavingToDatabase}
-                             maxLength={17}
-                         />
-                         <p className="text-xs text-gray-500 mt-1">
-                             Vehicle Identification Number - found on dashboard, door jamb, or registration
-                         </p>
-                         {errors.vin && (
-                             <p className="text-red-500 text-sm mt-1">{errors.vin}</p>
-                         )}
-                     </div>
+                    {/* Vehicle Information */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Vehicle Information</h3>
+                        
+                        {/* Vehicle Type Toggle */}
+                        <div className="flex gap-4 mb-4">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="vehicleType"
+                                    checked={!useExistingVehicle}
+                                    onChange={() => setUseExistingVehicle(false)}
+                                    className="mr-2"
+                                    disabled={form.customerType === 'new'}
+                                />
+                                <span className={`font-medium ${form.customerType === 'new' ? 'text-gray-400' : ''}`}>
+                                New Vehicle
+                                </span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="vehicleType"
+                                    checked={useExistingVehicle}
+                                    onChange={() => setUseExistingVehicle(true)}
+                                    className="mr-2"
+                                    disabled={form.customerType === 'new'}
+                                />
+                                <span className={`font-medium ${form.customerType === 'new' ? 'text-gray-400' : ''}`}>
+                                Existing Vehicle
+                                </span>
+                            </label>
+                        </div>
+                        
+                        {form.customerType === 'new' && (
+                            <p className="text-sm text-gray-500 mb-4">
+                                New customers must have new vehicles. Select "Existing Customer" to use existing vehicles.
+                            </p>
+                        )}
 
-                                           {/* License Plate */}
-                      <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                              License Plate (Optional)
-                          </label>
-                          <input
-                              name="licensePlate"
-                              placeholder="e.g., ABC123, XYZ-789"
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                              onChange={handleChange}
-                              value={form.licensePlate}
-                              disabled={isLoading || isSavingToDatabase}
-                              maxLength={10}
-                          />
-                      </div>
+                        {useExistingVehicle ? (
+                            /* Existing Vehicle Selection */
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Select Vehicle *
+                                </label>
+                                <select
+                                    name="vehicleId"
+                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        errors.vehicle ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    onChange={(e) => {
+                                        const selectedVehicle = selectedCustomerVehicles.find(v => v.id === e.target.value);
+                                        if (selectedVehicle) {
+                                            setForm(prev => ({
+                                                ...prev,
+                                                vehicleId: selectedVehicle.id,
+                                                vehicle: `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`,
+                                                vin: selectedVehicle.vin,
+                                                licensePlate: selectedVehicle.licensePlate
+                                            }));
+                                        } else {
+                                            setForm(prev => ({
+                                                ...prev,
+                                                vehicleId: '',
+                                                vehicle: '',
+                                                vin: '',
+                                                licensePlate: ''
+                                            }));
+                                        }
+                                    }}
+                                    value={form.vehicleId}
+                                    disabled={isLoading || isSavingToDatabase || !form.existingCustomerId}
+                                >
+                                    <option value="">
+                                        {!form.existingCustomerId 
+                                            ? 'Please select a customer first' 
+                                            : 'Select a vehicle'
+                                        }
+                                    </option>
+                                    {selectedCustomerVehicles.map((vehicle) => (
+                                        <option key={vehicle.id} value={vehicle.id}>
+                                            {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                                        </option>
+                                    ))}
+                                </select>
+                                {!form.existingCustomerId && (
+                                    <p className="text-sm text-gray-500 mt-1">Please select a customer to see their vehicles.</p>
+                                )}
+                                {form.existingCustomerId && selectedCustomerVehicles.length === 0 && (
+                                    <p className="text-sm text-gray-500 mt-1">This customer has no vehicles. Please add a vehicle first.</p>
+                                )}
+                            </div>
+                        ) : (
+                            /* New Vehicle Input */
+                            <div className="relative">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Vehicle Description *
+                                </label>
+                                <input
+                                    ref={vehicleInputRef}
+                                    name="vehicle"
+                                    placeholder="e.g., Toyota Camry 2020, 2020 Honda Civic, Ford F-150, BMW X5"
+                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        errors.vehicle ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    onChange={handleChange}
+                                    value={form.vehicle}
+                                    disabled={isLoading || isSavingToDatabase}
+                                />
+                                {errors.vehicle && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
+                                )}
+                                
+                                {/* Vehicle Suggestions */}
+                                {showVehicleSuggestions && (
+                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                        {filteredVehicles.map((vehicle, index) => (
+                                            <button
+                                                key={index}
+                                                className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                                onClick={() => selectVehicle(vehicle)}
+                                            >
+                                                {vehicle}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
-                      {/* Address Section */}
-                      <div className="space-y-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                              Address (Optional)
-                          </label>
-                          
-                          {/* Street Address */}
-                          <div>
-                              <input
-                                  name="address.street"
-                                  placeholder="Street Address"
-                                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  onChange={(e) => {
-                                      setForm(prev => ({
-                                          ...prev,
-                                          address: { ...prev.address, street: e.target.value }
-                                      }));
-                                      if (addressError) setAddressError('');
-                                  }}
-                                  value={form.address.street}
-                                  disabled={isLoading || isSavingToDatabase}
-                              />
-                          </div>
-                          
-                          {/* City, State, ZIP */}
-                          <div className="grid grid-cols-3 gap-3">
-                              <div>
-                                  <input
-                                      name="address.city"
-                                      placeholder="City"
-                                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      onChange={(e) => {
-                                          setForm(prev => ({
-                                              ...prev,
-                                              address: { ...prev.address, city: e.target.value }
-                                          }));
-                                          if (addressError) setAddressError('');
-                                      }}
-                                      value={form.address.city}
-                                      disabled={isLoading || isSavingToDatabase}
-                                  />
-                              </div>
-                              <div>
-                                  <input
-                                      name="address.state"
-                                      placeholder="State"
-                                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      onChange={(e) => {
-                                          setForm(prev => ({
-                                              ...prev,
-                                              address: { ...prev.address, state: e.target.value }
-                                          }));
-                                          if (addressError) setAddressError('');
-                                      }}
-                                      value={form.address.state}
-                                      disabled={isLoading || isSavingToDatabase}
-                                      maxLength={2}
-                                  />
-                              </div>
-                              <div>
-                                  <input
-                                      name="address.zipCode"
-                                      placeholder="ZIP Code"
-                                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      onChange={(e) => {
-                                          setForm(prev => ({
-                                              ...prev,
-                                              address: { ...prev.address, zipCode: e.target.value }
-                                          }));
-                                          if (addressError) setAddressError('');
-                                      }}
-                                      value={form.address.zipCode}
-                                      disabled={isLoading || isSavingToDatabase}
-                                      maxLength={10}
-                                  />
-                              </div>
-                          </div>
-                          {addressError && (
-                              <p className="text-red-500 text-sm mt-1">{addressError}</p>
-                          )}
-                      </div>
+                    {/* VIN Number */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            VIN Number (Optional)
+                        </label>
+                        <input
+                            name="vin"
+                            placeholder="8-17 character VIN (e.g., 1HGBH41JXMN109186)"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={handleChange}
+                            value={form.vin}
+                            disabled={isLoading || isSavingToDatabase}
+                            maxLength={17}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            Vehicle Identification Number - found on dashboard, door jamb, or registration. Must be 8-17 characters. Leave blank to generate automatically if you don't have the VIN.
+                        </p>
+                        {errors.vin && (
+                            <p className="text-red-500 text-sm mt-1">{errors.vin}</p>
+                        )}
+                    </div>
+
+                    {/* License Plate */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            License Plate (Optional)
+                        </label>
+                        <input
+                            name="licensePlate"
+                            placeholder="e.g., ABC123, XYZ-789"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={handleChange}
+                            value={form.licensePlate}
+                            disabled={isLoading || isSavingToDatabase}
+                            maxLength={10}
+                        />
+                    </div>
+
+                    {/* Address Section */}
+                    <div className="space-y-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Address (Optional)
+                        </label>
+                        
+                        {/* Street Address */}
+                        <div>
+                            <input
+                                name="address.street"
+                                placeholder="Street Address"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onChange={(e) => {
+                                    setForm(prev => ({
+                                        ...prev,
+                                        address: { ...prev.address, street: e.target.value }
+                                    }));
+                                    if (addressError) setAddressError('');
+                                }}
+                                value={form.address.street}
+                                disabled={isLoading || isSavingToDatabase}
+                            />
+                        </div>
+                        
+                        {/* City, State, ZIP */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <input
+                                    name="address.city"
+                                    placeholder="City"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onChange={(e) => {
+                                        setForm(prev => ({
+                                            ...prev,
+                                            address: { ...prev.address, city: e.target.value }
+                                        }));
+                                        if (addressError) setAddressError('');
+                                    }}
+                                    value={form.address.city}
+                                    disabled={isLoading || isSavingToDatabase}
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    name="address.state"
+                                    placeholder="State"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onChange={(e) => {
+                                        setForm(prev => ({
+                                            ...prev,
+                                            address: { ...prev.address, state: e.target.value }
+                                        }));
+                                        if (addressError) setAddressError('');
+                                    }}
+                                    value={form.address.state}
+                                    disabled={isLoading || isSavingToDatabase}
+                                    maxLength={2}
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    name="address.zipCode"
+                                    placeholder="ZIP Code"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onChange={(e) => {
+                                        setForm(prev => ({
+                                            ...prev,
+                                            address: { ...prev.address, zipCode: e.target.value }
+                                        }));
+                                        if (addressError) setAddressError('');
+                                    }}
+                                    value={form.address.zipCode}
+                                    disabled={isLoading || isSavingToDatabase}
+                                    maxLength={10}
+                                />
+                            </div>
+                        </div>
+                        {addressError && (
+                            <p className="text-red-500 text-sm mt-1">{addressError}</p>
+                        )}
+                    </div>
                     
                     {/* Date & Time */}
                     <div>
@@ -754,7 +1419,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                                 errors.date ? 'border-red-500' : 'border-gray-300'
                             }`}
                             onChange={handleChange}
-                            value={form.date}
+                            value={`${form.date}T${form.time}`}
                             min={new Date().toISOString().slice(0, 16)}
                             disabled={isLoading || isSavingToDatabase}
                         />
@@ -764,39 +1429,126 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                     </div>
                     
                     {/* Service Type */}
-                    <div className="relative">
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Service Type *
                         </label>
-                        <input
-                            ref={serviceInputRef}
+                        <select
                             name="serviceType"
-                            placeholder="e.g., Oil Change, Brake Inspection"
                             className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 errors.serviceType ? 'border-red-500' : 'border-gray-300'
                             }`}
                             onChange={handleChange}
                             value={form.serviceType}
                             disabled={isLoading || isSavingToDatabase}
-                        />
+                        >
+                            <option value="">Select a service type</option>
+                            {COMMON_SERVICES.map((service) => (
+                                <option key={service} value={service}>
+                                    {service}
+                                </option>
+                            ))}
+                        </select>
                         {errors.serviceType && (
                             <p className="text-red-500 text-sm mt-1">{errors.serviceType}</p>
                         )}
-                        
-                        {/* Service Suggestions */}
-                        {showServiceSuggestions && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                {filteredServices.map((service, index) => (
-                                    <button
-                                        key={index}
-                                        className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                        onClick={() => selectService(service)}
-                                    >
-                                        {service}
-                                    </button>
-                                ))}
-                            </div>
+                    </div>
+
+                    {/* Technician */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Assign Technician
+                        </label>
+                        <select
+                            name="technicianId"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={(e) => {
+                                const selectedTech = technicians.find(tech => tech._id === e.target.value);
+                                setForm(prev => ({
+                                    ...prev,
+                                    technicianId: e.target.value,
+                                    technicianName: selectedTech?.name || ""
+                                }));
+                            }}
+                            value={form.technicianId}
+                            disabled={isLoading || isSavingToDatabase}
+                        >
+                            <option value="">Select a technician (optional)</option>
+                            {technicians.filter(tech => tech.isActive).map((technician) => {
+                                const specializations = technician.specializations || [];
+                                return (
+                                    <option key={technician._id} value={technician._id}>
+                                        {technician.name} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Choose a technician to assign to this appointment</p>
+                    </div>
+
+                    {/* Priority */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Priority *
+                        </label>
+                        <select
+                            name="priority"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={handleChange}
+                            value={form.priority}
+                            disabled={isLoading || isSavingToDatabase}
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+
+                    {/* Estimated Duration */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Estimated Duration (minutes) *
+                        </label>
+                        <input
+                            type="number"
+                            name="estimatedDuration"
+                            min="15"
+                            max="480"
+                            placeholder="60"
+                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                errors.estimatedDuration ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                            onChange={handleChange}
+                            value={form.estimatedDuration}
+                            disabled={isLoading || isSavingToDatabase}
+                        />
+                        {errors.estimatedDuration && (
+                            <p className="text-red-500 text-sm mt-1">{errors.estimatedDuration}</p>
                         )}
+                        <p className="text-xs text-gray-500 mt-1">Duration between 15 minutes and 8 hours</p>
+                    </div>
+
+
+
+                    {/* Status */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Status *
+                        </label>
+                        <select
+                            name="status"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onChange={handleChange}
+                            value={form.status}
+                            disabled={isLoading || isSavingToDatabase}
+                        >
+                            <option value="scheduled">Scheduled</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
                     </div>
                     
                     {/* Notes */}
@@ -817,21 +1569,35 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false }:
                 </div>
 
                 <div className="p-6 border-t border-gray-200">
-                    <div className="flex justify-end gap-3">
+                    <div className="flex justify-between items-center">
+                        {isEditing && (
+                            <button
+                                onClick={handleDelete}
+                                disabled={isLoading || isSavingToDatabase || isDeleting}
+                                className="px-6 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete Appointment'}
+                            </button>
+                        )}
+                        <div className="flex gap-3 ml-auto">
                         <button
                             onClick={onClose}
-                            disabled={isLoading || isSavingToDatabase}
+                                disabled={isLoading || isSavingToDatabase || isDeleting}
                             className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleSubmit}
-                            disabled={isLoading || isSavingToDatabase}
+                                disabled={isLoading || isSavingToDatabase || isDeleting}
                             className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isLoading || isSavingToDatabase ? 'Saving to Database...' : 'Create Appointment'}
+                                {isLoading || isSavingToDatabase 
+                                    ? (isEditing ? 'Updating...' : 'Saving to Database...') 
+                                    : (isEditing ? 'Update Appointment' : 'Create Appointment')
+                                }
                         </button>
+                        </div>
                     </div>
                 </div>
             </div>

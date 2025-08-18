@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
-import { useAppSelector } from '../../redux'
-import { useState } from 'react'
+import { useAppSelector, useAppDispatch } from '../../redux'
+import { useState, useEffect } from 'react'
+import { fetchCustomer } from '../../redux/actions/customers'
 
 import OverviewSection from '../../components/customers/section/OverviewSection'
 import PaymentsSection from '../../components/customers/section/PaymentsSection'
@@ -29,14 +30,47 @@ const tabs = [
 
 export default function CustomerDetail() {
   const { id } = useParams()
+  const dispatch = useAppDispatch()
   const [activeTab, setActiveTab] = useState('Overview')
 
-  const customer = useAppSelector(state =>
-    state.customers.list.find(c => c.id === id)
-  )
+  const { selectedCustomer: customer, loading, error } = useAppSelector(state => state.customers)
 
+  // Fetch customer data when component mounts
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchCustomer(id))
+    }
+  }, [dispatch, id])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="p-8 text-center text-red-600 font-medium">
+          Error loading customer: {error}
+        </div>
+      </div>
+    )
+  }
+
+  // Customer not found
   if (!customer) {
-    return <div className="p-8 text-center text-red-600 font-medium">Customer not found.</div>
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="p-8 text-center text-red-600 font-medium">Customer not found.</div>
+      </div>
+    )
   }
 
   return (
@@ -45,7 +79,7 @@ export default function CustomerDetail() {
       <div className="bg-white shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
-          <p className="text-sm text-gray-500">Customer ID: {customer.id}</p>
+          <p className="text-sm text-gray-500">Customer ID: {customer._id}</p>
         </div>
         <div className="flex gap-2 mt-4 md:mt-0">
           <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow-sm">✏️ Edit</button>

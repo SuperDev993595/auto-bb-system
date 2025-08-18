@@ -4,13 +4,14 @@ const bcrypt = require('bcryptjs');
 const Joi = require('joi');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 // Validation schemas
 const userSchema = Joi.object({
   username: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).optional(),
-  role: Joi.string().valid('admin', 'customer').required(),
+  role: Joi.string().valid('super_admin', 'admin', 'business_client', 'customer').required(),
   firstName: Joi.string().min(2).max(50).required(),
   lastName: Joi.string().min(2).max(50).required(),
   phone: Joi.string().optional(),
@@ -23,7 +24,7 @@ const updateUserSchema = Joi.object({
   username: Joi.string().min(3).max(30).optional(),
   email: Joi.string().email().optional(),
   password: Joi.string().min(6).optional(),
-  role: Joi.string().valid('admin', 'customer').optional(),
+  role: Joi.string().valid('super_admin', 'admin', 'business_client', 'customer').optional(),
   firstName: Joi.string().min(2).max(50).optional(),
   lastName: Joi.string().min(2).max(50).optional(),
   phone: Joi.string().optional(),
@@ -210,6 +211,41 @@ router.post('/users', authenticateToken, requireAdmin, async (req, res) => {
     
     const user = new User(value);
     await user.save();
+    
+    // If user is a customer, create a Customer record
+    if (value.role === 'customer') {
+      try {
+        const customer = new Customer({
+          name: `${value.firstName} ${value.lastName}`,
+          email: value.email,
+          phone: value.phone || '',
+          businessName: '',
+          userId: user._id,
+          status: 'active',
+          preferences: {
+            notifications: {
+              email: true,
+              sms: true,
+              push: false
+            },
+            reminders: {
+              appointments: true,
+              maintenance: true,
+              payments: true
+            },
+            privacy: {
+              shareData: false,
+              marketing: false
+            }
+          }
+        });
+        await customer.save();
+        console.log('Customer record created for user:', user._id);
+      } catch (customerError) {
+        console.error('Error creating customer record:', customerError);
+        // Don't fail the user creation if customer creation fails
+      }
+    }
     
     const userResponse = user.toObject();
     delete userResponse.password;

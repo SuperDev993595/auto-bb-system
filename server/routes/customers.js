@@ -1,10 +1,13 @@
 const express = require('express');
 const Joi = require('joi');
-const { authenticateToken, requireCustomer } = require('../middleware/auth');
+const mongoose = require('mongoose');
+const { authenticateToken, requireCustomer, requireAdmin, requireAnyAdmin, requireRole } = require('../middleware/auth');
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Vehicle = require('../models/Vehicle');
 const Appointment = require('../models/Appointment');
 const { Service } = require('../models/Service');
+const { Technician } = require('../models/Service');
 const Invoice = require('../models/Invoice');
 const Message = require('../models/Message');
 const Notification = require('../models/Notification');
@@ -30,7 +33,10 @@ const appointmentSchema = Joi.object({
   serviceType: Joi.string().min(1).max(100).required(),
   vehicleId: Joi.string().required(),
   notes: Joi.string().max(500).allow('').optional(),
-  status: Joi.string().valid('scheduled', 'in-progress', 'completed', 'cancelled').default('scheduled')
+  status: Joi.string().valid('scheduled', 'in-progress', 'completed', 'cancelled').default('scheduled'),
+  estimatedDuration: Joi.string().optional(),
+  priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
+  technicianId: Joi.string().optional()
 });
 
 const messageSchema = Joi.object({
@@ -42,37 +48,271 @@ const messageSchema = Joi.object({
   relatedVehicle: Joi.string().optional()
 });
 
+const profileUpdateSchema = Joi.object({
+  name: Joi.string().min(1).max(100).optional(),
+  email: Joi.string().email().optional(),
+  phone: Joi.string().min(1).max(20).optional(),
+  businessName: Joi.string().max(100).optional(),
+  address: Joi.object({
+    street: Joi.string().max(200).allow('').optional(),
+    city: Joi.string().max(100).allow('').optional(),
+    state: Joi.string().max(50).allow('').optional(),
+    zipCode: Joi.string().max(20).allow('').optional()
+  }).optional(),
+  preferences: Joi.object({
+    notifications: Joi.object({
+      email: Joi.boolean(),
+      sms: Joi.boolean(),
+      push: Joi.boolean()
+    }),
+    reminders: Joi.object({
+      appointments: Joi.boolean(),
+      maintenance: Joi.boolean(),
+      payments: Joi.boolean()
+    }),
+    privacy: Joi.object({
+      shareData: Joi.boolean(),
+      marketing: Joi.boolean()
+    })
+  }).optional()
+});
+
+const customerCreateSchema = Joi.object({
+  name: Joi.string().min(1).max(100).required(),
+  email: Joi.string().email().required(),
+  phone: Joi.string().min(1).max(20).required(),
+  businessName: Joi.string().max(100).optional(),
+  address: Joi.object({
+    street: Joi.string().max(200).allow('').optional(),
+    city: Joi.string().max(100).allow('').optional(),
+    state: Joi.string().max(50).allow('').optional(),
+    zipCode: Joi.string().max(20).allow('').optional()
+  }).optional(),
+  status: Joi.string().valid('active', 'inactive', 'prospect').default('active'),
+  notes: Joi.string().max(1000).allow('').optional()
+});
+
+// Get customers (admin access) - allows admins to search customers, or users to find their own customer record
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      email,
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    // Check user role and apply appropriate restrictions
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+    
+    if (email) {
+      query.email = { $regex: email, $options: 'i' };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { businessName: { $regex: search, $options: 'i' } },
+        { 'address.street': { $regex: search, $options: 'i' } },
+        { 'address.city': { $regex: search, $options: 'i' } },
+        { 'address.state': { $regex: search, $options: 'i' } },
+        { 'address.zipCode': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // If not admin, only allow access to their own customer record
+    if (!isAdmin) {
+      // Find the customer record for this user
+      const userCustomer = await Customer.findOne({ userId: req.user.id });
+      if (!userCustomer) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Customer record not found for this user' 
+        });
+      }
+      
+      // Only allow access to their own customer record
+      query._id = userCustomer._id;
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const customers = await Customer.find(query)
+      .populate('userId', 'name email phone businessName')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Transform customers to match frontend expectations
+    const transformedCustomers = customers.map(customer => ({
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    }));
+
+    // Get total count
+    const total = await Customer.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        customers: transformedCustomers,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalCustomers: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Create new customer (admin only)
+router.post('/', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    // Validate request body
+    const { error, value } = customerCreateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ 
+        success: false, 
+        message: error.details[0].message 
+      });
+    }
+
+    // Check if customer with this email already exists
+    const existingCustomer = await Customer.findOne({ email: value.email });
+    if (existingCustomer) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'A customer with this email address already exists' 
+      });
+    }
+
+    // Create new customer
+    const customer = new Customer({
+      name: value.name,
+      email: value.email,
+      phone: value.phone,
+      businessName: value.businessName || '',
+      address: value.address || {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: ''
+      },
+      status: value.status,
+      notes: value.notes || '',
+      createdBy: req.user.id,
+      assignedTo: req.user.id
+    });
+
+    await customer.save();
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    };
+
+    res.status(201).json({
+      success: true,
+      message: 'Customer created successfully',
+      data: { customer: transformedCustomer }
+    });
+  } catch (error) {
+    console.error('Error creating customer:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Get customer profile
 router.get('/profile', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    // First try to find customer record
+    let customer = await Customer.findOne({ userId: req.user.id });
+    
+    if (!customer) {
+      // If no customer record exists, create one from user data
+      const user = await User.findById(req.user.id).select('-password');
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
+      customer = new Customer({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        businessName: user.businessName || '',
+        userId: user._id,
+        status: 'active'
+      });
+      await customer.save();
     }
 
     res.json({
       success: true,
       data: {
-        user,
+        user: {
+          id: customer._id,
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          businessName: customer.businessName
+        },
         profile: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || '',
-          businessName: user.businessName || '',
-          address: user.address || {
+          id: customer._id,
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone || '',
+          businessName: customer.businessName || '',
+          address: customer.address || {
             street: '',
             city: '',
             state: '',
             zipCode: ''
           },
-          preferences: user.preferences || {
+          preferences: customer.preferences || {
             notifications: { email: true, sms: true, push: false },
             reminders: { appointments: true, maintenance: true, payments: true },
             privacy: { shareData: false, marketing: false }
           },
-          createdAt: user.createdAt,
-          lastLogin: user.lastLogin || user.createdAt
+          createdAt: customer.createdAt,
+          lastLogin: customer.lastContact || customer.createdAt
         }
       }
     });
@@ -85,26 +325,52 @@ router.get('/profile', authenticateToken, requireCustomer, async (req, res) => {
 // Update customer profile
 router.put('/profile', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const { name, email, phone, businessName, address, preferences } = req.body;
+    console.log('Received profile update request:', req.body);
+    
+    // Validate the request body
+    const { error, value } = profileUpdateSchema.validate(req.body);
+    if (error) {
+      console.log('Validation error:', error.details[0].message);
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
 
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-    if (phone) updateData.phone = phone;
-    if (businessName !== undefined) updateData.businessName = businessName;
-    if (address) updateData.address = address;
-    if (preferences) updateData.preferences = preferences;
+    const { name, email, phone, businessName, address, preferences } = value;
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password');
+    // Find or create customer record
+    let customer = await Customer.findOne({ userId: req.user.id });
+    
+    if (!customer) {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
+      customer = new Customer({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        businessName: user.businessName || '',
+        userId: user._id,
+        status: 'active'
+      });
+    }
+
+    // Update fields
+    if (name) customer.name = name;
+    if (email) customer.email = email;
+    if (phone) customer.phone = phone;
+    if (businessName !== undefined) customer.businessName = businessName;
+    if (address) customer.address = address;
+    if (preferences) customer.preferences = preferences;
+
+    console.log('Update data to save:', { name, email, phone, businessName, address, preferences });
+
+    await customer.save();
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { user }
+      data: { user: customer }
     });
   } catch (error) {
     console.error('Error updating customer profile:', error);
@@ -115,14 +381,124 @@ router.put('/profile', authenticateToken, requireCustomer, async (req, res) => {
 // Get customer vehicles
 router.get('/vehicles', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const vehicles = await Vehicle.find({ customerId: req.user.id }).sort({ createdAt: -1 });
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.json({
+        success: true,
+        data: { vehicles: [] }
+      });
+    }
+    
+    // Get vehicles from the separate Vehicle collection
+    const vehicles = await Vehicle.find({ customer: customer._id }).sort({ createdAt: -1 });
+    
+    // Transform vehicles to match frontend expectations
+    const transformedVehicles = vehicles.map(vehicle => ({
+      id: vehicle._id,
+      year: vehicle.year,
+      make: vehicle.make,
+      model: vehicle.model,
+      vin: vehicle.vin,
+      licensePlate: vehicle.licensePlate,
+      color: vehicle.color,
+      mileage: vehicle.mileage,
+      status: vehicle.status,
+      fuelType: vehicle.fuelType,
+      transmission: vehicle.transmission,
+      lastServiceDate: vehicle.lastServiceDate,
+      nextServiceDate: vehicle.nextServiceDate,
+      createdAt: vehicle.createdAt,
+      updatedAt: vehicle.updatedAt
+    }));
     
     res.json({
       success: true,
-      data: { vehicles }
+      data: { vehicles: transformedVehicles }
     });
   } catch (error) {
     console.error('Error fetching customer vehicles:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get all vehicles (for admins)
+router.get('/vehicles/all', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      customer,
+      search,
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    if (customer) query.customer = customer;
+    if (status) query.status = status;
+
+    if (search) {
+      query.$or = [
+        { make: { $regex: search, $options: 'i' } },
+        { model: { $regex: search, $options: 'i' } },
+        { vin: { $regex: search, $options: 'i' } },
+        { licensePlate: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const vehicles = await Vehicle.find(query)
+      .populate('customer', 'name email businessName')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Transform vehicles to match frontend expectations
+    const transformedVehicles = vehicles.map(vehicle => ({
+      id: vehicle._id,
+      year: vehicle.year,
+      make: vehicle.make,
+      model: vehicle.model,
+      vin: vehicle.vin,
+      licensePlate: vehicle.licensePlate,
+      color: vehicle.color,
+      mileage: vehicle.mileage,
+      status: vehicle.status,
+      fuelType: vehicle.fuelType,
+      transmission: vehicle.transmission,
+      lastServiceDate: vehicle.lastServiceDate,
+      nextServiceDate: vehicle.nextServiceDate,
+      createdAt: vehicle.createdAt,
+      updatedAt: vehicle.updatedAt,
+      customer: vehicle.customer
+    }));
+
+    // Get total count
+    const total = await Vehicle.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        vehicles: transformedVehicles,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalVehicles: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching all vehicles:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -135,20 +511,53 @@ router.post('/vehicles', authenticateToken, requireCustomer, async (req, res) =>
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const vehicle = new Vehicle({
-      ...value,
-      customerId: req.user.id
-    });
+    // Find or create customer record
+    let customer = await Customer.findOne({ userId: req.user.id });
+    
+    if (!customer) {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
+      customer = new Customer({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        businessName: user.businessName || '',
+        userId: user._id,
+        status: 'active'
+      });
+      await customer.save();
+    }
 
-    await vehicle.save();
+    // Check for duplicate VIN within customer's vehicles
+    const existingVehicle = await Vehicle.findOne({ 
+      customer: customer._id, 
+      vin: value.vin 
+    });
+    if (existingVehicle) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
+
+    // Create new vehicle in separate collection
+    const newVehicle = new Vehicle({
+      ...value,
+      customer: customer._id,
+      createdBy: req.user.id
+    });
+    await newVehicle.save();
 
     res.status(201).json({
       success: true,
       message: 'Vehicle added successfully',
-      data: { vehicle }
+      data: { vehicle: newVehicle }
     });
   } catch (error) {
     console.error('Error adding vehicle:', error);
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
@@ -161,15 +570,33 @@ router.put('/vehicles/:id', authenticateToken, requireCustomer, async (req, res)
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const vehicle = await Vehicle.findOneAndUpdate(
-      { _id: req.params.id, customerId: req.user.id },
-      value,
-      { new: true, runValidators: true }
-    );
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
 
+    // Find vehicle in separate collection
+    const vehicle = await Vehicle.findOne({ 
+      _id: req.params.id, 
+      customer: customer._id 
+    });
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
+
+    // Check for duplicate VIN (excluding current vehicle)
+    const existingVehicle = await Vehicle.findOne({ 
+      customer: customer._id,
+      vin: value.vin,
+      _id: { $ne: req.params.id }
+    });
+    if (existingVehicle) {
+      return res.status(409).json({ success: false, message: 'A vehicle with this VIN already exists' });
+    }
+
+    // Update vehicle
+    Object.assign(vehicle, value);
+    await vehicle.save();
 
     res.json({
       success: true,
@@ -185,11 +612,16 @@ router.put('/vehicles/:id', authenticateToken, requireCustomer, async (req, res)
 // Delete vehicle
 router.delete('/vehicles/:id', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findOneAndDelete({
-      _id: req.params.id,
-      customerId: req.user.id
-    });
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
 
+    // Find and delete vehicle from separate collection
+    const vehicle = await Vehicle.findOneAndDelete({ 
+      _id: req.params.id, 
+      customer: customer._id 
+    });
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
@@ -207,17 +639,27 @@ router.delete('/vehicles/:id', authenticateToken, requireCustomer, async (req, r
 // Get customer appointments
 router.get('/appointments', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const appointments = await Appointment.find({ customer: req.user.id })
+    // Find customer record first
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.json({
+        success: true,
+        data: { appointments: [] }
+      });
+    }
+
+    const appointments = await Appointment.find({ customer: customer._id })
+      .populate('vehicle', 'year make model vin licensePlate mileage')
       .sort({ scheduledDate: -1, scheduledTime: -1 });
-    
+     
     // Transform appointments to match frontend expectations
     const transformedAppointments = appointments.map(appointment => ({
       id: appointment._id,
       date: appointment.scheduledDate.toISOString().split('T')[0],
       time: appointment.scheduledTime,
       serviceType: appointment.serviceDescription,
-      vehicleId: appointment.vehicle?.vin || '', // Use VIN as vehicle identifier
-      vehicleInfo: `${appointment.vehicle?.year} ${appointment.vehicle?.make} ${appointment.vehicle?.model}`,
+      vehicleId: appointment.vehicle?._id || '', // Use vehicle ID as identifier
+      vehicleInfo: appointment.vehicle ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}` : 'Unknown Vehicle',
       status: appointment.status,
       estimatedDuration: `${appointment.estimatedDuration} minutes`,
       notes: appointment.notes,
@@ -226,7 +668,7 @@ router.get('/appointments', authenticateToken, requireCustomer, async (req, res)
       createdAt: appointment.createdAt,
       updatedAt: appointment.updatedAt
     }));
-    
+     
     res.json({
       success: true,
       data: { appointments: transformedAppointments }
@@ -245,12 +687,16 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    // Verify vehicle belongs to customer
-    const vehicle = await Vehicle.findOne({
-      _id: value.vehicleId,
-      customerId: req.user.id
-    });
+    // Find customer and verify vehicle belongs to customer
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
 
+    const vehicle = await Vehicle.findOne({ 
+      _id: value.vehicleId, 
+      customer: customer._id 
+    });
     if (!vehicle) {
       return res.status(400).json({ success: false, message: 'Invalid vehicle' });
     }
@@ -275,27 +721,21 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
       'Custom Service': 'other'
     };
 
-    // Create appointment with proper field mapping
+    // Create appointment with vehicle reference
     const appointment = new Appointment({
-      customer: req.user.id,
-      vehicle: {
-        make: vehicle.make,
-        model: vehicle.model,
-        year: vehicle.year,
-        vin: vehicle.vin,
-        licensePlate: vehicle.licensePlate,
-        mileage: vehicle.mileage
-      },
+      customer: customer._id, // Use customer ID from customers table
+      vehicle: vehicle._id, // Reference to the vehicle document
       serviceType: serviceTypeMap[value.serviceType] || 'other',
       serviceDescription: value.serviceType,
       scheduledDate: new Date(value.date),
       scheduledTime: value.time,
-      estimatedDuration: 60, // Default 1 hour
+      estimatedDuration: value.estimatedDuration ? parseInt(value.estimatedDuration) : 60, // Use provided duration or default 1 hour
       status: value.status || 'scheduled',
       createdBy: req.user.id,
       assignedTo: req.user.id, // For now, assign to the customer (will be updated by admin)
       notes: value.notes,
-      priority: 'medium'
+      priority: value.priority || 'medium',
+      technician: value.technicianId ? (mongoose.Types.ObjectId.isValid(value.technicianId) ? new mongoose.Types.ObjectId(value.technicianId) : value.technicianId) : undefined
     });
 
     await appointment.save();
@@ -319,12 +759,16 @@ router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, 
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    // Verify vehicle belongs to customer
-    const vehicle = await Vehicle.findOne({
-      _id: value.vehicleId,
-      customerId: req.user.id
-    });
+    // Find customer and verify vehicle belongs to customer
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
 
+    const vehicle = await Vehicle.findOne({ 
+      _id: value.vehicleId, 
+      customer: customer._id 
+    });
     if (!vehicle) {
       return res.status(400).json({ success: false, message: 'Invalid vehicle' });
     }
@@ -350,23 +794,19 @@ router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, 
     };
 
     const updateData = {
-      vehicle: {
-        make: vehicle.make,
-        model: vehicle.model,
-        year: vehicle.year,
-        vin: vehicle.vin,
-        licensePlate: vehicle.licensePlate,
-        mileage: vehicle.mileage
-      },
+      vehicle: vehicle._id, // Reference to the vehicle document
       serviceType: serviceTypeMap[value.serviceType] || 'other',
       serviceDescription: value.serviceType,
       scheduledDate: new Date(value.date),
       scheduledTime: value.time,
-      notes: value.notes
+      notes: value.notes,
+      estimatedDuration: value.estimatedDuration ? parseInt(value.estimatedDuration) : 60,
+      priority: value.priority || 'medium',
+      technician: value.technicianId ? (mongoose.Types.ObjectId.isValid(value.technicianId) ? new mongoose.Types.ObjectId(value.technicianId) : value.technicianId) : undefined
     };
 
     const appointment = await Appointment.findOneAndUpdate(
-      { _id: req.params.id, customer: req.user.id },
+      { _id: req.params.id, customer: customer._id },
       updateData,
       { new: true, runValidators: true }
     );
@@ -389,8 +829,14 @@ router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, 
 // Confirm appointment
 router.put('/appointments/:id/confirm', authenticateToken, requireCustomer, async (req, res) => {
   try {
+    // Find customer record first
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
     const appointment = await Appointment.findOneAndUpdate(
-      { _id: req.params.id, customer: req.user.id, status: 'scheduled' },
+      { _id: req.params.id, customer: customer._id, status: 'scheduled' },
       { 
         status: 'confirmed',
         confirmedAt: new Date(),
@@ -417,8 +863,14 @@ router.put('/appointments/:id/confirm', authenticateToken, requireCustomer, asyn
 // Cancel appointment
 router.delete('/appointments/:id', authenticateToken, requireCustomer, async (req, res) => {
   try {
+    // Find customer record first
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
     const appointment = await Appointment.findOneAndUpdate(
-      { _id: req.params.id, customer: req.user.id },
+      { _id: req.params.id, customer: customer._id },
       { status: 'cancelled' },
       { new: true }
     );
@@ -441,13 +893,17 @@ router.delete('/appointments/:id', authenticateToken, requireCustomer, async (re
 // Get customer service history
 router.get('/services', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const services = await Service.find({ customerId: req.user.id })
-      .populate('vehicleId', 'year make model')
-      .sort({ date: -1 });
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.json({
+        success: true,
+        data: { services: [] }
+      });
+    }
     
     res.json({
       success: true,
-      data: { services }
+      data: { services: customer.serviceHistory || [] }
     });
   } catch (error) {
     console.error('Error fetching customer services:', error);
@@ -460,9 +916,8 @@ router.get('/invoices', authenticateToken, requireCustomer, async (req, res) => 
   try {
     const invoices = await Invoice.find({ customerId: req.user.id })
       .populate('appointmentId', 'date serviceType')
-      .populate('vehicleId', 'year make model')
       .sort({ date: -1 });
-    
+     
     res.json({
       success: true,
       data: { invoices }
@@ -477,7 +932,7 @@ router.get('/invoices', authenticateToken, requireCustomer, async (req, res) => 
 router.post('/invoices/:id/pay', authenticateToken, requireCustomer, async (req, res) => {
   try {
     const { paymentMethod, paymentReference } = req.body;
-    
+     
     const invoice = await Invoice.findOne({
       _id: req.params.id,
       customerId: req.user.id
@@ -516,7 +971,7 @@ router.get('/invoices/:id/download', authenticateToken, requireCustomer, async (
     const invoice = await Invoice.findOne({
       _id: req.params.id,
       customerId: req.user.id
-    }).populate('vehicleId', 'year make model');
+    });
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
@@ -552,8 +1007,7 @@ router.get('/messages', authenticateToken, requireCustomer, async (req, res) => 
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('relatedAppointment', 'date time serviceType')
-      .populate('relatedVehicle', 'year make model');
+      .populate('relatedAppointment', 'date time serviceType');
 
     const total = await Message.countDocuments(filter);
 
@@ -658,40 +1112,50 @@ router.delete('/messages/:id', authenticateToken, requireCustomer, async (req, r
 // Get customer dashboard data
 router.get('/dashboard', authenticateToken, requireCustomer, async (req, res) => {
   try {
-    const customerId = req.user.id;
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.json({
+        success: true,
+        data: {
+          stats: { vehicles: 0, appointments: 0, services: 0, invoices: 0, outstandingAmount: 0 },
+          recentAppointments: [],
+          upcomingAppointments: [],
+          recentServices: [],
+          outstandingInvoices: []
+        }
+      });
+    }
 
     // Get counts
-    const vehicleCount = await Vehicle.countDocuments({ customerId });
-    const appointmentCount = await Appointment.countDocuments({ customer: customerId });
-    const serviceCount = await Service.countDocuments({ customerId });
-    const invoiceCount = await Invoice.countDocuments({ customerId });
+    const vehicleCount = await Vehicle.countDocuments({ customer: customer._id });
+    const appointmentCount = await Appointment.countDocuments({ customer: customer._id });
+    const serviceCount = customer.serviceHistory ? customer.serviceHistory.length : 0;
+    const invoiceCount = await Invoice.countDocuments({ customerId: customer._id });
 
     // Get recent appointments
-    const recentAppointments = await Appointment.find({ customer: customerId })
+    const recentAppointments = await Appointment.find({ customer: customer._id })
+      .populate('vehicle', 'year make model vin licensePlate mileage')
       .sort({ scheduledDate: -1, scheduledTime: -1 })
       .limit(5);
 
     // Get upcoming appointments
     const upcomingAppointments = await Appointment.find({
-      customer: customerId,
+      customer: customer._id,
       scheduledDate: { $gte: new Date() },
       status: 'scheduled'
     })
+      .populate('vehicle', 'year make model vin licensePlate mileage')
       .sort({ scheduledDate: 1, scheduledTime: 1 })
       .limit(5);
 
     // Get recent services
-    const recentServices = await Service.find({ customerId })
-      .populate('vehicleId', 'year make model')
-      .sort({ date: -1 })
-      .limit(5);
+    const recentServices = customer.serviceHistory ? customer.serviceHistory.slice(0, 5) : [];
 
     // Get outstanding invoices
     const outstandingInvoices = await Invoice.find({
-      customerId,
+      customerId: customer._id,
       status: { $in: ['pending', 'overdue'] }
     })
-      .populate('vehicleId', 'year make model')
       .sort({ dueDate: 1 });
 
     const totalOutstanding = outstandingInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
@@ -724,7 +1188,25 @@ router.get('/notifications', authenticateToken, requireCustomer, async (req, res
     const { page = 1, limit = 20, type, status } = req.query;
     const skip = (page - 1) * limit;
 
-    const filter = { customer: req.user.id };
+    // Find customer record first
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.json({
+        success: true,
+        data: { 
+          notifications: [],
+          unreadCount: 0,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total: 0,
+            pages: 0
+          }
+        }
+      });
+    }
+
+    const filter = { customer: customer._id };
     if (type) filter.type = type;
     if (status) filter.status = status;
 
@@ -734,7 +1216,7 @@ router.get('/notifications', authenticateToken, requireCustomer, async (req, res
       .limit(parseInt(limit));
 
     const total = await Notification.countDocuments(filter);
-    const unreadCount = await notificationService.getUnreadCount(req.user.id);
+    const unreadCount = await notificationService.getUnreadCount(customer._id);
 
     res.json({
       success: true,
@@ -759,7 +1241,7 @@ router.get('/notifications', authenticateToken, requireCustomer, async (req, res
 router.put('/notifications/:id/read', authenticateToken, requireCustomer, async (req, res) => {
   try {
     const notification = await notificationService.markAsRead(req.params.id);
-    
+     
     if (!notification) {
       return res.status(404).json({ success: false, message: 'Notification not found' });
     }
@@ -778,9 +1260,15 @@ router.put('/notifications/:id/read', authenticateToken, requireCustomer, async 
 // Mark all notifications as read
 router.put('/notifications/read-all', authenticateToken, requireCustomer, async (req, res) => {
   try {
+    // Find customer record first
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
     await Notification.updateMany(
       { 
-        customer: req.user.id,
+        customer: customer._id,
         status: { $in: ['sent', 'delivered'] }
       },
       { 
@@ -795,6 +1283,147 @@ router.put('/notifications/read-all', authenticateToken, requireCustomer, async 
     });
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get available technicians for customer appointment scheduling
+router.get('/technicians', authenticateToken, requireRole(['customer', 'admin', 'super_admin']), async (req, res) => {
+  try {
+    const { isActive = 'true' } = req.query;
+
+    // Build query for active technicians only
+    const query = { isActive: isActive === 'true' };
+
+    // Execute query to get active technicians
+    const technicians = await Technician.find(query)
+      .select('name email specializations hourlyRate isActive')
+      .sort({ name: 1 })
+      .exec();
+
+    res.json({
+      success: true,
+      data: {
+        technicians,
+        pagination: {
+          totalTechnicians: technicians.length,
+          currentPage: 1,
+          totalPages: 1
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching technicians for customer:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get customer statistics (admin only)
+router.get('/stats/overview', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    // Get total customers
+    const totalCustomers = await Customer.countDocuments();
+    
+    // Get active customers
+    const activeCustomers = await Customer.countDocuments({ status: 'active' });
+    
+    // Get customers created this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const customersThisMonth = await Customer.countDocuments({
+      createdAt: { $gte: startOfMonth }
+    });
+    
+    // Get customers created last month
+    const startOfLastMonth = new Date(startOfMonth);
+    startOfLastMonth.setMonth(startOfMonth.getMonth() - 1);
+    const endOfLastMonth = new Date(startOfMonth);
+    endOfLastMonth.setDate(0);
+    
+    const customersLastMonth = await Customer.countDocuments({
+      createdAt: { 
+        $gte: startOfLastMonth,
+        $lte: endOfLastMonth
+      }
+    });
+    
+    // Calculate growth rate
+    const growthRate = customersLastMonth > 0 
+      ? Math.round(((customersThisMonth - customersLastMonth) / customersLastMonth) * 100)
+      : customersThisMonth > 0 ? 100 : 0;
+    
+    // Get total vehicles (from Vehicle collection)
+    const totalVehicles = await Vehicle.countDocuments();
+    
+    // Calculate average vehicles per customer
+    const averageVehiclesPerCustomer = totalCustomers > 0 
+      ? Math.round((totalVehicles / totalCustomers) * 10) / 10
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalCustomers,
+        activeCustomers,
+        totalVehicles,
+        averageVehiclesPerCustomer,
+        customersThisMonth,
+        customersLastMonth,
+        growthRate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching customer statistics:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Get individual customer by ID (admin only) - Must be last to avoid conflicts with other routes
+router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid customer ID format' 
+      });
+    }
+
+    const customer = await Customer.findById(id);
+    
+    if (!customer) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Customer not found' 
+      });
+    }
+
+    // Transform customer for response
+    const transformedCustomer = {
+      _id: customer._id,
+      id: customer._id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      businessName: customer.businessName,
+      address: customer.address,
+      status: customer.status,
+      notes: customer.notes,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    };
+
+    res.json({
+      success: true,
+      data: transformedCustomer
+    });
+  } catch (error) {
+    console.error('Error fetching customer:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

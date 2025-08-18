@@ -35,6 +35,7 @@ import FileUploadPage from "./pages/FileUploadPage";
 // New CRM Pages
 import CustomerList from "./pages/customers/CustomerList";
 import CustomerDetail from "./pages/customers/CustomerDetail";
+import CustomerNew from "./pages/customers/CustomerNew";
 import BusinessClientsPage from "./pages/BusinessClientsPage";
 import ServicesPage from "./pages/ServicesPage";
 import SystemAdminPage from "./pages/SystemAdminPage";
@@ -100,6 +101,7 @@ export default function App() {
         <Route path="overview" element={<Dashboard />} />
         <Route path="appointments" element={<AppointmentsPage />} />
         <Route path="customers" element={<CustomerList />} />
+        <Route path="customers/new" element={<CustomerNew />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
                               <Route path="business-clients" element={<BusinessClientsPage />} />
         <Route path="services" element={<ServicesPage />} />

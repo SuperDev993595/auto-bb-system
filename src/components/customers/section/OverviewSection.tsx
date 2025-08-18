@@ -1,4 +1,4 @@
-import { Customer } from '../../../utils/CustomerTypes'
+import { Customer } from '../../../services/customers'
 
 type Props = {
     customer: Customer
@@ -23,11 +23,16 @@ export default function OverviewSection({ customer }: Props) {
                         </div>
                         <div>
                             <p className="text-xs text-gray-400">Address</p>
-                            <p className="font-medium">{customer.address}</p>
+                            <p className="font-medium">
+                                {customer.address?.street || customer.address?.city || customer.address?.state 
+                                  ? `${customer.address?.street || ''}${customer.address?.street && (customer.address?.city || customer.address?.state) ? ', ' : ''}${customer.address?.city || ''}${customer.address?.city && customer.address?.state ? ', ' : ''}${customer.address?.state || ''}${customer.address?.zipCode ? ` ${customer.address.zipCode}` : ''}`
+                                  : 'N/A'
+                                }
+                            </p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400">Preferred Contact</p>
-                            <p className="font-medium capitalize">{customer.preferences?.preferredContactMethod || 'Phone'}</p>
+                            <p className="text-xs text-gray-400">Business Name</p>
+                            <p className="font-medium">{customer.businessName || 'N/A'}</p>
                         </div>
                     </div>
                 </div>
@@ -38,11 +43,11 @@ export default function OverviewSection({ customer }: Props) {
                     <div className="space-y-2">
                         <div>
                             <p className="text-xs text-gray-400">Customer Since</p>
-                            <p className="font-medium">{new Date(customer.dateCreated).toLocaleDateString()}</p>
+                            <p className="font-medium">{new Date(customer.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400">Last Visit</p>
-                            <p className="font-medium">{customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : 'Never'}</p>
+                            <p className="text-xs text-gray-400">Last Updated</p>
+                            <p className="font-medium">{new Date(customer.updatedAt).toLocaleDateString()}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-400">Total Vehicles</p>
@@ -55,21 +60,27 @@ export default function OverviewSection({ customer }: Props) {
                     </div>
                 </div>
 
-                {/* Preferences */}
+                {/* Status */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Preferences</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Status</h3>
                     <div className="space-y-2">
                         <div>
-                            <p className="text-xs text-gray-400">Appointment Reminders</p>
-                            <p className="font-medium">{customer.preferences?.reminderPreferences?.appointmentReminders ? '✅ Enabled' : '❌ Disabled'}</p>
+                            <p className="text-xs text-gray-400">Account Status</p>
+                            <p className="font-medium">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                    customer.status === 'active' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : customer.status === 'inactive'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                    {customer.status}
+                                </span>
+                            </p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400">Service Reminders</p>
-                            <p className="font-medium">{customer.preferences?.reminderPreferences?.serviceReminders ? '✅ Enabled' : '❌ Disabled'}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Follow-up Reminders</p>
-                            <p className="font-medium">{customer.preferences?.reminderPreferences?.followUpReminders ? '✅ Enabled' : '❌ Disabled'}</p>
+                            <p className="text-xs text-gray-400">Customer ID</p>
+                            <p className="font-medium text-xs font-mono">{customer._id}</p>
                         </div>
                     </div>
                 </div>
@@ -86,7 +97,7 @@ export default function OverviewSection({ customer }: Props) {
                 {customer.vehicles && customer.vehicles.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {customer.vehicles.map((vehicle) => (
-                            <div key={vehicle.id} className="border border-gray-200 rounded-lg p-4">
+                            <div key={vehicle._id} className="border border-gray-200 rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <h4 className="font-medium text-gray-800">
                                         {vehicle.year} {vehicle.make} {vehicle.model}
@@ -121,26 +132,20 @@ export default function OverviewSection({ customer }: Props) {
                 {customer.serviceHistory && customer.serviceHistory.length > 0 ? (
                     <div className="space-y-3">
                         {customer.serviceHistory.slice(0, 3).map((service) => (
-                            <div key={service.id} className="border border-gray-200 rounded-lg p-4">
+                            <div key={service._id} className="border border-gray-200 rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <h4 className="font-medium text-gray-800">{service.serviceType}</h4>
                                         <p className="text-sm text-gray-600">{service.description}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-medium text-gray-800">${service.totalCost.toFixed(2)}</p>
+                                        <p className="text-sm font-medium text-gray-800">${service.cost.toFixed(2)}</p>
                                         <p className="text-xs text-gray-500">{new Date(service.date).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center text-xs text-gray-500">
-                                    <span>Technician: {service.technicianName}</span>
-                                    <span className={`px-2 py-1 rounded-full ${
-                                        service.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                        service.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
-                                        {service.status}
-                                    </span>
+                                    <span>Technician: {service.technician}</span>
+                                    <span>Vehicle: {service.vehicleId}</span>
                                 </div>
                             </div>
                         ))}

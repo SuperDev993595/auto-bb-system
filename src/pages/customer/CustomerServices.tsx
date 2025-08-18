@@ -57,15 +57,27 @@ export default function CustomerServices() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [servicesData, vehiclesData] = await Promise.all([
+      const [servicesResponse, vehiclesResponse] = await Promise.all([
         customerApiService.getServices(),
         customerApiService.getVehicles()
       ]);
-      setServiceRecords(servicesData);
-      setVehicles(vehiclesData);
+      
+      if (servicesResponse.success) {
+        setServiceRecords(servicesResponse.data.services);
+      } else {
+        toast.error(servicesResponse.message || 'Failed to load services');
+      }
+      
+      if (vehiclesResponse.success) {
+        setVehicles(vehiclesResponse.data.vehicles);
+      } else {
+        toast.error(vehiclesResponse.message || 'Failed to load vehicles');
+      }
       
       // Generate maintenance schedule from vehicles and services
-      const schedule = generateMaintenanceSchedule(vehiclesData, servicesData);
+      const vehicles = vehiclesResponse.success ? vehiclesResponse.data.vehicles : [];
+      const services = servicesResponse.success ? servicesResponse.data.services : [];
+      const schedule = generateMaintenanceSchedule(vehicles, services);
       setMaintenanceSchedule(schedule);
     } catch (error) {
       console.error('Error loading data:', error);

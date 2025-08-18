@@ -2,20 +2,17 @@ import api, { apiResponse } from './api';
 
 export interface Customer {
   _id: string;
-  businessName: string;
-  contactPerson: {
-    name: string;
-    phone: string;
-    email: string;
+  name: string;
+  email: string;
+  phone: string;
+  businessName?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
   };
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  vehicles: Array<{
+  vehicles?: Array<{
     _id: string;
     make: string;
     model: string;
@@ -25,7 +22,7 @@ export interface Customer {
     mileage: number;
     color: string;
   }>;
-  serviceHistory: Array<{
+  serviceHistory?: Array<{
     _id: string;
     date: string;
     serviceType: string;
@@ -34,7 +31,7 @@ export interface Customer {
     vehicleId: string;
     technician: string;
   }>;
-  communicationLog: Array<{
+  communicationLog?: Array<{
     _id: string;
     date: string;
     type: 'phone' | 'email' | 'in-person';
@@ -42,31 +39,29 @@ export interface Customer {
     notes: string;
     followUpDate?: string;
   }>;
-  notes: string;
-  status: 'active' | 'inactive';
+  notes?: string;
+  status: 'active' | 'inactive' | 'prospect';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateCustomerData {
-  businessName: string;
-  contactPerson: {
-    name: string;
-    phone: string;
-    email: string;
+  name: string;
+  email: string;
+  phone: string;
+  businessName?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
   };
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
+  status?: 'active' | 'inactive' | 'prospect';
   notes?: string;
 }
 
 export interface UpdateCustomerData extends Partial<CreateCustomerData> {
-  status?: 'active' | 'inactive';
+  status?: 'active' | 'inactive' | 'prospect';
 }
 
 export interface CustomerFilters {
@@ -120,7 +115,7 @@ export const customerService = {
   // Get single customer by ID
   async getCustomer(id: string): Promise<{
     success: boolean;
-    data: { customer: Customer };
+    data: Customer;
   }> {
     const response = await apiResponse(api.get(`/customers/${id}`));
     return response;

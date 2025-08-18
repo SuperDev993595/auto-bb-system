@@ -1,53 +1,6 @@
 const mongoose = require('mongoose');
 
-const vehicleSchema = new mongoose.Schema({
-  make: {
-    type: String,
-    required: [true, 'Vehicle make is required'],
-    trim: true
-  },
-  model: {
-    type: String,
-    required: [true, 'Vehicle model is required'],
-    trim: true
-  },
-  year: {
-    type: Number,
-    required: [true, 'Vehicle year is required'],
-    min: [1900, 'Year must be after 1900'],
-    max: [new Date().getFullYear() + 1, 'Year cannot be in the future']
-  },
-  vin: {
-    type: String,
-    trim: true,
-    uppercase: true
-  },
-  licensePlate: {
-    type: String,
-    trim: true,
-    uppercase: true
-  },
-  mileage: {
-    type: Number,
-    min: [0, 'Mileage cannot be negative']
-  },
-  color: {
-    type: String,
-    trim: true
-  },
-  engineType: {
-    type: String,
-    trim: true
-  },
-  transmission: {
-    type: String,
-    enum: ['Automatic', 'Manual', 'CVT', 'Other'],
-    default: 'Automatic'
-  }
-}, {
-  timestamps: true
-});
-
+// Service history schema
 const serviceHistorySchema = new mongoose.Schema({
   serviceType: {
     type: String,
@@ -103,164 +56,125 @@ const serviceHistorySchema = new mongoose.Schema({
   timestamps: true
 });
 
-const communicationLogSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ['phone', 'email', 'in_person', 'text', 'other'],
-    required: [true, 'Communication type is required']
-  },
-  direction: {
-    type: String,
-    enum: ['inbound', 'outbound'],
-    required: [true, 'Communication direction is required']
-  },
-  subject: {
-    type: String,
-    trim: true
-  },
-  content: {
-    type: String,
-    trim: true
-  },
-  duration: {
-    type: Number, // in minutes
-    min: [0, 'Duration cannot be negative']
-  },
-  outcome: {
-    type: String,
-    enum: ['scheduled', 'completed', 'rescheduled', 'cancelled', 'no_answer', 'left_message', 'other'],
-    default: 'other'
-  },
-  followUpRequired: {
-    type: Boolean,
-    default: false
-  },
-  followUpDate: {
-    type: Date
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
-}, {
-  timestamps: true
-});
-
+// Main customer schema for individual customers
 const customerSchema = new mongoose.Schema({
+  // Basic information
+  name: {
+    type: String,
+    required: [true, 'Customer name is required'],
+    trim: true
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+  },
+  phone: {
+    type: String,
+    required: [true, 'Phone number is required'],
+    trim: true
+  },
   businessName: {
     type: String,
-    required: [true, 'Business name is required'],
     trim: true
   },
-  contactPerson: {
-    name: {
-      type: String,
-      required: [true, 'Contact person name is required'],
-      trim: true
-    },
-    title: {
-      type: String,
-      trim: true
-    },
-    phone: {
-      type: String,
-      required: [true, 'Phone number is required'],
-      trim: true
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true
-    }
-  },
+  
+  // Address information
   address: {
     street: {
       type: String,
-      required: [true, 'Street address is required'],
       trim: true
     },
     city: {
       type: String,
-      required: [true, 'City is required'],
       trim: true
     },
     state: {
       type: String,
-      required: [true, 'State is required'],
       trim: true
     },
     zipCode: {
       type: String,
-      required: [true, 'ZIP code is required'],
       trim: true
     }
   },
-  businessInfo: {
-    businessType: {
-      type: String,
-      enum: ['auto_repair', 'tire_shop', 'oil_change', 'brake_shop', 'general_repair', 'other'],
-      default: 'auto_repair'
-    },
-    yearsInBusiness: {
-      type: Number,
-      min: [0, 'Years in business cannot be negative']
-    },
-    employeeCount: {
-      type: Number,
-      min: [1, 'Employee count must be at least 1']
-    },
-    website: {
-      type: String,
-      trim: true
-    },
-    hours: {
-      type: String,
-      trim: true
-    }
-  },
-  vehicles: [vehicleSchema],
-  serviceHistory: [serviceHistorySchema],
-  communicationLogs: [communicationLogSchema],
-  notes: {
-    type: String,
-    trim: true
-  },
+  
+  // Preferences
   preferences: {
-    preferredContactMethod: {
-      type: String,
-      enum: ['phone', 'email', 'text'],
-      default: 'phone'
+    notifications: {
+      email: {
+        type: Boolean,
+        default: true
+      },
+      sms: {
+        type: Boolean,
+        default: true
+      },
+      push: {
+        type: Boolean,
+        default: false
+      }
     },
-    preferredContactTime: {
-      type: String,
-      enum: ['morning', 'afternoon', 'evening', 'anytime'],
-      default: 'anytime'
+    reminders: {
+      appointments: {
+        type: Boolean,
+        default: true
+      },
+      maintenance: {
+        type: Boolean,
+        default: true
+      },
+      payments: {
+        type: Boolean,
+        default: true
+      }
     },
-    specialInstructions: {
-      type: String,
-      trim: true
+    privacy: {
+      shareData: {
+        type: Boolean,
+        default: false
+      },
+      marketing: {
+        type: Boolean,
+        default: false
+      }
     }
   },
+  
+
+  
+  // Service history
+  serviceHistory: [serviceHistorySchema],
+  
+  // Status and metadata
   status: {
     type: String,
-    enum: ['active', 'inactive', 'prospect', 'former'],
-    default: 'prospect'
+    enum: ['active', 'inactive', 'prospect'],
+    default: 'active'
   },
-  source: {
-    type: String,
-    enum: ['yellowpages', 'referral', 'website', 'cold_call', 'other'],
-    default: 'other'
+  
+  // Reference to user account (if exists)
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
+  
+  // Assigned to admin/sales rep
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  
+  // Created by
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
+  
+  // Timestamps
   lastContact: {
     type: Date
   },
@@ -271,12 +185,30 @@ const customerSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-customerSchema.index({ 'contactPerson.email': 1 });
-customerSchema.index({ 'contactPerson.phone': 1 });
+// Indexes for better query performance
+customerSchema.index({ email: 1 });
+customerSchema.index({ phone: 1 });
 customerSchema.index({ 'address.city': 1, 'address.state': 1 });
 customerSchema.index({ status: 1 });
 customerSchema.index({ assignedTo: 1 });
 customerSchema.index({ nextFollowUp: 1 });
+
+
+// Virtual for full address
+customerSchema.virtual('fullAddress').get(function() {
+  if (!this.address.street) return '';
+  return `${this.address.street}, ${this.address.city}, ${this.address.state} ${this.address.zipCode}`;
+});
+
+// Virtual for vehicles (populated when needed)
+customerSchema.virtual('vehicles', {
+  ref: 'Vehicle',
+  localField: '_id',
+  foreignField: 'customer'
+});
+
+// Ensure virtual fields are serialized
+customerSchema.set('toJSON', { virtuals: true });
+customerSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Customer', customerSchema);

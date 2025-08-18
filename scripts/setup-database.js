@@ -7,6 +7,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-r
 // Import actual models from the project
 const User = require('../server/models/User');
 const Customer = require('../server/models/Customer');
+const Vehicle = require('../server/models/Vehicle');
 const Appointment = require('../server/models/Appointment');
 const Task = require('../server/models/Task');
 const Invoice = require('../server/models/Invoice');
@@ -315,104 +316,106 @@ const sampleInventoryItems = [
   }
 ];
 
-// Sample data for Customers
+// Sample data for Customers (individual customers, not business clients)
 const sampleCustomers = [
   {
-    businessName: 'ABC Auto Repair',
-    contactPerson: {
-      name: 'John Smith',
-      title: 'Owner',
-      phone: '(555) 987-6543',
-      email: 'john.smith@abcautorepair.com'
-    },
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    phone: '(555) 987-6543',
+    businessName: '',
     address: {
-      street: '123 Business Ave',
+      street: '123 Main Street',
       city: 'New York',
       state: 'NY',
       zipCode: '10001'
     },
-    businessInfo: {
-      businessType: 'auto_repair',
-      yearsInBusiness: 15,
-      employeeCount: 8,
-      website: 'www.abcautorepair.com',
-      hours: 'Mon-Fri 8AM-6PM, Sat 9AM-4PM'
+    preferences: {
+      notifications: {
+        email: true,
+        sms: true,
+        push: false
+      },
+      reminders: {
+        appointments: true,
+        maintenance: true,
+        payments: true
+      }
     },
     vehicles: [
       {
+        year: 2020,
         make: 'Toyota',
         model: 'Camry',
-        year: 2020,
-        vin: '1HGBH41JXMN109186',
+        vin: '1HGBH41JXMN109187',
         licensePlate: 'ABC123',
         color: 'Silver',
         mileage: 45000,
         engineType: '2.5L 4-Cylinder',
-        transmission: 'Automatic'
+        transmission: 'automatic',
+        fuelType: 'gasoline',
+        status: 'active',
+        lastServiceDate: new Date('2024-01-15'),
+        nextServiceDate: new Date('2024-07-15')
       }
     ],
-    preferences: {
-      preferredContactMethod: 'phone',
-      preferredContactTime: 'morning',
-      specialInstructions: 'Call before 10 AM'
-    },
-    status: 'active',
-    source: 'referral',
-    notes: 'Regular maintenance customer, prefers synthetic oil'
+    status: 'active'
   },
   {
-    businessName: 'XYZ Fleet Services',
-    contactPerson: {
-      name: 'Jane Doe',
-      title: 'Fleet Manager',
-      phone: '(555) 987-6544',
-      email: 'jane.doe@xyzfleet.com'
-    },
+    name: 'Mike Davis',
+    email: 'mike.davis@email.com',
+    phone: '(555) 987-6544',
+    businessName: '',
     address: {
-      street: '456 Corporate Blvd',
+      street: '456 Oak Avenue',
       city: 'Los Angeles',
       state: 'CA',
       zipCode: '90210'
     },
-    businessInfo: {
-      businessType: 'general_repair',
-      yearsInBusiness: 12,
-      employeeCount: 25,
-      website: 'www.xyzfleet.com',
-      hours: 'Mon-Fri 7AM-7PM'
+    preferences: {
+      notifications: {
+        email: true,
+        sms: false,
+        push: true
+      },
+      reminders: {
+        appointments: true,
+        maintenance: true,
+        payments: true
+      }
     },
     vehicles: [
       {
+        year: 2019,
         make: 'Honda',
         model: 'Accord',
-        year: 2019,
-        vin: '2T1BURHE0JC123456',
+        vin: '2T1BURHE0JC123457',
         licensePlate: 'XYZ789',
         color: 'Black',
         mileage: 38000,
         engineType: '1.5L Turbo',
-        transmission: 'CVT'
+        transmission: 'cvt',
+        fuelType: 'gasoline',
+        status: 'active',
+        lastServiceDate: new Date('2024-02-20'),
+        nextServiceDate: new Date('2024-08-20')
       },
       {
+        year: 2021,
         make: 'Ford',
         model: 'Transit',
-        year: 2021,
-        vin: '3FTNW21F8XEA12345',
+        vin: '3FTNW21F8XEA12346',
         licensePlate: 'XYZ790',
         color: 'White',
         mileage: 25000,
         engineType: '3.5L V6',
-        transmission: 'Automatic'
+        transmission: 'automatic',
+        fuelType: 'gasoline',
+        status: 'active',
+        lastServiceDate: new Date('2024-03-10'),
+        nextServiceDate: new Date('2024-09-10')
       }
     ],
-    preferences: {
-      preferredContactMethod: 'email',
-      preferredContactTime: 'afternoon',
-      specialInstructions: 'Send quotes via email'
-    },
-    status: 'active',
-    source: 'website',
-    notes: 'Fleet customer with 15 vehicles, bulk pricing preferred'
+    status: 'active'
   }
 ];
 
@@ -426,6 +429,7 @@ async function setupDatabase() {
     console.log('🧹 Clearing existing data...');
     await User.deleteMany({});
     await Customer.deleteMany({});
+    await Vehicle.deleteMany({});
     await Appointment.deleteMany({});
     await Task.deleteMany({});
     await Invoice.deleteMany({});
@@ -443,16 +447,17 @@ async function setupDatabase() {
       password: 'admin123',
       role: 'super_admin',
       phone: '(555) 123-4567',
-      permissions: {
-        customers: true,
-        appointments: true,
-        marketing: true,
-        sales: true,
-        collections: true,
-        tasks: true,
-        reports: true,
-        users: true
-      },
+      permissions: [
+        'customers',
+        'appointments', 
+        'marketing',
+        'sales',
+        'collections',
+        'tasks',
+        'reports',
+        'users',
+        'system_admin'
+      ],
       isActive: true
     });
     console.log('✅ Super Admin user created:', superAdmin.email);
@@ -463,21 +468,61 @@ async function setupDatabase() {
       name: 'Sub Admin',
       email: 'subadmin@autocrm.com',
       password: 'admin123',
-      role: 'sub_admin',
+      role: 'admin',
       phone: '(555) 123-4568',
-      permissions: {
-        customers: true,
-        appointments: true,
-        marketing: true,
-        sales: true,
-        collections: true,
-        tasks: true,
-        reports: true,
-        users: false
-      },
+      permissions: [
+        'customers',
+        'appointments', 
+        'marketing',
+        'sales',
+        'collections',
+        'tasks',
+        'reports'
+      ],
       isActive: true
     });
     console.log('✅ Sub Admin user created:', subAdmin.email);
+
+    // Create default Customer user
+    console.log('👤 Creating default Customer user...');
+    const customerUser = await User.create({
+      name: 'John Customer',
+      email: 'customer@autocrm.com',
+      password: 'customer123',
+      role: 'customer',
+      phone: '(555) 123-4569',
+      permissions: ['customer_access'],
+      isActive: true
+    });
+    console.log('✅ Customer user created:', customerUser.email);
+
+    // Create corresponding Customer record
+    console.log('👥 Creating Customer record for user...');
+    const customerRecord = await Customer.create({
+      name: 'John Customer',
+      email: 'customer@autocrm.com',
+      phone: '(555) 123-4569',
+      businessName: '',
+      userId: customerUser._id,
+      status: 'active',
+      preferences: {
+        notifications: {
+          email: true,
+          sms: true,
+          push: false
+        },
+        reminders: {
+          appointments: true,
+          maintenance: true,
+          payments: true
+        },
+        privacy: {
+          shareData: false,
+          marketing: false
+        }
+      }
+    });
+    console.log('✅ Customer record created for user:', customerRecord._id);
 
     // Create sample service catalogs
     console.log('🔧 Creating sample service catalogs...');
@@ -505,11 +550,31 @@ async function setupDatabase() {
 
     // Create sample customers
     console.log('👥 Creating sample customers...');
-    const customers = await Customer.insertMany(sampleCustomers.map(customer => ({
-      ...customer,
-      createdBy: superAdmin._id
-    })));
+    const customers = await Customer.insertMany(sampleCustomers.map(customer => {
+      const { vehicles, ...customerData } = customer;
+      return {
+        ...customerData,
+        createdBy: superAdmin._id
+      };
+    }));
     console.log(`✅ Created ${customers.length} sample customers`);
+
+    // Create sample vehicles
+    console.log('🚗 Creating sample vehicles...');
+    const allVehicles = [];
+    sampleCustomers.forEach((customer, index) => {
+      if (customer.vehicles) {
+        customer.vehicles.forEach(vehicle => {
+          allVehicles.push({
+            ...vehicle,
+            customer: customers[index]._id,
+            createdBy: superAdmin._id
+          });
+        });
+      }
+    });
+    const vehicles = await Vehicle.insertMany(allVehicles);
+    console.log(`✅ Created ${vehicles.length} sample vehicles`);
 
     // Create sample tasks
     console.log('📋 Creating sample tasks...');
@@ -547,16 +612,18 @@ async function setupDatabase() {
     console.log('\n📋 Summary:');
     console.log(`- Database: ${mongoose.connection.name}`);
     console.log(`- Collections created: 10`);
-    console.log(`- Users created: 2 (Super Admin + Sub Admin)`);
+    console.log(`- Users created: 3 (Super Admin + Sub Admin + Customer)`);
     console.log(`- Service Catalogs created: ${serviceCatalogs.length}`);
     console.log(`- Technicians created: ${technicians.length}`);
     console.log(`- Inventory items created: ${inventoryItems.length}`);
     console.log(`- Customers created: ${customers.length}`);
+    console.log(`- Vehicles created: ${vehicles.length}`);
     console.log(`- Tasks created: ${tasks.length}`);
     
     console.log('\n🔑 Default Login Credentials:');
     console.log('Super Admin: admin@autocrm.com / admin123');
     console.log('Sub Admin: subadmin@autocrm.com / admin123');
+    console.log('Customer: customer@autocrm.com / customer123');
 
     console.log('\n🚀 You can now start the application!');
 

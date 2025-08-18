@@ -301,7 +301,7 @@ export default function ServicesPage() {
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
+                                            <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
             <option value="on_hold">On Hold</option>
@@ -380,7 +380,7 @@ export default function ServicesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
                         order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'on_hold' ? 'bg-orange-100 text-orange-800' :
                         order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'

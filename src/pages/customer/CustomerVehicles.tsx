@@ -113,8 +113,12 @@ export default function CustomerVehicles() {
   const loadVehicles = async () => {
     try {
       setIsLoading(true);
-      const data = await customerApiService.getVehicles();
-      setVehicles(data);
+          const response = await customerApiService.getVehicles();
+    if (response.success) {
+      setVehicles(response.data.vehicles);
+    } else {
+      toast.error(response.message || 'Failed to load vehicles');
+    }
     } catch (error) {
       console.error('Error loading vehicles:', error);
       if (error instanceof Error) {
@@ -275,11 +279,19 @@ export default function CustomerVehicles() {
       };
 
       if (editingVehicle) {
-        await customerApiService.updateVehicle(editingVehicle.id, vehicleData);
-        toast.success('Vehicle updated successfully');
+        const response = await customerApiService.updateVehicle(editingVehicle.id, vehicleData);
+        if (response.success) {
+          toast.success('Vehicle updated successfully');
+        } else {
+          toast.error(response.message || 'Failed to update vehicle');
+        }
       } else {
-        await customerApiService.addVehicle(vehicleData);
-        toast.success('Vehicle added successfully');
+        const response = await customerApiService.addVehicle(vehicleData);
+        if (response.success) {
+          toast.success('Vehicle added successfully');
+        } else {
+          toast.error(response.message || 'Failed to add vehicle');
+        }
       }
 
       await loadVehicles();
@@ -328,9 +340,13 @@ export default function CustomerVehicles() {
       type: 'danger',
       onConfirm: async () => {
         try {
-          await customerApiService.deleteVehicle(vehicleId);
-          await loadVehicles();
-          toast.success('Vehicle deleted successfully');
+          const response = await customerApiService.deleteVehicle(vehicleId);
+          if (response.success) {
+            await loadVehicles();
+            toast.success('Vehicle deleted successfully');
+          } else {
+            toast.error(response.message || 'Failed to delete vehicle');
+          }
         } catch (error) {
           console.error('Error deleting vehicle:', error);
           toast.error('Failed to delete vehicle');

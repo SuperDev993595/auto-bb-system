@@ -7,32 +7,9 @@ const appointmentSchema = new mongoose.Schema({
     required: [true, 'Customer is required']
   },
   vehicle: {
-    make: {
-      type: String,
-      required: [true, 'Vehicle make is required'],
-      trim: true
-    },
-    model: {
-      type: String,
-      required: [true, 'Vehicle model is required'],
-      trim: true
-    },
-    year: {
-      type: Number,
-      required: [true, 'Vehicle year is required']
-    },
-    vin: {
-      type: String,
-      trim: true
-    },
-    licensePlate: {
-      type: String,
-      trim: true
-    },
-    mileage: {
-      type: Number,
-      min: [0, 'Mileage cannot be negative']
-    }
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vehicle',
+    required: [true, 'Vehicle is required']
   },
   serviceType: {
     type: String,
@@ -72,7 +49,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'],
+    enum: ['scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show'],
     default: 'scheduled'
   },
   priority: {
@@ -229,37 +206,35 @@ appointmentSchema.virtual('scheduledDateTime').get(function() {
 
 // Method to check if appointment conflicts with existing ones
 appointmentSchema.methods.checkConflicts = async function() {
-  const startTime = this.scheduledDateTime;
-  const endTime = new Date(startTime.getTime() + this.estimatedDuration * 60000);
-  
-  const conflicts = await this.constructor.find({
+  // Get all appointments for the same date and assigned user
+  const existingAppointments = await this.constructor.find({
     _id: { $ne: this._id },
     assignedTo: this.assignedTo,
     status: { $in: ['scheduled', 'confirmed', 'in_progress'] },
-    $or: [
-      {
-        scheduledDate: this.scheduledDate,
-        scheduledTime: {
-          $gte: this.scheduledTime,
-          $lt: endTime.toTimeString().slice(0, 5)
-        }
-      },
-      {
-        scheduledDate: this.scheduledDate,
-        $expr: {
-          $and: [
-            { $lt: ['$scheduledTime', this.scheduledTime] },
-            {
-              $gte: [
-                { $add: ['$scheduledTime', { $multiply: ['$estimatedDuration', 60000] }] },
-                startTime.toTimeString().slice(0, 5)
-              ]
-            }
-          ]
-        }
-      }
-    ]
+    scheduledDate: this.scheduledDate
   });
+
+  const conflicts = [];
+  
+  // Convert current appointment time to minutes
+  const [currentHours, currentMinutes] = this.scheduledTime.split(':').map(Number);
+  const currentStartMinutes = currentHours * 60 + currentMinutes;
+  const currentEndMinutes = currentStartMinutes + this.estimatedDuration;
+
+  for (const appointment of existingAppointments) {
+    // Convert existing appointment time to minutes
+    const [existingHours, existingMinutes] = appointment.scheduledTime.split(':').map(Number);
+    const existingStartMinutes = existingHours * 60 + existingMinutes;
+    const existingEndMinutes = existingStartMinutes + appointment.estimatedDuration;
+
+    // Check for overlap
+    if (
+      (currentStartMinutes < existingEndMinutes && currentEndMinutes > existingStartMinutes) ||
+      (existingStartMinutes < currentEndMinutes && existingEndMinutes > currentStartMinutes)
+    ) {
+      conflicts.push(appointment);
+    }
+  }
   
   return conflicts;
 };

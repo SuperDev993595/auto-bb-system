@@ -106,43 +106,15 @@ const initialState: ServicesState = {
         }
       ],
       laborHours: 0.5,
-      technicianId: 't1',
-      technicianName: 'Mike Johnson',
+      technicianId: '',
+      technicianName: '',
       subtotal: 75.99,
       tax: 6.08,
       total: 82.07,
       completedDate: '2024-08-01'
     }
   ],
-  technicians: [
-    {
-      id: 't1',
-      name: 'Mike Johnson',
-      email: 'mike.johnson@autorepair.com',
-      phone: '(555) 111-2222',
-      specializations: ['Engine', 'Oil Change', 'General Maintenance'],
-      hourlyRate: 120,
-      isActive: true
-    },
-    {
-      id: 't2',
-      name: 'Tom Wilson',
-      email: 'tom.wilson@autorepair.com',
-      phone: '(555) 333-4444',
-      specializations: ['Tires', 'Brakes', 'Suspension'],
-      hourlyRate: 125,
-      isActive: true
-    },
-    {
-      id: 't3',
-      name: 'Sarah Davis',
-      email: 'sarah.davis@autorepair.com',
-      phone: '(555) 555-6666',
-      specializations: ['Transmission', 'Electrical', 'Diagnostics'],
-      hourlyRate: 135,
-      isActive: true
-    }
-  ],
+  technicians: [],
   loading: false,
   error: null
 }

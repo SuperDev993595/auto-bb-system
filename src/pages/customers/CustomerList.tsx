@@ -47,12 +47,31 @@ function CustomerList() {
     setCurrentPage(page);
   };
 
+  // Helper function to format address
+  const formatAddress = (address: any) => {
+    if (!address) return 'N/A';
+    
+    const parts = [];
+    if (address.street) parts.push(address.street);
+    if (address.city) parts.push(address.city);
+    if (address.state) parts.push(address.state);
+    if (address.zipCode) parts.push(address.zipCode);
+    
+    return parts.length > 0 ? parts.join(', ') : 'N/A';
+  };
+
   // Filter customers based on search (client-side for immediate feedback)
-  const filteredCustomers = customers.filter(customer =>
-    customer.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.contactPerson.phone.includes(searchTerm) ||
-    customer.contactPerson.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredCustomers = customers.filter(customer => {
+    const searchLower = searchTerm.toLowerCase();
+    const addressText = formatAddress(customer.address).toLowerCase();
+    
+    return (
+      (customer.businessName?.toLowerCase() || customer.name?.toLowerCase() || '').includes(searchLower) ||
+      (customer.phone || '').includes(searchTerm) ||
+      (customer.email?.toLowerCase() || '').includes(searchLower) ||
+      addressText.includes(searchLower)
+    );
+  })
 
   return (
     <div className="p-6 space-y-6">
@@ -92,7 +111,7 @@ function CustomerList() {
           >
             <option value="createdAt">Date Created</option>
             <option value="businessName">Business Name</option>
-            <option value="contactPerson.name">Contact Name</option>
+            <option value="name">Contact Name</option>
           </select>
         </div>
 
@@ -193,8 +212,8 @@ function CustomerList() {
                   to={`/admin/dashboard/customers/${customer._id}`}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900 truncate">{customer.businessName}</h3>
+                                     <div className="flex items-center justify-between mb-4">
+                     <h3 className="font-semibold text-gray-900 truncate">{customer.businessName || customer.name}</h3>
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       customer.status === 'active' 
                         ? 'bg-green-100 text-green-800' 
@@ -207,20 +226,20 @@ function CustomerList() {
                   <div className="space-y-2 text-sm text-gray-600">
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Contact:</span>
-                      {customer.contactPerson.name}
+                      {customer.name || 'N/A'}
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Phone:</span>
-                      {customer.contactPerson.phone}
+                      {customer.phone || 'N/A'}
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="font-medium">Vehicles:</span>
                       {customer.vehicles?.length || 0}
                     </p>
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Location:</span>
-                      {customer.address.city}, {customer.address.state}
-                    </p>
+                                         <p className="flex items-center gap-2">
+                       <span className="font-medium">Address:</span>
+                       {formatAddress(customer.address)}
+                     </p>
                   </div>
                 </Link>
               ))}
@@ -239,9 +258,9 @@ function CustomerList() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Vehicles
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Location
-                    </th>
+                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                       Address
+                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
@@ -251,22 +270,22 @@ function CustomerList() {
                   {filteredCustomers.map((customer) => (
                     <tr key={customer._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Link
-                          to={`/admin/dashboard/customers/${customer._id}`}
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                        >
-                          {customer.businessName}
-                        </Link>
+                                                 <Link
+                           to={`/admin/dashboard/customers/${customer._id}`}
+                           className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                         >
+                           {customer.businessName || customer.name}
+                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.contactPerson.name}
+                        {customer.name || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {customer.vehicles?.length || 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.address.city}, {customer.address.state}
-                      </td>
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                         {formatAddress(customer.address)}
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           customer.status === 'active' 

@@ -27,7 +27,7 @@ export const fetchCustomer = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await customerService.getCustomer(id);
-      return response.data.customer;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer');
     }

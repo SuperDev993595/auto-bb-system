@@ -1,55 +1,51 @@
 const mongoose = require('mongoose');
 
 const vehicleSchema = new mongoose.Schema({
-  customerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+  // Vehicle information
   year: {
     type: Number,
-    required: true,
-    min: 1900,
-    max: new Date().getFullYear() + 1
+    required: [true, 'Vehicle year is required'],
+    min: [1900, 'Year must be after 1900'],
+    max: [new Date().getFullYear() + 1, 'Year cannot be in the future']
   },
   make: {
     type: String,
-    required: true,
+    required: [true, 'Vehicle make is required'],
     trim: true,
     maxlength: 50
   },
   model: {
     type: String,
-    required: true,
+    required: [true, 'Vehicle model is required'],
     trim: true,
     maxlength: 50
   },
   vin: {
     type: String,
-    required: true,
+    required: [true, 'VIN is required'],
     unique: true,
     trim: true,
-    minlength: 17,
+    minlength: 8,
     maxlength: 17,
     uppercase: true
   },
   licensePlate: {
     type: String,
-    required: true,
+    required: [true, 'License plate is required'],
     trim: true,
     maxlength: 20,
     uppercase: true
   },
   color: {
     type: String,
-    required: true,
+    required: [true, 'Vehicle color is required'],
     trim: true,
     maxlength: 30
   },
   mileage: {
     type: Number,
-    required: true,
-    min: 0
+    required: [true, 'Mileage is required'],
+    min: [0, 'Mileage cannot be negative']
   },
   engineType: {
     type: String,
@@ -89,22 +85,29 @@ const vehicleSchema = new mongoose.Schema({
     type: String,
     maxlength: 500
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  
+  // Reference to customer who owns this vehicle
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+    required: [true, 'Vehicle must belong to a customer']
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  
+  // Created by
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true
 });
 
-// Index for efficient queries
-vehicleSchema.index({ customerId: 1, createdAt: -1 });
-vehicleSchema.index({ vin: 1 }, { unique: true });
+// Indexes for better query performance
+vehicleSchema.index({ customer: 1 });
+vehicleSchema.index({ vin: 1 });
 vehicleSchema.index({ licensePlate: 1 });
+vehicleSchema.index({ status: 1 });
+vehicleSchema.index({ nextServiceDate: 1 });
 
 // Virtual for full vehicle name
 vehicleSchema.virtual('fullName').get(function() {
@@ -114,11 +117,5 @@ vehicleSchema.virtual('fullName').get(function() {
 // Ensure virtual fields are serialized
 vehicleSchema.set('toJSON', { virtuals: true });
 vehicleSchema.set('toObject', { virtuals: true });
-
-// Pre-save middleware to update timestamps
-vehicleSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
 
 module.exports = mongoose.model('Vehicle', vehicleSchema);

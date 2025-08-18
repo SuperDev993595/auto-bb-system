@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const Customer = require('../models/Customer');
 const Vehicle = require('../models/Vehicle');
 const Appointment = require('../models/Appointment');
 const { Service } = require('../models/Service');
@@ -8,17 +9,22 @@ class NotificationService {
   // Generate service reminders based on mileage and time intervals
   async generateServiceReminders() {
     try {
-      const vehicles = await Vehicle.find({ status: 'active' });
+      const customers = await Customer.find({ status: 'active' });
       const reminders = [];
 
-      for (const vehicle of vehicles) {
-        // Check for mileage-based reminders
-        const mileageReminders = this.checkMileageBasedReminders(vehicle);
-        reminders.push(...mileageReminders);
+      for (const customer of customers) {
+        // Get vehicles for this customer from separate collection
+        const vehicles = await Vehicle.find({ customer: customer._id, status: 'active' });
+        
+        for (const vehicle of vehicles) {
+          // Check for mileage-based reminders
+          const mileageReminders = this.checkMileageBasedReminders(vehicle, customer._id);
+          reminders.push(...mileageReminders);
 
-        // Check for time-based reminders
-        const timeReminders = this.checkTimeBasedReminders(vehicle);
-        reminders.push(...timeReminders);
+          // Check for time-based reminders
+          const timeReminders = this.checkTimeBasedReminders(vehicle, customer._id);
+          reminders.push(...timeReminders);
+        }
       }
 
       // Save reminders to database
@@ -35,7 +41,7 @@ class NotificationService {
   }
 
   // Check mileage-based service reminders
-  checkMileageBasedReminders(vehicle) {
+  checkMileageBasedReminders(vehicle, customerId) {
     const reminders = [];
     const currentMileage = vehicle.mileage;
     const lastServiceMileage = vehicle.lastServiceMileage || 0;
@@ -44,7 +50,7 @@ class NotificationService {
     // Oil change reminder (every 3,000-5,000 miles)
     if (mileageSinceLastService >= 3000) {
       reminders.push({
-        customer: vehicle.customerId,
+        customer: customerId,
         type: 'service_reminder',
         title: 'Oil Change Due',
         message: `Your ${vehicle.year} ${vehicle.make} ${vehicle.model} is due for an oil change. Current mileage: ${currentMileage.toLocaleString()} miles.`,
@@ -63,7 +69,7 @@ class NotificationService {
     // Major service reminder (every 30,000 miles)
     if (mileageSinceLastService >= 30000) {
       reminders.push({
-        customer: vehicle.customerId,
+        customer: customerId,
         type: 'service_reminder',
         title: 'Major Service Due',
         message: `Your ${vehicle.year} ${vehicle.make} ${vehicle.model} is due for a major service. Current mileage: ${currentMileage.toLocaleString()} miles.`,
@@ -83,7 +89,7 @@ class NotificationService {
   }
 
   // Check time-based service reminders
-  checkTimeBasedReminders(vehicle) {
+  checkTimeBasedReminders(vehicle, customerId) {
     const reminders = [];
     const now = new Date();
     const lastServiceDate = vehicle.lastServiceDate;
@@ -94,7 +100,7 @@ class NotificationService {
       // Annual service reminder
       if (monthsSinceLastService >= 12) {
         reminders.push({
-          customer: vehicle.customerId,
+          customer: customerId,
           type: 'service_reminder',
           title: 'Annual Service Due',
           message: `Your ${vehicle.year} ${vehicle.make} ${vehicle.model} is due for annual service.`,
@@ -112,7 +118,7 @@ class NotificationService {
       // Seasonal maintenance reminder
       if (monthsSinceLastService >= 6) {
         reminders.push({
-          customer: vehicle.customerId,
+          customer: customerId,
           type: 'maintenance_alert',
           title: 'Seasonal Maintenance Check',
           message: `Consider scheduling seasonal maintenance for your ${vehicle.year} ${vehicle.make} ${vehicle.model}.`,

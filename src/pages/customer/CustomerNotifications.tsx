@@ -22,9 +22,14 @@ export default function CustomerNotifications() {
       setLoading(true);
       const status = activeFilter === 'all' ? undefined : activeFilter;
       const response = await customerApiService.getNotifications(currentPage, 20, typeFilter, status);
-      setNotifications(response.notifications);
-      setUnreadCount(response.unreadCount);
-      setTotalPages(response.pagination.pages);
+      
+      if (response.success) {
+        setNotifications(response.data.notifications);
+        setUnreadCount(response.data.unreadCount);
+        setTotalPages(response.data.pagination?.pages || 1);
+      } else {
+        toast.error(response.message || 'Failed to load notifications');
+      }
     } catch (error) {
       console.error('Error loading notifications:', error);
       toast.error('Failed to load notifications');
@@ -35,16 +40,20 @@ export default function CustomerNotifications() {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await customerApiService.markNotificationAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, status: 'read', readAt: new Date().toISOString() }
-            : notification
-        )
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      toast.success('Notification marked as read');
+      const response = await customerApiService.markNotificationAsRead(notificationId);
+      if (response.success) {
+        setNotifications(prev => 
+          prev.map(notification => 
+            notification.id === notificationId 
+              ? { ...notification, status: 'read', readAt: new Date().toISOString() }
+              : notification
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        toast.success('Notification marked as read');
+      } else {
+        toast.error(response.message || 'Failed to mark notification as read');
+      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast.error('Failed to mark notification as read');
@@ -53,12 +62,16 @@ export default function CustomerNotifications() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await customerApiService.markAllNotificationsAsRead();
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, status: 'read' }))
-      );
-      setUnreadCount(0);
-      toast.success('All notifications marked as read');
+      const response = await customerApiService.markAllNotificationsAsRead();
+      if (response.success) {
+        setNotifications(prev => 
+          prev.map(notification => ({ ...notification, status: 'read' }))
+        );
+        setUnreadCount(0);
+        toast.success('All notifications marked as read');
+      } else {
+        toast.error(response.message || 'Failed to mark all notifications as read');
+      }
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       toast.error('Failed to mark all notifications as read');

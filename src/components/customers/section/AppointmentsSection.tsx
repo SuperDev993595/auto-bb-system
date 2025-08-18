@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HiCalendar } from 'react-icons/hi'
-import { Customer } from '../../../utils/CustomerTypes'
+import { Customer } from '../../../services/customers'
 import Pagination from '../../../utils/Pagination'
 import NewAppointmentModal from '../modal/NewAppointmentModal'
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { generateToken, hashPassword, comparePassword, authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -15,7 +16,7 @@ const registerSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid('admin', 'customer').default('customer'),
+  role: Joi.string().valid('super_admin', 'admin', 'business_client', 'customer').default('customer'),
   phone: Joi.string().allow('').optional(),
   businessName: Joi.string().allow('').optional(),
   permissions: Joi.array().items(Joi.string()).optional()
@@ -130,11 +131,50 @@ router.post('/register', async (req, res) => {
       role,
       phone: phone || undefined,
       businessName: businessName || undefined,
-      permissions: permissions || (role === 'admin' ? ['admin_access'] : ['customer_access']),
+      permissions: permissions || (role === 'customer' ? ['customer_access'] : 
+        role === 'admin' ? ['admin_access'] : 
+        role === 'super_admin' ? ['super_admin_access'] : 
+        role === 'business_client' ? ['business_client_access'] : ['customer_access']),
       createdBy: null // Self-registration
     });
 
     await newUser.save();
+
+    // If user is a customer, create a Customer record
+    if (role === 'customer') {
+      try {
+        const customer = new Customer({
+          name,
+          email,
+          phone: phone || '',
+          businessName: businessName || '',
+          userId: newUser._id,
+          status: 'active',
+          preferences: {
+            notifications: {
+              email: true,
+              sms: true,
+              push: false
+            },
+            reminders: {
+              appointments: true,
+              maintenance: true,
+              payments: true
+            },
+            privacy: {
+              shareData: false,
+              marketing: false
+            }
+          }
+        });
+        await customer.save();
+        console.log('Customer record created for user:', newUser._id);
+      } catch (customerError) {
+        console.error('Error creating customer record:', customerError);
+        // Don't fail the registration if customer creation fails
+        // The customer record can be created later when they access their profile
+      }
+    }
 
     // Generate token
     const token = generateToken(newUser);
@@ -156,6 +196,38 @@ router.post('/register', async (req, res) => {
 
   } catch (error) {
     console.error('Register error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/auth/check-email
+// @desc    Check if email already exists
+// @access  Public
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    
+    res.json({
+      success: true,
+      exists: !!existingUser,
+      message: existingUser ? 'Email already exists' : 'Email is available'
+    });
+
+  } catch (error) {
+    console.error('Check email error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

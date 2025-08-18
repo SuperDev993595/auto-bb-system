@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
-  HiPlus, 
-  HiSearch, 
-  HiFilter, 
-  HiEye, 
-  HiPencil, 
-  HiTrash,
-  HiCheckCircle,
-  HiXCircle,
-  HiClock,
-  HiExclamation,
-  HiBuilding,
-  HiPhone,
-  HiMail,
-  HiLocationMarker,
-  HiCalendar,
-  HiCurrencyDollar,
-  HiUsers,
-  HiChartBar
-} from 'react-icons/hi';
+  Plus, 
+  Search, 
+  Filter, 
+  Eye, 
+  Pencil, 
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Users,
+  BarChart3
+} from 'lucide-react';
 import PageTitle from '../components/Shared/PageTitle';
 import businessClientService, { 
   BusinessClient, 
@@ -160,15 +160,15 @@ export default function BusinessClientsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <HiCheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'pending':
-        return <HiClock className="w-5 h-5 text-yellow-500" />;
+        return <Clock className="w-5 h-5 text-yellow-500" />;
       case 'suspended':
-        return <HiXCircle className="w-5 h-5 text-red-500" />;
+        return <XCircle className="w-5 h-5 text-red-500" />;
       case 'inactive':
-        return <HiExclamation className="w-5 h-5 text-gray-500" />;
+        return <AlertTriangle className="w-5 h-5 text-gray-500" />;
       default:
-        return <HiExclamation className="w-5 h-5 text-gray-500" />;
+        return <AlertTriangle className="w-5 h-5 text-gray-500" />;
     }
   };
 
@@ -210,7 +210,7 @@ export default function BusinessClientsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <HiBuilding className="w-6 h-6 text-blue-600" />
+              <Building className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Clients</p>
@@ -222,7 +222,7 @@ export default function BusinessClientsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <HiCheckCircle className="w-6 h-6 text-green-600" />
+              <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Active Clients</p>
@@ -234,7 +234,7 @@ export default function BusinessClientsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
-              <HiClock className="w-6 h-6 text-yellow-600" />
+              <Clock className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Trial Clients</p>
@@ -246,7 +246,7 @@ export default function BusinessClientsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <HiCurrencyDollar className="w-6 h-6 text-purple-600" />
+              <DollarSign className="w-6 h-6 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
@@ -264,7 +264,7 @@ export default function BusinessClientsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <div className="relative flex-1">
-                <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search business clients..."
@@ -317,7 +317,7 @@ export default function BusinessClientsPage() {
             </div>
 
             <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              <HiPlus className="h-5 w-5 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               Add Business Client
             </button>
           </div>
@@ -395,10 +395,10 @@ export default function BusinessClientsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button className="text-blue-600 hover:text-blue-900">
-                          <HiEye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button className="text-gray-600 hover:text-gray-900">
-                          <HiPencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" />
                         </button>
                         {client.subscription.status === 'trial' && (
                           <button 
@@ -410,7 +410,7 @@ export default function BusinessClientsPage() {
                             )}
                             className="text-green-600 hover:text-green-900"
                           >
-                            <HiCheckCircle className="w-4 h-4" />
+                            <CheckCircle className="w-4 h-4" />
                           </button>
                         )}
                         {client.subscription.status === 'active' && (
@@ -423,7 +423,7 @@ export default function BusinessClientsPage() {
                             )}
                             className="text-yellow-600 hover:text-yellow-900"
                           >
-                            <HiXCircle className="w-4 h-4" />
+                            <XCircle className="w-4 h-4" />
                           </button>
                         )}
                         <button 
@@ -435,7 +435,7 @@ export default function BusinessClientsPage() {
                           )}
                           className="text-red-600 hover:text-red-900"
                         >
-                          <HiTrash className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

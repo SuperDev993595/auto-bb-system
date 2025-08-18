@@ -43,8 +43,12 @@ export default function CustomerMessages() {
   const loadMessages = async () => {
     try {
       setIsLoading(true);
-      const messagesData = await customerApiService.getMessages();
-      setMessages(messagesData);
+      const response = await customerApiService.getMessages();
+      if (response.success) {
+        setMessages(response.data.messages);
+      } else {
+        toast.error(response.message || 'Failed to load messages');
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
       toast.error('Failed to load messages');
@@ -66,7 +70,11 @@ export default function CustomerMessages() {
 
   const handleMarkAsRead = async (messageId: string) => {
     try {
-      await customerApiService.markMessageAsRead(messageId);
+      const response = await customerApiService.markMessageAsRead(messageId);
+      if (!response.success) {
+        toast.error(response.message || 'Failed to mark message as read');
+        return;
+      }
       setMessages(prev => 
         prev.map(msg => 
           msg.id === messageId ? { ...msg, isRead: true } : msg
@@ -87,14 +95,19 @@ export default function CustomerMessages() {
     }
 
     try {
-      const sentMessage = await customerApiService.sendMessage({
+      const response = await customerApiService.sendMessage({
         subject: newMessage.subject,
         message: newMessage.message,
         type: newMessage.type,
         priority: newMessage.priority
       });
 
-      setMessages(prev => [sentMessage, ...prev]);
+      if (response.success) {
+        setMessages(prev => [response.data.message, ...prev]);
+      } else {
+        toast.error(response.message || 'Failed to send message');
+        return;
+      }
       setNewMessage({ subject: '', message: '', type: 'general', priority: 'medium' });
       setShowNewMessageModal(false);
       toast.success('Message sent successfully');
@@ -110,7 +123,11 @@ export default function CustomerMessages() {
     }
 
     try {
-      await customerApiService.deleteMessage(messageId);
+      const response = await customerApiService.deleteMessage(messageId);
+      if (!response.success) {
+        toast.error(response.message || 'Failed to delete message');
+        return;
+      }
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
       if (selectedMessage?.id === messageId) {
         setSelectedMessage(null);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, CustomerProfile as CustomerProfileType } from '../../services/customerApi';
+import ConfirmDialog from '../../components/Shared/ConfirmDialog';
 
 interface UserProfile {
   id: string;
@@ -40,6 +41,7 @@ export default function CustomerProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'security'>('profile');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -74,19 +76,25 @@ export default function CustomerProfile() {
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-      const profileData = await customerApiService.getProfile();
-      setProfile(profileData);
-      setFormData({
-        name: profileData.name,
-        email: profileData.email,
-        phone: profileData.phone,
-        businessName: profileData.businessName || '',
-        street: profileData.address.street,
-        city: profileData.address.city,
-        state: profileData.address.state,
-        zipCode: profileData.address.zipCode
-      });
-      setPreferences(profileData.preferences);
+      const response = await customerApiService.getProfile();
+      
+      if (response.success) {
+        const profileData = response.data.profile;
+        setProfile(profileData);
+        setFormData({
+          name: profileData.name,
+          email: profileData.email,
+          phone: profileData.phone,
+          businessName: profileData.businessName || '',
+          street: profileData.address.street,
+          city: profileData.address.city,
+          state: profileData.address.state,
+          zipCode: profileData.address.zipCode
+        });
+        setPreferences(profileData.preferences);
+      } else {
+        toast.error(response.message || 'Failed to load profile data');
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       toast.error('Failed to load profile data');
@@ -128,10 +136,15 @@ export default function CustomerProfile() {
         }
       };
       
-      await customerApiService.updateProfile(updateData);
-      await loadProfile();
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
+      const response = await customerApiService.updateProfile(updateData);
+      
+      if (response.success) {
+        await loadProfile();
+        toast.success('Profile updated successfully!');
+        setIsEditing(false);
+      } else {
+        toast.error(response.message || 'Failed to update profile');
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -140,8 +153,13 @@ export default function CustomerProfile() {
 
   const handleSavePreferences = async () => {
     try {
-      await customerApiService.updateProfile({ preferences });
-      toast.success('Preferences updated successfully!');
+      const response = await customerApiService.updateProfile({ preferences });
+      
+      if (response.success) {
+        toast.success('Preferences updated successfully!');
+      } else {
+        toast.error(response.message || 'Failed to update preferences');
+      }
     } catch (error) {
       console.error('Error updating preferences:', error);
       toast.error('Failed to update preferences');
@@ -153,9 +171,12 @@ export default function CustomerProfile() {
   };
 
   const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      toast.success('Account deletion request submitted');
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    toast.success('Account deletion request submitted');
+    setShowDeleteConfirm(false);
   };
 
   if (isLoading) {
@@ -511,6 +532,18 @@ export default function CustomerProfile() {
           </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteAccount}
+        onCancel={() => setShowDeleteConfirm(false)}
+        type="danger"
+      />
     </div>
   );
 }

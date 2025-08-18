@@ -176,127 +176,136 @@ export interface DashboardData {
 
 class CustomerApiService {
   // Profile Management
-  async getProfile(): Promise<CustomerProfile> {
+  async getProfile(): Promise<{ success: boolean; data: { user: any; profile: CustomerProfile }; message?: string }> {
     const response = await api.get('/customers/profile');
-    return response.data.data.profile;
+    return response.data;
   }
 
-  async updateProfile(profileData: Partial<CustomerProfile>): Promise<CustomerProfile> {
+  async updateProfile(profileData: Partial<CustomerProfile>): Promise<{ success: boolean; data: { user: any }; message?: string }> {
     const response = await api.put('/customers/profile', profileData);
-    return response.data.data.user;
+    return response.data;
   }
 
   // Vehicle Management
-  async getVehicles(): Promise<Vehicle[]> {
+  async getVehicles(): Promise<{ success: boolean; data: { vehicles: Vehicle[] }; message?: string }> {
     const response = await api.get('/customers/vehicles');
-    return response.data.data.vehicles;
+    return response.data;
   }
 
-  async addVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> {
+  async addVehicle(vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; data: { vehicle: Vehicle }; message?: string }> {
     const response = await api.post('/customers/vehicles', vehicleData);
-    return response.data.data.vehicle;
+    return response.data;
   }
 
-  async updateVehicle(id: string, vehicleData: Partial<Vehicle>): Promise<Vehicle> {
+  async updateVehicle(id: string, vehicleData: Partial<Vehicle>): Promise<{ success: boolean; data: { vehicle: Vehicle }; message?: string }> {
     const response = await api.put(`/customers/vehicles/${id}`, vehicleData);
-    return response.data.data.vehicle;
+    return response.data;
   }
 
-  async deleteVehicle(id: string): Promise<void> {
-    await api.delete(`/customers/vehicles/${id}`);
+  async deleteVehicle(id: string): Promise<{ success: boolean; message?: string }> {
+    const response = await api.delete(`/customers/vehicles/${id}`);
+    return response.data;
   }
 
   // Appointment Management
-  async getAppointments(): Promise<Appointment[]> {
+  async getAppointments(): Promise<{ success: boolean; data: { appointments: Appointment[] }; message?: string }> {
     const response = await api.get('/customers/appointments');
-    return response.data.data.appointments;
+    return response.data;
   }
 
-  async createAppointment(appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment> {
+  async createAppointment(appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; data: { appointment: Appointment }; message?: string }> {
     const response = await api.post('/customers/appointments', appointmentData);
-    return response.data.data.appointment;
+    return response.data;
   }
 
-  async updateAppointment(id: string, appointmentData: Partial<Appointment>): Promise<Appointment> {
+  async updateAppointment(id: string, appointmentData: Partial<Appointment>): Promise<{ success: boolean; data: { appointment: Appointment }; message?: string }> {
     const response = await api.put(`/customers/appointments/${id}`, appointmentData);
-    return response.data.data.appointment;
+    return response.data;
   }
 
-  async cancelAppointment(id: string): Promise<Appointment> {
+  async cancelAppointment(id: string): Promise<{ success: boolean; data: { appointment: Appointment }; message?: string }> {
     const response = await api.delete(`/customers/appointments/${id}`);
-    return response.data.data.appointment;
+    return response.data;
   }
 
-  async confirmAppointment(id: string): Promise<Appointment> {
+  async confirmAppointment(id: string): Promise<{ success: boolean; data: { appointment: Appointment }; message?: string }> {
     const response = await api.put(`/customers/appointments/${id}/confirm`);
-    return response.data.data.appointment;
+    return response.data;
   }
 
   // Service History
-  async getServices(): Promise<ServiceRecord[]> {
+  async getServices(): Promise<{ success: boolean; data: { services: ServiceRecord[] }; message?: string }> {
     const response = await api.get('/customers/services');
-    return response.data.data.services;
+    return response.data;
   }
 
   // Invoice Management
-  async getInvoices(): Promise<Invoice[]> {
+  async getInvoices(): Promise<{ success: boolean; data: { invoices: Invoice[] }; message?: string }> {
     const response = await api.get('/customers/invoices');
-    return response.data.data.invoices;
+    return response.data;
   }
 
-  async payInvoice(id: string, paymentData: { paymentMethod?: string; paymentReference?: string }): Promise<Invoice> {
+  async payInvoice(id: string, paymentData: { paymentMethod?: string; paymentReference?: string }): Promise<{ success: boolean; data: { invoice: Invoice }; message?: string }> {
     const response = await api.post(`/customers/invoices/${id}/pay`, paymentData);
-    return response.data.data.invoice;
+    return response.data;
   }
 
-  async downloadInvoice(id: string): Promise<{ downloadUrl: string }> {
+  async downloadInvoice(id: string): Promise<{ success: boolean; data: { downloadUrl: string }; message?: string }> {
     const response = await api.get(`/customers/invoices/${id}/download`);
-    return response.data.data;
+    return response.data;
   }
 
   // Messages
-  async getMessages(): Promise<Message[]> {
+  async getMessages(): Promise<{ success: boolean; data: { messages: Message[] }; message?: string }> {
     const response = await api.get('/customers/messages');
-    return response.data.data.messages;
+    return response.data;
   }
 
-  async sendMessage(messageData: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>): Promise<Message> {
+  async sendMessage(messageData: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; data: { message: Message }; message?: string }> {
     const response = await api.post('/customers/messages', messageData);
-    return response.data.data.message;
+    return response.data;
   }
 
-  async markMessageAsRead(id: string): Promise<Message> {
+  async markMessageAsRead(id: string): Promise<{ success: boolean; data: { message: Message }; message?: string }> {
     const response = await api.put(`/customers/messages/${id}/read`);
-    return response.data.data.message;
+    return response.data;
   }
 
-  async deleteMessage(id: string): Promise<void> {
-    await api.delete(`/customers/messages/${id}`);
+  async deleteMessage(id: string): Promise<{ success: boolean; message?: string }> {
+    const response = await api.delete(`/customers/messages/${id}`);
+    return response.data;
   }
 
   // Dashboard Data
-  async getDashboardData(): Promise<DashboardData> {
+  async getDashboardData(): Promise<{ success: boolean; data: DashboardData; message?: string }> {
     const response = await api.get('/customers/dashboard');
-    return response.data.data;
+    return response.data;
   }
 
   // Notifications
-  async getNotifications(page = 1, limit = 20, type?: string, status?: string): Promise<{ notifications: Notification[], unreadCount: number, pagination: any }> {
+  async getNotifications(page = 1, limit = 20, type?: string, status?: string): Promise<{ success: boolean; data: { notifications: Notification[], unreadCount: number, pagination: any }; message?: string }> {
     const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
     if (type) params.append('type', type);
     if (status) params.append('status', status);
     
     const response = await api.get(`/customers/notifications?${params}`);
-    return response.data.data;
+    return response.data;
   }
 
-  async markNotificationAsRead(id: string): Promise<Notification> {
+  async markNotificationAsRead(id: string): Promise<{ success: boolean; data: { notification: Notification }; message?: string }> {
     const response = await api.put(`/customers/notifications/${id}/read`);
-    return response.data.data.notification;
+    return response.data;
   }
 
-  async markAllNotificationsAsRead(): Promise<void> {
-    await api.put('/customers/notifications/read-all');
+  async markAllNotificationsAsRead(): Promise<{ success: boolean; message?: string }> {
+    const response = await api.put('/customers/notifications/read-all');
+    return response.data;
+  }
+
+  // Technicians
+  async getTechnicians(): Promise<{ success: boolean; data: { technicians: any[] }; message?: string }> {
+    const response = await api.get('/customers/technicians');
+    return response.data;
   }
 }
 

@@ -1,4 +1,11 @@
-import api, { apiResponse } from './api';
+import api from './api';
+
+// Define the API response type
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
 
 export interface Appointment {
   _id: string;
@@ -17,7 +24,7 @@ export interface Appointment {
     year: string;
     vin: string;
   };
-  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
   notes?: string;
   estimatedCost?: number;
   actualCost?: number;
@@ -78,98 +85,116 @@ export interface AppointmentStats {
 
 class AppointmentService {
   // Get all appointments with filters
-  async getAppointments(filters: AppointmentFilters = {}): Promise<apiResponse<{ data: Appointment[]; pagination: any }>> {
+  async getAppointments(filters: AppointmentFilters = {}): Promise<{ success: boolean; data: { appointments: Appointment[]; pagination: any }; message?: string }> {
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        params.append(key, value.toString());
+        // Map technicianId to technician for backend compatibility
+        const paramKey = key === 'technicianId' ? 'technician' : key;
+        params.append(paramKey, value.toString());
       }
     });
 
-    return api.get(`/appointments?${params.toString()}`);
+    const response = await api.get(`/appointments?${params.toString()}`);
+    return response.data;
   }
 
   // Get single appointment by ID
-  async getAppointment(id: string): Promise<apiResponse<Appointment>> {
-    return api.get(`/appointments/${id}`);
+  async getAppointment(id: string): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.get(`/appointments/${id}`);
+    return response.data;
   }
 
   // Create new appointment
-  async createAppointment(data: CreateAppointmentData): Promise<apiResponse<Appointment>> {
-    return api.post('/appointments', data);
+  async createAppointment(data: CreateAppointmentData): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.post('/appointments', data);
+    return response.data;
   }
 
   // Update appointment
-  async updateAppointment(id: string, data: UpdateAppointmentData): Promise<apiResponse<Appointment>> {
-    return api.put(`/appointments/${id}`, data);
+  async updateAppointment(id: string, data: UpdateAppointmentData): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.put(`/appointments/${id}`, data);
+    return response.data;
   }
 
   // Delete appointment
-  async deleteAppointment(id: string): Promise<apiResponse<{ message: string }>> {
-    return api.delete(`/appointments/${id}`);
+  async deleteAppointment(id: string): Promise<ApiResponse<{ message: string }>> {
+    const response = await api.delete(`/appointments/${id}`);
+    return response.data;
   }
 
   // Update appointment status
-  async updateStatus(id: string, status: Appointment['status']): Promise<apiResponse<Appointment>> {
-    return api.patch(`/appointments/${id}/status`, { status });
+  async updateStatus(id: string, status: Appointment['status']): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.patch(`/appointments/${id}/status`, { status });
+    return response.data;
   }
 
   // Get appointment statistics
-  async getStats(startDate?: string, endDate?: string): Promise<apiResponse<AppointmentStats>> {
+  async getStats(startDate?: string, endDate?: string): Promise<ApiResponse<{ stats: AppointmentStats }>> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    return api.get(`/appointments/stats/overview?${params.toString()}`);
+    const response = await api.get(`/appointments/stats/overview?${params.toString()}`);
+    return response.data;
   }
 
   // Get appointments by date range
-  async getAppointmentsByDateRange(startDate: string, endDate: string): Promise<apiResponse<Appointment[]>> {
-    return api.get(`/appointments/date-range?startDate=${startDate}&endDate=${endDate}`);
+  async getAppointmentsByDateRange(startDate: string, endDate: string): Promise<ApiResponse<Appointment[]>> {
+    const response = await api.get(`/appointments/date-range?startDate=${startDate}&endDate=${endDate}`);
+    return response.data;
   }
 
   // Get today's appointments
-  async getTodayAppointments(): Promise<apiResponse<Appointment[]>> {
-    return api.get('/appointments/today');
+  async getTodayAppointments(): Promise<ApiResponse<Appointment[]>> {
+    const response = await api.get('/appointments/today');
+    return response.data;
   }
 
   // Get upcoming appointments
-  async getUpcomingAppointments(days: number = 7): Promise<apiResponse<Appointment[]>> {
-    return api.get(`/appointments/upcoming?days=${days}`);
+  async getUpcomingAppointments(days: number = 7): Promise<ApiResponse<Appointment[]>> {
+    const response = await api.get(`/appointments/upcoming?days=${days}`);
+    return response.data;
   }
 
   // Confirm appointment
-  async confirmAppointment(id: string): Promise<apiResponse<Appointment>> {
-    return api.post(`/appointments/${id}/confirm`);
+  async confirmAppointment(id: string): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.post(`/appointments/${id}/confirm`);
+    return response.data;
   }
 
   // Cancel appointment
-  async cancelAppointment(id: string, reason?: string): Promise<apiResponse<Appointment>> {
-    return api.post(`/appointments/${id}/cancel`, { reason });
+  async cancelAppointment(id: string, reason?: string): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.post(`/appointments/${id}/cancel`, { reason });
+    return response.data;
   }
 
   // Mark as no-show
-  async markAsNoShow(id: string): Promise<apiResponse<Appointment>> {
-    return api.post(`/appointments/${id}/no-show`);
+  async markAsNoShow(id: string): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.post(`/appointments/${id}/no-show`);
+    return response.data;
   }
 
   // Assign technician
-  async assignTechnician(id: string, technicianId: string): Promise<apiResponse<Appointment>> {
-    return api.post(`/appointments/${id}/assign-technician`, { technicianId });
+  async assignTechnician(id: string, technicianId: string): Promise<ApiResponse<{ appointment: Appointment }>> {
+    const response = await api.post(`/appointments/${id}/assign-technician`, { technicianId });
+    return response.data;
   }
 
   // Get available time slots
-  async getAvailableTimeSlots(date: string, serviceId?: string): Promise<apiResponse<string[]>> {
+  async getAvailableTimeSlots(date: string, serviceId?: string): Promise<ApiResponse<string[]>> {
     const params = new URLSearchParams({ date });
     if (serviceId) params.append('serviceId', serviceId);
     
-    return api.get(`/appointments/available-slots?${params.toString()}`);
+    const response = await api.get(`/appointments/available-slots?${params.toString()}`);
+    return response.data;
   }
 
   // Check for scheduling conflicts
-  async checkConflicts(data: CreateAppointmentData): Promise<apiResponse<{ hasConflicts: boolean; conflicts: any[] }>> {
-    return api.post('/appointments/check-conflicts', data);
+  async checkConflicts(data: CreateAppointmentData): Promise<ApiResponse<{ hasConflicts: boolean; conflicts: any[] }>> {
+    const response = await api.post('/appointments/check-conflicts', data);
+    return response.data;
   }
 }
 

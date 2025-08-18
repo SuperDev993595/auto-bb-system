@@ -3,6 +3,8 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Appointment as AppointmentType, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
+import { HiCalendar, HiClock, HiTruck, HiCog, HiUser, HiFlag, HiDocumentText } from 'react-icons/hi';
+import { useAppSelector, useAppDispatch } from '../../redux';
 
 interface Appointment {
   id: string;
@@ -10,12 +12,14 @@ interface Appointment {
   time: string;
   serviceType: string;
   vehicleId: string;
-  vehicleInfo: string;
+  vehicleInfo?: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  estimatedDuration: string;
+  estimatedDuration?: string;
   notes?: string;
   technician?: string;
   totalCost?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AppointmentFormData {
@@ -24,10 +28,16 @@ interface AppointmentFormData {
   serviceType: string;
   vehicleId: string;
   notes: string;
+  status: string;
+  estimatedDuration: string;
+  priority: string;
+  technicianId: string;
 }
 
 export default function CustomerAppointments() {
   const { user } = useAuth();
+  const dispatch = useAppDispatch();
+  const [technicians, setTechnicians] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [vehicles, setVehicles] = useState<VehicleType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +50,11 @@ export default function CustomerAppointments() {
     time: '',
     serviceType: '',
     vehicleId: '',
-    notes: ''
+    notes: '',
+    status: 'scheduled',
+    estimatedDuration: '60',
+    priority: 'medium',
+    technicianId: ''
   });
   
   // Confirm dialog states
@@ -82,6 +96,27 @@ export default function CustomerAppointments() {
   }, []);
 
   useEffect(() => {
+    const loadTechnicians = async () => {
+      try {
+        const response = await customerApiService.getTechnicians();
+        if (response.success) {
+          setTechnicians(response.data.technicians || []);
+        } else {
+          console.error('Failed to load technicians:', response.message);
+          setTechnicians([]);
+        }
+      } catch (error) {
+        console.error('Error loading technicians:', error);
+        setTechnicians([]); // Set empty array instead of mock data
+      }
+    };
+
+    if (technicians.length === 0) {
+      loadTechnicians();
+    }
+  }, [technicians.length]);
+
+  useEffect(() => {
     if (vehicles.length > 0 && appointments.length > 0) {
       generateSmartSuggestions();
     }
@@ -90,12 +125,22 @@ export default function CustomerAppointments() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [appointmentsData, vehiclesData] = await Promise.all([
+      const [appointmentsResponse, vehiclesResponse] = await Promise.all([
         customerApiService.getAppointments(),
         customerApiService.getVehicles()
       ]);
-      setAppointments(appointmentsData);
-      setVehicles(vehiclesData);
+      
+      if (appointmentsResponse.success) {
+        setAppointments(appointmentsResponse.data.appointments);
+      } else {
+        toast.error(appointmentsResponse.message || 'Failed to load appointments');
+      }
+      
+      if (vehiclesResponse.success) {
+        setVehicles(vehiclesResponse.data.vehicles);
+      } else {
+        toast.error(vehiclesResponse.message || 'Failed to load vehicles');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load appointments and vehicles');
@@ -160,11 +205,23 @@ export default function CustomerAppointments() {
       return false;
     }
     
+    if (vehicles.length === 0) {
+      toast.error('Please add a vehicle first before scheduling an appointment');
+      return false;
+    }
+    
     const selectedDate = new Date(`${formData.date}T${formData.time}`);
     const now = new Date();
     
     if (selectedDate <= now) {
       toast.error('Please select a future date and time');
+      return false;
+    }
+
+    // Validate duration
+    const duration = parseInt(formData.estimatedDuration);
+    if (isNaN(duration) || duration < 15 || duration > 480) {
+      toast.error('Duration must be between 15 and 480 minutes');
       return false;
     }
     
@@ -182,20 +239,29 @@ export default function CustomerAppointments() {
         time: formData.time,
         serviceType: formData.serviceType,
         vehicleId: formData.vehicleId,
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+        status: formData.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
+        estimatedDuration: formData.estimatedDuration,
+        priority: formData.priority,
+        technicianId: formData.technicianId || undefined
       };
 
       if (editingAppointment) {
         // Update existing appointment
-        await customerApiService.updateAppointment(editingAppointment.id, appointmentData);
-        toast.success('Appointment updated successfully');
+        const response = await customerApiService.updateAppointment(editingAppointment.id, appointmentData);
+        if (response.success) {
+          toast.success('Appointment updated successfully');
+        } else {
+          toast.error(response.message || 'Failed to update appointment');
+        }
       } else {
         // Add new appointment
-        await customerApiService.createAppointment({
-          ...appointmentData,
-          status: 'scheduled'
-        });
-        toast.success('Appointment scheduled successfully');
+        const response = await customerApiService.createAppointment(appointmentData);
+        if (response.success) {
+          toast.success('Appointment scheduled successfully');
+        } else {
+          toast.error(response.message || 'Failed to create appointment');
+        }
       }
 
       await loadData();
@@ -213,7 +279,11 @@ export default function CustomerAppointments() {
       time: appointment.time,
       serviceType: appointment.serviceType,
       vehicleId: appointment.vehicleId,
-      notes: appointment.notes || ''
+      notes: appointment.notes || '',
+      status: appointment.status,
+      estimatedDuration: appointment.estimatedDuration || '60',
+      priority: 'medium',
+      technicianId: appointment.technician || ''
     });
     setShowAddModal(true);
   };
@@ -226,9 +296,13 @@ export default function CustomerAppointments() {
       type: 'warning',
       onConfirm: async () => {
         try {
-          await customerApiService.cancelAppointment(appointmentId);
-          await loadData();
-          toast.success('Appointment cancelled successfully');
+          const response = await customerApiService.cancelAppointment(appointmentId);
+          if (response.success) {
+            await loadData();
+            toast.success('Appointment cancelled successfully');
+          } else {
+            toast.error(response.message || 'Failed to cancel appointment');
+          }
         } catch (error) {
           console.error('Error cancelling appointment:', error);
           toast.error('Failed to cancel appointment');
@@ -248,7 +322,11 @@ export default function CustomerAppointments() {
             time: '',
             serviceType: '',
             vehicleId: suggestion.vehicleId,
-            notes: `Service due for ${vehicles.find(v => v.id === suggestion.vehicleId)?.year} ${vehicles.find(v => v.id === suggestion.vehicleId)?.make} ${vehicles.find(v => v.id === suggestion.vehicleId)?.model}`
+            notes: `Service due for ${vehicles.find(v => v.id === suggestion.vehicleId)?.year} ${vehicles.find(v => v.id === suggestion.vehicleId)?.make} ${vehicles.find(v => v.id === suggestion.vehicleId)?.model}`,
+            status: 'scheduled',
+            estimatedDuration: '60',
+            priority: 'medium',
+            technicianId: ''
           });
           setShowAddModal(true);
           break;
@@ -263,12 +341,16 @@ export default function CustomerAppointments() {
             type: 'info',
             onConfirm: async () => {
               try {
-                await customerApiService.confirmAppointment(suggestion.appointmentId);
-                toast.success('Appointment confirmed successfully!');
-                // Reload data to update the appointment status
-                await loadData();
-                // Remove the suggestion from the list
-                setSmartSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+                const response = await customerApiService.confirmAppointment(suggestion.appointmentId);
+                if (response.success) {
+                  toast.success('Appointment confirmed successfully!');
+                  // Reload data to update the appointment status
+                  await loadData();
+                  // Remove the suggestion from the list
+                  setSmartSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+                } else {
+                  toast.error(response.message || 'Failed to confirm appointment');
+                }
               } catch (error) {
                 console.error('Error confirming appointment:', error);
                 toast.error('Failed to confirm appointment');
@@ -295,7 +377,11 @@ export default function CustomerAppointments() {
       time: '',
       serviceType: '',
       vehicleId: '',
-      notes: ''
+      notes: '',
+      status: 'scheduled',
+      estimatedDuration: '60',
+      priority: 'medium',
+      technicianId: ''
     });
   };
 
@@ -373,24 +459,39 @@ export default function CustomerAppointments() {
                   <div key={suggestion.id} className="flex items-center text-sm text-amber-700 bg-amber-100 px-3 py-2 rounded-lg">
                     <span className="mr-2">💡</span>
                     {suggestion.description}
-                                         <button 
-                       className="ml-2 text-amber-800 underline hover:text-amber-900"
-                       onClick={() => handleSuggestionAction(suggestion)}
-                     >
-                       {suggestion.action}
-                     </button>
+                    <button 
+                      className="ml-2 text-amber-800 underline hover:text-amber-900"
+                      onClick={() => handleSuggestionAction(suggestion)}
+                    >
+                      {suggestion.action}
+                    </button>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {/* No Vehicles Warning */}
+            {vehicles.length === 0 && (
+              <div className="mt-3 flex items-center text-sm text-red-700 bg-red-100 px-3 py-2 rounded-lg">
+                <span className="mr-2">⚠️</span>
+                No vehicles found. Please add a vehicle first to schedule appointments.
               </div>
             )}
           </div>
           
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
+            disabled={vehicles.length === 0}
+            className={`px-4 py-2 rounded-lg flex items-center space-x-2 shadow-lg transition-all duration-200 ${
+              vehicles.length === 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-xl'
+            }`}
           >
             <span>📅</span>
-            <span>Schedule Appointment</span>
+            <span>
+              {vehicles.length === 0 ? 'No Vehicles Available' : 'Schedule Appointment'}
+            </span>
           </button>
         </div>
       </div>
@@ -525,7 +626,18 @@ export default function CustomerAppointments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {(() => {
                       const vehicle = vehicles.find(v => v.id === appointment.vehicleId);
-                      return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                      return vehicle ? (
+                        <div>
+                          <div className="font-medium">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </div>
+                          <div className="text-gray-500 text-xs">
+                            {vehicle.licensePlate} • {vehicle.mileage.toLocaleString()} mi
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-red-600">Unknown Vehicle</span>
+                      );
                     })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -589,17 +701,30 @@ export default function CustomerAppointments() {
             </h3>
             <p className="text-gray-600 mb-6">
               {activeTab === 'upcoming' 
-                ? 'Schedule your first appointment to get started'
+                ? vehicles.length === 0 
+                  ? 'Add a vehicle first to schedule appointments'
+                  : 'Schedule your first appointment to get started'
                 : 'Your completed appointments will appear here'
               }
             </p>
             {activeTab === 'upcoming' && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Schedule Appointment
-              </button>
+              <div className="space-y-2">
+                {vehicles.length === 0 ? (
+                  <button
+                    onClick={() => window.location.href = '/customer/vehicles'}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Add Vehicle
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Schedule Appointment
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -608,7 +733,7 @@ export default function CustomerAppointments() {
       {/* Add/Edit Appointment Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
                 {editingAppointment ? 'Edit Appointment' : 'Schedule New Appointment'}
@@ -624,7 +749,8 @@ export default function CustomerAppointments() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <HiCalendar className="w-4 h-4" />
                     Date *
                   </label>
                   <input
@@ -637,7 +763,8 @@ export default function CustomerAppointments() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <HiClock className="w-4 h-4" />
                     Time *
                   </label>
                   <input
@@ -651,7 +778,8 @@ export default function CustomerAppointments() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <HiTruck className="w-4 h-4" />
                   Vehicle *
                 </label>
                 <select
@@ -659,18 +787,27 @@ export default function CustomerAppointments() {
                   value={formData.vehicleId}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={vehicles.length === 0}
                 >
-                  <option value="">Select a vehicle</option>
+                  <option value="">
+                    {vehicles.length === 0 ? 'No vehicles available' : 'Select a vehicle'}
+                  </option>
                   {vehicles.map(vehicle => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                      {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate} ({vehicle.mileage.toLocaleString()} mi)
                     </option>
                   ))}
                 </select>
+                {vehicles.length === 0 && (
+                  <p className="text-sm text-red-600 mt-1">
+                    Please add a vehicle first before scheduling an appointment.
+                  </p>
+                )}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <HiCog className="w-4 h-4" />
                   Service Type *
                 </label>
                 <select
@@ -687,9 +824,89 @@ export default function CustomerAppointments() {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <HiUser className="w-4 h-4" />
+                  Assign Technician
+                </label>
+                <select
+                  name="technicianId"
+                  value={formData.technicianId}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a technician (optional)</option>
+                  {technicians.filter(tech => tech.isActive).map((technician) => {
+                    const techId = (technician as any).id || (technician as any)._id;
+                    const specializations = (technician as any).specializations || (technician as any).specialization || [];
+                    return (
+                      <option key={techId} value={techId}>
+                        {technician.name} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Choose a technician to assign to this appointment</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <HiClock className="w-4 h-4" />
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    name="estimatedDuration"
+                    min="15"
+                    max="480"
+                    value={formData.estimatedDuration}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="60"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <HiFlag className="w-4 h-4" />
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    value={formData.priority}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+                             <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                   <HiFlag className="w-4 h-4" />
+                   Status
+                 </label>
+                 <select
+                   name="status"
+                   value={formData.status}
+                   onChange={handleInputChange}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 >
+                   <option value="scheduled">Scheduled</option>
+                   <option value="in-progress">In Progress</option>
+                   <option value="completed">Completed</option>
+                   <option value="cancelled">Cancelled</option>
+                 </select>
+               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <HiDocumentText className="w-4 h-4" />
                   Notes (Optional)
                 </label>
                 <textarea

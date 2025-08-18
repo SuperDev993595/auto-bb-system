@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { Appointment } from '../../utils/CustomerTypes'
 import AppointmentModal from './AppointmentModal'
-import { addAppointment } from '../../redux/reducer/appointmentsReducer'
+import { addAppointment, updateAppointment } from '../../redux/reducer/appointmentsReducer'
+import { deleteAppointment } from '../../redux/actions/appointments'
 import { toast } from 'react-hot-toast'
 import {
   HiChevronLeft,
@@ -10,7 +11,10 @@ import {
   HiCalendar,
   HiClock,
   HiUser,
-  HiTruck
+  HiTruck,
+  HiPencil,
+  HiEye,
+  HiTrash
 } from 'react-icons/hi'
 
 type CalendarView = 'month' | 'week' | 'day'
@@ -20,11 +24,13 @@ export default function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<CalendarView>('month')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedTime, setSelectedTime] = useState<string>('09:00')
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
+  const [showEditAppointmentModal, setShowEditAppointmentModal] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
   
   const appointments = useAppSelector(state => state.appointments.data)
-  const technicians = useAppSelector(state => state.services.technicians)
 
   // Calendar navigation
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -74,6 +80,24 @@ export default function AppointmentCalendar() {
     return days
   }, [currentDate, appointments])
 
+  // Generate week days for week view
+  const generateWeekDays = useMemo(() => {
+    const startOfWeek = new Date(currentDate)
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay())
+    
+    const days = []
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek)
+      day.setDate(startOfWeek.getDate() + i)
+      days.push({
+        date: day,
+        isToday: day.toDateString() === new Date().toDateString(),
+        appointments: getAppointmentsForDate(day)
+      })
+    }
+    return days
+  }, [currentDate, appointments])
+
   // Get status color
   const getStatusColor = (status: Appointment['status']) => {
     switch (status) {
@@ -106,41 +130,106 @@ export default function AppointmentCalendar() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
+  // Handle appointment click
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment)
+    setShowEditAppointmentModal(true)
+  }
+
+  // Handle appointment delete
+  const handleDeleteAppointment = async (appointment: Appointment, event: React.MouseEvent) => {
+    event.stopPropagation()
+    
+    if (window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
+      try {
+        await dispatch(deleteAppointment(appointment.id)).unwrap()
+      } catch (error) {
+        console.error('Failed to delete appointment:', error)
+      }
+    }
+  }
+
+  // Handle calendar slot click to create new appointment
+  const handleCalendarSlotClick = (date: Date, time?: string) => {
+    setSelectedDate(date)
+    if (time) {
+      setSelectedTime(time)
+    } else {
+      setSelectedTime('09:00') // Default time for day clicks
+    }
+    setShowNewAppointmentModal(true)
+  }
+
   // Handle new appointment creation
   const handleCreateAppointment = async (appointmentData: any) => {
     try {
       setIsCreatingAppointment(true)
       
+      // Check if this is saved appointment data from database or form data
+      if (appointmentData._id) {
+        // This is saved appointment data from database - use it directly
+        const savedAppointment = {
+          id: appointmentData._id, // Use the real MongoDB ObjectId
+          customerId: appointmentData.customer?._id || appointmentData.customer,
+          customerName: appointmentData.customer?.name || appointmentData.customerName,
+          vehicleId: appointmentData.vehicle?._id || appointmentData.vehicle,
+          vehicleInfo: appointmentData.vehicle?.fullName || appointmentData.vehicleInfo,
+          date: new Date(appointmentData.scheduledDate).toISOString().split('T')[0],
+          time: appointmentData.scheduledTime,
+          estimatedDuration: appointmentData.estimatedDuration,
+          serviceType: appointmentData.serviceType,
+          description: appointmentData.serviceDescription,
+          status: appointmentData.status,
+          priority: appointmentData.priority,
+          createdDate: new Date(appointmentData.createdAt).toISOString().split('T')[0],
+          notes: appointmentData.notes || '',
+          technicianId: appointmentData.technician?._id || appointmentData.technicianId,
+          technicianName: appointmentData.technician?.name || appointmentData.technicianName,
+        }
+        
+        dispatch(addAppointment(savedAppointment))
+        setShowNewAppointmentModal(false)
+        return
+      }
+      
+      // Fallback for form data (when database save fails)
       // Validate required fields
       if (!appointmentData.customer || !appointmentData.vehicle || !appointmentData.date || !appointmentData.serviceType) {
         toast.error('Please fill in all required fields');
         return;
       }
 
+      // Extract date and time from the appointment data
+      let appointmentDate: string;
+      let appointmentTime: string;
+      
+      // The modal passes form data with separate date and time fields
+      appointmentDate = appointmentData.date;
+      appointmentTime = appointmentData.time || selectedTime || '09:00';
+
       const newAppointment = {
-        id: `apt${Date.now()}`, // Generate unique ID
+        id: `apt${Date.now()}`, // Generate unique ID for local storage
         customerId: `customer${Date.now()}`,
         customerName: appointmentData.customer,
         vehicleId: `vehicle${Date.now()}`,
         vehicleInfo: appointmentData.vehicle,
-        date: appointmentData.date.split('T')[0], // Extract date part
-        time: appointmentData.date.split('T')[1]?.substring(0, 5) || '09:00', // Extract time part
-        estimatedDuration: 60, // Default duration
+        date: appointmentDate,
+        time: appointmentTime,
+        estimatedDuration: appointmentData.estimatedDuration || 60,
         serviceType: appointmentData.serviceType,
         description: appointmentData.serviceType,
-        status: 'scheduled' as const,
-        priority: 'medium' as const,
+        status: appointmentData.status || 'scheduled' as const,
+        priority: appointmentData.priority || 'medium' as const,
         createdDate: new Date().toISOString().split('T')[0],
         notes: appointmentData.notes || '',
-        technicianId: technicians.length > 0 ? technicians[0].id : undefined,
-        technicianName: technicians.length > 0 ? technicians[0].name : undefined,
+                  technicianId: appointmentData.technicianId || undefined,
+          technicianName: appointmentData.technicianName || undefined,
       }
 
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 500))
       
       dispatch(addAppointment(newAppointment))
-      toast.success('Appointment created successfully!')
       setShowNewAppointmentModal(false)
     } catch (error) {
       console.error('Error creating appointment:', error)
@@ -150,8 +239,33 @@ export default function AppointmentCalendar() {
     }
   }
 
+  // Handle appointment update
+  const handleUpdateAppointment = async (appointmentData: any) => {
+    try {
+      if (!selectedAppointment) return;
+
+      const updatedAppointment = {
+        ...selectedAppointment,
+        ...appointmentData
+      }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      dispatch(updateAppointment(updatedAppointment))
+      toast.success('Appointment updated successfully!')
+      setShowEditAppointmentModal(false)
+      setSelectedAppointment(null)
+    } catch (error) {
+      console.error('Error updating appointment:', error)
+      toast.error('Failed to update appointment. Please try again.')
+    }
+  }
+
   const handleCloseModal = () => {
     setShowNewAppointmentModal(false)
+    setShowEditAppointmentModal(false)
+    setSelectedAppointment(null)
   }
 
   const renderMonthView = () => (
@@ -170,7 +284,7 @@ export default function AppointmentCalendar() {
           className={`min-h-24 p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 ${
             !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
           } ${day.isToday ? 'bg-blue-50 border-blue-200' : ''}`}
-          onClick={() => setSelectedDate(day.date)}
+          onClick={() => handleCalendarSlotClick(day.date)}
         >
           <div className={`text-sm font-medium mb-1 ${day.isToday ? 'text-blue-600' : ''}`}>
             {day.date.getDate()}
@@ -179,8 +293,12 @@ export default function AppointmentCalendar() {
             {day.appointments.slice(0, 2).map(apt => (
               <div
                 key={apt.id}
-                className={`text-xs p-1 rounded border-l-2 ${getPriorityColor(apt.priority)} bg-gray-100 truncate`}
+                className={`text-xs p-1 rounded border-l-2 ${getPriorityColor(apt.priority)} bg-gray-100 truncate cursor-pointer hover:bg-gray-200`}
                 title={`${apt.customerName} - ${apt.serviceType}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleAppointmentClick(apt)
+                }}
               >
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${getStatusColor(apt.status)}`}></div>
@@ -194,9 +312,90 @@ export default function AppointmentCalendar() {
                 +{day.appointments.length - 2} more
               </div>
             )}
+            {/* Show "Click to add appointment" hint for empty days */}
+            {day.appointments.length === 0 && day.isCurrentMonth && (
+              <div className="text-xs text-gray-400 text-center mt-2 opacity-0 hover:opacity-100 transition-opacity">
+                Click to add appointment
+              </div>
+            )}
           </div>
         </div>
       ))}
+    </div>
+  )
+
+  const renderWeekView = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-8 gap-2">
+        {/* Time column header */}
+        <div className="p-2 text-sm font-medium text-gray-500"></div>
+        
+        {/* Day headers */}
+        {generateWeekDays.map((day, index) => (
+          <div key={index} className="p-2 text-center">
+            <div className={`text-sm font-medium ${day.isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+              {day.date.toLocaleDateString('en-US', { weekday: 'short' })}
+            </div>
+            <div className={`text-lg font-bold ${day.isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+              {day.date.getDate()}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Time slots */}
+      <div className="grid grid-cols-8 gap-2">
+        {/* Time labels */}
+        <div className="space-y-2">
+          {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
+            <div key={hour} className="h-16 text-xs text-gray-500 text-right pr-2 pt-1">
+              {formatTime(`${hour.toString().padStart(2, '0')}:00`)}
+            </div>
+          ))}
+        </div>
+
+        {/* Day columns */}
+        {generateWeekDays.map((day, dayIndex) => (
+          <div key={dayIndex} className="space-y-2">
+            {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => {
+              const timeStr = `${hour.toString().padStart(2, '0')}:00`
+              const hourAppointments = day.appointments.filter(apt => 
+                apt.time.startsWith(hour.toString().padStart(2, '0'))
+              )
+              
+              return (
+                <div 
+                  key={hour} 
+                  className="h-16 border border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleCalendarSlotClick(day.date, timeStr)}
+                  title={`Click to add appointment at ${formatTime(timeStr)}`}
+                >
+                  {hourAppointments.map((apt, aptIndex) => (
+                    <div
+                      key={apt.id}
+                      className={`absolute inset-1 p-1 rounded text-xs cursor-pointer hover:bg-opacity-90 ${getPriorityColor(apt.priority)} bg-blue-100`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAppointmentClick(apt)
+                      }}
+                      title={`${apt.customerName} - ${apt.serviceType}`}
+                    >
+                      <div className="font-medium truncate">{apt.customerName}</div>
+                      <div className="text-gray-600 truncate">{apt.serviceType}</div>
+                    </div>
+                  ))}
+                  {/* Show hint for empty slots */}
+                  {hourAppointments.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="text-xs text-gray-400">+</div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   )
 
@@ -227,11 +426,19 @@ export default function AppointmentCalendar() {
                 <div className="w-20 p-2 text-sm text-gray-500 font-medium">
                   {formatTime(timeStr)}
                 </div>
-                <div className="flex-1 p-2 min-h-12">
+                <div 
+                  className="flex-1 p-2 min-h-12 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleCalendarSlotClick(currentDate, timeStr)}
+                  title={`Click to add appointment at ${formatTime(timeStr)}`}
+                >
                   {hourAppointments.map(apt => (
                     <div
                       key={apt.id}
-                      className={`p-3 mb-2 rounded-lg border-l-4 ${getPriorityColor(apt.priority)} bg-white shadow-sm`}
+                      className={`p-3 mb-2 rounded-lg border-l-4 ${getPriorityColor(apt.priority)} bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAppointmentClick(apt)
+                      }}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -248,6 +455,13 @@ export default function AppointmentCalendar() {
                           }`}>
                             {apt.status}
                           </span>
+                          <button
+                            onClick={(e) => handleDeleteAppointment(apt, e)}
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Delete appointment"
+                          >
+                            <HiTrash className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -271,6 +485,12 @@ export default function AppointmentCalendar() {
                       )}
                     </div>
                   ))}
+                  {/* Show hint for empty slots */}
+                  {hourAppointments.length === 0 && (
+                    <div className="flex items-center justify-center h-12 text-gray-400 opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="text-sm">Click to add appointment</div>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -351,12 +571,8 @@ export default function AppointmentCalendar() {
       {/* Calendar Content */}
       <div className="p-6">
         {view === 'month' && renderMonthView()}
+        {view === 'week' && renderWeekView()}
         {view === 'day' && renderDayView()}
-        {view === 'week' && (
-          <div className="text-center py-8 text-gray-500">
-            Week view coming soon...
-          </div>
-        )}
       </div>
 
       {/* Legend */}
@@ -383,6 +599,19 @@ export default function AppointmentCalendar() {
           onClose={handleCloseModal}
           onSave={handleCreateAppointment}
           isLoading={isCreatingAppointment}
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+        />
+      )}
+
+      {/* Edit Appointment Modal */}
+      {showEditAppointmentModal && selectedAppointment && (
+        <AppointmentModal
+          onClose={handleCloseModal}
+          onSave={handleUpdateAppointment}
+          isLoading={isCreatingAppointment}
+          appointment={selectedAppointment}
+          isEditing={true}
         />
       )}
     </div>

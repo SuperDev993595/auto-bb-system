@@ -48,6 +48,24 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware to check if user is any type of Admin (admin or super_admin)
+const requireAnyAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
+  if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Admin access required' 
+    });
+  }
+  next();
+};
+
 // Middleware to check if user is Customer
 const requireCustomer = (req, res, next) => {
   if (!req.user) {
@@ -114,6 +132,7 @@ const generateToken = (user) => {
 module.exports = {
   authenticateToken,
   requireAdmin,
+  requireAnyAdmin,
   requireCustomer,
   requireRole,
   hashPassword,
