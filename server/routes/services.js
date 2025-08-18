@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const { ServiceCatalog, WorkOrder, Technician } = require('../models/Service');
 const Customer = require('../models/Customer');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -76,7 +76,7 @@ const technicianSchema = Joi.object({
 // @route   GET /api/services/catalog
 // @desc    Get all service catalog items
 // @access  Private
-router.get('/catalog', requireAdmin, async (req, res) => {
+router.get('/catalog', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -142,7 +142,7 @@ router.get('/catalog', requireAdmin, async (req, res) => {
 // @route   POST /api/services/catalog
 // @desc    Create new service catalog item
 // @access  Private
-router.post('/catalog', requireAdmin, async (req, res) => {
+router.post('/catalog', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = serviceCatalogSchema.validate(req.body);
@@ -182,7 +182,7 @@ router.post('/catalog', requireAdmin, async (req, res) => {
 // @route   PUT /api/services/catalog/:id
 // @desc    Update service catalog item
 // @access  Private
-router.put('/catalog/:id', requireAdmin, async (req, res) => {
+router.put('/catalog/:id', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = serviceCatalogSchema.validate(req.body);
@@ -226,7 +226,7 @@ router.put('/catalog/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/services/catalog/:id
 // @desc    Delete service catalog item
 // @access  Private
-router.delete('/catalog/:id', requireAdmin, async (req, res) => {
+router.delete('/catalog/:id', requireAnyAdmin, async (req, res) => {
   try {
     const service = await ServiceCatalog.findById(req.params.id);
     if (!service) {
@@ -256,7 +256,7 @@ router.delete('/catalog/:id', requireAdmin, async (req, res) => {
 // @route   GET /api/services/workorders
 // @desc    Get all work orders
 // @access  Private
-router.get('/workorders', requireAdmin, async (req, res) => {
+router.get('/workorders', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -331,7 +331,7 @@ router.get('/workorders', requireAdmin, async (req, res) => {
 // @route   POST /api/services/workorders
 // @desc    Create new work order
 // @access  Private
-router.post('/workorders', requireAdmin, async (req, res) => {
+router.post('/workorders', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = workOrderSchema.validate(req.body);
@@ -392,7 +392,7 @@ router.post('/workorders', requireAdmin, async (req, res) => {
 // @route   PUT /api/services/workorders/:id/status
 // @desc    Update work order status
 // @access  Private
-router.put('/workorders/:id/status', requireAdmin, async (req, res) => {
+router.put('/workorders/:id/status', requireAnyAdmin, async (req, res) => {
   try {
     const { status, notes } = req.body;
 
@@ -431,7 +431,7 @@ router.put('/workorders/:id/status', requireAdmin, async (req, res) => {
 // @route   GET /api/services/technicians
 // @desc    Get all technicians
 // @access  Private
-router.get('/technicians', requireAdmin, async (req, res) => {
+router.get('/technicians', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -496,7 +496,7 @@ router.get('/technicians', requireAdmin, async (req, res) => {
 // @route   POST /api/services/technicians
 // @desc    Create new technician
 // @access  Private
-router.post('/technicians', requireAdmin, async (req, res) => {
+router.post('/technicians', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = technicianSchema.validate(req.body);
@@ -536,7 +536,7 @@ router.post('/technicians', requireAdmin, async (req, res) => {
 // @route   PUT /api/services/technicians/:id
 // @desc    Update technician
 // @access  Private
-router.put('/technicians/:id', requireAdmin, async (req, res) => {
+router.put('/technicians/:id', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = technicianSchema.validate(req.body);
@@ -580,7 +580,7 @@ router.put('/technicians/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/services/technicians/:id
 // @desc    Delete technician
 // @access  Private
-router.delete('/technicians/:id', requireAdmin, async (req, res) => {
+router.delete('/technicians/:id', requireAnyAdmin, async (req, res) => {
   try {
     const technician = await Technician.findById(req.params.id);
     if (!technician) {
