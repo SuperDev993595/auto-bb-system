@@ -81,6 +81,21 @@ export interface WorkOrder {
   updatedAt: string;
 }
 
+// Form data interface for the modal
+export interface WorkOrderFormData {
+  customerId: string;
+  serviceId: string;
+  vehicleId: string;
+  technicianId: string;
+  priority: WorkOrder['priority'];
+  estimatedStartDate: string;
+  estimatedEndDate: string;
+  laborHours: number;
+  laborRate: number;
+  partsCost: number;
+  notes: string;
+}
+
 export interface CreateWorkOrderData {
   customer: string;
   vehicle: {

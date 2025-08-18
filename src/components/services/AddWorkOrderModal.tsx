@@ -4,7 +4,7 @@ import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClipboardList } from 'react-icons/hi'
 import { createWorkOrder } from '../../redux/actions/services'
 import { useAppDispatch, useAppSelector } from '../../redux'
-import { CreateWorkOrderData, ServiceCatalogItem, Technician } from '../../services/services'
+import { WorkOrderFormData, CreateWorkOrderData, ServiceCatalogItem, Technician } from '../../services/services'
 
 interface Props {
   onClose: () => void
@@ -17,7 +17,7 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
   const { list: customers } = useAppSelector(state => state.customers)
   
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<CreateWorkOrderData>({
+  const [formData, setFormData] = useState<WorkOrderFormData>({
     customerId: '',
     serviceId: '',
     vehicleId: '',
@@ -35,7 +35,7 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
   const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
   const customerVehicles = selectedCustomer?.vehicles || []
 
-  const handleInputChange = (field: keyof CreateWorkOrderData, value: any) => {
+  const handleInputChange = (field: keyof WorkOrderFormData, value: any) => {
     setFormData(prev => ({ 
       ...prev, 
       [field]: value,
