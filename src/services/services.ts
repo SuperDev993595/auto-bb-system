@@ -82,16 +82,34 @@ export interface WorkOrder {
 }
 
 export interface CreateWorkOrderData {
-  customerId: string;
-  serviceId: string;
-  vehicleId: string;
-  technicianId?: string;
+  customer: string;
+  vehicle: {
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+    licensePlate: string;
+    mileage: number;
+  };
+  services: Array<{
+    service: string;
+    description: string;
+    laborHours: number;
+    laborRate: number;
+    parts: Array<{
+      name: string;
+      partNumber?: string;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+      inStock: boolean;
+    }>;
+    totalCost: number;
+  }>;
+  technician?: string;
   priority?: WorkOrder['priority'];
   estimatedStartDate: string;
-  estimatedEndDate: string;
-  laborHours: number;
-  laborRate: number;
-  partsCost?: number;
+  estimatedCompletionDate: string;
   notes?: string;
 }
 
@@ -224,34 +242,34 @@ export interface TechnicianStats {
 
 class ServiceManagementService {
   // Service Catalog Methods
-  async getServiceCatalog(filters: ServiceCatalogFilters = {}): Promise<apiResponse<{ data: ServiceCatalogItem[]; pagination: any }>> {
+  async getServiceCatalog(filters: ServiceCatalogFilters = {}): Promise<{ data: ServiceCatalogItem[]; pagination: any }> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.append(key, value.toString());
       }
     });
-    return api.get(`/services/catalog?${params.toString()}`);
+    return apiResponse(api.get(`/services/catalog?${params.toString()}`));
   }
 
-  async getServiceCatalogItem(id: string): Promise<apiResponse<ServiceCatalogItem>> {
-    return api.get(`/services/catalog/${id}`);
+  async getServiceCatalogItem(id: string): Promise<ServiceCatalogItem> {
+    return apiResponse(api.get(`/services/catalog/${id}`));
   }
 
-  async createServiceCatalogItem(data: CreateServiceCatalogData): Promise<apiResponse<ServiceCatalogItem>> {
-    return api.post('/services/catalog', data);
+  async createServiceCatalogItem(data: CreateServiceCatalogData): Promise<ServiceCatalogItem> {
+    return apiResponse(api.post('/services/catalog', data));
   }
 
-  async updateServiceCatalogItem(id: string, data: UpdateServiceCatalogData): Promise<apiResponse<ServiceCatalogItem>> {
-    return api.put(`/services/catalog/${id}`, data);
+  async updateServiceCatalogItem(id: string, data: UpdateServiceCatalogData): Promise<ServiceCatalogItem> {
+    return apiResponse(api.put(`/services/catalog/${id}`, data));
   }
 
-  async deleteServiceCatalogItem(id: string): Promise<apiResponse<{ message: string }>> {
-    return api.delete(`/services/catalog/${id}`);
+  async deleteServiceCatalogItem(id: string): Promise<{ message: string }> {
+    return apiResponse(api.delete(`/services/catalog/${id}`));
   }
 
-  async getServiceCatalogStats(): Promise<apiResponse<ServiceStats>> {
-    return api.get('/services/catalog/stats/overview');
+  async getServiceCatalogStats(): Promise<ServiceStats> {
+    return apiResponse(api.get('/services/catalog/stats/overview'));
   }
 
   // Work Order Methods
@@ -269,8 +287,8 @@ class ServiceManagementService {
     return api.get(`/services/workorders/${id}`);
   }
 
-  async createWorkOrder(data: CreateWorkOrderData): Promise<apiResponse<WorkOrder>> {
-    return api.post('/services/workorders', data);
+  async createWorkOrder(data: CreateWorkOrderData): Promise<WorkOrder> {
+    return apiResponse(api.post('/services/workorders', data));
   }
 
   async updateWorkOrder(id: string, data: UpdateWorkOrderData): Promise<apiResponse<WorkOrder>> {

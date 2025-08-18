@@ -31,8 +31,17 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
     notes: ''
   })
 
+  // Get selected customer's vehicles
+  const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
+  const customerVehicles = selectedCustomer?.vehicles || []
+
   const handleInputChange = (field: keyof CreateWorkOrderData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: value,
+      // Reset vehicleId when customer changes
+      ...(field === 'customerId' && { vehicleId: '' })
+    }))
   }
 
   const handleSubmit = async () => {
@@ -41,10 +50,46 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
       return
     }
 
+    // Get the selected customer, service, and vehicle data
+    const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
+    const selectedService = catalog?.find(service => service._id === formData.serviceId)
+    const selectedVehicle = selectedCustomer?.vehicles?.find(vehicle => vehicle._id === formData.vehicleId)
+
+    if (!selectedCustomer || !selectedService || !selectedVehicle) {
+      toast.error('Invalid selection. Please try again.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await dispatch(createWorkOrder(formData)).unwrap()
+      // Transform data to match backend expectations
+      const workOrderData = {
+        customer: formData.customerId,
+        vehicle: {
+          make: selectedVehicle.make,
+          model: selectedVehicle.model,
+          year: selectedVehicle.year,
+          vin: selectedVehicle.vin,
+          licensePlate: selectedVehicle.licensePlate,
+          mileage: selectedVehicle.mileage
+        },
+        services: [{
+          service: formData.serviceId,
+          description: selectedService.description,
+          laborHours: formData.laborHours,
+          laborRate: formData.laborRate,
+          parts: [],
+          totalCost: (formData.laborHours * formData.laborRate) + (formData.partsCost || 0)
+        }],
+        technician: formData.technicianId || undefined,
+        priority: formData.priority,
+        estimatedStartDate: formData.estimatedStartDate,
+        estimatedCompletionDate: formData.estimatedEndDate,
+        notes: formData.notes
+      }
+
+      await dispatch(createWorkOrder(workOrderData)).unwrap()
       toast.success('Work order created successfully')
       onSuccess()
       onClose()
@@ -113,12 +158,22 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
             onChange={(e) => handleInputChange('vehicleId', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
+            disabled={!formData.customerId}
           >
-            <option value="">Select Vehicle</option>
-            {/* This would need to be populated based on selected customer */}
-            <option value="vehicle1">Vehicle 1</option>
-            <option value="vehicle2">Vehicle 2</option>
+            <option value="">
+              {!formData.customerId ? 'Select Customer First' : 'Select Vehicle'}
+            </option>
+            {customerVehicles.map(vehicle => (
+              <option key={vehicle._id} value={vehicle._id}>
+                {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+              </option>
+            ))}
           </select>
+          {formData.customerId && customerVehicles.length === 0 && (
+            <p className="text-sm text-gray-500 mt-1">
+              No vehicles found for this customer. Please add vehicles to the customer profile first.
+            </p>
+          )}
         </div>
 
         <div>
