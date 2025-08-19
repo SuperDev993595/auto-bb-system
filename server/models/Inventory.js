@@ -194,24 +194,9 @@ const purchaseOrderSchema = new mongoose.Schema({
     unique: true
   },
   supplier: {
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    contact: {
-      type: String,
-      trim: true
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true
-    },
-    phone: {
-      type: String,
-      trim: true
-    }
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Supplier',
+    required: true
   },
   items: [{
     item: {

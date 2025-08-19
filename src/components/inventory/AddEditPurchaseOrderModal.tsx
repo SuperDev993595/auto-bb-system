@@ -21,12 +21,7 @@ interface PurchaseOrderItem {
 
 interface CreatePurchaseOrderData {
   poNumber?: string;
-  supplier: {
-    name: string;
-    contact?: string;
-    email?: string;
-    phone?: string;
-  };
+  supplier: string;
   items: PurchaseOrderItem[];
   expectedDeliveryDate?: string;
   tax?: number;
@@ -36,12 +31,7 @@ interface CreatePurchaseOrderData {
 
 interface UpdatePurchaseOrderData {
   poNumber?: string;
-  supplier?: {
-    name: string;
-    contact?: string;
-    email?: string;
-    phone?: string;
-  };
+  supplier?: string;
   items?: PurchaseOrderItem[];
   expectedDeliveryDate?: string;
   tax?: number;
@@ -55,12 +45,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   
   const [formData, setFormData] = useState<CreatePurchaseOrderData>({
     poNumber: '',
-    supplier: {
-      name: '',
-      contact: '',
-      email: '',
-      phone: ''
-    },
+    supplier: '',
     items: [],
     expectedDeliveryDate: '',
     tax: 0,
@@ -75,12 +60,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     if (purchaseOrder && mode === 'edit') {
       setFormData({
         poNumber: purchaseOrder.poNumber || '',
-        supplier: {
-          name: purchaseOrder.supplierName,
-          contact: '',
-          email: '',
-          phone: ''
-        },
+        supplier: purchaseOrder.supplierId || purchaseOrder.supplier || '',
         items: purchaseOrder.items || [],
         expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : '',
         tax: 0,
@@ -90,12 +70,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     } else {
       setFormData({
         poNumber: '',
-        supplier: {
-          name: '',
-          contact: '',
-          email: '',
-          phone: ''
-        },
+        supplier: '',
         items: [],
         expectedDeliveryDate: '',
         tax: 0,
@@ -109,7 +84,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.supplier.name.trim()) newErrors.supplierName = 'Supplier is required';
+    if (!formData.supplier.trim()) newErrors.supplierName = 'Supplier is required';
     if (formData.items.length === 0) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
@@ -229,17 +204,11 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                 Supplier *
               </label>
               <select
-                value={formData.supplier.name}
+                value={formData.supplier}
                 onChange={(e) => {
-                  const selectedSupplier = (suppliers && Array.isArray(suppliers) ? suppliers : []).find(s => s.name === e.target.value);
                   setFormData(prev => ({
                     ...prev,
-                    supplier: {
-                      name: e.target.value,
-                      contact: selectedSupplier?.contactPerson?.name || '',
-                      email: selectedSupplier?.email || '',
-                      phone: selectedSupplier?.phone || ''
-                    }
+                    supplier: e.target.value
                   }));
                   if (errors.supplierName) {
                     setErrors(prev => ({ ...prev, supplierName: '' }));
@@ -251,7 +220,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
               >
                 <option value="">Select supplier</option>
                 {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => (
-                  <option key={supplier._id || supplier.id} value={supplier.name}>
+                  <option key={supplier._id || supplier.id} value={supplier._id || supplier.id}>
                     {supplier.name}
                   </option>
                 ))}

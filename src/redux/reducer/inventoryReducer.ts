@@ -59,8 +59,9 @@ export interface Supplier {
 
 export interface PurchaseOrder {
   id: string
-  supplierId: string
-  supplierName: string
+  poNumber: string
+  supplier: string
+  supplierName?: string
   orderDate: string
   expectedDate?: string
   receivedDate?: string
@@ -74,12 +75,10 @@ export interface PurchaseOrder {
 }
 
 export interface PurchaseOrderItem {
-  itemId: string
-  partNumber: string
-  name: string
+  item: string
   quantity: number
-  unitCost: number
-  totalCost: number
+  unitPrice: number
+  totalPrice: number
 }
 
 interface InventoryState {
@@ -187,30 +186,30 @@ const inventorySlice = createSlice({
         if (action.payload.status === 'received') {
           po.receivedDate = new Date().toISOString()
           
-          // Add received items to inventory
-          po.items.forEach(poItem => {
-            const transaction: InventoryTransaction = {
-              id: `txn_${Date.now()}_${poItem.itemId}`,
-              itemId: poItem.itemId,
-              type: 'purchase',
-              quantity: poItem.quantity,
-              unitCost: poItem.unitCost,
-              totalCost: poItem.totalCost,
-              date: new Date().toISOString(),
-              reference: po.id,
-              notes: `Received from ${po.supplierName}`,
-              employeeId: 'system',
-              employeeName: 'System'
-            }
-            state.transactions.push(transaction)
-            
-            // Update inventory quantity
-            const item = state.items.find(item => item.id === poItem.itemId)
-            if (item) {
-              item.quantityOnHand += poItem.quantity
-              item.lastUpdated = new Date().toISOString()
-            }
-          })
+                      // Add received items to inventory
+            po.items.forEach(poItem => {
+              const transaction: InventoryTransaction = {
+                id: `txn_${Date.now()}_${poItem.item}`,
+                itemId: poItem.item,
+                type: 'purchase',
+                quantity: poItem.quantity,
+                unitCost: poItem.unitPrice,
+                totalCost: poItem.totalPrice,
+                date: new Date().toISOString(),
+                reference: po.id,
+                notes: `Received from ${po.supplierName}`,
+                employeeId: 'system',
+                employeeName: 'System'
+              }
+              state.transactions.push(transaction)
+              
+              // Update inventory quantity
+              const item = state.items.find(item => item.id === poItem.item)
+              if (item) {
+                item.quantityOnHand += poItem.quantity
+                item.lastUpdated = new Date().toISOString()
+              }
+            })
         }
       }
     },

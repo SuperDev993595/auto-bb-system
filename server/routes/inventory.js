@@ -42,12 +42,7 @@ const inventoryItemSchema = Joi.object({
 
 const purchaseOrderSchema = Joi.object({
   poNumber: Joi.string().optional(),
-  supplier: Joi.object({
-    name: Joi.string().required(),
-    contact: Joi.string().optional(),
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional()
-  }).required(),
+  supplier: Joi.string().required(),
   items: Joi.array().items(Joi.object({
     item: Joi.string().required(),
     quantity: Joi.number().min(1).required(),
@@ -536,6 +531,7 @@ router.get('/purchase-orders', requireAnyAdmin, async (req, res) => {
     // Execute query with pagination
     const purchaseOrders = await PurchaseOrder.find(query)
       .populate('items.item', 'name partNumber sku')
+      .populate('supplier', 'name contactPerson email phone')
       .populate('createdBy', 'name email')
       .sort(sort)
       .limit(limit * 1)
@@ -592,6 +588,7 @@ router.post('/purchase-orders', requireAnyAdmin, async (req, res) => {
 
     // Populate references
     await purchaseOrder.populate('items.item', 'name partNumber sku');
+    await purchaseOrder.populate('supplier', 'name contactPerson email phone');
     await purchaseOrder.populate('createdBy', 'name email');
 
     res.status(201).json({
@@ -1030,6 +1027,7 @@ router.get('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
   try {
     const purchaseOrder = await PurchaseOrder.findById(req.params.id)
       .populate('items.item', 'name partNumber sku')
+      .populate('supplier', 'name contactPerson email phone')
       .populate('createdBy', 'name email');
 
     if (!purchaseOrder) {
@@ -1079,6 +1077,7 @@ router.put('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
     await purchaseOrder.save();
 
     await purchaseOrder.populate('items.item', 'name partNumber sku');
+    await purchaseOrder.populate('supplier', 'name contactPerson email phone');
     await purchaseOrder.populate('createdBy', 'name email');
 
     res.json({
