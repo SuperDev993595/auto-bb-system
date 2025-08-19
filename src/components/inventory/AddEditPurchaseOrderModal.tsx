@@ -195,7 +195,10 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   };
 
   const handleItemSelect = (index: number, itemId: string) => {
-    const selectedItem = (items && Array.isArray(items) ? items : []).find(item => (item._id || item.id) === itemId);
+    const selectedItem = (items && Array.isArray(items) ? items : []).find(item => {
+      const currentItemId = item._id || item.id;
+      return currentItemId === itemId;
+    });
     if (selectedItem) {
       updateItem(index, 'itemId', itemId);
       updateItem(index, 'unitPrice', selectedItem.costPrice || 0);
@@ -273,12 +276,15 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                   errors.supplierName ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
-                <option value="">Select supplier</option>
-                {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
+                                 <option value="">Select supplier</option>
+                 {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => {
+                   const supplierId = supplier._id || supplier.id;
+                   return (
+                     <option key={supplierId} value={supplierId}>
+                       {supplier.name}
+                     </option>
+                   );
+                 })}
               </select>
               {errors.supplierName && <p className="mt-1 text-sm text-red-600">{errors.supplierName}</p>}
             </div>
@@ -374,18 +380,21 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Item *
                     </label>
-                    <select
-                      value={item.itemId}
-                      onChange={(e) => handleItemSelect(index, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select item</option>
-                      {(items && Array.isArray(items) ? items : []).map(inventoryItem => (
-                        <option key={inventoryItem.id} value={inventoryItem.id}>
-                          {inventoryItem.name} - {inventoryItem.partNumber}
-                        </option>
-                      ))}
-                    </select>
+                                         <select
+                       value={item.itemId}
+                       onChange={(e) => handleItemSelect(index, e.target.value)}
+                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     >
+                       <option value="">Select item</option>
+                       {(items && Array.isArray(items) ? items : []).map(inventoryItem => {
+                         const itemId = inventoryItem._id || inventoryItem.id;
+                         return (
+                           <option key={itemId} value={itemId}>
+                             {inventoryItem.name} - {inventoryItem.partNumber}
+                           </option>
+                         );
+                       })}
+                     </select>
                   </div>
 
                   <div>

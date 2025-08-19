@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { InventoryItem } from '../../utils/CustomerTypes'
+
+// Extend InventoryItem to include _id for backend compatibility
+interface ExtendedInventoryItem extends InventoryItem {
+  _id?: string
+}
 import {
   fetchInventoryItems,
   fetchInventoryTransactions,
@@ -33,6 +38,7 @@ export interface InventoryTransaction {
 }
 
 export interface Supplier {
+  _id?: string
   id: string
   name: string
   contactPerson: {
@@ -82,7 +88,7 @@ export interface PurchaseOrderItem {
 }
 
 interface InventoryState {
-  items: InventoryItem[]
+  items: ExtendedInventoryItem[]
   transactions: InventoryTransaction[]
   suppliers: Supplier[]
   purchaseOrders: PurchaseOrder[]
