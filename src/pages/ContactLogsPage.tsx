@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
 import { fetchCommunicationLogs, createCommunicationLog, updateCommunicationLog, deleteCommunicationLog, fetchCommunicationStats } from '../redux/actions/communicationLogs'
+import { fetchCustomers } from '../redux/actions/customers'
 import PageTitle from '../components/Shared/PageTitle'
 import CreateCommunicationLogModal from '../components/CommunicationLogs/CreateCommunicationLogModal'
 import EditCommunicationLogModal from '../components/CommunicationLogs/EditCommunicationLogModal'
@@ -37,6 +38,7 @@ export default function ContactLogsPage() {
   useEffect(() => {
     dispatch(fetchCommunicationLogs({}))
     dispatch(fetchCommunicationStats())
+    dispatch(fetchCustomers({})) // Ensure customers are loaded
   }, [dispatch])
 
   const filteredLogs = communicationLogs.filter(log => {
@@ -83,7 +85,10 @@ export default function ContactLogsPage() {
   const handleUpdateLog = (data: any) => {
     if (!editingLog) return
     
-    dispatch(updateCommunicationLog({ id: editingLog.id, logData: data })).then((result) => {
+    // Use id if available, otherwise fall back to _id
+    const logId = editingLog.id || (editingLog as any)._id
+    
+    dispatch(updateCommunicationLog({ id: logId, logData: data })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setShowEditModal(false)
         setEditingLog(null)
@@ -102,7 +107,17 @@ export default function ContactLogsPage() {
   }
 
   const getCustomerName = (customerId: string) => {
-    const customer = customers.find(c => c._id === customerId)
+    // Debug: Log the customerId and available customers
+    console.log('Looking for customer with ID:', customerId)
+    console.log('Available customers:', customers)
+    
+    // Try to find customer by _id (from Customer interface in services)
+    const customer = customers.find(c => (c as any)._id === customerId)
+    
+    if (!customer) {
+      console.log('Customer not found for ID:', customerId)
+    }
+    
     return customer?.name || 'Unknown Customer'
   }
 
@@ -247,12 +262,12 @@ export default function ContactLogsPage() {
                        >
                          Edit
                        </button>
-                       <button 
-                         onClick={() => setDeleteLogId(log.id)}
-                         className="text-red-600 hover:text-red-800"
-                       >
-                         Delete
-                       </button>
+                                            <button 
+                       onClick={() => setDeleteLogId(log.id || (log as any)._id)}
+                       className="text-red-600 hover:text-red-800"
+                     >
+                       Delete
+                     </button>
                      </div>
                   </div>
                   

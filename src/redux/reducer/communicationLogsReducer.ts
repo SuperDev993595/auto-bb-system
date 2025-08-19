@@ -68,7 +68,12 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(fetchCommunicationLogs.fulfilled, (state, action) => {
         state.loading = false
-        state.logs = action.payload.data || []
+        // Map _id to id for consistency with frontend interface
+        const logsWithId = (action.payload.data || []).map((log: any) => ({
+          ...log,
+          id: log._id || log.id
+        }))
+        state.logs = logsWithId
         state.pagination = action.payload.pagination || {
           currentPage: 1,
           totalPages: 1,

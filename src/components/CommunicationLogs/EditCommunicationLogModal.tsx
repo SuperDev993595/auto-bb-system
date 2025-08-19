@@ -75,7 +75,7 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
   }
 
   return (
-    <ModalWrapper onClose={onClose} title="Edit Communication Log">
+    <ModalWrapper onClose={onClose} title="Edit Communication Log" onSubmit={handleSubmit}>
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Customer *</label>
@@ -219,23 +219,7 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+
       </div>
     </ModalWrapper>
   )
