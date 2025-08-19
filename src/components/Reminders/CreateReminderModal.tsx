@@ -3,7 +3,7 @@ import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers } from '../../redux/actions/customers'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClock, HiUser, HiMail, HiPhone, HiCalendar } from 'react-icons/hi'
-import { Reminder } from '../../utils/CustomerTypes'
+import { Reminder, Customer } from '../../utils/CustomerTypes'
 
 interface CreateReminderData {
   customerId: string
@@ -42,7 +42,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   // Load customers if not already loaded
   useEffect(() => {
     if (!customers || customers.length === 0) {
-      dispatch(fetchCustomers())
+      dispatch(fetchCustomers({}))
     }
   }, [dispatch, customers])
 
@@ -54,11 +54,11 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   }
 
   const handleCustomerChange = (customerId: string) => {
-    const customer = customers?.find(c => c.id === customerId)
+    const customer = customers?.find(c => c._id === customerId)
     setFormData(prev => ({
       ...prev,
       customerId,
-      customerName: customer ? `${customer.firstName} ${customer.lastName}` : ''
+      customerName: customer ? customer.name : ''
     }))
   }
 
@@ -81,19 +81,14 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   }
 
   return (
-    <ModalWrapper onClose={onClose}>
-      <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">Create New Reminder</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <HiClock className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="space-y-6">
+    <ModalWrapper 
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      title="Create New Reminder"
+      icon={<HiClock className="w-5 h-5" />}
+      submitLabel={isLoading ? 'Creating...' : 'Create Reminder'}
+    >
+      <div className="space-y-6">
           {/* Customer Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -107,8 +102,8 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               <option value="">Select a customer</option>
               {customers && customers.length > 0 ? (
                 customers.map(customer => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.firstName} {customer.lastName} - {customer.email}
+                  <option key={customer._id} value={customer._id}>
+                    {customer.name} - {customer.email}
                   </option>
                 ))
               ) : (
@@ -250,24 +245,6 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
             />
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? 'Creating...' : 'Create Reminder'}
-          </button>
-        </div>
-      </div>
     </ModalWrapper>
   )
 }
