@@ -118,7 +118,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         await dispatch(createInventoryItem(formData)).unwrap();
       } else if (item) {
         const updateData: UpdateInventoryItemData = { ...formData };
-        await dispatch(updateInventoryItem({ id: item.id, itemData: updateData })).unwrap();
+        await dispatch(updateInventoryItem({ id: item._id || item.id, itemData: updateData })).unwrap();
       }
       onClose();
     } catch (error) {

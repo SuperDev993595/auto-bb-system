@@ -110,7 +110,7 @@ export default function InventoryPage() {
   const handleQuantityAdjustment = (itemId: string, newQuantity: number, reason: string) => {
     // This would need to be implemented with a modal or form
     // For now, we'll use the adjustStock action
-    const currentItem = items.find(item => item.id === itemId)
+    const currentItem = items.find(item => (item._id || item.id) === itemId)
     if (currentItem) {
       const difference = newQuantity - currentItem.quantityOnHand
       dispatch(adjustStock({ itemId, quantity: difference, reason }))
@@ -323,10 +323,10 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredItems.map(item => {
+                {filteredItems.map((item, index) => {
                   const stockStatus = getStockStatus(item)
                   return (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item._id || item.id || `item-${index}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{item.name}</div>
@@ -463,10 +463,10 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(transactions && Array.isArray(transactions) ? transactions : []).slice(0, 50).map(transaction => {
-                const item = (items && Array.isArray(items) ? items : []).find(i => i.id === transaction.itemId)
+              {(transactions && Array.isArray(transactions) ? transactions : []).slice(0, 50).map((transaction, index) => {
+                const item = (items && Array.isArray(items) ? items : []).find(i => (i._id || i.id) === transaction.itemId)
                 return (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
+                  <tr key={transaction._id || transaction.id || `transaction-${index}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm text-gray-900">
@@ -539,8 +539,8 @@ export default function InventoryPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).map(supplier => (
-          <div key={supplier.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        {(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).map((supplier, index) => (
+          <div key={supplier._id || supplier.id || `supplier-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">{supplier.name}</h3>
@@ -646,8 +646,8 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).map(po => (
-                <tr key={po.id} className="hover:bg-gray-50">
+              {(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).map((po, index) => (
+                <tr key={po._id || po.id || `po-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">#{po.id}</div>
                   </td>

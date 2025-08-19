@@ -19,7 +19,7 @@ export default function DeleteInventoryModal({ isOpen, onClose, item }: DeleteIn
 
     setIsDeleting(true);
     try {
-      await dispatch(deleteInventoryItem(item.id)).unwrap();
+      await dispatch(deleteInventoryItem(item._id || item.id)).unwrap();
       onClose();
     } catch (error) {
       console.error('Error deleting inventory item:', error);

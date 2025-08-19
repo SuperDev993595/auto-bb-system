@@ -201,6 +201,7 @@ export interface Invoice {
 
 // Inventory Item
 export interface InventoryItem {
+    _id?: string
     id: string
     partNumber: string
     name: string
@@ -261,6 +262,7 @@ export interface UpdateInventoryItemData {
 
 // Inventory Transaction
 export interface InventoryTransaction {
+    _id?: string
     id: string
     itemId: string
     type: 'purchase' | 'usage' | 'adjustment' | 'return' | 'damage' | 'transfer'
@@ -275,6 +277,7 @@ export interface InventoryTransaction {
 
 // Supplier
 export interface Supplier {
+    _id?: string
     id: string
     name: string
     contactPerson: string | { name: string; email: string; phone?: string; position?: string }
@@ -288,6 +291,7 @@ export interface Supplier {
 
 // Purchase Order
 export interface PurchaseOrder {
+    _id?: string
     id: string
     supplierName: string
     orderDate: string
