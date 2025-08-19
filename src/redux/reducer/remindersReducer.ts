@@ -186,7 +186,11 @@ const remindersSlice = createSlice({
       })
       .addCase(fetchReminderTemplates.fulfilled, (state, action) => {
         state.loading = false
-        state.templates = action.payload.data || []
+        // Map _id to id for consistency with frontend interface
+        state.templates = (action.payload.data || []).map((template: any) => ({
+          ...template,
+          id: template._id || template.id
+        }))
       })
       .addCase(fetchReminderTemplates.rejected, (state, action) => {
         state.loading = false
@@ -283,7 +287,12 @@ const remindersSlice = createSlice({
         state.loading = false
         // Add the new template to the list
         if (action.payload) {
-          state.templates.push(action.payload)
+          // Map _id to id for consistency with frontend interface
+          const templateWithId = {
+            ...action.payload,
+            id: action.payload._id || action.payload.id
+          }
+          state.templates.push(templateWithId)
         }
       })
       .addCase(createReminderTemplateThunk.rejected, (state, action) => {
@@ -301,9 +310,14 @@ const remindersSlice = createSlice({
         state.loading = false
         // Update the template in the list
         if (action.payload) {
-          const index = state.templates.findIndex(t => t.id === action.payload.id)
+          // Map _id to id for consistency with frontend interface
+          const templateWithId = {
+            ...action.payload,
+            id: action.payload._id || action.payload.id
+          }
+          const index = state.templates.findIndex(t => t.id === templateWithId.id || (t as any)._id === templateWithId.id)
           if (index !== -1) {
-            state.templates[index] = action.payload
+            state.templates[index] = templateWithId
           }
         }
       })
@@ -321,7 +335,7 @@ const remindersSlice = createSlice({
       .addCase(deleteReminderTemplateThunk.fulfilled, (state, action) => {
         state.loading = false
         // Remove the template from the list
-        state.templates = state.templates.filter(t => t.id !== action.payload)
+        state.templates = state.templates.filter(t => t.id !== action.payload && (t as any)._id !== action.payload)
       })
       .addCase(deleteReminderTemplateThunk.rejected, (state, action) => {
         state.loading = false

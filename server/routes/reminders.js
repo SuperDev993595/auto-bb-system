@@ -3,6 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const Reminder = require('../models/Reminder');
+const ReminderTemplate = require('../models/ReminderTemplate');
 const Customer = require('../models/Customer');
 const Appointment = require('../models/Appointment');
 
@@ -735,6 +736,169 @@ router.post('/bulk', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating bulk reminders:', error);
     res.status(500).json({ success: false, message: 'Failed to create bulk reminders' });
+  }
+});
+
+// ========================================
+// REMINDER TEMPLATES ROUTES
+// ========================================
+
+// Validation schema for reminder templates
+const reminderTemplateSchema = Joi.object({
+  name: Joi.string().required(),
+  type: Joi.string().valid('appointment', 'service_due', 'follow_up', 'payment', 'custom').required(),
+  subject: Joi.string().required(),
+  message: Joi.string().required(),
+  timing: Joi.object({
+    value: Joi.number().min(1).required(),
+    unit: Joi.string().valid('minutes', 'hours', 'days', 'weeks').required(),
+    when: Joi.string().valid('before', 'after').required()
+  }).required(),
+  methods: Joi.array().items(Joi.string().valid('email', 'sms')).min(1).required(),
+  isActive: Joi.boolean().default(true)
+});
+
+// Get all reminder templates
+router.get('/templates', authenticateToken, async (req, res) => {
+  try {
+    const { type, isActive, search } = req.query;
+    
+    const filter = {};
+    
+    if (type) filter.type = type;
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } },
+        { message: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const templates = await ReminderTemplate.find(filter)
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      data: templates
+    });
+  } catch (error) {
+    console.error('Error fetching reminder templates:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch reminder templates' });
+  }
+});
+
+// Get single reminder template by ID
+router.get('/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const template = await ReminderTemplate.findById(req.params.id);
+
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'Reminder template not found' });
+    }
+
+    res.json({ success: true, data: template });
+  } catch (error) {
+    console.error('Error fetching reminder template:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch reminder template' });
+  }
+});
+
+// Create new reminder template
+router.post('/templates', authenticateToken, async (req, res) => {
+  try {
+    const { error, value } = reminderTemplateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const template = new ReminderTemplate({
+      ...value,
+      createdBy: req.user.id
+    });
+
+    await template.save();
+    
+    res.status(201).json({
+      success: true,
+      data: template,
+      message: 'Reminder template created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating reminder template:', error);
+    res.status(500).json({ success: false, message: 'Failed to create reminder template' });
+  }
+});
+
+// Update reminder template
+router.put('/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const { error, value } = reminderTemplateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const template = await ReminderTemplate.findByIdAndUpdate(
+      req.params.id,
+      { ...value, updatedBy: req.user.id },
+      { new: true, runValidators: true }
+    );
+
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'Reminder template not found' });
+    }
+
+    res.json({
+      success: true,
+      data: template,
+      message: 'Reminder template updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating reminder template:', error);
+    res.status(500).json({ success: false, message: 'Failed to update reminder template' });
+  }
+});
+
+// Delete reminder template
+router.delete('/templates/:id', authenticateToken, async (req, res) => {
+  try {
+    const template = await ReminderTemplate.findByIdAndDelete(req.params.id);
+
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'Reminder template not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Reminder template deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting reminder template:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete reminder template' });
+  }
+});
+
+// Toggle reminder template active status
+router.patch('/templates/:id/toggle', authenticateToken, async (req, res) => {
+  try {
+    const template = await ReminderTemplate.findById(req.params.id);
+
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'Reminder template not found' });
+    }
+
+    template.isActive = !template.isActive;
+    template.updatedBy = req.user.id;
+    await template.save();
+
+    res.json({
+      success: true,
+      data: template,
+      message: `Reminder template ${template.isActive ? 'activated' : 'deactivated'} successfully`
+    });
+  } catch (error) {
+    console.error('Error toggling reminder template:', error);
+    res.status(500).json({ success: false, message: 'Failed to toggle reminder template' });
   }
 });
 

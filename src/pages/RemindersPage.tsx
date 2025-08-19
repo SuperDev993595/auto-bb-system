@@ -228,10 +228,24 @@ export default function RemindersPage() {
 
   const handleCreateTemplate = (data: any) => {
     if (editingTemplate) {
-      dispatch(updateReminderTemplate({ id: editingTemplate.id, templateData: data }))
+      console.log('Updating template with data:', data)
+      dispatch(updateReminderTemplate({ id: editingTemplate.id, templateData: data })).then((result) => {
+        console.log('Update template result:', result)
+        if (result.meta.requestStatus === 'fulfilled') {
+          console.log('Template updated successfully, refreshing list...')
+          dispatch(fetchReminderTemplates())
+        }
+      })
       setEditingTemplate(null)
     } else {
-      dispatch(createReminderTemplate(data))
+      console.log('Creating template with data:', data)
+      dispatch(createReminderTemplate(data)).then((result) => {
+        console.log('Create template result:', result)
+        if (result.meta.requestStatus === 'fulfilled') {
+          console.log('Template created successfully, refreshing list...')
+          dispatch(fetchReminderTemplates())
+        }
+      })
     }
     setShowCreateTemplateModal(false)
   }
@@ -248,7 +262,14 @@ export default function RemindersPage() {
           }
         })
       } else {
-        dispatch(deleteReminderTemplate(deleteItem.id))
+        console.log('Deleting template:', deleteItem.id)
+        dispatch(deleteReminderTemplate(deleteItem.id)).then((result) => {
+          console.log('Delete template result:', result)
+          if (result.meta.requestStatus === 'fulfilled') {
+            console.log('Template deleted successfully, refreshing list...')
+            dispatch(fetchReminderTemplates())
+          }
+        })
       }
       setDeleteItem(null)
       setShowDeleteModal(false)
@@ -260,10 +281,17 @@ export default function RemindersPage() {
     // For now, we'll just update the template
     const template = templates.find(t => t.id === id)
     if (template) {
+      console.log('Toggling template:', id, 'isActive:', !template.isActive)
       dispatch(updateReminderTemplate({ 
         id, 
         templateData: { isActive: !template.isActive } 
-      }))
+      })).then((result) => {
+        console.log('Toggle template result:', result)
+        if (result.meta.requestStatus === 'fulfilled') {
+          console.log('Template toggled successfully, refreshing list...')
+          dispatch(fetchReminderTemplates())
+        }
+      })
     }
   }
 
@@ -644,7 +672,7 @@ export default function RemindersPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">{template.name}</h3>
                   <span className="text-sm text-gray-500 capitalize">
-                    {template.type.replace('-', ' ')} reminder
+                    {(template.type || '').replace('-', ' ')} reminder
                   </span>
                 </div>
               </div>
@@ -670,14 +698,14 @@ export default function RemindersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-700">Timing</p>
                 <p className="text-sm text-gray-600">
-                  {template.timing.value} {template.timing.unit} {template.timing.when} event
+                  {template.timing?.value || 0} {template.timing?.unit || 'hours'} {template.timing?.when || 'before'} event
                 </p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-gray-700">Methods</p>
                 <div className="flex gap-2 mt-1">
-                  {template.methods.map(method => (
+                  {(template.methods || []).map(method => (
                     <span key={method} className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                       {method === 'email' ? <HiMail className="w-3 h-3" /> : <HiPhone className="w-3 h-3" />}
                       {method}
@@ -688,12 +716,12 @@ export default function RemindersPage() {
               
               <div>
                 <p className="text-sm font-medium text-gray-700">Subject</p>
-                <p className="text-sm text-gray-600 truncate">{template.subject}</p>
+                <p className="text-sm text-gray-600 truncate">{template.subject || 'No subject'}</p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-gray-700">Message Preview</p>
-                <p className="text-sm text-gray-600 line-clamp-3">{template.message}</p>
+                <p className="text-sm text-gray-600 line-clamp-3">{template.message || 'No message'}</p>
               </div>
             </div>
             
@@ -712,7 +740,7 @@ export default function RemindersPage() {
                   Edit
                 </button>
                 <button 
-                  onClick={() => handleDeleteTemplate(template.id, template.name)}
+                  onClick={() => handleDeleteTemplate(template.id, template.name || 'Unknown Template')}
                   className="text-red-600 hover:text-red-900 text-sm flex items-center gap-1"
                 >
                   <HiTrash className="w-3 h-3" />
