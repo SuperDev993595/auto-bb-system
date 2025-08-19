@@ -18,6 +18,9 @@ import DeleteServiceModal from "../components/services/DeleteServiceModal"
 import AddWorkOrderModal from "../components/services/AddWorkOrderModal"
 import EditWorkOrderModal from "../components/services/EditWorkOrderModal"
 import DeleteWorkOrderModal from "../components/services/DeleteWorkOrderModal"
+import AddTechnicianModal from "../components/services/AddTechnicianModal"
+import EditTechnicianModal from "../components/services/EditTechnicianModal"
+import DeleteTechnicianModal from "../components/services/DeleteTechnicianModal"
 import {
   HiPlus,
   HiPencil,
@@ -43,6 +46,7 @@ export default function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showInactiveTechnicians, setShowInactiveTechnicians] = useState(false)
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false)
@@ -55,6 +59,12 @@ export default function ServicesPage() {
   const [showEditWorkOrderModal, setShowEditWorkOrderModal] = useState(false)
   const [showDeleteWorkOrderModal, setShowDeleteWorkOrderModal] = useState(false)
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+
+  // Technician modal states
+  const [showAddTechnicianModal, setShowAddTechnicianModal] = useState(false)
+  const [showEditTechnicianModal, setShowEditTechnicianModal] = useState(false)
+  const [showDeleteTechnicianModal, setShowDeleteTechnicianModal] = useState(false)
+  const [selectedTechnician, setSelectedTechnician] = useState<Technician | null>(null)
 
   const { 
     catalog, 
@@ -181,6 +191,11 @@ export default function ServicesPage() {
     dispatch(fetchWorkOrderStats({}))
   }
 
+  const handleTechnicianSuccess = () => {
+    dispatch(fetchTechnicians({}))
+    dispatch(fetchTechnicianStats())
+  }
+
   // Statistics calculations with safety checks
   const totalServices = (Array.isArray(catalog) ? catalog.length : 0)
   const activeServices = (Array.isArray(catalog) ? catalog.filter(s => s && s.isActive).length : 0)
@@ -188,6 +203,7 @@ export default function ServicesPage() {
   const completedWorkOrders = (Array.isArray(workOrders) ? workOrders.filter(w => w && w.status === 'completed').length : 0)
   const totalTechnicians = (Array.isArray(technicians) ? technicians.length : 0)
   const activeTechnicians = (Array.isArray(technicians) ? technicians.filter(t => t && t.isActive).length : 0)
+  const inactiveTechnicians = (Array.isArray(technicians) ? technicians.filter(t => t && !t.isActive).length : 0)
 
   const renderStatistics = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -226,6 +242,9 @@ export default function ServicesPage() {
             <p className="text-sm font-medium text-gray-600">Technicians</p>
             <p className="text-2xl font-bold text-gray-900">{totalTechnicians}</p>
             <p className="text-sm text-green-600">{activeTechnicians} active</p>
+            {inactiveTechnicians > 0 && (
+              <p className="text-sm text-gray-500">{inactiveTechnicians} inactive</p>
+            )}
           </div>
           <div className="p-3 bg-purple-100 rounded-full">
             <HiUsers className="w-6 h-6 text-purple-600" />
@@ -523,80 +542,145 @@ export default function ServicesPage() {
           <h2 className="text-xl font-semibold text-gray-800">Technicians</h2>
           <p className="text-gray-600">Manage your service technicians</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={() => setShowAddTechnicianModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Add Technician
         </button>
       </div>
 
-      {/* Technicians Grid */}
+      {/* Filter Toggle */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={showInactiveTechnicians}
+                onChange={(e) => setShowInactiveTechnicians(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Show inactive technicians</span>
+            </label>
+            {inactiveTechnicians > 0 && (
+              <span className="text-sm text-gray-500">({inactiveTechnicians} inactive)</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+            {/* Technicians Grid */}
       {techniciansLoading ? (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-             ) : (technicians || []).filter(tech => tech && tech.isActive).length === 0 ? (
-        <div className="text-center py-12">
-          <HiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No technicians found</h3>
-          <p className="text-gray-600 mb-4">Get started by adding your first technician</p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Add First Technician
-          </button>
-        </div>
-      ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-           {(technicians || []).filter(tech => tech && tech.isActive).map(technician => (
-            <div key={technician._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <HiUser className="w-6 h-6 text-blue-600" />
-                  </div>
-                                     <div>
-                     <h3 className="text-lg font-semibold text-gray-800">{technician.name || 'Unknown'}</h3>
-                     <p className="text-gray-600 text-sm">{technician.email || 'No email'}</p>
-                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
-                    <HiPencil className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                                 <div className="flex items-center justify-between">
-                   <span className="text-gray-500">Phone</span>
-                   <span className="font-medium">{technician.phone || 'N/A'}</span>
-                 </div>
-                 <div className="flex items-center justify-between">
-                   <span className="text-gray-500">Hourly Rate</span>
-                   <span className="font-medium">${technician.hourlyRate || 0}/hr</span>
-                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Specializations</span>
-                  <span className="font-medium">{(technician.specialization || []).length} areas</span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex flex-wrap gap-1">
-                  {(technician.specialization || []).slice(0, 3).map((spec: string) => (
-                    <span key={spec} className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                      {spec}
-                    </span>
-                  ))}
-                  {(technician.specialization || []).length > 3 && (
-                    <span className="inline-block text-gray-500 text-xs px-2 py-1">
-                      +{(technician.specialization || []).length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
+      ) : (() => {
+        const filteredTechnicians = (technicians || []).filter(tech => 
+          tech && (showInactiveTechnicians ? true : tech.isActive)
+        )
+        
+        if (filteredTechnicians.length === 0) {
+          return (
+            <div className="text-center py-12">
+              <HiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {showInactiveTechnicians ? 'No technicians found' : 'No active technicians found'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {showInactiveTechnicians 
+                  ? 'Get started by adding your first technician'
+                  : 'All technicians are currently inactive'
+                }
+              </p>
+              <button 
+                onClick={() => setShowAddTechnicianModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Add First Technician
+              </button>
             </div>
-          ))}
-        </div>
-      )}
+          )
+        }
+        
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTechnicians.map(technician => (
+              <div key={technician._id} className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${!technician.isActive ? 'opacity-60' : ''}`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <HiUser className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800">{technician.name || 'Unknown'}</h3>
+                      <p className="text-gray-600 text-sm">{technician.email || 'No email'}</p>
+                      {!technician.isActive && (
+                        <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full mt-1">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        setSelectedTechnician(technician)
+                        setShowEditTechnicianModal(true)
+                      }}
+                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Edit technician"
+                    >
+                      <HiPencil className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setSelectedTechnician(technician)
+                        setShowDeleteTechnicianModal(true)
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete technician"
+                    >
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Phone</span>
+                    <span className="font-medium">{technician.phone || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Hourly Rate</span>
+                    <span className="font-medium">${technician.hourlyRate || 0}/hr</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-500">Specializations</span>
+                    <span className="font-medium">{(technician.specialization || []).length} areas</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-1">
+                    {(technician.specialization || []).slice(0, 3).map((spec: string) => (
+                      <span key={spec} className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        {spec}
+                      </span>
+                    ))}
+                    {(technician.specialization || []).length > 3 && (
+                      <span className="inline-block text-gray-500 text-xs px-2 py-1">
+                        +{(technician.specialization || []).length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 
@@ -714,6 +798,36 @@ export default function ServicesPage() {
             setSelectedWorkOrder(null)
           }}
           onSuccess={handleWorkOrderSuccess}
+        />
+      )}
+
+      {/* Technician Modals */}
+      {showAddTechnicianModal && (
+        <AddTechnicianModal
+          onClose={() => setShowAddTechnicianModal(false)}
+          onSuccess={handleTechnicianSuccess}
+        />
+      )}
+
+      {showEditTechnicianModal && (
+        <EditTechnicianModal
+          technician={selectedTechnician}
+          onClose={() => {
+            setShowEditTechnicianModal(false)
+            setSelectedTechnician(null)
+          }}
+          onSuccess={handleTechnicianSuccess}
+        />
+      )}
+
+      {showDeleteTechnicianModal && (
+        <DeleteTechnicianModal
+          technician={selectedTechnician}
+          onClose={() => {
+            setShowDeleteTechnicianModal(false)
+            setSelectedTechnician(null)
+          }}
+          onSuccess={handleTechnicianSuccess}
         />
       )}
     </div>

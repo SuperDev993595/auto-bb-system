@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const invoiceSchema = new mongoose.Schema({
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true
   },
   appointmentId: {
@@ -98,6 +98,56 @@ const invoiceSchema = new mongoose.Schema({
     trim: true,
     maxlength: 100
   },
+  payments: [{
+    amount: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ['cash', 'credit_card', 'debit_card', 'check', 'bank_transfer', 'online']
+    },
+    reference: {
+      type: String,
+      trim: true,
+      maxlength: 100
+    },
+    notes: {
+      type: String,
+      maxlength: 500
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    processedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  }],
+  totalPaid: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  paidAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  paidDate: {
+    type: Date
+  },
+  sentBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   notes: {
     type: String,
     maxlength: 1000
@@ -154,6 +204,33 @@ invoiceSchema.virtual('daysOverdue').get(function() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
   return 0;
+});
+
+// Virtual for vehicle (to match frontend expectations)
+invoiceSchema.virtual('vehicle').get(function() {
+  if (this.vehicleId) {
+    return {
+      make: this.vehicleId.make,
+      model: this.vehicleId.model,
+      year: this.vehicleId.year,
+      vin: this.vehicleId.vin,
+      licensePlate: this.vehicleId.licensePlate
+    };
+  }
+  return null;
+});
+
+// Virtual for customer (to match frontend expectations)
+invoiceSchema.virtual('customer').get(function() {
+  if (this.customerId) {
+    return {
+      _id: this.customerId._id,
+      name: this.customerId.name,
+      email: this.customerId.email,
+      phone: this.customerId.phone
+    };
+  }
+  return null;
 });
 
 // Ensure virtual fields are serialized

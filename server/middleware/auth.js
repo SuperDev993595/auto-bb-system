@@ -24,7 +24,6 @@ const authenticateToken = (req, res, next) => {
       });
     }
     
-    console.log('JWT verified user:', user);
     req.user = user;
     next();
   });

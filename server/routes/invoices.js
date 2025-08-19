@@ -9,27 +9,24 @@ const InventoryItem = require('../models/Inventory');
 
 // Validation schemas
 const invoiceItemSchema = Joi.object({
-  itemType: Joi.string().valid('service', 'product').required(),
-  itemId: Joi.string().required(),
   description: Joi.string().required(),
   quantity: Joi.number().positive().required(),
   unitPrice: Joi.number().positive().required(),
-  discount: Joi.number().min(0).default(0),
-  tax: Joi.number().min(0).default(0)
+  total: Joi.number().positive().required()
 });
 
 const invoiceSchema = Joi.object({
   customerId: Joi.string().required(),
   invoiceNumber: Joi.string().required(),
-  issueDate: Joi.date().default(Date.now),
   dueDate: Joi.date().required(),
+  vehicleId: Joi.string().required(),
+  serviceType: Joi.string().required(),
   items: Joi.array().items(invoiceItemSchema).min(1).required(),
   subtotal: Joi.number().positive().required(),
-  taxAmount: Joi.number().min(0).required(),
-  discountAmount: Joi.number().min(0).default(0),
-  totalAmount: Joi.number().positive().required(),
-  status: Joi.string().valid('draft', 'sent', 'paid', 'overdue', 'cancelled').default('draft'),
-  paymentTerms: Joi.string().default('Net 30'),
+  tax: Joi.number().min(0).required(),
+  discount: Joi.number().min(0).default(0),
+  total: Joi.number().positive().required(),
+  status: Joi.string().valid('draft', 'sent', 'paid', 'pending', 'overdue', 'cancelled').default('draft'),
   notes: Joi.string().allow('', null),
   terms: Joi.string().allow('', null)
 });
@@ -65,9 +62,9 @@ router.get('/', authenticateToken, async (req, res) => {
 
     // Get invoices with pagination
     const invoices = await Invoice.find(filter)
-      .populate('customer', 'name email phone')
-      .populate('items.reference', 'name description')
-      .sort({ issueDate: -1 })
+      .populate('customerId', 'name email phone')
+      .populate('vehicleId', 'year make model')
+      .sort({ date: -1 })
       .skip(skip)
       .limit(limitNum);
     
@@ -96,9 +93,9 @@ router.get('/stats/overview', authenticateToken, async (req, res) => {
     
     const filter = {};
     if (startDate || endDate) {
-      filter.issueDate = {};
-      if (startDate) filter.issueDate.$gte = new Date(startDate);
-      if (endDate) filter.issueDate.$lte = new Date(endDate);
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate);
+      if (endDate) filter.date.$lte = new Date(endDate);
     }
 
     const stats = await Invoice.aggregate([
@@ -131,8 +128,8 @@ router.get('/stats/overview', authenticateToken, async (req, res) => {
       {
         $group: {
           _id: {
-            year: { $year: '$issueDate' },
-            month: { $month: '$issueDate' }
+            year: { $year: '$date' },
+            month: { $month: '$date' }
           },
           count: { $sum: 1 },
           totalAmount: { $sum: '$total' },
@@ -174,7 +171,7 @@ router.get('/templates', authenticateToken, async (req, res) => {
         description: 'Basic invoice template for general services',
         fields: [
           { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
-          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'date', type: 'date', required: true, label: 'Issue Date' },
           { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
           { name: 'customerId', type: 'select', required: true, label: 'Customer' },
           { name: 'items', type: 'array', required: true, label: 'Items' },
@@ -196,7 +193,7 @@ router.get('/templates', authenticateToken, async (req, res) => {
         description: 'Comprehensive invoice template with detailed breakdown',
         fields: [
           { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
-          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'date', type: 'date', required: true, label: 'Issue Date' },
           { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
           { name: 'customerId', type: 'select', required: true, label: 'Customer' },
           { name: 'items', type: 'array', required: true, label: 'Items' },
@@ -222,7 +219,7 @@ router.get('/templates', authenticateToken, async (req, res) => {
         description: 'Specialized template for service-based invoices',
         fields: [
           { name: 'invoiceNumber', type: 'text', required: true, label: 'Invoice Number' },
-          { name: 'issueDate', type: 'date', required: true, label: 'Issue Date' },
+          { name: 'date', type: 'date', required: true, label: 'Issue Date' },
           { name: 'dueDate', type: 'date', required: true, label: 'Due Date' },
           { name: 'customerId', type: 'select', required: true, label: 'Customer' },
           { name: 'items', type: 'array', required: true, label: 'Services' },
@@ -253,8 +250,8 @@ router.get('/templates', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id)
-      .populate('customer', 'name email phone address')
-      .populate('items.itemId', 'name description price');
+      .populate('customerId', 'name email phone address')
+      .populate('vehicleId', 'year make model');
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
@@ -287,18 +284,13 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invoice number already exists' });
     }
 
-    // Validate items
+    // Validate items - ensure totals are calculated correctly
     for (const item of value.items) {
-      if (item.itemType === 'service') {
-        const service = await ServiceCatalog.findById(item.itemId);
-        if (!service) {
-          return res.status(400).json({ success: false, message: `Service with ID ${item.itemId} not found` });
-        }
-      } else if (item.itemType === 'product') {
-        const product = await InventoryItem.findById(item.itemId);
-        if (!product) {
-          return res.status(400).json({ success: false, message: `Product with ID ${item.itemId} not found` });
-        }
+      if (item.total !== item.quantity * item.unitPrice) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Item total mismatch: ${item.description}` 
+        });
       }
     }
 
@@ -308,7 +300,8 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     await invoice.save();
-    await invoice.populate('customer', 'name email phone');
+    await invoice.populate('customerId', 'name email phone');
+    await invoice.populate('vehicleId', 'year make model');
 
     res.status(201).json({ success: true, data: invoice });
   } catch (error) {
@@ -345,18 +338,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invoice number already exists' });
     }
 
-    // Validate items
+    // Validate items - ensure totals are calculated correctly
     for (const item of value.items) {
-      if (item.itemType === 'service') {
-        const service = await ServiceCatalog.findById(item.itemId);
-        if (!service) {
-          return res.status(400).json({ success: false, message: `Service with ID ${item.itemId} not found` });
-        }
-      } else if (item.itemType === 'product') {
-        const product = await InventoryItem.findById(item.itemId);
-        if (!product) {
-          return res.status(400).json({ success: false, message: `Product with ID ${item.itemId} not found` });
-        }
+      if (item.total !== item.quantity * item.unitPrice) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Item total mismatch: ${item.description}` 
+        });
       }
     }
 
@@ -365,7 +353,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
     invoice.updatedAt = Date.now();
 
     await invoice.save();
-    await invoice.populate('customer', 'name email phone');
+    await invoice.populate('customerId', 'name email phone');
+    await invoice.populate('vehicleId', 'year make model');
 
     res.json({ success: true, data: invoice });
   } catch (error) {
@@ -375,11 +364,19 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete invoice
-router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).json({ success: false, message: 'Invoice not found' });
+    }
+
+    // Check if user has permission to delete this invoice
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+    const isCreator = invoice.createdBy && invoice.createdBy.toString() === req.user.id;
+    
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ success: false, message: 'You can only delete invoices you created or admin access required' });
     }
 
     // Only allow deletion of draft invoices
@@ -442,7 +439,8 @@ router.post('/:id/payments', authenticateToken, async (req, res) => {
     }
 
     await invoice.save();
-    await invoice.populate('customer', 'name email phone');
+    await invoice.populate('customerId', 'name email phone');
+    await invoice.populate('vehicleId', 'year make model');
 
     res.json({ success: true, data: invoice });
   } catch (error) {
@@ -468,7 +466,8 @@ router.post('/:id/send', authenticateToken, async (req, res) => {
     invoice.sentBy = req.user.id;
 
     await invoice.save();
-    await invoice.populate('customer', 'name email phone');
+    await invoice.populate('customerId', 'name email phone');
+    await invoice.populate('vehicleId', 'year make model');
 
     res.json({ success: true, data: invoice });
   } catch (error) {
@@ -498,9 +497,9 @@ router.post('/mark-overdue', authenticateToken, async (req, res) => {
 
     // Fetch updated invoices
     const updatedInvoices = await Invoice.find()
-      .populate('customer', 'name email phone')
-      .populate('items.reference', 'name description')
-      .sort({ issueDate: -1 });
+      .populate('customerId', 'name email phone')
+      .populate('vehicleId', 'year make model')
+      .sort({ date: -1 });
 
     res.json({ 
       success: true, 

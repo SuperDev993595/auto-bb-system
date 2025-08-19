@@ -19,20 +19,18 @@ export interface CreateInvoiceData {
   customerId: string;
   invoiceNumber: string;
   dueDate: string;
+  vehicleId: string;
+  serviceType: string;
   items: {
-    itemType: 'service' | 'product';
-    itemId: string;
     description: string;
     quantity: number;
     unitPrice: number;
-    discount?: number;
-    tax?: number;
+    total: number;
   }[];
   subtotal: number;
-  taxAmount: number;
-  discountAmount?: number;
-  totalAmount: number;
-  paymentTerms?: string;
+  tax: number;
+  discount?: number;
+  total: number;
   notes?: string;
   terms?: string;
 }
@@ -41,13 +39,14 @@ export interface UpdateInvoiceData {
   customerId?: string;
   invoiceNumber?: string;
   dueDate?: string;
+  vehicleId?: string;
+  serviceType?: string;
   items?: CreateInvoiceData['items'];
   subtotal?: number;
-  taxAmount?: number;
-  discountAmount?: number;
-  totalAmount?: number;
+  tax?: number;
+  discount?: number;
+  total?: number;
   status?: Invoice['status'];
-  paymentTerms?: string;
   notes?: string;
   terms?: string;
 }

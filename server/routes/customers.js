@@ -569,7 +569,7 @@ router.get('/vehicles', authenticateToken, requireCustomer, async (req, res) => 
     
     // Transform vehicles to match frontend expectations
     const transformedVehicles = vehicles.map(vehicle => ({
-      id: vehicle._id,
+      _id: vehicle._id,
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,
@@ -597,7 +597,7 @@ router.get('/vehicles', authenticateToken, requireCustomer, async (req, res) => 
 });
 
 // Get all vehicles (for admins)
-router.get('/vehicles/all', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/vehicles/all', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -638,7 +638,7 @@ router.get('/vehicles/all', authenticateToken, requireAdmin, async (req, res) =>
 
     // Transform vehicles to match frontend expectations
     const transformedVehicles = vehicles.map(vehicle => ({
-      id: vehicle._id,
+      _id: vehicle._id,
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,

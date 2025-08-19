@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
+import { toast } from 'react-hot-toast'
 import {
   fetchInvoices,
   fetchInvoiceStats,
@@ -14,6 +15,9 @@ import {
 } from '../redux/actions/invoices'
 import { Invoice } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
+import AddInvoiceModal from '../components/invoices/AddInvoiceModal'
+import EditInvoiceModal from '../components/invoices/EditInvoiceModal'
+import DeleteInvoiceModal from '../components/invoices/DeleteInvoiceModal'
 import {
   HiDocumentText,
   HiCurrencyDollar,
@@ -42,6 +46,13 @@ export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
+  
+  // Invoice modal states
+  const [showAddInvoiceModal, setShowAddInvoiceModal] = useState(false)
+  const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false)
+  const [showDeleteInvoiceModal, setShowDeleteInvoiceModal] = useState(false)
   
   const { 
     invoices, 
@@ -94,44 +105,72 @@ export default function InvoicesPage() {
     dispatch(updateInvoice({ id, invoiceData: { status } }))
   }
 
-  const handlePaymentRecord = (invoiceId: string, amount: number, method: string) => {
+  const handlePaymentRecord = (invoiceId: string) => {
+    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+      toast.error('Please enter a valid payment amount')
+      return
+    }
+    
     dispatch(addPayment({
       invoiceId,
       paymentData: {
-        amount,
-        method,
+        amount: parseFloat(paymentAmount),
+        paymentMethod: paymentMethod,
         date: new Date().toISOString()
       }
     }))
     setShowPaymentModal(false)
     setSelectedInvoice(null)
+    setPaymentAmount('')
+    setPaymentMethod('cash')
   }
 
   const handleDeleteInvoice = (id: string) => {
-    if (confirm('Are you sure you want to delete this invoice?')) {
-      dispatch(deleteInvoice(id))
+    const invoice = invoices.find(inv => inv._id === id)
+    if (invoice) {
+      setSelectedInvoice(invoice)
+      setShowDeleteInvoiceModal(true)
     }
   }
 
+  const handleOpenPaymentModal = (invoice: Invoice) => {
+    setSelectedInvoice(invoice)
+    setShowPaymentModal(true)
+    setPaymentAmount('')
+    setPaymentMethod('cash')
+  }
+
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false)
+    setSelectedInvoice(null)
+    setPaymentAmount('')
+    setPaymentMethod('cash')
+  }
+
+  const handleInvoiceSuccess = () => {
+    dispatch(fetchInvoices())
+    dispatch(fetchInvoiceStats())
+  }
+
   const handleGenerateFromWorkOrder = (workOrderId: string) => {
-    const workOrder = workOrders.find(wo => wo.id === workOrderId)
-    const customer = customers.find(c => c.id === workOrder?.customerId)
+    const workOrder = workOrders.find(wo => wo._id === workOrderId)
+    const customer = customers.find(c => c._id === workOrder?.customer?._id)
     
     if (workOrder && customer) {
       // Create invoice from work order
       const invoiceData = {
-        customerId: customer.id,
+        customerId: customer._id,
         customerName: customer.name,
-        workOrderId: workOrder.id,
+        workOrderId: workOrder._id,
         items: workOrder.services.map(service => ({
-          description: service.name,
+          description: service.service?.name || service.description || 'Service',
           quantity: 1,
-          unitPrice: service.price,
-          total: service.price
+          unitPrice: service.laborRate,
+          total: service.totalCost
         })),
-        subtotal: workOrder.services.reduce((sum, service) => sum + service.price, 0),
+        subtotal: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
         tax: 0,
-        total: workOrder.services.reduce((sum, service) => sum + service.price, 0),
+        total: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
         status: 'draft' as const
       }
       dispatch(createInvoice(invoiceData))
@@ -154,7 +193,10 @@ export default function InvoicesPage() {
             <HiRefresh className="w-4 h-4" />
             Update Overdue
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+          <button 
+            onClick={() => setShowAddInvoiceModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
             <HiPlus className="w-4 h-4" />
             Create Invoice
           </button>
@@ -296,7 +338,9 @@ export default function InvoicesPage() {
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{invoice.customer?.name}</div>
-                      <div className="text-sm text-gray-500">{invoice.vehicle.year} {invoice.vehicle.make} {invoice.vehicle.model}</div>
+                      <div className="text-sm text-gray-500">
+                        {invoice.vehicle ? `${invoice.vehicle.year} ${invoice.vehicle.make} ${invoice.vehicle.model}` : 'Vehicle info not available'}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -356,19 +400,20 @@ export default function InvoicesPage() {
                       >
                         <HiMail className="w-4 h-4" />
                       </button>
-                      {invoice.status !== 'paid' && (
-                        <button 
-                          onClick={() => {
-                            setSelectedInvoice(invoice)
-                            setShowPaymentModal(true)
-                          }}
-                          className="text-yellow-600 hover:text-yellow-900"
-                          title="Record payment"
-                        >
-                          <HiCurrencyDollar className="w-4 h-4" />
-                        </button>
-                      )}
+                                             {invoice.status !== 'paid' && (
+                         <button 
+                           onClick={() => handleOpenPaymentModal(invoice)}
+                           className="text-yellow-600 hover:text-yellow-900"
+                           title="Record payment"
+                         >
+                           <HiCurrencyDollar className="w-4 h-4" />
+                         </button>
+                       )}
                       <button 
+                        onClick={() => {
+                          setSelectedInvoice(invoice)
+                          setShowEditInvoiceModal(true)
+                        }}
                         className="text-gray-600 hover:text-gray-900"
                         title="Edit"
                       >
@@ -738,7 +783,7 @@ export default function InvoicesPage() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Record Payment</h3>
               <button 
-                onClick={() => setShowPaymentModal(false)}
+                onClick={handleClosePaymentModal}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <HiX className="w-6 h-6" />
@@ -757,6 +802,8 @@ export default function InvoicesPage() {
                 <input
                   type="number"
                   step="0.01"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   placeholder="0.00"
                 />
@@ -764,24 +811,28 @@ export default function InvoicesPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <select 
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
                   <option value="cash">Cash</option>
                   <option value="check">Check</option>
-                  <option value="credit card">Credit Card</option>
-                  <option value="debit card">Debit Card</option>
-                  <option value="bank transfer">Bank Transfer</option>
+                  <option value="credit_card">Credit Card</option>
+                  <option value="debit_card">Debit Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
                 </select>
               </div>
               
               <div className="flex gap-3 pt-4">
                 <button
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={handleClosePaymentModal}
                   className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => handlePaymentRecord(selectedInvoice._id, 100, 'cash')}
+                  onClick={() => handlePaymentRecord(selectedInvoice._id)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                 >
                   Record Payment
@@ -790,6 +841,36 @@ export default function InvoicesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Invoice Modals */}
+      {showAddInvoiceModal && (
+        <AddInvoiceModal
+          onClose={() => setShowAddInvoiceModal(false)}
+          onSuccess={handleInvoiceSuccess}
+        />
+      )}
+
+      {showEditInvoiceModal && (
+        <EditInvoiceModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowEditInvoiceModal(false)
+            setSelectedInvoice(null)
+          }}
+          onSuccess={handleInvoiceSuccess}
+        />
+      )}
+
+      {showDeleteInvoiceModal && (
+        <DeleteInvoiceModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowDeleteInvoiceModal(false)
+            setSelectedInvoice(null)
+          }}
+          onSuccess={handleInvoiceSuccess}
+        />
       )}
     </div>
   )
