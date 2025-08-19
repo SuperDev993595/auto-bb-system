@@ -58,10 +58,34 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
 
   useEffect(() => {
     if (purchaseOrder && mode === 'edit') {
+      // Transform items to ensure they have the correct structure
+      const transformedItems = (purchaseOrder.items || []).map(item => {
+        // Handle different possible item structures
+        let itemId = '';
+        if (typeof item === 'object') {
+          if (item.item) {
+            // If item.item is an object (populated), get its _id, otherwise use the string
+            itemId = typeof item.item === 'object' ? item.item._id || item.item.id : item.item;
+          } else if (item._id) {
+            // Direct item object
+            itemId = item._id;
+          }
+        } else if (typeof item === 'string') {
+          itemId = item;
+        }
+        
+        return {
+          item: itemId,
+          quantity: typeof item === 'object' ? item.quantity || 1 : 1,
+          unitPrice: typeof item === 'object' ? item.unitPrice || 0 : 0,
+          totalPrice: typeof item === 'object' ? item.totalPrice || 0 : 0
+        };
+      });
+      
       setFormData({
         poNumber: purchaseOrder.poNumber || '',
         supplier: purchaseOrder.supplierId || purchaseOrder.supplier || '',
-        items: purchaseOrder.items || [],
+        items: transformedItems,
         expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : '',
         tax: 0,
         shipping: 0,
@@ -102,6 +126,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
         await dispatch(createPurchaseOrder(formData)).unwrap();
       } else if (purchaseOrder) {
         const updateData: UpdatePurchaseOrderData = { ...formData };
+        console.log('Sending update data:', updateData); // Debug log
         await dispatch(updatePurchaseOrder({ id: purchaseOrder._id || purchaseOrder.id, purchaseOrderData: updateData })).unwrap();
       }
       onClose();
