@@ -1,6 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const { InventoryItem, InventoryTransaction, PurchaseOrder } = require('../models/Inventory');
+const Supplier = require('../models/Supplier');
 const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -61,7 +62,7 @@ const purchaseOrderSchema = Joi.object({
 // @access  Private
 router.get('/suppliers', requireAnyAdmin, async (req, res) => {
   try {
-    const suppliers = await require('../models/Supplier').find({ isActive: true });
+    const suppliers = await Supplier.find({ isActive: true });
 
     res.json({
       success: true,
@@ -105,7 +106,7 @@ router.post('/suppliers', requireAnyAdmin, async (req, res) => {
     }
 
     // Create supplier
-    const supplier = new (require('../models/Supplier'))({
+    const supplier = new Supplier({
       name,
       contactPerson: {
         name: contactPerson,
@@ -161,7 +162,7 @@ router.put('/suppliers/:id', requireAnyAdmin, async (req, res) => {
       notes
     } = req.body;
 
-    const supplier = await require('../models/Supplier').findById(req.params.id);
+    const supplier = await Supplier.findById(req.params.id);
 
     if (!supplier) {
       return res.status(404).json({
@@ -211,7 +212,7 @@ router.put('/suppliers/:id', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.delete('/suppliers/:id', requireAnyAdmin, async (req, res) => {
   try {
-    const supplier = await require('../models/Supplier').findById(req.params.id);
+    const supplier = await Supplier.findById(req.params.id);
 
     if (!supplier) {
       return res.status(404).json({
