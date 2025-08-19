@@ -1,6 +1,11 @@
-import { useState } from 'react'
-import { useAppSelector } from '../redux'
+import { useState, useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '../redux'
+import { fetchCommunicationLogs, createCommunicationLog, updateCommunicationLog, deleteCommunicationLog, fetchCommunicationStats } from '../redux/actions/communicationLogs'
+import { fetchCustomers } from '../redux/actions/customers'
 import PageTitle from '../components/Shared/PageTitle'
+import CreateCommunicationLogModal from '../components/CommunicationLogs/CreateCommunicationLogModal'
+import EditCommunicationLogModal from '../components/CommunicationLogs/EditCommunicationLogModal'
+import { CommunicationLog } from '../utils/CustomerTypes'
 import {
   HiPhone,
   HiMail,
@@ -16,115 +21,31 @@ import {
   HiArrowDown
 } from 'react-icons/hi'
 
-interface CommunicationLog {
-  id: string
-  customerId: string
-  customerName: string
-  date: string
-  time: string
-  type: 'phone' | 'email' | 'in-person' | 'sms'
-  direction: 'inbound' | 'outbound'
-  subject: string
-  content: string
-  outcome: 'resolved' | 'follow-up-needed' | 'appointment-scheduled' | 'no-answer' | 'callback-requested'
-  employeeName: string
-  priority: 'low' | 'medium' | 'high'
-  relatedService?: string
-}
-
 export default function ContactLogsPage() {
   const [typeFilter, setTypeFilter] = useState('all')
-  const [outcomeFilter, setOutcomeFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLog, setSelectedLog] = useState<CommunicationLog | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingLog, setEditingLog] = useState<CommunicationLog | null>(null)
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null)
 
+  const dispatch = useAppDispatch()
+  const { logs: communicationLogs, stats, loading } = useAppSelector(state => state.communicationLogs)
   const customers = useAppSelector(state => state.customers.list)
 
-  // Sample communication logs for auto repair shop
-  const communicationLogs: CommunicationLog[] = [
-    {
-      id: '1',
-      customerId: '1',
-      customerName: 'John Smith',
-      date: '2025-08-05',
-      time: '10:30 AM',
-      type: 'phone',
-      direction: 'outbound',
-      subject: 'Oil Change Reminder',
-      content: 'Called to remind customer about upcoming oil change due at 45,000 miles. Customer appreciated the call and scheduled appointment for next week.',
-      outcome: 'appointment-scheduled',
-      employeeName: 'Sarah Davis',
-      priority: 'medium',
-      relatedService: 'Oil Change'
-    },
-    {
-      id: '2',
-      customerId: '2',
-      customerName: 'Lisa Brown',
-      date: '2025-08-04',
-      time: '2:15 PM',
-      type: 'email',
-      direction: 'inbound',
-      subject: 'Question about brake service',
-      content: 'Customer emailed asking about brake service costs and what\'s included. Provided detailed breakdown and offered free inspection.',
-      outcome: 'follow-up-needed',
-      employeeName: 'Mike Johnson',
-      priority: 'low',
-      relatedService: 'Brake Service'
-    },
-    {
-      id: '3',
-      customerId: '1',
-      customerName: 'John Smith',
-      date: '2025-08-03',
-      time: '4:45 PM',
-      type: 'phone',
-      direction: 'inbound',
-      subject: 'Service completion notification',
-      content: 'Customer called to confirm his vehicle was ready for pickup after oil change. Confirmed completion and provided service summary.',
-      outcome: 'resolved',
-      employeeName: 'Tom Wilson',
-      priority: 'low'
-    },
-    {
-      id: '4',
-      customerId: '3',
-      customerName: 'Mike Rodriguez',
-      date: '2025-08-02',
-      time: '11:20 AM',
-      type: 'in-person',
-      direction: 'inbound',
-      subject: 'Engine diagnostic results',
-      content: 'Customer came in to discuss diagnostic results for engine trouble. Explained findings and provided repair options with estimates.',
-      outcome: 'follow-up-needed',
-      employeeName: 'Mike Johnson',
-      priority: 'high',
-      relatedService: 'Engine Diagnostic'
-    },
-    {
-      id: '5',
-      customerId: '2',
-      customerName: 'Lisa Brown',
-      date: '2025-08-01',
-      time: '9:00 AM',
-      type: 'sms',
-      direction: 'outbound',
-      subject: 'Appointment reminder',
-      content: 'Sent SMS reminder for tire rotation appointment scheduled for today at 2 PM.',
-      outcome: 'resolved',
-      employeeName: 'System',
-      priority: 'low',
-      relatedService: 'Tire Rotation'
-    }
-  ]
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchCommunicationLogs({}))
+    dispatch(fetchCommunicationStats())
+    dispatch(fetchCustomers({})) // Ensure customers are loaded
+  }, [dispatch])
 
   const filteredLogs = communicationLogs.filter(log => {
     const matchesType = typeFilter === 'all' || log.type === typeFilter
-    const matchesOutcome = outcomeFilter === 'all' || log.outcome === outcomeFilter
-    const matchesSearch = log.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.content.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesType && matchesOutcome && matchesSearch
+    const matchesSearch = log.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (log.subject || '').toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesType && matchesSearch
   })
 
   const getTypeIcon = (type: CommunicationLog['type']) => {
@@ -147,31 +68,91 @@ export default function ContactLogsPage() {
     }
   }
 
-  const getOutcomeColor = (outcome: CommunicationLog['outcome']) => {
-    switch (outcome) {
-      case 'resolved': return 'bg-green-100 text-green-800'
-      case 'appointment-scheduled': return 'bg-blue-100 text-blue-800'
-      case 'follow-up-needed': return 'bg-yellow-100 text-yellow-800'
-      case 'callback-requested': return 'bg-orange-100 text-orange-800'
-      case 'no-answer': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+  const handleCreateLog = (data: any) => {
+    dispatch(createCommunicationLog(data)).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        setShowCreateModal(false)
+        dispatch(fetchCommunicationLogs({}))
+      }
+    })
   }
 
-  const getPriorityColor = (priority: CommunicationLog['priority']) => {
-    switch (priority) {
-      case 'high': return 'text-red-600'
-      case 'medium': return 'text-yellow-600'
-      case 'low': return 'text-green-600'
-      default: return 'text-gray-600'
+  const handleEditLog = (log: CommunicationLog) => {
+    setEditingLog(log)
+    setShowEditModal(true)
+  }
+
+  const handleUpdateLog = (data: any) => {
+    if (!editingLog) return
+    
+    // Use id if available, otherwise fall back to _id
+    const logId = editingLog.id || (editingLog as any)._id
+    
+    dispatch(updateCommunicationLog({ id: logId, logData: data })).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        setShowEditModal(false)
+        setEditingLog(null)
+        dispatch(fetchCommunicationLogs({}))
+      }
+    })
+  }
+
+  const handleDeleteLog = (id: string) => {
+    dispatch(deleteCommunicationLog(id)).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        setDeleteLogId(null)
+        dispatch(fetchCommunicationLogs({}))
+      }
+    })
+  }
+
+  const getCustomerName = (customerId: string | any) => {
+    // Debug: Log the customerId and available customers
+    console.log('=== getCustomerName Debug ===')
+    console.log('Looking for customer with ID/Object:', customerId)
+    console.log('Type of customerId:', typeof customerId)
+    
+    // If customerId is already a populated customer object, return its name directly
+    if (typeof customerId === 'object' && customerId !== null && customerId.name) {
+      console.log('✅ CustomerId is a customer object, returning name:', customerId.name)
+      return customerId.name
     }
+    
+    // If customerId is a string, try to find the customer in the list
+    if (typeof customerId === 'string') {
+      console.log('CustomerId is string, searching in customer list...')
+      console.log('Available customers count:', customers.length)
+      
+      if (customers.length === 0) {
+        console.log('⚠️ No customers loaded yet!')
+        return 'Loading...'
+      }
+      
+      // Try to find customer by id (now mapped from _id) or fallback to _id
+      const customer = customers.find(c => (c as any).id === customerId || (c as any)._id === customerId)
+      
+      if (!customer) {
+        console.log('❌ Customer not found for ID:', customerId)
+        console.log('Available customer IDs:', customers.map(c => (c as any).id || (c as any)._id))
+      } else {
+        console.log('✅ Found customer:', customer)
+      }
+      
+      return customer?.name || 'Unknown Customer'
+    }
+    
+    console.log('❌ CustomerId is neither string nor valid object:', customerId)
+    return 'Unknown Customer'
   }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <PageTitle title="Customer Communication Logs" />
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Log Communication
         </button>
@@ -208,13 +189,13 @@ export default function ContactLogsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Follow-ups Needed</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {communicationLogs.filter(log => log.outcome === 'follow-up-needed').length}
+              <p className="text-sm text-gray-600">Emails</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {communicationLogs.filter(log => log.type === 'email').length}
               </p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <HiClock className="w-6 h-6 text-yellow-600" />
+            <div className="bg-blue-100 p-3 rounded-full">
+              <HiMail className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -222,13 +203,13 @@ export default function ContactLogsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Resolved</p>
-              <p className="text-2xl font-bold text-green-600">
-                {communicationLogs.filter(log => log.outcome === 'resolved').length}
+              <p className="text-sm text-gray-600">In-Person</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {communicationLogs.filter(log => log.type === 'in-person').length}
               </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiEye className="w-6 h-6 text-green-600" />
+            <div className="bg-purple-100 p-3 rounded-full">
+              <HiUser className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -259,90 +240,86 @@ export default function ContactLogsPage() {
             <option value="in-person">In-Person</option>
             <option value="sms">SMS</option>
           </select>
-          
-          <select
-            value={outcomeFilter}
-            onChange={(e) => setOutcomeFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          >
-            <option value="all">All Outcomes</option>
-            <option value="resolved">Resolved</option>
-            <option value="follow-up-needed">Follow-up Needed</option>
-            <option value="appointment-scheduled">Appointment Scheduled</option>
-            <option value="callback-requested">Callback Requested</option>
-            <option value="no-answer">No Answer</option>
-          </select>
         </div>
       </div>
 
       {/* Communication Logs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-6">
-          <div className="space-y-4">
-            {filteredLogs.map(log => (
-              <div key={log.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-full ${getTypeColor(log.type)}`}>
-                      {getTypeIcon(log.type)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-800">{log.subject}</h3>
-                        <div className="flex items-center gap-1">
-                          {log.direction === 'inbound' ? (
-                            <HiArrowDown className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <HiArrowUp className="w-4 h-4 text-blue-600" />
-                          )}
-                          <span className="text-xs text-gray-500 capitalize">{log.direction}</span>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-500">Loading communication logs...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredLogs.map(log => (
+                <div key={log.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-full ${getTypeColor(log.type)}`}>
+                        {getTypeIcon(log.type)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-800">{log.subject || 'No Subject'}</h3>
+                          <div className="flex items-center gap-1">
+                            {log.direction === 'inbound' ? (
+                              <HiArrowDown className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <HiArrowUp className="w-4 h-4 text-blue-600" />
+                            )}
+                            <span className="text-xs text-gray-500 capitalize">{log.direction}</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-2">{log.content}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>Customer: <strong>{getCustomerName(log.customerId)}</strong></span>
+                          <span>Employee: <strong>{log.employeeName}</strong></span>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{log.content}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Customer: <strong>{log.customerName}</strong></span>
-                        <span>Employee: <strong>{log.employeeName}</strong></span>
-                        {log.relatedService && (
-                          <span>Service: <strong>{log.relatedService}</strong></span>
-                        )}
+                    </div>
+                                         <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => handleEditLog(log)}
+                         className="text-blue-600 hover:text-blue-800"
+                       >
+                         Edit
+                       </button>
+                                            <button 
+                       onClick={() => setDeleteLogId(log.id || (log as any)._id)}
+                       className="text-red-600 hover:text-red-800"
+                     >
+                       Delete
+                     </button>
+                     </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm text-gray-500 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <HiCalendar className="w-4 h-4" />
+                        <span>{log.date}</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getOutcomeColor(log.outcome)}`}>
-                      {log.outcome.replace('-', ' ')}
-                    </span>
-                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(log.priority) === 'text-red-600' ? 'bg-red-500' : getPriorityColor(log.priority) === 'text-yellow-600' ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                    <button 
+                      onClick={() => setSelectedLog(log)}
+                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <HiEye className="w-4 h-4" />
+                      View Details
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center text-sm text-gray-500 pt-2 border-t border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <HiCalendar className="w-4 h-4" />
-                      <span>{log.date} at {log.time}</span>
-                    </div>
-                    <span className={`capitalize font-medium ${getPriorityColor(log.priority)}`}>
-                      {log.priority} priority
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedLog(log)}
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                  >
-                    <HiEye className="w-4 h-4" />
-                    View Details
-                  </button>
+              ))}
+              
+              {filteredLogs.length === 0 && (
+                <div className="text-center py-12">
+                  <HiChatAlt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-500 mb-2">No communication logs found</h3>
+                  <p className="text-gray-400">Try adjusting your filters or log a new communication.</p>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          {filteredLogs.length === 0 && (
-            <div className="text-center py-12">
-              <HiChatAlt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-500 mb-2">No communication logs found</h3>
-              <p className="text-gray-400">Try adjusting your filters or log a new communication.</p>
+              )}
             </div>
           )}
         </div>
@@ -366,15 +343,15 @@ export default function ContactLogsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Customer</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedLog.customerName}</p>
+                  <p className="mt-1 text-sm text-gray-900">{getCustomerName(selectedLog.customerId)}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Employee</label>
                   <p className="mt-1 text-sm text-gray-900">{selectedLog.employeeName}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date & Time</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedLog.date} at {selectedLog.time}</p>
+                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedLog.date}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Type</label>
@@ -387,34 +364,59 @@ export default function ContactLogsPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Subject</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedLog.subject}</p>
+                <p className="mt-1 text-sm text-gray-900">{selectedLog.subject || 'No Subject'}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Content</label>
                 <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded">{selectedLog.content}</p>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Outcome</label>
-                  <span className={`inline-block mt-1 px-2 py-1 text-xs font-semibold rounded-full ${getOutcomeColor(selectedLog.outcome)}`}>
-                    {selectedLog.outcome.replace('-', ' ')}
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Priority</label>
-                  <p className={`mt-1 text-sm font-medium capitalize ${getPriorityColor(selectedLog.priority)}`}>
-                    {selectedLog.priority}
-                  </p>
-                </div>
-                {selectedLog.relatedService && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Related Service</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedLog.relatedService}</p>
-                  </div>
-                )}
-              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+             {/* Create Modal */}
+       {showCreateModal && (
+         <CreateCommunicationLogModal
+           onClose={() => setShowCreateModal(false)}
+           onSave={handleCreateLog}
+           isLoading={loading}
+         />
+       )}
+
+       {/* Edit Modal */}
+       {showEditModal && editingLog && (
+         <EditCommunicationLogModal
+           onClose={() => {
+             setShowEditModal(false)
+             setEditingLog(null)
+           }}
+           onSave={handleUpdateLog}
+           isLoading={loading}
+           log={editingLog}
+         />
+       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteLogId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this communication log? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteLogId(null)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteLog(deleteLogId)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
