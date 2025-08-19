@@ -41,6 +41,7 @@ const inventoryItemSchema = Joi.object({
 });
 
 const purchaseOrderSchema = Joi.object({
+  poNumber: Joi.string().optional(),
   supplier: Joi.object({
     name: Joi.string().required(),
     contact: Joi.string().optional(),
