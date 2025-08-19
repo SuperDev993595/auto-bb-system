@@ -3,36 +3,25 @@ import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers } from '../../redux/actions/customers'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClock, HiUser, HiMail, HiPhone, HiCalendar } from 'react-icons/hi'
-import { Reminder, Customer } from '../../utils/CustomerTypes'
-
-interface CreateReminderData {
-  customerId: string
-  customerName: string
-  type: Reminder['type']
-  message: string
-  scheduledDate: string
-  scheduledTime: string
-  method: Reminder['method']
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  notes?: string
-}
+import { Customer } from '../../utils/CustomerTypes'
+import { Reminder, CreateReminderData as ServiceCreateReminderData } from '../../services/reminders'
 
 interface Props {
   onClose: () => void
-  onSave: (data: CreateReminderData) => void
+  onSave: (data: ServiceCreateReminderData) => void
   isLoading?: boolean
 }
 
 export default function CreateReminderModal({ onClose, onSave, isLoading = false }: Props) {
-  const [formData, setFormData] = useState<CreateReminderData>({
-    customerId: '',
-    customerName: '',
+  const [formData, setFormData] = useState<ServiceCreateReminderData>({
+    title: '',
+    description: '',
     type: 'appointment',
-    message: '',
-    scheduledDate: '',
-    scheduledTime: '',
-    method: 'email',
     priority: 'medium',
+    dueDate: '',
+    reminderDate: '',
+    customerId: '',
+    notificationMethods: ['email'],
     notes: ''
   })
 
@@ -46,7 +35,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     }
   }, [dispatch, customers])
 
-  const handleChange = (field: keyof CreateReminderData, value: any) => {
+  const handleChange = (field: keyof ServiceCreateReminderData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -63,7 +52,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   }
 
   const handleSubmit = () => {
-    if (!formData.customerId || !formData.message || !formData.scheduledDate || !formData.scheduledTime) {
+    if (!formData.title || !formData.dueDate || !formData.reminderDate) {
       alert('Please fill in all required fields.')
       return
     }
@@ -118,12 +107,12 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               Reminder Type *
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: 'appointment', label: 'Appointment', icon: <HiCalendar className="w-4 h-4" /> },
-                { value: 'service-due', label: 'Service Due', icon: <HiClock className="w-4 h-4" /> },
-                { value: 'follow-up', label: 'Follow-up', icon: <HiUser className="w-4 h-4" /> },
-                { value: 'payment-due', label: 'Payment Due', icon: <HiMail className="w-4 h-4" /> }
-              ].map(type => (
+                             {[
+                 { value: 'appointment', label: 'Appointment', icon: <HiCalendar className="w-4 h-4" /> },
+                 { value: 'service_due', label: 'Service Due', icon: <HiClock className="w-4 h-4" /> },
+                 { value: 'follow_up', label: 'Follow-up', icon: <HiUser className="w-4 h-4" /> },
+                 { value: 'payment', label: 'Payment Due', icon: <HiMail className="w-4 h-4" /> }
+               ].map(type => (
                 <button
                   key={type.value}
                   type="button"
@@ -141,43 +130,76 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
             </div>
           </div>
 
-          {/* Date and Time */}
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter reminder title..."
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter reminder description..."
+            />
+          </div>
+
+          {/* Due Date and Reminder Date */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date *
+                Due Date *
               </label>
               <input
                 type="date"
-                value={formData.scheduledDate}
-                onChange={(e) => handleChange('scheduledDate', e.target.value)}
+                value={formData.dueDate}
+                onChange={(e) => handleChange('dueDate', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Time *
+                Reminder Date *
               </label>
               <input
-                type="time"
-                value={formData.scheduledTime}
-                onChange={(e) => handleChange('scheduledTime', e.target.value)}
+                type="date"
+                value={formData.reminderDate}
+                onChange={(e) => handleChange('reminderDate', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* Notification Method */}
+          {/* Notification Methods */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notification Method *
+              Notification Methods *
             </label>
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => handleChange('method', 'email')}
+                onClick={() => {
+                  const methods = formData.notificationMethods.includes('email') 
+                    ? formData.notificationMethods.filter(m => m !== 'email')
+                    : [...formData.notificationMethods, 'email']
+                  handleChange('notificationMethods', methods)
+                }}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                  formData.method === 'email'
+                  formData.notificationMethods.includes('email')
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 text-gray-700 hover:border-gray-400'
                 }`}
@@ -187,9 +209,14 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               </button>
               <button
                 type="button"
-                onClick={() => handleChange('method', 'sms')}
+                onClick={() => {
+                  const methods = formData.notificationMethods.includes('sms') 
+                    ? formData.notificationMethods.filter(m => m !== 'sms')
+                    : [...formData.notificationMethods, 'sms']
+                  handleChange('notificationMethods', methods)
+                }}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                  formData.method === 'sms'
+                  formData.notificationMethods.includes('sms')
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 text-gray-700 hover:border-gray-400'
                 }`}
@@ -217,19 +244,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
             </select>
           </div>
 
-          {/* Message */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Message *
-            </label>
-            <textarea
-              value={formData.message}
-              onChange={(e) => handleChange('message', e.target.value)}
-              rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter the reminder message..."
-            />
-          </div>
+
 
           {/* Notes */}
           <div>
