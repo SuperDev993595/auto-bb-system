@@ -4,25 +4,37 @@ import { fetchCustomers } from '../../redux/actions/customers'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClock, HiUser, HiMail, HiPhone, HiCalendar } from 'react-icons/hi'
 import { Customer } from '../../utils/CustomerTypes'
-import { Reminder, CreateReminderData as ServiceCreateReminderData } from '../../services/reminders'
+import { Reminder } from '../../utils/CustomerTypes'
+import { CreateReminderData as ServiceCreateReminderData } from '../../services/reminders'
 
 interface Props {
   onClose: () => void
   onSave: (data: ServiceCreateReminderData) => void
   isLoading?: boolean
+  reminder: Reminder
 }
 
-export default function CreateReminderModal({ onClose, onSave, isLoading = false }: Props) {
+export default function EditReminderModal({ onClose, onSave, isLoading = false, reminder }: Props) {
   const [formData, setFormData] = useState<ServiceCreateReminderData>({
-    title: '',
-    description: '',
-    type: 'appointment',
-    priority: 'medium',
-    dueDate: '',
-    reminderDate: '',
-    customerId: '',
-    notificationMethods: ['email'],
-    notes: ''
+    title: (reminder as any).title || reminder.message || '',
+    description: (reminder as any).description || '',
+    type: reminder.type === 'service-due' ? 'service_due' : 
+          reminder.type === 'follow-up' ? 'follow_up' : 
+          reminder.type === 'payment-due' ? 'payment' : 
+          (reminder as any).type === 'service_due' ? 'service_due' :
+          (reminder as any).type === 'follow_up' ? 'follow_up' :
+          (reminder as any).type === 'payment' ? 'payment' : 'appointment',
+    priority: (reminder as any).priority || 'medium',
+    dueDate: (reminder as any).dueDate ? (reminder as any).dueDate.split('T')[0] : 
+             reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    reminderDate: (reminder as any).reminderDate ? (reminder as any).reminderDate.split('T')[0] : 
+                  reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    customerId: (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId || '',
+    notificationMethods: (reminder as any).notificationMethods || 
+                        (reminder.method === 'phone' ? ['sms'] : 
+                         reminder.method === 'email' ? ['email'] : 
+                         reminder.method === 'sms' ? ['sms'] : ['email']),
+    notes: (reminder as any).notes || ''
   })
 
   const { list: customers = [] } = useAppSelector(state => state.customers)
@@ -34,6 +46,41 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
       dispatch(fetchCustomers({}))
     }
   }, [dispatch, customers])
+
+  // Debug: Log customers and form data
+  useEffect(() => {
+    console.log('EditReminderModal - Available customers:', customers)
+    console.log('EditReminderModal - Current form data:', formData)
+  }, [customers, formData])
+
+  // Update form data when reminder changes
+  useEffect(() => {
+    console.log('EditReminderModal - Reminder data:', reminder)
+    console.log('EditReminderModal - Customer data:', (reminder as any).customer)
+    console.log('EditReminderModal - Customer ID:', (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId)
+    
+    setFormData({
+      title: (reminder as any).title || reminder.message || '',
+      description: (reminder as any).description || '',
+      type: reminder.type === 'service-due' ? 'service_due' : 
+            reminder.type === 'follow-up' ? 'follow_up' : 
+            reminder.type === 'payment-due' ? 'payment' : 
+            (reminder as any).type === 'service_due' ? 'service_due' :
+            (reminder as any).type === 'follow_up' ? 'follow_up' :
+            (reminder as any).type === 'payment' ? 'payment' : 'appointment',
+      priority: (reminder as any).priority || 'medium',
+      dueDate: (reminder as any).dueDate ? (reminder as any).dueDate.split('T')[0] : 
+               reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+      reminderDate: (reminder as any).reminderDate ? (reminder as any).reminderDate.split('T')[0] : 
+                    reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+      customerId: (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId || '',
+      notificationMethods: (reminder as any).notificationMethods || 
+                          (reminder.method === 'phone' ? ['sms'] : 
+                           reminder.method === 'email' ? ['email'] : 
+                           reminder.method === 'sms' ? ['sms'] : ['email']),
+      notes: (reminder as any).notes || ''
+    })
+  }, [reminder])
 
   const handleChange = (field: keyof ServiceCreateReminderData, value: any) => {
     setFormData(prev => ({
@@ -57,7 +104,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     onSave(formData)
   }
 
-  const getTypeIcon = (type: Reminder['type']) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'appointment': return <HiCalendar className="w-4 h-4" />
       case 'service_due': return <HiClock className="w-4 h-4" />
@@ -72,9 +119,9 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     <ModalWrapper 
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="Create New Reminder"
+      title="Edit Reminder"
       icon={<HiClock className="w-5 h-5" />}
-      submitLabel={isLoading ? 'Creating...' : 'Create Reminder'}
+      submitLabel={isLoading ? 'Updating...' : 'Update Reminder'}
     >
       <div className="space-y-6">
           {/* Customer Selection */}
@@ -242,8 +289,6 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               <option value="urgent">Urgent</option>
             </select>
           </div>
-
-
 
           {/* Notes */}
           <div>

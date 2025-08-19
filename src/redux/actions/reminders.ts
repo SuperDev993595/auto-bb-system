@@ -160,7 +160,7 @@ export const fetchReminderTemplates = createAsyncThunk(
   'reminders/fetchTemplates',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await reminderService.getReminderTemplates();
+      const response = await reminderService.getTemplates();
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch reminder templates');
@@ -172,7 +172,7 @@ export const createReminderTemplate = createAsyncThunk(
   'reminders/createTemplate',
   async (templateData: Partial<ReminderTemplate>, { rejectWithValue }) => {
     try {
-      const response = await reminderService.createReminderTemplate(templateData);
+      const response = await reminderService.createTemplate(templateData);
       toast.success('Reminder template created successfully');
       return response.data;
     } catch (error: any) {
@@ -186,7 +186,7 @@ export const updateReminderTemplate = createAsyncThunk(
   'reminders/updateTemplate',
   async ({ id, templateData }: { id: string; templateData: Partial<ReminderTemplate> }, { rejectWithValue }) => {
     try {
-      const response = await reminderService.updateReminderTemplate(id, templateData);
+      const response = await reminderService.updateTemplate(id, templateData);
       toast.success('Reminder template updated successfully');
       return response.data;
     } catch (error: any) {
@@ -200,7 +200,7 @@ export const deleteReminderTemplate = createAsyncThunk(
   'reminders/deleteTemplate',
   async (id: string, { rejectWithValue }) => {
     try {
-      await reminderService.deleteReminderTemplate(id);
+      await reminderService.deleteTemplate(id);
       toast.success('Reminder template deleted successfully');
       return id;
     } catch (error: any) {

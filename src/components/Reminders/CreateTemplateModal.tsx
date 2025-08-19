@@ -109,21 +109,14 @@ export default function CreateTemplateModal({
   }
 
   return (
-    <ModalWrapper onClose={onClose}>
-      <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            {isEditing ? 'Edit Template' : 'Create New Template'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <HiTemplate className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="space-y-6">
+    <ModalWrapper 
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      title={isEditing ? 'Edit Template' : 'Create New Template'}
+      icon={<HiTemplate className="w-5 h-5" />}
+      submitLabel={isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Template' : 'Create Template')}
+    >
+      <div className="space-y-6">
           {/* Template Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -254,7 +247,7 @@ export default function CreateTemplateModal({
               value={formData.subject}
               onChange={(e) => handleChange('subject', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Appointment Reminder - {{businessName}}"
+              placeholder="e.g., Appointment Reminder - {'{{businessName}}'}"
             />
           </div>
 
@@ -268,19 +261,19 @@ export default function CreateTemplateModal({
               onChange={(e) => handleChange('message', e.target.value)}
               rows={8}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter the message template with placeholders like {{customerName}}, {{appointmentDate}}, etc."
+              placeholder="Enter the message template with placeholders like {'{{customerName}}'}, {'{{appointmentDate}}'}, etc."
             />
             <div className="mt-2 text-xs text-gray-500">
               <p className="font-medium mb-1">Available placeholders:</p>
               <div className="grid grid-cols-2 gap-1">
-                <span>• {{customerName}} - Customer's full name</span>
-                <span>• {{businessName}} - Your business name</span>
-                <span>• {{appointmentDate}} - Appointment date</span>
-                <span>• {{appointmentTime}} - Appointment time</span>
-                <span>• {{serviceType}} - Type of service</span>
-                <span>• {{businessPhone}} - Business phone</span>
-                <span>• {{vehicleInfo}} - Vehicle details</span>
-                <span>• {{technicianName}} - Technician name</span>
+                <span>• {'{{customerName}}'} - Customer's full name</span>
+                <span>• {'{{businessName}}'} - Your business name</span>
+                <span>• {'{{appointmentDate}}'} - Appointment date</span>
+                <span>• {'{{appointmentTime}}'} - Appointment time</span>
+                <span>• {'{{serviceType}}'} - Type of service</span>
+                <span>• {'{{businessPhone}}'} - Business phone</span>
+                <span>• {'{{vehicleInfo}}'} - Vehicle details</span>
+                <span>• {'{{technicianName}}'} - Technician name</span>
               </div>
             </div>
           </div>
@@ -303,24 +296,6 @@ export default function CreateTemplateModal({
             </button>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Template' : 'Create Template')}
-          </button>
-        </div>
-      </div>
     </ModalWrapper>
   )
 }
