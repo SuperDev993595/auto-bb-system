@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../redux'
-import { fetchCommunicationLogs, createCommunicationLog, deleteCommunicationLog, fetchCommunicationStats } from '../redux/actions/communicationLogs'
+import { fetchCommunicationLogs, createCommunicationLog, updateCommunicationLog, deleteCommunicationLog, fetchCommunicationStats } from '../redux/actions/communicationLogs'
 import PageTitle from '../components/Shared/PageTitle'
 import CreateCommunicationLogModal from '../components/CommunicationLogs/CreateCommunicationLogModal'
+import EditCommunicationLogModal from '../components/CommunicationLogs/EditCommunicationLogModal'
 import { CommunicationLog } from '../utils/CustomerTypes'
 import {
   HiPhone,
@@ -24,6 +25,8 @@ export default function ContactLogsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLog, setSelectedLog] = useState<CommunicationLog | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingLog, setEditingLog] = useState<CommunicationLog | null>(null)
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null)
 
   const dispatch = useAppDispatch()
@@ -67,6 +70,23 @@ export default function ContactLogsPage() {
     dispatch(createCommunicationLog(data)).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setShowCreateModal(false)
+        dispatch(fetchCommunicationLogs({}))
+      }
+    })
+  }
+
+  const handleEditLog = (log: CommunicationLog) => {
+    setEditingLog(log)
+    setShowEditModal(true)
+  }
+
+  const handleUpdateLog = (data: any) => {
+    if (!editingLog) return
+    
+    dispatch(updateCommunicationLog({ id: editingLog.id, logData: data })).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        setShowEditModal(false)
+        setEditingLog(null)
         dispatch(fetchCommunicationLogs({}))
       }
     })
@@ -220,14 +240,20 @@ export default function ContactLogsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => setDeleteLogId(log.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                                         <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => handleEditLog(log)}
+                         className="text-blue-600 hover:text-blue-800"
+                       >
+                         Edit
+                       </button>
+                       <button 
+                         onClick={() => setDeleteLogId(log.id)}
+                         className="text-red-600 hover:text-red-800"
+                       >
+                         Delete
+                       </button>
+                     </div>
                   </div>
                   
                   <div className="flex justify-between items-center text-sm text-gray-500 pt-2 border-t border-gray-100">
@@ -311,14 +337,27 @@ export default function ContactLogsPage() {
         </div>
       )}
 
-      {/* Create Modal */}
-      {showCreateModal && (
-        <CreateCommunicationLogModal
-          onClose={() => setShowCreateModal(false)}
-          onSave={handleCreateLog}
-          isLoading={loading}
-        />
-      )}
+             {/* Create Modal */}
+       {showCreateModal && (
+         <CreateCommunicationLogModal
+           onClose={() => setShowCreateModal(false)}
+           onSave={handleCreateLog}
+           isLoading={loading}
+         />
+       )}
+
+       {/* Edit Modal */}
+       {showEditModal && editingLog && (
+         <EditCommunicationLogModal
+           onClose={() => {
+             setShowEditModal(false)
+             setEditingLog(null)
+           }}
+           onSave={handleUpdateLog}
+           isLoading={loading}
+           log={editingLog}
+         />
+       )}
 
       {/* Delete Confirmation Modal */}
       {deleteLogId && (

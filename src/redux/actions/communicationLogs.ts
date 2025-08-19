@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { toast } from 'react-hot-toast'
 import { CommunicationLog } from '../../utils/CustomerTypes'
+import { apiRequest } from '../../services/api'
 
 // API base URL
 const API_BASE = '/api/communication-logs'
@@ -25,13 +26,7 @@ export const fetchCommunicationLogs = createAsyncThunk(
         }
       })
       
-      const response = await fetch(`${API_BASE}?${params.toString()}`)
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch communication logs')
-      }
-      
+      const data = await apiRequest(`${API_BASE}?${params.toString()}`)
       return data
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch communication logs')
@@ -57,19 +52,10 @@ export const createCommunicationLog = createAsyncThunk(
     relatedService?: string
   }, { rejectWithValue }) => {
     try {
-      const response = await fetch(API_BASE, {
+      const data = await apiRequest(API_BASE, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(logData),
       })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create communication log')
-      }
       
       toast.success('Communication log created successfully')
       return data
@@ -88,19 +74,10 @@ export const updateCommunicationLog = createAsyncThunk(
     logData: Partial<CommunicationLog>
   }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE}/${id}`, {
+      const data = await apiRequest(`${API_BASE}/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(logData),
       })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update communication log')
-      }
       
       toast.success('Communication log updated successfully')
       return data
@@ -116,15 +93,9 @@ export const deleteCommunicationLog = createAsyncThunk(
   'communicationLogs/delete',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE}/${id}`, {
+      await apiRequest(`${API_BASE}/${id}`, {
         method: 'DELETE',
       })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete communication log')
-      }
       
       toast.success('Communication log deleted successfully')
       return id
@@ -140,13 +111,7 @@ export const fetchCommunicationStats = createAsyncThunk(
   'communicationLogs/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE}/stats`)
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch communication statistics')
-      }
-      
+      const data = await apiRequest(`${API_BASE}/stats`)
       return data
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch communication statistics')
