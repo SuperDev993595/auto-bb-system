@@ -10,6 +10,7 @@ import dashboardReducer from "./actions/dashboard";
 import adminReducer from "./actions/admin";
 import emailReducer from "./actions/email";
 import vehiclesReducer from "./actions/vehicles";
+import communicationLogsReducer from "./reducer/communicationLogsReducer";
 
 const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ const store = configureStore({
     admin: adminReducer,
     email: emailReducer,
     vehicles: vehiclesReducer,
+    communicationLogs: communicationLogsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

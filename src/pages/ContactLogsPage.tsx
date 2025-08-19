@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { useAppSelector } from '../redux'
+import { useState, useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '../redux'
+import { fetchCommunicationLogs, createCommunicationLog, deleteCommunicationLog, fetchCommunicationStats } from '../redux/actions/communicationLogs'
 import PageTitle from '../components/Shared/PageTitle'
+import CreateCommunicationLogModal from '../components/CommunicationLogs/CreateCommunicationLogModal'
 import {
   HiPhone,
   HiMail,
@@ -16,7 +18,8 @@ import {
   HiArrowDown
 } from 'react-icons/hi'
 
-interface CommunicationLog {
+// Extended CommunicationLog interface for the page
+interface ExtendedCommunicationLog {
   id: string
   customerId: string
   customerName: string
@@ -36,12 +39,22 @@ export default function ContactLogsPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [outcomeFilter, setOutcomeFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLog, setSelectedLog] = useState<CommunicationLog | null>(null)
+  const [selectedLog, setSelectedLog] = useState<ExtendedCommunicationLog | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null)
 
+  const dispatch = useAppDispatch()
+  const { logs: communicationLogs, stats, loading } = useAppSelector(state => state.communicationLogs)
   const customers = useAppSelector(state => state.customers.list)
 
-  // Sample communication logs for auto repair shop
-  const communicationLogs: CommunicationLog[] = [
+  // Load data on component mount
+  useEffect(() => {
+    dispatch(fetchCommunicationLogs())
+    dispatch(fetchCommunicationStats())
+  }, [dispatch])
+
+  // Sample communication logs for auto repair shop (fallback data)
+  const sampleCommunicationLogs: ExtendedCommunicationLog[] = [
     {
       id: '1',
       customerId: '1',
@@ -118,16 +131,19 @@ export default function ContactLogsPage() {
     }
   ]
 
-  const filteredLogs = communicationLogs.filter(log => {
+  // Use real data if available, otherwise use sample data
+  const logsToDisplay = communicationLogs.length > 0 ? communicationLogs : sampleCommunicationLogs
+
+  const filteredLogs = logsToDisplay.filter(log => {
     const matchesType = typeFilter === 'all' || log.type === typeFilter
-    const matchesOutcome = outcomeFilter === 'all' || log.outcome === outcomeFilter
-    const matchesSearch = log.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesOutcome = outcomeFilter === 'all' || (log as any).outcome === outcomeFilter
+    const matchesSearch = (log as any).customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (log as any).subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          log.content.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesType && matchesOutcome && matchesSearch
   })
 
-  const getTypeIcon = (type: CommunicationLog['type']) => {
+  const getTypeIcon = (type: ExtendedCommunicationLog['type']) => {
     switch (type) {
       case 'phone': return <HiPhone className="w-4 h-4" />
       case 'email': return <HiMail className="w-4 h-4" />
