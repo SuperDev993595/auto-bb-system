@@ -12,10 +12,15 @@ import {
   fetchInventoryLocations,
   adjustStock
 } from '../redux/actions/inventory'
-import { InventoryItem, InventoryTransaction, Supplier, PurchaseOrder } from '../utils/CustomerTypes'
+import { InventoryItem } from '../utils/CustomerTypes'
+import type { InventoryTransaction, Supplier, PurchaseOrder } from '../redux/reducer/inventoryReducer'
 import PageTitle from '../components/Shared/PageTitle'
 import AddEditInventoryModal from '../components/inventory/AddEditInventoryModal'
 import DeleteInventoryModal from '../components/inventory/DeleteInventoryModal'
+import AddEditSupplierModal from '../components/inventory/AddEditSupplierModal'
+import DeleteSupplierModal from '../components/inventory/DeleteSupplierModal'
+import AddEditPurchaseOrderModal from '../components/inventory/AddEditPurchaseOrderModal'
+import DeletePurchaseOrderModal from '../components/inventory/DeletePurchaseOrderModal'
 import {
   HiCube,
   HiTruck,
@@ -51,6 +56,18 @@ export default function InventoryPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
+  
+  // Supplier modal states
+  const [isAddEditSupplierModalOpen, setIsAddEditSupplierModalOpen] = useState(false)
+  const [isDeleteSupplierModalOpen, setIsDeleteSupplierModalOpen] = useState(false)
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
+  const [supplierModalMode, setSupplierModalMode] = useState<'add' | 'edit'>('add')
+  
+  // Purchase Order modal states
+  const [isAddEditPurchaseOrderModalOpen, setIsAddEditPurchaseOrderModalOpen] = useState(false)
+  const [isDeletePurchaseOrderModalOpen, setIsDeletePurchaseOrderModalOpen] = useState(false)
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null)
+  const [purchaseOrderModalMode, setPurchaseOrderModalMode] = useState<'add' | 'edit'>('add')
   
   const { 
     items, 
@@ -143,6 +160,62 @@ export default function InventoryPage() {
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false)
     setSelectedItem(null)
+  }
+
+  // Supplier modal handlers
+  const handleAddSupplier = () => {
+    setSupplierModalMode('add')
+    setSelectedSupplier(null)
+    setIsAddEditSupplierModalOpen(true)
+  }
+
+  const handleEditSupplier = (supplier: Supplier) => {
+    setSupplierModalMode('edit')
+    setSelectedSupplier(supplier)
+    setIsAddEditSupplierModalOpen(true)
+  }
+
+  const handleDeleteSupplier = (supplier: Supplier) => {
+    setSelectedSupplier(supplier)
+    setIsDeleteSupplierModalOpen(true)
+  }
+
+  const handleCloseAddEditSupplierModal = () => {
+    setIsAddEditSupplierModalOpen(false)
+    setSelectedSupplier(null)
+  }
+
+  const handleCloseDeleteSupplierModal = () => {
+    setIsDeleteSupplierModalOpen(false)
+    setSelectedSupplier(null)
+  }
+
+  // Purchase Order modal handlers
+  const handleAddPurchaseOrder = () => {
+    setPurchaseOrderModalMode('add')
+    setSelectedPurchaseOrder(null)
+    setIsAddEditPurchaseOrderModalOpen(true)
+  }
+
+  const handleEditPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
+    setPurchaseOrderModalMode('edit')
+    setSelectedPurchaseOrder(purchaseOrder)
+    setIsAddEditPurchaseOrderModalOpen(true)
+  }
+
+  const handleDeletePurchaseOrder = (purchaseOrder: PurchaseOrder) => {
+    setSelectedPurchaseOrder(purchaseOrder)
+    setIsDeletePurchaseOrderModalOpen(true)
+  }
+
+  const handleCloseAddEditPurchaseOrderModal = () => {
+    setIsAddEditPurchaseOrderModalOpen(false)
+    setSelectedPurchaseOrder(null)
+  }
+
+  const handleCloseDeletePurchaseOrderModal = () => {
+    setIsDeletePurchaseOrderModalOpen(false)
+    setSelectedPurchaseOrder(null)
   }
 
   const renderInventory = () => (
@@ -380,9 +453,9 @@ export default function InventoryPage() {
                           <div className="text-sm text-gray-900">
                             Cost: ${(item.costPrice || 0).toFixed(2)}
                           </div>
-                          <div className="text-sm text-gray-900">
-                            Sell: ${(item.sellPrice || 0).toFixed(2)}
-                          </div>
+                                                     <div className="text-sm text-gray-900">
+                             Sell: ${(item.sellingPrice || 0).toFixed(2)}
+                           </div>
                           <div className="text-xs text-gray-500">
                             Value: ${((item.quantityOnHand || 0) * (item.costPrice || 0)).toFixed(2)}
                           </div>
@@ -466,7 +539,7 @@ export default function InventoryPage() {
               {(transactions && Array.isArray(transactions) ? transactions : []).slice(0, 50).map((transaction, index) => {
                 const item = (items && Array.isArray(items) ? items : []).find(i => (i._id || i.id) === transaction.itemId)
                 return (
-                  <tr key={transaction._id || transaction.id || `transaction-${index}`} className="hover:bg-gray-50">
+                  <tr key={transaction.id || `transaction-${index}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm text-gray-900">
@@ -532,7 +605,10 @@ export default function InventoryPage() {
           <h2 className="text-xl font-semibold text-gray-800">Suppliers</h2>
           <p className="text-gray-600">Manage your parts suppliers and vendors</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddSupplier}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Add Supplier
         </button>
@@ -540,14 +616,11 @@ export default function InventoryPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).map((supplier, index) => (
-          <div key={supplier._id || supplier.id || `supplier-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={supplier.id || `supplier-${index}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">{supplier.name}</h3>
-                                 <p className="text-sm text-gray-600">{typeof supplier.contactPerson === 'object' && supplier.contactPerson 
-                   ? (supplier.contactPerson as any).name 
-                   : supplier.contactPerson || 'N/A'
-                 }</p>
+                                 <p className="text-sm text-gray-600">{supplier.contactPerson || 'N/A'}</p>
               </div>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -590,10 +663,20 @@ export default function InventoryPage() {
                      : item.supplier === supplier.name
                  ).length} items
               </span>
-              <div className="flex gap-2">
-                <button className="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
-                <button className="text-green-600 hover:text-green-900 text-sm">Order</button>
-              </div>
+                             <div className="flex gap-2">
+                 <button 
+                   onClick={() => handleEditSupplier(supplier)}
+                   className="text-blue-600 hover:text-blue-900 text-sm"
+                 >
+                   Edit
+                 </button>
+                 <button 
+                   onClick={() => handleDeleteSupplier(supplier)}
+                   className="text-red-600 hover:text-red-900 text-sm"
+                 >
+                   Delete
+                 </button>
+               </div>
             </div>
           </div>
         ))}
@@ -608,7 +691,10 @@ export default function InventoryPage() {
           <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
           <p className="text-gray-600">Track and manage purchase orders</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddPurchaseOrder}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Create PO
         </button>
@@ -647,7 +733,7 @@ export default function InventoryPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).map((po, index) => (
-                <tr key={po._id || po.id || `po-${index}`} className="hover:bg-gray-50">
+                <tr key={po.id || `po-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">#{po.id}</div>
                   </td>
@@ -681,18 +767,24 @@ export default function InventoryPage() {
                       {po.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900" title="View">
-                        <HiEye className="w-4 h-4" />
-                      </button>
-                      {po.status !== 'received' && (
-                        <button className="text-green-600 hover:text-green-900" title="Mark received">
-                          <HiDownload className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                     <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => handleEditPurchaseOrder(po)}
+                         className="text-blue-600 hover:text-blue-900" 
+                         title="Edit"
+                       >
+                         <HiPencil className="w-4 h-4" />
+                       </button>
+                       <button 
+                         onClick={() => handleDeletePurchaseOrder(po)}
+                         className="text-red-600 hover:text-red-900" 
+                         title="Delete"
+                       >
+                         <HiTrash className="w-4 h-4" />
+                       </button>
+                     </div>
+                   </td>
                 </tr>
               ))}
             </tbody>
@@ -748,11 +840,39 @@ export default function InventoryPage() {
         mode={modalMode}
       />
 
-      <DeleteInventoryModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        item={selectedItem}
-      />
-    </div>
-  )
-}
+             <DeleteInventoryModal
+         isOpen={isDeleteModalOpen}
+         onClose={handleCloseDeleteModal}
+         item={selectedItem}
+       />
+
+       {/* Supplier Modals */}
+       <AddEditSupplierModal
+         isOpen={isAddEditSupplierModalOpen}
+         onClose={handleCloseAddEditSupplierModal}
+         supplier={selectedSupplier}
+         mode={supplierModalMode}
+       />
+
+       <DeleteSupplierModal
+         isOpen={isDeleteSupplierModalOpen}
+         onClose={handleCloseDeleteSupplierModal}
+         supplier={selectedSupplier}
+       />
+
+       {/* Purchase Order Modals */}
+       <AddEditPurchaseOrderModal
+         isOpen={isAddEditPurchaseOrderModalOpen}
+         onClose={handleCloseAddEditPurchaseOrderModal}
+         purchaseOrder={selectedPurchaseOrder}
+         mode={purchaseOrderModalMode}
+       />
+
+       <DeletePurchaseOrderModal
+         isOpen={isDeletePurchaseOrderModalOpen}
+         onClose={handleCloseDeletePurchaseOrderModal}
+         purchaseOrder={selectedPurchaseOrder}
+       />
+     </div>
+   )
+ }

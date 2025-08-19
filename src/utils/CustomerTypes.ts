@@ -207,12 +207,17 @@ export interface InventoryItem {
     name: string
     description: string
     category: string
+    subcategory?: string
+    brand?: string
+    model?: string
+    year?: string
     supplier: string | { name: string; contact?: string; email?: string; phone?: string; website?: string }
     costPrice: number
-    sellPrice: number
+    sellingPrice: number
     quantityOnHand: number
     minStockLevel: number
     maxStockLevel: number
+    reorderPoint?: number
     location: string | { warehouse?: string; shelf?: string; bin?: string }
     isActive: boolean
     lastUpdated: string
