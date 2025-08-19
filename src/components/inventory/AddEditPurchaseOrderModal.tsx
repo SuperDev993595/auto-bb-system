@@ -21,9 +21,13 @@ interface PurchaseOrderItem {
 
 interface CreatePurchaseOrderData {
   poNumber?: string;
-  supplier: string;
-  items: PurchaseOrderItem[];
-  expectedDeliveryDate?: string;
+  supplierId: string;
+  items: {
+    itemId: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+  expectedDeliveryDate: string;
   tax?: number;
   shipping?: number;
   notes?: string;
@@ -31,8 +35,12 @@ interface CreatePurchaseOrderData {
 
 interface UpdatePurchaseOrderData {
   poNumber?: string;
-  supplier?: string;
-  items?: PurchaseOrderItem[];
+  supplierId?: string;
+  items?: {
+    itemId: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
   expectedDeliveryDate?: string;
   tax?: number;
   shipping?: number;
@@ -45,7 +53,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   
   const [formData, setFormData] = useState<CreatePurchaseOrderData>({
     poNumber: '',
-    supplier: '',
+    supplierId: '',
     items: [],
     expectedDeliveryDate: '',
     tax: 0,
@@ -59,7 +67,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   useEffect(() => {
     if (purchaseOrder && mode === 'edit') {
       // Transform items to ensure they have the correct structure
-      const transformedItems = (purchaseOrder.items || []).map(item => {
+      const transformedItems = (purchaseOrder.items || []).map((item: any) => {
         // Handle different possible item structures
         let itemId = '';
         if (typeof item === 'object') {
@@ -75,18 +83,17 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
         }
         
         return {
-          item: itemId,
+          itemId: itemId,
           quantity: typeof item === 'object' ? item.quantity || 1 : 1,
-          unitPrice: typeof item === 'object' ? item.unitPrice || 0 : 0,
-          totalPrice: typeof item === 'object' ? item.totalPrice || 0 : 0
+          unitPrice: typeof item === 'object' ? item.unitPrice || 0 : 0
         };
       });
       
       setFormData({
         poNumber: purchaseOrder.poNumber || '',
-        supplier: purchaseOrder.supplierId || purchaseOrder.supplier || '',
+        supplierId: purchaseOrder.supplier || '',
         items: transformedItems,
-        expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : '',
+        expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : new Date().toISOString().split('T')[0],
         tax: 0,
         shipping: 0,
         notes: purchaseOrder.notes || ''
@@ -94,7 +101,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     } else {
       setFormData({
         poNumber: '',
-        supplier: '',
+        supplierId: '',
         items: [],
         expectedDeliveryDate: '',
         tax: 0,
@@ -108,7 +115,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.supplier.trim()) newErrors.supplierName = 'Supplier is required';
+    if (!formData.supplierId.trim()) newErrors.supplierName = 'Supplier is required';
     if (formData.items.length === 0) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
@@ -127,7 +134,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
       } else if (purchaseOrder) {
         const updateData: UpdatePurchaseOrderData = { ...formData };
         console.log('Sending update data:', updateData); // Debug log
-        await dispatch(updatePurchaseOrder({ id: purchaseOrder._id || purchaseOrder.id, purchaseOrderData: updateData })).unwrap();
+        await dispatch(updatePurchaseOrder({ id: purchaseOrder.id, purchaseOrderData: updateData })).unwrap();
       }
       onClose();
     } catch (error) {
@@ -145,11 +152,10 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   };
 
   const addItem = () => {
-    const newItem: PurchaseOrderItem = {
-      item: '',
+    const newItem = {
+      itemId: '',
       quantity: 1,
-      unitPrice: 0,
-      totalPrice: 0
+      unitPrice: 0
     };
     setFormData(prev => ({
       ...prev,
@@ -164,15 +170,10 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     }));
   };
 
-  const updateItem = (index: number, field: keyof PurchaseOrderItem, value: any) => {
+  const updateItem = (index: number, field: 'itemId' | 'quantity' | 'unitPrice', value: any) => {
     setFormData(prev => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
-      
-      // Recalculate total price for this item
-      if (field === 'quantity' || field === 'unitPrice') {
-        newItems[index].totalPrice = newItems[index].quantity * newItems[index].unitPrice;
-      }
       
       return {
         ...prev,
@@ -184,9 +185,8 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const handleItemSelect = (index: number, itemId: string) => {
     const selectedItem = (items && Array.isArray(items) ? items : []).find(item => (item._id || item.id) === itemId);
     if (selectedItem) {
-      updateItem(index, 'item', itemId);
+      updateItem(index, 'itemId', itemId);
       updateItem(index, 'unitPrice', selectedItem.costPrice || 0);
-      updateItem(index, 'totalPrice', (selectedItem.costPrice || 0) * formData.items[index].quantity);
     }
   };
 
@@ -229,11 +229,11 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                 Supplier *
               </label>
               <select
-                value={formData.supplier}
+                value={formData.supplierId}
                 onChange={(e) => {
                   setFormData(prev => ({
                     ...prev,
-                    supplier: e.target.value
+                    supplierId: e.target.value
                   }));
                   if (errors.supplierName) {
                     setErrors(prev => ({ ...prev, supplierName: '' }));
@@ -245,7 +245,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
               >
                 <option value="">Select supplier</option>
                 {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => (
-                  <option key={supplier._id || supplier.id} value={supplier._id || supplier.id}>
+                  <option key={supplier.id} value={supplier.id}>
                     {supplier.name}
                   </option>
                 ))}
@@ -345,13 +345,13 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                       Item *
                     </label>
                     <select
-                      value={item.item}
+                      value={item.itemId}
                       onChange={(e) => handleItemSelect(index, e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select item</option>
                       {(items && Array.isArray(items) ? items : []).map(inventoryItem => (
-                        <option key={inventoryItem._id || inventoryItem.id} value={inventoryItem._id || inventoryItem.id}>
+                        <option key={inventoryItem.id} value={inventoryItem.id}>
                           {inventoryItem.name} - {inventoryItem.partNumber}
                         </option>
                       ))}
@@ -389,12 +389,12 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Total Price
                     </label>
-                    <input
-                      type="number"
-                      value={item.totalPrice}
-                      readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                    />
+                                         <input
+                       type="number"
+                       value={item.quantity * item.unitPrice}
+                       readOnly
+                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                     />
                   </div>
                 </div>
               </div>
@@ -405,9 +405,9 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
           <div className="border-t pt-4">
             <div className="flex justify-end">
               <div className="text-right">
-                <p className="text-lg font-semibold text-gray-900">
-                  Total: ${(formData.items.reduce((sum, item) => sum + item.totalPrice, 0) + (formData.tax || 0) + (formData.shipping || 0)).toFixed(2)}
-                </p>
+                                 <p className="text-lg font-semibold text-gray-900">
+                   Total: ${(formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) + (formData.tax || 0) + (formData.shipping || 0)).toFixed(2)}
+                 </p>
               </div>
             </div>
           </div>
