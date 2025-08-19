@@ -43,12 +43,11 @@ const inventoryItemSchema = Joi.object({
 
 const purchaseOrderSchema = Joi.object({
   poNumber: Joi.string().optional(),
-  supplier: Joi.string().required(),
+  supplierId: Joi.string().required(),
   items: Joi.array().items(Joi.object({
-    item: Joi.string().required(),
+    itemId: Joi.string().required(),
     quantity: Joi.number().min(1).required(),
-    unitPrice: Joi.number().min(0).required(),
-    totalPrice: Joi.number().min(0).required()
+    unitPrice: Joi.number().min(0).required()
   })).min(1).required(),
   expectedDeliveryDate: Joi.date().optional(),
   tax: Joi.number().min(0).default(0),
@@ -579,9 +578,24 @@ router.post('/purchase-orders', requireAnyAdmin, async (req, res) => {
       });
     }
 
+    // Transform frontend data to backend format
+    const purchaseOrderData = {
+      supplier: value.supplierId, // Map supplierId to supplier
+      items: value.items.map(item => ({
+        item: item.itemId, // Map itemId to item
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.quantity * item.unitPrice // Calculate totalPrice
+      })),
+      expectedDeliveryDate: value.expectedDeliveryDate,
+      tax: value.tax || 0,
+      shipping: value.shipping || 0,
+      notes: value.notes
+    };
+
     // Create purchase order
     const purchaseOrder = new PurchaseOrder({
-      ...value,
+      ...purchaseOrderData,
       createdBy: req.user.id
     });
 
@@ -1074,7 +1088,39 @@ router.put('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    Object.assign(purchaseOrder, value);
+    // Transform frontend data to backend format
+    const updateData = {};
+    
+    if (value.supplierId) {
+      updateData.supplier = value.supplierId;
+    }
+    
+    if (value.items) {
+      updateData.items = value.items.map(item => ({
+        item: item.itemId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.quantity * item.unitPrice
+      }));
+    }
+    
+    if (value.expectedDeliveryDate) {
+      updateData.expectedDeliveryDate = value.expectedDeliveryDate;
+    }
+    
+    if (value.tax !== undefined) {
+      updateData.tax = value.tax;
+    }
+    
+    if (value.shipping !== undefined) {
+      updateData.shipping = value.shipping;
+    }
+    
+    if (value.notes !== undefined) {
+      updateData.notes = value.notes;
+    }
+
+    Object.assign(purchaseOrder, updateData);
     await purchaseOrder.save();
 
     await purchaseOrder.populate('items.item', 'name partNumber sku');
