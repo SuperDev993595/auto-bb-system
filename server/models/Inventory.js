@@ -428,7 +428,7 @@ purchaseOrderSchema.pre('save', function(next) {
 
 // Generate PO number
 purchaseOrderSchema.pre('save', function(next) {
-  if (this.isNew && !this.poNumber) {
+  if (this.isNew && (!this.poNumber || this.poNumber.trim() === '')) {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');

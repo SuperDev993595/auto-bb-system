@@ -142,7 +142,12 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     setIsSubmitting(true);
     try {
       if (mode === 'add') {
-        await dispatch(createPurchaseOrder(formData)).unwrap();
+        // For new purchase orders, if poNumber is empty, don't send it (let backend auto-generate)
+        const createData = { ...formData };
+        if (!createData.poNumber || createData.poNumber.trim() === '') {
+          delete createData.poNumber;
+        }
+        await dispatch(createPurchaseOrder(createData)).unwrap();
       } else if (purchaseOrder) {
         const updateData: UpdatePurchaseOrderData = { ...formData };
         console.log('Sending update data:', updateData); // Debug log
@@ -247,14 +252,14 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 PO Number
               </label>
-              <input
-                type="text"
-                value={formData.poNumber}
-                onChange={(e) => handleInputChange('poNumber', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Auto-generated if empty"
-                disabled={mode === 'edit'}
-              />
+                             <input
+                 type="text"
+                 value={formData.poNumber}
+                 onChange={(e) => handleInputChange('poNumber', e.target.value)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 placeholder={mode === 'add' ? "Leave empty to auto-generate" : "PO Number"}
+                 disabled={mode === 'edit'}
+               />
             </div>
 
             <div>
