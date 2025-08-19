@@ -55,7 +55,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     poNumber: '',
     supplierId: '',
     items: [],
-    expectedDeliveryDate: '',
+    expectedDeliveryDate: new Date().toISOString().split('T')[0],
     tax: 0,
     shipping: 0,
     notes: ''
@@ -66,8 +66,12 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
 
   useEffect(() => {
     if (purchaseOrder && mode === 'edit') {
+      console.log('Editing purchase order:', purchaseOrder); // Debug log
+      
       // Transform items to ensure they have the correct structure
       const transformedItems = (purchaseOrder.items || []).map((item: any) => {
+        console.log('Processing item:', item); // Debug log
+        
         // Handle different possible item structures
         let itemId = '';
         if (typeof item === 'object') {
@@ -89,13 +93,21 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
         };
       });
       
+      // Handle supplier - could be populated object or string ID
+      let supplierId = '';
+      if (typeof purchaseOrder.supplier === 'object' && purchaseOrder.supplier) {
+        supplierId = (purchaseOrder.supplier as any)._id || (purchaseOrder.supplier as any).id;
+      } else {
+        supplierId = purchaseOrder.supplier || '';
+      }
+      
       setFormData({
         poNumber: purchaseOrder.poNumber || '',
-        supplierId: purchaseOrder.supplier || '',
+        supplierId: supplierId,
         items: transformedItems,
         expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : new Date().toISOString().split('T')[0],
-        tax: 0,
-        shipping: 0,
+        tax: purchaseOrder.tax || 0,
+        shipping: purchaseOrder.shipping || 0,
         notes: purchaseOrder.notes || ''
       });
     } else {
@@ -103,7 +115,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
         poNumber: '',
         supplierId: '',
         items: [],
-        expectedDeliveryDate: '',
+        expectedDeliveryDate: new Date().toISOString().split('T')[0], // Set today as default
         tax: 0,
         shipping: 0,
         notes: ''
@@ -190,22 +202,40 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     }
   };
 
+  // Debug function to log current form state
+  const logFormState = () => {
+    console.log('Current form data:', formData);
+    console.log('Available suppliers:', suppliers);
+    console.log('Available items:', items);
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <HiX className="w-6 h-6" />
-          </button>
-        </div>
+                   <div className="flex items-center justify-between p-6 border-b">
+             <h2 className="text-xl font-semibold text-gray-900">
+               {mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
+             </h2>
+             <div className="flex items-center gap-2">
+               {mode === 'edit' && (
+                 <button
+                   type="button"
+                   onClick={logFormState}
+                   className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                 >
+                   Debug
+                 </button>
+               )}
+               <button
+                 onClick={onClose}
+                 className="text-gray-400 hover:text-gray-600 transition-colors"
+               >
+                 <HiX className="w-6 h-6" />
+               </button>
+             </div>
+           </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
