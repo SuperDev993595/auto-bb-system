@@ -111,8 +111,8 @@ export default function ContactLogsPage() {
     console.log('Looking for customer with ID:', customerId)
     console.log('Available customers:', customers)
     
-    // Try to find customer by _id (from Customer interface in services)
-    const customer = customers.find(c => (c as any)._id === customerId)
+    // Try to find customer by id (now mapped from _id) or fallback to _id
+    const customer = customers.find(c => (c as any).id === customerId || (c as any)._id === customerId)
     
     if (!customer) {
       console.log('Customer not found for ID:', customerId)

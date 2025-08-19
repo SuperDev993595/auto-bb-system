@@ -58,7 +58,7 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
   }
 
   const handleCustomerChange = (customerId: string) => {
-    const customer = customers.find(c => c._id === customerId)
+    const customer = customers.find(c => (c as any)._id === customerId || (c as any).id === customerId)
     setFormData(prev => ({
       ...prev,
       customerId,
@@ -87,7 +87,7 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
           >
             <option value="">Select a customer</option>
             {customers.map(customer => (
-              <option key={customer._id} value={customer._id}>{customer.name}</option>
+              <option key={(customer as any)._id} value={(customer as any)._id}>{(customer as any).name}</option>
             ))}
           </select>
         </div>

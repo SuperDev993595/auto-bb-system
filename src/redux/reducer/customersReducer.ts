@@ -64,7 +64,14 @@ const customersSlice = createSlice({
           ? payload.data.customers
           : []
         console.log('fetchCustomers.fulfilled normalized:', normalized)
-        state.list = normalized
+        
+        // Map _id to id for consistency with frontend interface
+        const customersWithId = normalized.map((customer: any) => ({
+          ...customer,
+          id: customer._id || customer.id
+        }))
+        
+        state.list = customersWithId
         state.pagination = payload?.pagination || payload?.data?.pagination || null
         state.error = null
       })
