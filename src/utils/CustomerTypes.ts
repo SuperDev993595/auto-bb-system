@@ -44,7 +44,7 @@ export interface ServicePart {
 // Communication Log
 export interface CommunicationLog {
     id: string
-    customerId: string
+    customerId: string | { id: string; _id: string; name: string; fullAddress?: string; [key: string]: any }
     date: string
     type: 'phone' | 'email' | 'in-person' | 'sms'
     direction: 'inbound' | 'outbound'

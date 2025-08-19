@@ -106,19 +106,43 @@ export default function ContactLogsPage() {
     })
   }
 
-  const getCustomerName = (customerId: string) => {
+  const getCustomerName = (customerId: string | any) => {
     // Debug: Log the customerId and available customers
-    console.log('Looking for customer with ID:', customerId)
-    console.log('Available customers:', customers)
+    console.log('=== getCustomerName Debug ===')
+    console.log('Looking for customer with ID/Object:', customerId)
+    console.log('Type of customerId:', typeof customerId)
     
-    // Try to find customer by id (now mapped from _id) or fallback to _id
-    const customer = customers.find(c => (c as any).id === customerId || (c as any)._id === customerId)
-    
-    if (!customer) {
-      console.log('Customer not found for ID:', customerId)
+    // If customerId is already a populated customer object, return its name directly
+    if (typeof customerId === 'object' && customerId !== null && customerId.name) {
+      console.log('✅ CustomerId is a customer object, returning name:', customerId.name)
+      return customerId.name
     }
     
-    return customer?.name || 'Unknown Customer'
+    // If customerId is a string, try to find the customer in the list
+    if (typeof customerId === 'string') {
+      console.log('CustomerId is string, searching in customer list...')
+      console.log('Available customers count:', customers.length)
+      
+      if (customers.length === 0) {
+        console.log('⚠️ No customers loaded yet!')
+        return 'Loading...'
+      }
+      
+      // Try to find customer by id (now mapped from _id) or fallback to _id
+      const customer = customers.find(c => (c as any).id === customerId || (c as any)._id === customerId)
+      
+      if (!customer) {
+        console.log('❌ Customer not found for ID:', customerId)
+        console.log('Available customer IDs:', customers.map(c => (c as any).id || (c as any)._id))
+      } else {
+        console.log('✅ Found customer:', customer)
+      }
+      
+      return customer?.name || 'Unknown Customer'
+    }
+    
+    console.log('❌ CustomerId is neither string nor valid object:', customerId)
+    return 'Unknown Customer'
   }
 
   return (

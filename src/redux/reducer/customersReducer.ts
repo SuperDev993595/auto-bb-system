@@ -56,23 +56,19 @@ const customersSlice = createSlice({
         state.loading = false
         console.log('fetchCustomers.fulfilled payload:', action.payload)
         const payload: any = action.payload as any
-        const normalized = Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.customers)
-          ? payload.customers
-          : Array.isArray(payload?.data?.customers)
-          ? payload.data.customers
-          : []
-        console.log('fetchCustomers.fulfilled normalized:', normalized)
+        
+        // The payload structure is: { customers: Customer[], pagination: {...} }
+        const customers = payload?.customers || []
+        console.log('fetchCustomers.fulfilled customers:', customers)
         
         // Map _id to id for consistency with frontend interface
-        const customersWithId = normalized.map((customer: any) => ({
+        const customersWithId = customers.map((customer: any) => ({
           ...customer,
           id: customer._id || customer.id
         }))
         
         state.list = customersWithId
-        state.pagination = payload?.pagination || payload?.data?.pagination || null
+        state.pagination = payload?.pagination || null
         state.error = null
       })
       .addCase(fetchCustomers.rejected, (state, action) => {
