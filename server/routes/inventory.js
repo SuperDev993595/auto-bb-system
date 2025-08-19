@@ -42,7 +42,7 @@ const inventoryItemSchema = Joi.object({
 });
 
 const purchaseOrderSchema = Joi.object({
-  poNumber: Joi.string().optional(),
+  poNumber: Joi.string().allow('').optional(),
   supplierId: Joi.string().required(),
   items: Joi.array().items(Joi.object({
     itemId: Joi.string().required(),
@@ -52,7 +52,7 @@ const purchaseOrderSchema = Joi.object({
   expectedDeliveryDate: Joi.date().optional(),
   tax: Joi.number().min(0).default(0),
   shipping: Joi.number().min(0).default(0),
-  notes: Joi.string().optional()
+  notes: Joi.string().allow('').optional()
 });
 
 // Supplier Routes
@@ -580,6 +580,7 @@ router.post('/purchase-orders', requireAnyAdmin, async (req, res) => {
 
     // Transform frontend data to backend format
     const purchaseOrderData = {
+      poNumber: value.poNumber && value.poNumber.trim() !== '' ? value.poNumber : '', // Use empty string to trigger auto-generation
       supplier: value.supplierId, // Map supplierId to supplier
       items: value.items.map(item => ({
         item: item.itemId, // Map itemId to item
@@ -590,7 +591,7 @@ router.post('/purchase-orders', requireAnyAdmin, async (req, res) => {
       expectedDeliveryDate: value.expectedDeliveryDate,
       tax: value.tax || 0,
       shipping: value.shipping || 0,
-      notes: value.notes
+      notes: value.notes && value.notes.trim() !== '' ? value.notes : undefined
     };
 
     // Create purchase order
@@ -1118,6 +1119,11 @@ router.put('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
     
     if (value.notes !== undefined) {
       updateData.notes = value.notes;
+    }
+    
+    // Handle poNumber for updates (only if provided and not empty)
+    if (value.poNumber !== undefined) {
+      updateData.poNumber = value.poNumber && value.poNumber.trim() !== '' ? value.poNumber : '';
     }
 
     Object.assign(purchaseOrder, updateData);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../redux';
-import { createPurchaseOrder, updatePurchaseOrder } from '../../redux/actions/inventory';
+import { createPurchaseOrder, updatePurchaseOrder, fetchPurchaseOrders } from '../../redux/actions/inventory';
 import { InventoryItem } from '../../utils/CustomerTypes'
 import type { PurchaseOrder, Supplier } from '../../redux/reducer/inventoryReducer';
 import { HiX, HiSave, HiPlus, HiTrash } from 'react-icons/hi';
@@ -148,10 +148,14 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
           delete createData.poNumber;
         }
         await dispatch(createPurchaseOrder(createData)).unwrap();
+        // Refresh the purchase orders list after successful creation
+        dispatch(fetchPurchaseOrders({}));
       } else if (purchaseOrder) {
         const updateData: UpdatePurchaseOrderData = { ...formData };
         console.log('Sending update data:', updateData); // Debug log
         await dispatch(updatePurchaseOrder({ id: purchaseOrder.id, purchaseOrderData: updateData })).unwrap();
+        // Refresh the purchase orders list after successful update
+        dispatch(fetchPurchaseOrders({}));
       }
       onClose();
     } catch (error) {
