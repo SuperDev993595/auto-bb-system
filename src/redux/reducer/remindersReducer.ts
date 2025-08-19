@@ -3,7 +3,13 @@ import { Reminder } from '../../utils/CustomerTypes'
 import { 
   fetchReminders, 
   fetchReminderTemplates, 
-  fetchNotificationSettings 
+  fetchNotificationSettings,
+  createReminder as createReminderThunk,
+  updateReminder as updateReminderThunk,
+  deleteReminder as deleteReminderThunk,
+  createReminderTemplate as createReminderTemplateThunk,
+  updateReminderTemplate as updateReminderTemplateThunk,
+  deleteReminderTemplate as deleteReminderTemplateThunk
 } from '../actions/reminders'
 
 interface RemindersState {
@@ -195,6 +201,116 @@ const remindersSlice = createSlice({
       .addCase(fetchNotificationSettings.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Failed to fetch notification settings'
+      })
+
+    // Create Reminder
+    builder
+      .addCase(createReminderThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(createReminderThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Add the new reminder to the list
+        if (action.payload) {
+          state.reminders.push(action.payload)
+        }
+      })
+      .addCase(createReminderThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to create reminder'
+      })
+
+    // Update Reminder
+    builder
+      .addCase(updateReminderThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateReminderThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Update the reminder in the list
+        if (action.payload) {
+          const index = state.reminders.findIndex(r => r.id === action.payload.id)
+          if (index !== -1) {
+            state.reminders[index] = action.payload
+          }
+        }
+      })
+      .addCase(updateReminderThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to update reminder'
+      })
+
+    // Delete Reminder
+    builder
+      .addCase(deleteReminderThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteReminderThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Remove the reminder from the list
+        state.reminders = state.reminders.filter(r => r.id !== action.payload)
+      })
+      .addCase(deleteReminderThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to delete reminder'
+      })
+
+    // Create Reminder Template
+    builder
+      .addCase(createReminderTemplateThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(createReminderTemplateThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Add the new template to the list
+        if (action.payload) {
+          state.templates.push(action.payload)
+        }
+      })
+      .addCase(createReminderTemplateThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to create reminder template'
+      })
+
+    // Update Reminder Template
+    builder
+      .addCase(updateReminderTemplateThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateReminderTemplateThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Update the template in the list
+        if (action.payload) {
+          const index = state.templates.findIndex(t => t.id === action.payload.id)
+          if (index !== -1) {
+            state.templates[index] = action.payload
+          }
+        }
+      })
+      .addCase(updateReminderTemplateThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to update reminder template'
+      })
+
+    // Delete Reminder Template
+    builder
+      .addCase(deleteReminderTemplateThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteReminderTemplateThunk.fulfilled, (state, action) => {
+        state.loading = false
+        // Remove the template from the list
+        state.templates = state.templates.filter(t => t.id !== action.payload)
+      })
+      .addCase(deleteReminderTemplateThunk.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to delete reminder template'
       })
   }
 })
