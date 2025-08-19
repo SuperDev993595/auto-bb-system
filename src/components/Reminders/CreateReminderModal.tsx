@@ -43,11 +43,9 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   }
 
   const handleCustomerChange = (customerId: string) => {
-    const customer = customers?.find(c => c._id === customerId)
     setFormData(prev => ({
       ...prev,
-      customerId,
-      customerName: customer ? customer.name : ''
+      customerId
     }))
   }
 
@@ -62,9 +60,10 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   const getTypeIcon = (type: Reminder['type']) => {
     switch (type) {
       case 'appointment': return <HiCalendar className="w-4 h-4" />
-      case 'service-due': return <HiClock className="w-4 h-4" />
-      case 'follow-up': return <HiUser className="w-4 h-4" />
-      case 'payment-due': return <HiMail className="w-4 h-4" />
+      case 'service_due': return <HiClock className="w-4 h-4" />
+      case 'follow_up': return <HiUser className="w-4 h-4" />
+      case 'payment': return <HiMail className="w-4 h-4" />
+      case 'custom': return <HiClock className="w-4 h-4" />
       default: return <HiClock className="w-4 h-4" />
     }
   }

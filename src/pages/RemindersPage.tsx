@@ -165,15 +165,15 @@ export default function RemindersPage() {
 
   const handleCreateReminder = (data: any) => {
     const reminderData = {
-      customerId: data.customerId,
-      customerName: data.customerName,
+      title: data.title,
+      description: data.description,
       type: data.type,
-      message: data.message,
-      scheduledDate: `${data.scheduledDate}T${data.scheduledTime}`,
-      method: data.method,
       priority: data.priority,
-      notes: data.notes || '',
-      status: 'pending' as const
+      dueDate: data.dueDate,
+      reminderDate: data.reminderDate,
+      customerId: data.customerId,
+      notificationMethods: data.notificationMethods,
+      notes: data.notes || ''
     }
     dispatch(createReminder(reminderData))
     setShowCreateReminderModal(false)
