@@ -13,29 +13,38 @@ interface AddEditPurchaseOrderModalProps {
 }
 
 interface PurchaseOrderItem {
-  itemId: string;
-  name: string;
+  item: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
 }
 
 interface CreatePurchaseOrderData {
-  supplierName: string;
-  orderDate: string;
-  expectedDate?: string;
+  supplier: {
+    name: string;
+    contact?: string;
+    email?: string;
+    phone?: string;
+  };
   items: PurchaseOrderItem[];
-  total: number;
-  status: 'draft' | 'sent' | 'confirmed' | 'received' | 'cancelled';
+  expectedDeliveryDate?: string;
+  tax?: number;
+  shipping?: number;
+  notes?: string;
 }
 
 interface UpdatePurchaseOrderData {
-  supplierName?: string;
-  orderDate?: string;
-  expectedDate?: string;
+  supplier?: {
+    name: string;
+    contact?: string;
+    email?: string;
+    phone?: string;
+  };
   items?: PurchaseOrderItem[];
-  total?: number;
-  status?: 'draft' | 'sent' | 'confirmed' | 'received' | 'cancelled';
+  expectedDeliveryDate?: string;
+  tax?: number;
+  shipping?: number;
+  notes?: string;
 }
 
 export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrder, mode }: AddEditPurchaseOrderModalProps) {
@@ -43,12 +52,17 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const { suppliers, items } = useAppSelector(state => state.inventory);
   
   const [formData, setFormData] = useState<CreatePurchaseOrderData>({
-    supplierName: '',
-    orderDate: new Date().toISOString().split('T')[0],
-    expectedDate: '',
+    supplier: {
+      name: '',
+      contact: '',
+      email: '',
+      phone: ''
+    },
     items: [],
-    total: 0,
-    status: 'draft'
+    expectedDeliveryDate: '',
+    tax: 0,
+    shipping: 0,
+    notes: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,21 +71,31 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   useEffect(() => {
     if (purchaseOrder && mode === 'edit') {
       setFormData({
-        supplierName: purchaseOrder.supplierName,
-        orderDate: purchaseOrder.orderDate.split('T')[0],
-        expectedDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : '',
+        supplier: {
+          name: purchaseOrder.supplierName,
+          contact: '',
+          email: '',
+          phone: ''
+        },
         items: purchaseOrder.items || [],
-        total: purchaseOrder.total,
-        status: purchaseOrder.status
+        expectedDeliveryDate: purchaseOrder.expectedDate ? purchaseOrder.expectedDate.split('T')[0] : '',
+        tax: 0,
+        shipping: 0,
+        notes: purchaseOrder.notes || ''
       });
     } else {
       setFormData({
-        supplierName: '',
-        orderDate: new Date().toISOString().split('T')[0],
-        expectedDate: '',
+        supplier: {
+          name: '',
+          contact: '',
+          email: '',
+          phone: ''
+        },
         items: [],
-        total: 0,
-        status: 'draft'
+        expectedDeliveryDate: '',
+        tax: 0,
+        shipping: 0,
+        notes: ''
       });
     }
     setErrors({});
@@ -80,8 +104,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.supplierName.trim()) newErrors.supplierName = 'Supplier is required';
-    if (!formData.orderDate) newErrors.orderDate = 'Order date is required';
+    if (!formData.supplier.name.trim()) newErrors.supplierName = 'Supplier is required';
     if (formData.items.length === 0) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
@@ -118,8 +141,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
 
   const addItem = () => {
     const newItem: PurchaseOrderItem = {
-      itemId: '',
-      name: '',
+      item: '',
       quantity: 1,
       unitPrice: 0,
       totalPrice: 0
@@ -147,13 +169,9 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
         newItems[index].totalPrice = newItems[index].quantity * newItems[index].unitPrice;
       }
       
-      // Recalculate total for all items
-      const total = newItems.reduce((sum, item) => sum + item.totalPrice, 0);
-      
       return {
         ...prev,
-        items: newItems,
-        total
+        items: newItems
       };
     });
   };
@@ -161,8 +179,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const handleItemSelect = (index: number, itemId: string) => {
     const selectedItem = (items && Array.isArray(items) ? items : []).find(item => (item._id || item.id) === itemId);
     if (selectedItem) {
-      updateItem(index, 'itemId', itemId);
-      updateItem(index, 'name', selectedItem.name);
+      updateItem(index, 'item', itemId);
       updateItem(index, 'unitPrice', selectedItem.costPrice || 0);
       updateItem(index, 'totalPrice', (selectedItem.costPrice || 0) * formData.items[index].quantity);
     }
@@ -187,14 +204,28 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Supplier *
               </label>
               <select
-                value={formData.supplierName}
-                onChange={(e) => handleInputChange('supplierName', e.target.value)}
+                value={formData.supplier.name}
+                onChange={(e) => {
+                  const selectedSupplier = (suppliers && Array.isArray(suppliers) ? suppliers : []).find(s => s.name === e.target.value);
+                  setFormData(prev => ({
+                    ...prev,
+                    supplier: {
+                      name: e.target.value,
+                      contact: selectedSupplier?.contactPerson?.name || '',
+                      email: selectedSupplier?.email || '',
+                      phone: selectedSupplier?.phone || ''
+                    }
+                  }));
+                  if (errors.supplierName) {
+                    setErrors(prev => ({ ...prev, supplierName: '' }));
+                  }
+                }}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.supplierName ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -211,48 +242,59 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Date *
+                Expected Delivery Date
               </label>
               <input
                 type="date"
-                value={formData.orderDate}
-                onChange={(e) => handleInputChange('orderDate', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.orderDate ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.orderDate && <p className="mt-1 text-sm text-red-600">{errors.orderDate}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Date
-              </label>
-              <input
-                type="date"
-                value={formData.expectedDate}
-                onChange={(e) => handleInputChange('expectedDate', e.target.value)}
+                value={formData.expectedDeliveryDate}
+                onChange={(e) => handleInputChange('expectedDeliveryDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="received">Received</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+          {/* Additional Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tax Amount
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.tax}
+                onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shipping Cost
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.shipping}
+                onChange={(e) => handleInputChange('shipping', parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notes
+              </label>
+              <input
+                type="text"
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Additional notes"
+              />
+            </div>
           </div>
 
           {/* Items */}
@@ -290,7 +332,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                       Item *
                     </label>
                     <select
-                      value={item.itemId}
+                      value={item.item}
                       onChange={(e) => handleItemSelect(index, e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
@@ -351,7 +393,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
             <div className="flex justify-end">
               <div className="text-right">
                 <p className="text-lg font-semibold text-gray-900">
-                  Total: ${formData.total.toFixed(2)}
+                  Total: ${(formData.items.reduce((sum, item) => sum + item.totalPrice, 0) + (formData.tax || 0) + (formData.shipping || 0)).toFixed(2)}
                 </p>
               </div>
             </div>
