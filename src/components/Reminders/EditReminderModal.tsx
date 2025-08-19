@@ -4,24 +4,28 @@ import { fetchCustomers } from '../../redux/actions/customers'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClock, HiUser, HiMail, HiPhone, HiCalendar } from 'react-icons/hi'
 import { Customer } from '../../utils/CustomerTypes'
-import { Reminder, CreateReminderData as ServiceCreateReminderData } from '../../services/reminders'
+import { Reminder } from '../../utils/CustomerTypes'
+import { CreateReminderData as ServiceCreateReminderData } from '../../services/reminders'
 
 interface Props {
   onClose: () => void
   onSave: (data: ServiceCreateReminderData) => void
   isLoading?: boolean
+  reminder: Reminder
 }
 
-export default function CreateReminderModal({ onClose, onSave, isLoading = false }: Props) {
+export default function EditReminderModal({ onClose, onSave, isLoading = false, reminder }: Props) {
   const [formData, setFormData] = useState<ServiceCreateReminderData>({
-    title: '',
+    title: reminder.message || '',
     description: '',
-    type: 'appointment',
+    type: reminder.type === 'service-due' ? 'service_due' : 
+          reminder.type === 'follow-up' ? 'follow_up' : 
+          reminder.type === 'payment-due' ? 'payment' : 'appointment',
     priority: 'medium',
-    dueDate: '',
-    reminderDate: '',
-    customerId: '',
-    notificationMethods: ['email'],
+    dueDate: reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    reminderDate: reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    customerId: reminder.customerId || '',
+    notificationMethods: reminder.method === 'phone' ? ['sms'] : [reminder.method as 'email' | 'sms'],
     notes: ''
   })
 
@@ -57,7 +61,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     onSave(formData)
   }
 
-  const getTypeIcon = (type: Reminder['type']) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'appointment': return <HiCalendar className="w-4 h-4" />
       case 'service_due': return <HiClock className="w-4 h-4" />
@@ -72,9 +76,9 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     <ModalWrapper 
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="Create New Reminder"
+      title="Edit Reminder"
       icon={<HiClock className="w-5 h-5" />}
-      submitLabel={isLoading ? 'Creating...' : 'Create Reminder'}
+      submitLabel={isLoading ? 'Updating...' : 'Update Reminder'}
     >
       <div className="space-y-6">
           {/* Customer Selection */}
@@ -242,8 +246,6 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               <option value="urgent">Urgent</option>
             </select>
           </div>
-
-
 
           {/* Notes */}
           <div>
