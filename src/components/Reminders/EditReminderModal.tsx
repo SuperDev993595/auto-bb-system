@@ -16,17 +16,25 @@ interface Props {
 
 export default function EditReminderModal({ onClose, onSave, isLoading = false, reminder }: Props) {
   const [formData, setFormData] = useState<ServiceCreateReminderData>({
-    title: reminder.message || '',
-    description: '',
+    title: (reminder as any).title || reminder.message || '',
+    description: (reminder as any).description || '',
     type: reminder.type === 'service-due' ? 'service_due' : 
           reminder.type === 'follow-up' ? 'follow_up' : 
-          reminder.type === 'payment-due' ? 'payment' : 'appointment',
-    priority: 'medium',
-    dueDate: reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
-    reminderDate: reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
-    customerId: reminder.customerId || '',
-    notificationMethods: reminder.method === 'phone' ? ['sms'] : [reminder.method as 'email' | 'sms'],
-    notes: ''
+          reminder.type === 'payment-due' ? 'payment' : 
+          (reminder as any).type === 'service_due' ? 'service_due' :
+          (reminder as any).type === 'follow_up' ? 'follow_up' :
+          (reminder as any).type === 'payment' ? 'payment' : 'appointment',
+    priority: (reminder as any).priority || 'medium',
+    dueDate: (reminder as any).dueDate ? (reminder as any).dueDate.split('T')[0] : 
+             reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    reminderDate: (reminder as any).reminderDate ? (reminder as any).reminderDate.split('T')[0] : 
+                  reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+    customerId: (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId || '',
+    notificationMethods: (reminder as any).notificationMethods || 
+                        (reminder.method === 'phone' ? ['sms'] : 
+                         reminder.method === 'email' ? ['email'] : 
+                         reminder.method === 'sms' ? ['sms'] : ['email']),
+    notes: (reminder as any).notes || ''
   })
 
   const { list: customers = [] } = useAppSelector(state => state.customers)
@@ -38,6 +46,41 @@ export default function EditReminderModal({ onClose, onSave, isLoading = false, 
       dispatch(fetchCustomers({}))
     }
   }, [dispatch, customers])
+
+  // Debug: Log customers and form data
+  useEffect(() => {
+    console.log('EditReminderModal - Available customers:', customers)
+    console.log('EditReminderModal - Current form data:', formData)
+  }, [customers, formData])
+
+  // Update form data when reminder changes
+  useEffect(() => {
+    console.log('EditReminderModal - Reminder data:', reminder)
+    console.log('EditReminderModal - Customer data:', (reminder as any).customer)
+    console.log('EditReminderModal - Customer ID:', (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId)
+    
+    setFormData({
+      title: (reminder as any).title || reminder.message || '',
+      description: (reminder as any).description || '',
+      type: reminder.type === 'service-due' ? 'service_due' : 
+            reminder.type === 'follow-up' ? 'follow_up' : 
+            reminder.type === 'payment-due' ? 'payment' : 
+            (reminder as any).type === 'service_due' ? 'service_due' :
+            (reminder as any).type === 'follow_up' ? 'follow_up' :
+            (reminder as any).type === 'payment' ? 'payment' : 'appointment',
+      priority: (reminder as any).priority || 'medium',
+      dueDate: (reminder as any).dueDate ? (reminder as any).dueDate.split('T')[0] : 
+               reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+      reminderDate: (reminder as any).reminderDate ? (reminder as any).reminderDate.split('T')[0] : 
+                    reminder.scheduledDate ? reminder.scheduledDate.split('T')[0] : '',
+      customerId: (reminder as any).customer?._id || (reminder as any).customerId || reminder.customerId || '',
+      notificationMethods: (reminder as any).notificationMethods || 
+                          (reminder.method === 'phone' ? ['sms'] : 
+                           reminder.method === 'email' ? ['email'] : 
+                           reminder.method === 'sms' ? ['sms'] : ['email']),
+      notes: (reminder as any).notes || ''
+    })
+  }, [reminder])
 
   const handleChange = (field: keyof ServiceCreateReminderData, value: any) => {
     setFormData(prev => ({

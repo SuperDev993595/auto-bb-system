@@ -96,6 +96,12 @@ const reminderSchema = new mongoose.Schema({
       trim: true
     }
   },
+  // Notification methods array
+  notificationMethods: {
+    type: [String],
+    enum: ['email', 'sms', 'push', 'in_app'],
+    default: ['email']
+  },
   // Notification settings
   notifications: {
     email: {

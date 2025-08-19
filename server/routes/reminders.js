@@ -125,8 +125,15 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
+    // Map customerId to customer field for database
+    const reminderData = { ...value };
+    if (reminderData.customerId) {
+      reminderData.customer = reminderData.customerId;
+      delete reminderData.customerId;
+    }
+
     const reminder = new Reminder({
-      ...value,
+      ...reminderData,
       createdBy: req.user.id
     });
 
@@ -169,7 +176,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
       }
     }
 
-    Object.assign(reminder, value);
+    // Map customerId to customer field for database
+    const updateData = { ...value };
+    if (updateData.customerId) {
+      updateData.customer = updateData.customerId;
+      delete updateData.customerId;
+    }
+
+    Object.assign(reminder, updateData);
     reminder.updatedBy = req.user.id;
     reminder.updatedAt = Date.now();
 

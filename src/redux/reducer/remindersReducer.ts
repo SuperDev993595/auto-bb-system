@@ -166,7 +166,12 @@ const remindersSlice = createSlice({
       })
       .addCase(fetchReminders.fulfilled, (state, action) => {
         state.loading = false
-        state.reminders = action.payload.data || []
+        // Map _id to id for consistency with frontend interface
+        const remindersWithId = (action.payload.data || []).map((reminder: any) => ({
+          ...reminder,
+          id: reminder._id || reminder.id
+        }))
+        state.reminders = remindersWithId
       })
       .addCase(fetchReminders.rejected, (state, action) => {
         state.loading = false
@@ -213,7 +218,12 @@ const remindersSlice = createSlice({
         state.loading = false
         // Add the new reminder to the list
         if (action.payload) {
-          state.reminders.push(action.payload)
+          // Map _id to id for consistency with frontend interface
+          const reminderWithId = {
+            ...action.payload,
+            id: action.payload._id || action.payload.id
+          }
+          state.reminders.push(reminderWithId)
         }
       })
       .addCase(createReminderThunk.rejected, (state, action) => {
@@ -231,9 +241,14 @@ const remindersSlice = createSlice({
         state.loading = false
         // Update the reminder in the list
         if (action.payload) {
-          const index = state.reminders.findIndex(r => r.id === action.payload.id)
+          // Map _id to id for consistency with frontend interface
+          const reminderWithId = {
+            ...action.payload,
+            id: action.payload._id || action.payload.id
+          }
+          const index = state.reminders.findIndex(r => r.id === reminderWithId.id || (r as any)._id === reminderWithId.id)
           if (index !== -1) {
-            state.reminders[index] = action.payload
+            state.reminders[index] = reminderWithId
           }
         }
       })
@@ -251,7 +266,7 @@ const remindersSlice = createSlice({
       .addCase(deleteReminderThunk.fulfilled, (state, action) => {
         state.loading = false
         // Remove the reminder from the list
-        state.reminders = state.reminders.filter(r => r.id !== action.payload)
+        state.reminders = state.reminders.filter(r => r.id !== action.payload && (r as any)._id !== action.payload)
       })
       .addCase(deleteReminderThunk.rejected, (state, action) => {
         state.loading = false

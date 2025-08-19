@@ -16,6 +16,7 @@ import { ReminderTemplate, NotificationSettings } from '../redux/reducer/reminde
 import { Reminder } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
 import CreateReminderModal from '../components/Reminders/CreateReminderModal'
+import EditReminderModal from '../components/Reminders/EditReminderModal'
 import CreateTemplateModal from '../components/Reminders/CreateTemplateModal'
 import DeleteConfirmationModal from '../components/Reminders/DeleteConfirmationModal'
 import {
@@ -45,9 +46,11 @@ export default function RemindersPage() {
   
   // Modal states
   const [showCreateReminderModal, setShowCreateReminderModal] = useState(false)
+  const [showEditReminderModal, setShowEditReminderModal] = useState(false)
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<ReminderTemplate | null>(null)
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null)
   const [deleteItem, setDeleteItem] = useState<{ type: 'reminder' | 'template', id: string, name: string } | null>(null)
   
   const [settingsForm, setSettingsForm] = useState({
@@ -139,6 +142,12 @@ export default function RemindersPage() {
     return true
   })
 
+  // Debug: Log reminders state
+  useEffect(() => {
+    console.log('Current reminders state:', reminders)
+    console.log('Filtered reminders:', filteredReminders)
+  }, [reminders, filteredReminders])
+
   const handleStatusUpdate = (id: string, status: 'pending' | 'sent' | 'delivered' | 'failed') => {
     dispatch(updateReminder({ 
       id, 
@@ -158,6 +167,11 @@ export default function RemindersPage() {
     setShowDeleteModal(true)
   }
 
+  const handleEditReminder = (reminder: Reminder) => {
+    setEditingReminder(reminder)
+    setShowEditReminderModal(true)
+  }
+
   const handleEditTemplate = (template: ReminderTemplate) => {
     setEditingTemplate(template)
     setShowCreateTemplateModal(true)
@@ -175,8 +189,41 @@ export default function RemindersPage() {
       notificationMethods: data.notificationMethods,
       notes: data.notes || ''
     }
-    dispatch(createReminder(reminderData))
+    console.log('Creating reminder with data:', reminderData)
+    dispatch(createReminder(reminderData)).then((result) => {
+      console.log('Create reminder result:', result)
+      if (result.meta.requestStatus === 'fulfilled') {
+        console.log('Reminder created successfully, refreshing list...')
+        dispatch(fetchReminders())
+      }
+    })
     setShowCreateReminderModal(false)
+  }
+
+  const handleUpdateReminder = (data: any) => {
+    if (!editingReminder) return
+    
+    const reminderData = {
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      priority: data.priority,
+      dueDate: data.dueDate,
+      reminderDate: data.reminderDate,
+      customerId: data.customerId,
+      notificationMethods: data.notificationMethods,
+      notes: data.notes || ''
+    }
+    console.log('Updating reminder with data:', reminderData)
+    dispatch(updateReminder({ id: (editingReminder as any)._id || editingReminder.id, reminderData })).then((result) => {
+      console.log('Update reminder result:', result)
+      if (result.meta.requestStatus === 'fulfilled') {
+        console.log('Reminder updated successfully, refreshing list...')
+        dispatch(fetchReminders())
+      }
+    })
+    setShowEditReminderModal(false)
+    setEditingReminder(null)
   }
 
   const handleCreateTemplate = (data: any) => {
@@ -192,7 +239,14 @@ export default function RemindersPage() {
   const handleConfirmDelete = () => {
     if (deleteItem) {
       if (deleteItem.type === 'reminder') {
-        dispatch(deleteReminder(deleteItem.id))
+        console.log('Deleting reminder:', deleteItem.id)
+        dispatch(deleteReminder(deleteItem.id)).then((result) => {
+          console.log('Delete reminder result:', result)
+          if (result.meta.requestStatus === 'fulfilled') {
+            console.log('Reminder deleted successfully, refreshing list...')
+            dispatch(fetchReminders())
+          }
+        })
       } else {
         dispatch(deleteReminderTemplate(deleteItem.id))
       }
@@ -443,45 +497,79 @@ export default function RemindersPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredReminders.map(reminder => (
-                <tr key={reminder.id} className="hover:bg-gray-50">
+                <tr key={(reminder as any)._id || reminder.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       {getTypeIcon(reminder.type)}
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {reminder.customerName}
+                          {(reminder as any).customer?.name || reminder.customerName || 'Unknown Customer'}
                         </div>
                         <div className="text-sm text-gray-500 capitalize">
-                          {reminder.type.replace('-', ' ')}
+                          {(reminder.type || '').replace('-', ' ')}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900 max-w-xs truncate">
-                      {reminder.message}
+                      {(reminder as any).title || reminder.message || 'No title'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {new Date(reminder.scheduledDate).toLocaleDateString()}
+                      {new Date((reminder as any).dueDate || reminder.scheduledDate).toLocaleDateString()}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {new Date(reminder.scheduledDate).toLocaleTimeString()}
+                      {new Date((reminder as any).dueDate || reminder.scheduledDate).toLocaleTimeString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {reminder.method === 'email' ? (
-                        <HiMail className="w-4 h-4 text-blue-500" />
-                      ) : (
-                        <HiPhone className="w-4 h-4 text-green-500" />
-                      )}
-                      <span className="text-sm text-gray-900 capitalize">
-                        {reminder.method}
-                      </span>
-                    </div>
-                  </td>
+                                     <td className="px-6 py-4 whitespace-nowrap">
+                     <div className="flex items-center gap-2">
+                       {(() => {
+                         const methods = (reminder as any).notificationMethods || [reminder.method];
+                         const hasEmail = methods.includes('email');
+                         const hasSms = methods.includes('sms');
+                         
+                         if (hasEmail && hasSms) {
+                           return (
+                             <>
+                               <HiMail className="w-4 h-4 text-blue-500" />
+                               <HiPhone className="w-4 h-4 text-green-500" />
+                               <span className="text-sm text-gray-900">Email, SMS</span>
+                             </>
+                           );
+                         } else if (hasEmail) {
+                           return (
+                             <>
+                               <HiMail className="w-4 h-4 text-blue-500" />
+                               <span className="text-sm text-gray-900">Email</span>
+                             </>
+                           );
+                         } else if (hasSms) {
+                           return (
+                             <>
+                               <HiPhone className="w-4 h-4 text-green-500" />
+                               <span className="text-sm text-gray-900">SMS</span>
+                             </>
+                           );
+                         } else {
+                           // Fallback for old data structure
+                           const method = reminder.method || 'email';
+                           return (
+                             <>
+                               {method === 'email' ? (
+                                 <HiMail className="w-4 h-4 text-blue-500" />
+                               ) : (
+                                 <HiPhone className="w-4 h-4 text-green-500" />
+                               )}
+                               <span className="text-sm text-gray-900 capitalize">{method}</span>
+                             </>
+                           );
+                         }
+                       })()}
+                     </div>
+                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reminder.status)}`}>
                       {reminder.status}
@@ -495,9 +583,16 @@ export default function RemindersPage() {
                       >
                         <HiEye className="w-4 h-4" />
                       </button>
+                      <button 
+                        onClick={() => handleEditReminder(reminder)}
+                        className="text-yellow-600 hover:text-yellow-900"
+                        title="Edit reminder"
+                      >
+                        <HiPencil className="w-4 h-4" />
+                      </button>
                       {reminder.status === 'pending' && (
                         <button 
-                          onClick={() => handleStatusUpdate(reminder.id, 'sent')}
+                          onClick={() => handleStatusUpdate((reminder as any)._id || reminder.id, 'sent')}
                           className="text-green-600 hover:text-green-900"
                           title="Mark as sent"
                         >
@@ -505,7 +600,7 @@ export default function RemindersPage() {
                         </button>
                       )}
                       <button 
-                        onClick={() => handleDeleteReminder(reminder.id, reminder.customerName)}
+                        onClick={() => handleDeleteReminder((reminder as any)._id || reminder.id, (reminder as any).customer?.name || reminder.customerName || 'Unknown Customer')}
                         className="text-red-600 hover:text-red-900"
                         title="Delete reminder"
                       >
@@ -876,6 +971,18 @@ export default function RemindersPage() {
           onClose={() => setShowCreateReminderModal(false)}
           onSave={handleCreateReminder}
           isLoading={remindersLoading}
+        />
+      )}
+
+      {showEditReminderModal && editingReminder && (
+        <EditReminderModal
+          onClose={() => {
+            setShowEditReminderModal(false)
+            setEditingReminder(null)
+          }}
+          onSave={handleUpdateReminder}
+          isLoading={remindersLoading}
+          reminder={editingReminder}
         />
       )}
 
