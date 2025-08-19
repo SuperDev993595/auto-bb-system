@@ -35,10 +35,21 @@ export interface InventoryTransaction {
 export interface Supplier {
   id: string
   name: string
-  contactPerson: string
+  contactPerson: {
+    name: string
+    email: string
+    phone?: string
+    position?: string
+  }
   email: string
   phone: string
-  address: string
+  address: {
+    street?: string
+    city?: string
+    state?: string
+    zipCode?: string
+    country?: string
+  }
   website?: string
   paymentTerms: string
   isActive: boolean

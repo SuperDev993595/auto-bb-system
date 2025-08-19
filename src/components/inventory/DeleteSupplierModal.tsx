@@ -66,7 +66,7 @@ export default function DeleteSupplierModal({ isOpen, onClose, supplier }: Delet
             <h4 className="text-sm font-medium text-gray-900 mb-2">Supplier Details:</h4>
             <div className="text-sm text-gray-600 space-y-1">
               <p><strong>Name:</strong> {supplier.name}</p>
-                             <p><strong>Contact:</strong> {supplier.contactPerson || 'N/A'}</p>
+                             <p><strong>Contact:</strong> {supplier.contactPerson?.name || 'N/A'}</p>
               <p><strong>Email:</strong> {supplier.email}</p>
               <p><strong>Phone:</strong> {supplier.phone}</p>
               <p><strong>Rating:</strong> {supplier.rating}/5</p>

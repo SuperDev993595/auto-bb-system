@@ -59,6 +59,199 @@ const purchaseOrderSchema = Joi.object({
   notes: Joi.string().optional()
 });
 
+// Supplier Routes
+// @route   GET /api/inventory/suppliers
+// @desc    Get suppliers
+// @access  Private
+router.get('/suppliers', requireAnyAdmin, async (req, res) => {
+  try {
+    const suppliers = await require('../models/Supplier').find({ isActive: true });
+
+    res.json({
+      success: true,
+      data: { suppliers }
+    });
+
+  } catch (error) {
+    console.error('Get suppliers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/inventory/suppliers
+// @desc    Create new supplier
+// @access  Private
+router.post('/suppliers', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      name,
+      contactPerson,
+      address,
+      email,
+      phone,
+      website,
+      paymentTerms,
+      taxId,
+      rating,
+      categories,
+      notes
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !contactPerson) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and contact person are required'
+      });
+    }
+
+    // Create supplier
+    const supplier = new (require('../models/Supplier'))({
+      name,
+      contactPerson: {
+        name: contactPerson,
+        email: email || '',
+        phone: phone || '',
+        position: ''
+      },
+      address: address || {},
+      email,
+      phone,
+      website,
+      paymentTerms,
+      taxId,
+      rating,
+      categories: categories || [],
+      notes,
+      createdBy: req.user.id
+    });
+
+    await supplier.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Supplier created successfully',
+      data: { supplier }
+    });
+
+  } catch (error) {
+    console.error('Create supplier error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/inventory/suppliers/:id
+// @desc    Update supplier
+// @access  Private
+router.put('/suppliers/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      name,
+      contactPerson,
+      address,
+      email,
+      phone,
+      website,
+      paymentTerms,
+      taxId,
+      rating,
+      categories,
+      notes
+    } = req.body;
+
+    const supplier = await require('../models/Supplier').findById(req.params.id);
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: 'Supplier not found'
+      });
+    }
+
+    // Update supplier
+    supplier.name = name || supplier.name;
+    supplier.contactPerson = {
+      name: contactPerson || supplier.contactPerson.name,
+      email: email || supplier.contactPerson.email,
+      phone: phone || supplier.contactPerson.phone,
+      position: supplier.contactPerson.position
+    };
+    supplier.address = address || supplier.address;
+    supplier.email = email || supplier.email;
+    supplier.phone = phone || supplier.phone;
+    supplier.website = website || supplier.website;
+    supplier.paymentTerms = paymentTerms || supplier.paymentTerms;
+    supplier.taxId = taxId || supplier.taxId;
+    supplier.rating = rating || supplier.rating;
+    supplier.categories = categories || supplier.categories;
+    supplier.notes = notes || supplier.notes;
+    supplier.updatedBy = req.user.id;
+
+    await supplier.save();
+
+    res.json({
+      success: true,
+      message: 'Supplier updated successfully',
+      data: { supplier }
+    });
+
+  } catch (error) {
+    console.error('Update supplier error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   DELETE /api/inventory/suppliers/:id
+// @desc    Delete supplier
+// @access  Private
+router.delete('/suppliers/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const supplier = await require('../models/Supplier').findById(req.params.id);
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: 'Supplier not found'
+      });
+    }
+
+    // Check if supplier is used in any inventory items
+    const usedInInventory = await InventoryItem.findOne({ 'supplier.name': supplier.name });
+    if (usedInInventory) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete supplier that is used in inventory items'
+      });
+    }
+
+    // Soft delete by setting isActive to false
+    supplier.isActive = false;
+    supplier.updatedBy = req.user.id;
+    await supplier.save();
+
+    res.json({
+      success: true,
+      message: 'Supplier deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete supplier error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // Inventory Items Routes
 // @route   GET /api/inventory/items
 // @desc    Get all inventory items
@@ -1049,26 +1242,7 @@ router.get('/purchase-orders/stats/overview', requireAnyAdmin, async (req, res) 
   }
 });
 
-// @route   GET /api/inventory/suppliers
-// @desc    Get suppliers
-// @access  Private
-router.get('/suppliers', requireAnyAdmin, async (req, res) => {
-  try {
-    const suppliers = await require('../models/Supplier').find({ isActive: true });
 
-    res.json({
-      success: true,
-      data: { suppliers }
-    });
-
-  } catch (error) {
-    console.error('Get suppliers error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-});
 
 // @route   GET /api/inventory/categories
 // @desc    Get inventory categories

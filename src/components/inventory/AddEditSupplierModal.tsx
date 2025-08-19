@@ -16,7 +16,13 @@ interface CreateSupplierData {
   contactPerson: string;
   email: string;
   phone: string;
-  address: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   website?: string;
   paymentTerms: string;
   rating: number;
@@ -29,7 +35,13 @@ interface UpdateSupplierData {
   contactPerson?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
   website?: string;
   paymentTerms?: string;
   rating?: number;
@@ -45,7 +57,13 @@ export default function AddEditSupplierModal({ isOpen, onClose, supplier, mode }
     contactPerson: '',
     email: '',
     phone: '',
-    address: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'USA'
+    },
     website: '',
     paymentTerms: '',
     rating: 0,
@@ -60,10 +78,16 @@ export default function AddEditSupplierModal({ isOpen, onClose, supplier, mode }
     if (supplier && mode === 'edit') {
       setFormData({
         name: supplier.name,
-        contactPerson: supplier.contactPerson,
+        contactPerson: supplier.contactPerson?.name || '',
         email: supplier.email,
         phone: supplier.phone,
-        address: supplier.address,
+        address: supplier.address || {
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: 'USA'
+        },
         website: supplier.website || '',
         paymentTerms: supplier.paymentTerms,
         rating: supplier.rating,
@@ -76,7 +100,13 @@ export default function AddEditSupplierModal({ isOpen, onClose, supplier, mode }
         contactPerson: '',
         email: '',
         phone: '',
-        address: '',
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: 'USA'
+        },
         website: '',
         paymentTerms: '',
         rating: 0,
@@ -94,7 +124,7 @@ export default function AddEditSupplierModal({ isOpen, onClose, supplier, mode }
     if (!formData.contactPerson.trim()) newErrors.contactPerson = 'Contact person is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
+    if (!formData.address.street?.trim()) newErrors.address = 'Street address is required';
     if (!formData.paymentTerms.trim()) newErrors.paymentTerms = 'Payment terms is required';
     if (formData.rating < 0 || formData.rating > 5) newErrors.rating = 'Rating must be between 0 and 5';
 
@@ -238,35 +268,93 @@ export default function AddEditSupplierModal({ isOpen, onClose, supplier, mode }
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address *
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.address ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter company address"
-              />
-              {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+          {/* Address Fields */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Address Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Street Address *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address.street}
+                  onChange={(e) => handleInputChange('address', { ...formData.address, street: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.address ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter street address"
+                />
+                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address.city}
+                  onChange={(e) => handleInputChange('address', { ...formData.address, city: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter city"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Website
-              </label>
-              <input
-                type="url"
-                value={formData.website}
-                onChange={(e) => handleInputChange('website', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter company website"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address.state}
+                  onChange={(e) => handleInputChange('address', { ...formData.address, state: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter state"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ZIP Code *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address.zipCode}
+                  onChange={(e) => handleInputChange('address', { ...formData.address, zipCode: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter ZIP code"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={formData.address.country}
+                  onChange={(e) => handleInputChange('address', { ...formData.address, country: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter country"
+                />
+              </div>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Website
+            </label>
+            <input
+              type="url"
+              value={formData.website}
+              onChange={(e) => handleInputChange('website', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter company website"
+            />
           </div>
 
           {/* Payment Terms */}
