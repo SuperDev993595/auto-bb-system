@@ -1,5 +1,4 @@
-const jsPDF = require('jspdf');
-const html2canvas = require('html2canvas');
+const { jsPDF } = require('jspdf');
 const moment = require('moment');
 const Task = require('../models/Task');
 const Customer = require('../models/Customer');
@@ -42,6 +41,213 @@ class PDFGenerator {
     // Reset text color
     this.doc.setTextColor(0, 0, 0);
     this.doc.setFontSize(12);
+  }
+
+  // Generate invoice PDF
+  async generateInvoicePDF(invoice) {
+    // Initialize document
+    this.initDocument(`Invoice #${invoice.invoiceNumber}`);
+
+    let yPosition = 60;
+
+    // Company header
+    this.doc.setFontSize(16);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('AUTO REPAIR SHOP', 20, yPosition);
+    yPosition += 8;
+
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('123 Main Street', 20, yPosition);
+    yPosition += 5;
+    this.doc.text('City, State 12345', 20, yPosition);
+    yPosition += 5;
+    this.doc.text('Phone: (555) 123-4567', 20, yPosition);
+    yPosition += 5;
+    this.doc.text('Email: info@autorepair.com', 20, yPosition);
+    yPosition += 15;
+
+    // Invoice details
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text(`INVOICE #${invoice.invoiceNumber}`, 120, yPosition);
+    yPosition += 8;
+
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text(`Date: ${moment(invoice.issueDate).format('MM/DD/YYYY')}`, 120, yPosition);
+    yPosition += 5;
+    this.doc.text(`Due Date: ${moment(invoice.dueDate).format('MM/DD/YYYY')}`, 120, yPosition);
+    yPosition += 5;
+    this.doc.text(`Status: ${invoice.status.toUpperCase()}`, 120, yPosition);
+    yPosition += 15;
+
+    // Customer information
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('BILL TO:', 20, yPosition);
+    yPosition += 8;
+
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text(invoice.customerId.name, 20, yPosition);
+    yPosition += 5;
+    if (invoice.customerId.address) {
+      // Handle address as object or string
+      let addressText = '';
+      if (invoice.customerId.address && typeof invoice.customerId.address === 'object') {
+        const addr = invoice.customerId.address;
+        addressText = (addr.street || '') + ', ' + (addr.city || '') + ', ' + (addr.state || '') + ' ' + (addr.zipCode || '');
+        addressText = addressText.trim();
+        // Remove extra commas
+        addressText = addressText.replace(/,\s*,/g, ',').replace(/^,\s*/, '').replace(/\s*,$/, '');
+      } else {
+        addressText = invoice.customerId.address || '';
+      }
+      
+      if (addressText) {
+        this.doc.text(addressText, 20, yPosition);
+        yPosition += 5;
+      }
+    }
+    this.doc.text(`Phone: ${invoice.customerId.phone}`, 20, yPosition);
+    yPosition += 5;
+    this.doc.text(`Email: ${invoice.customerId.email}`, 20, yPosition);
+    yPosition += 15;
+
+    // Vehicle information
+    if (invoice.vehicleId) {
+      this.doc.setFontSize(12);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('VEHICLE:', 20, yPosition);
+      yPosition += 8;
+
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(`${invoice.vehicleId.year} ${invoice.vehicleId.make} ${invoice.vehicleId.model}`, 20, yPosition);
+      yPosition += 5;
+      if (invoice.vehicleId.vin) {
+        this.doc.text(`VIN: ${invoice.vehicleId.vin}`, 20, yPosition);
+        yPosition += 5;
+      }
+      if (invoice.vehicleId.licensePlate) {
+        this.doc.text(`License: ${invoice.vehicleId.licensePlate}`, 20, yPosition);
+        yPosition += 5;
+      }
+      yPosition += 10;
+    }
+
+    // Items table header
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Description', 20, yPosition);
+    this.doc.text('Qty', 100, yPosition);
+    this.doc.text('Rate', 130, yPosition);
+    this.doc.text('Amount', 160, yPosition);
+    yPosition += 8;
+
+    // Draw table line
+    this.doc.line(20, yPosition, 190, yPosition);
+    yPosition += 5;
+
+    // Items
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    
+    if (invoice.items && invoice.items.length > 0) {
+      invoice.items.forEach(item => {
+        // Check if we need a new page
+        if (yPosition > 250) {
+          this.doc.addPage();
+          yPosition = 20;
+        }
+
+        this.doc.text(item.description || 'Service', 20, yPosition);
+        this.doc.text(item.quantity.toString(), 100, yPosition);
+        this.doc.text(`$${item.unitPrice.toFixed(2)}`, 130, yPosition);
+        this.doc.text(`$${item.total.toFixed(2)}`, 160, yPosition);
+        yPosition += 6;
+      });
+    } else {
+      this.doc.text('Service', 20, yPosition);
+      this.doc.text('1', 100, yPosition);
+      this.doc.text(`$${invoice.total.toFixed(2)}`, 130, yPosition);
+      this.doc.text(`$${invoice.total.toFixed(2)}`, 160, yPosition);
+      yPosition += 6;
+    }
+
+    yPosition += 5;
+
+    // Draw total line
+    this.doc.line(20, yPosition, 190, yPosition);
+    yPosition += 8;
+
+    // Totals
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Subtotal:', 130, yPosition);
+    this.doc.text(`$${invoice.subtotal.toFixed(2)}`, 160, yPosition);
+    yPosition += 6;
+
+    if (invoice.tax > 0) {
+      this.doc.text('Tax:', 130, yPosition);
+      this.doc.text(`$${invoice.tax.toFixed(2)}`, 160, yPosition);
+      yPosition += 6;
+    }
+
+    if (invoice.discount > 0) {
+      this.doc.text('Discount:', 130, yPosition);
+      this.doc.text(`-$${invoice.discount.toFixed(2)}`, 160, yPosition);
+      yPosition += 6;
+    }
+
+    this.doc.setFontSize(14);
+    this.doc.text('TOTAL:', 130, yPosition);
+    this.doc.text(`$${invoice.total.toFixed(2)}`, 160, yPosition);
+    yPosition += 15;
+
+    // Payment information
+    if (invoice.paidAmount > 0) {
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(`Amount Paid: $${invoice.paidAmount.toFixed(2)}`, 20, yPosition);
+      yPosition += 5;
+      this.doc.text(`Balance Due: $${(invoice.total - invoice.paidAmount).toFixed(2)}`, 20, yPosition);
+      yPosition += 10;
+    }
+
+    // Notes
+    if (invoice.notes) {
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('Notes:', 20, yPosition);
+      yPosition += 5;
+
+      this.doc.setFont('helvetica', 'normal');
+      const notesLines = this.doc.splitTextToSize(invoice.notes, 150);
+      notesLines.forEach(line => {
+        this.doc.text(line, 20, yPosition);
+        yPosition += 4;
+      });
+    }
+
+    // Terms
+    if (invoice.terms) {
+      yPosition += 10;
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('Terms:', 20, yPosition);
+      yPosition += 5;
+
+      this.doc.setFont('helvetica', 'normal');
+      const termsLines = this.doc.splitTextToSize(invoice.terms, 150);
+      termsLines.forEach(line => {
+        this.doc.text(line, 20, yPosition);
+        yPosition += 4;
+      });
+    }
+
+    return Buffer.from(this.doc.output('arraybuffer'));
   }
 
   // Generate daily activity report for a specific Sub Admin
@@ -459,7 +665,7 @@ class PDFGenerator {
 
   // Save PDF to buffer
   saveToBuffer() {
-    return this.doc.output('arraybuffer');
+    return Buffer.from(this.doc.output('arraybuffer'));
   }
 
   // Save PDF to file

@@ -476,6 +476,81 @@ router.post('/:id/send', authenticateToken, async (req, res) => {
   }
 });
 
+// Generate PDF for invoice
+router.get('/:id/pdf', authenticateToken, async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id)
+      .populate('customerId', 'name email phone address')
+      .populate('vehicleId', 'year make model vin licensePlate');
+
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: 'Invoice not found' });
+    }
+
+    // Generate PDF content
+    const PDFGenerator = require('../utils/pdfGenerator');
+    const pdfGenerator = new PDFGenerator();
+    const pdfBuffer = await pdfGenerator.generateInvoicePDF(invoice);
+
+    // Set response headers for PDF download
+    res.type('application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoice.invoiceNumber}.pdf"`);
+    
+    // Let Express compute Content-Length
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate PDF' });
+  }
+});
+
+// Send invoice via email
+router.post('/:id/send-email', authenticateToken, async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id)
+      .populate('customerId', 'name email phone')
+      .populate('vehicleId', 'year make model');
+
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: 'Invoice not found' });
+    }
+
+    if (!invoice.customerId.email) {
+      return res.status(400).json({ success: false, message: 'Customer email not available' });
+    }
+
+    // Generate PDF for attachment
+    const PDFGenerator = require('../utils/pdfGenerator');
+    const pdfGenerator = new PDFGenerator();
+    const pdfBuffer = await pdfGenerator.generateInvoicePDF(invoice);
+
+    // Send email with PDF attachment
+    const emailService = require('../services/emailService');
+    await emailService.sendInvoiceEmail({
+      to: invoice.customerId.email,
+      customerName: invoice.customerId.name,
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceAmount: invoice.total,
+      dueDate: invoice.dueDate,
+      pdfBuffer,
+      fileName: `invoice-${invoice.invoiceNumber}.pdf`
+    });
+
+    // Update invoice status to sent if it's still draft
+    if (invoice.status === 'draft') {
+      invoice.status = 'sent';
+      invoice.sentDate = new Date();
+      invoice.sentBy = req.user.id;
+      await invoice.save();
+    }
+
+    res.json({ success: true, message: 'Invoice sent successfully' });
+  } catch (error) {
+    console.error('Error sending invoice email:', error);
+    res.status(500).json({ success: false, message: 'Failed to send invoice email' });
+  }
+});
+
 // Mark overdue invoices
 router.post('/mark-overdue', authenticateToken, async (req, res) => {
   try {

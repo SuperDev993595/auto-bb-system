@@ -118,6 +118,16 @@ class InvoiceService {
     return api.post(`/invoices/${id}/send`);
   }
 
+  async downloadInvoicePDF(id: string): Promise<AxiosResponse<ArrayBuffer>> {
+    return api.get(`/invoices/${id}/pdf`, {
+      responseType: 'arraybuffer'
+    });
+  }
+
+  async sendInvoiceEmail(id: string): Promise<AxiosResponse<{ message: string }>> {
+    return api.post(`/invoices/${id}/send-email`);
+  }
+
   async addPayment(id: string, paymentData: AddPaymentData): Promise<AxiosResponse<Invoice>> {
     return api.post(`/invoices/${id}/payments`, paymentData);
   }

@@ -11,7 +11,9 @@ import {
   addPayment,
   sendInvoice,
   createInvoice,
-  markAsOverdue
+  markAsOverdue,
+  downloadInvoicePDF,
+  sendInvoiceEmail
 } from '../redux/actions/invoices'
 import { Invoice } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
@@ -145,6 +147,14 @@ export default function InvoicesPage() {
     setSelectedInvoice(null)
     setPaymentAmount('')
     setPaymentMethod('cash')
+  }
+
+  const handleDownloadPDF = (invoiceId: string) => {
+    dispatch(downloadInvoicePDF(invoiceId))
+  }
+
+  const handleSendEmail = (invoiceId: string) => {
+    dispatch(sendInvoiceEmail(invoiceId))
   }
 
   const handleInvoiceSuccess = () => {
@@ -389,12 +399,14 @@ export default function InvoicesPage() {
                         <HiEye className="w-4 h-4" />
                       </button>
                       <button 
+                        onClick={() => handleDownloadPDF(invoice._id)}
                         className="text-green-600 hover:text-green-900"
                         title="Download PDF"
                       >
                         <HiDownload className="w-4 h-4" />
                       </button>
                       <button 
+                        onClick={() => handleSendEmail(invoice._id)}
                         className="text-purple-600 hover:text-purple-900"
                         title="Send email"
                       >

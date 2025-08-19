@@ -139,6 +139,50 @@ export const markAsOverdue = createAsyncThunk(
   }
 );
 
+export const downloadInvoicePDF = createAsyncThunk(
+  'invoices/downloadPDF',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await invoiceService.downloadInvoicePDF(id);
+      
+      // Create a blob from the PDF data
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('PDF downloaded successfully');
+      return { success: true };
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to download PDF');
+      return rejectWithValue(error.response?.data?.message || 'Failed to download PDF');
+    }
+  }
+);
+
+export const sendInvoiceEmail = createAsyncThunk(
+  'invoices/sendEmail',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await invoiceService.sendInvoiceEmail(id);
+      toast.success('Invoice sent successfully');
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send invoice');
+      return rejectWithValue(error.response?.data?.message || 'Failed to send invoice');
+    }
+  }
+);
+
 export const createInvoiceTemplate = createAsyncThunk(
   'invoices/createTemplate',
   async (templateData: any, { rejectWithValue }) => {
