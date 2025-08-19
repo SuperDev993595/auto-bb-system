@@ -364,13 +364,13 @@ const inventorySlice = createSlice({
     // Create Supplier
     builder
       .addCase(createSupplier.fulfilled, (state, action) => {
-        state.suppliers.push(action.payload.data || action.payload)
+        state.suppliers.push(action.payload.data?.supplier || action.payload.data || action.payload)
       })
 
     // Update Supplier
     builder
       .addCase(updateSupplier.fulfilled, (state, action) => {
-        const updatedSupplier = action.payload.data || action.payload
+        const updatedSupplier = action.payload.data?.supplier || action.payload.data || action.payload
         const index = state.suppliers.findIndex(supplier => (supplier as any)._id === (updatedSupplier as any)._id || supplier.id === updatedSupplier.id)
         if (index !== -1) {
           state.suppliers[index] = updatedSupplier
