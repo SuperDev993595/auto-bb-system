@@ -74,7 +74,27 @@ export default function RemindersPage() {
   const { 
     reminders, 
     templates, 
-    settings: notificationSettings, 
+    settings: notificationSettings = {
+      emailEnabled: false,
+      smsEnabled: false,
+      emailProvider: {
+        smtp: '',
+        port: 587,
+        username: '',
+        password: ''
+      },
+      smsProvider: {
+        apiKey: '',
+        serviceName: 'twilio'
+      },
+      businessInfo: {
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        website: ''
+      }
+    }, 
     loading: remindersLoading
   } = useAppSelector(state => state.reminders)
   const dispatch = useAppDispatch()
@@ -90,23 +110,23 @@ export default function RemindersPage() {
   useEffect(() => {
     if (notificationSettings) {
       setSettingsForm({
-        emailEnabled: notificationSettings.emailEnabled,
-        smsEnabled: notificationSettings.smsEnabled,
+        emailEnabled: notificationSettings.emailEnabled || false,
+        smsEnabled: notificationSettings.smsEnabled || false,
         emailProvider: { 
-          smtp: notificationSettings.emailProvider.smtp,
-          port: notificationSettings.emailProvider.port.toString(),
-          username: notificationSettings.emailProvider.username,
-          password: notificationSettings.emailProvider.password
+          smtp: notificationSettings.emailProvider?.smtp || '',
+          port: notificationSettings.emailProvider?.port?.toString() || '587',
+          username: notificationSettings.emailProvider?.username || '',
+          password: notificationSettings.emailProvider?.password || ''
         },
         smsProvider: { 
-          apiKey: notificationSettings.smsProvider.apiKey
+          apiKey: notificationSettings.smsProvider?.apiKey || ''
         },
         businessInfo: { 
-          name: notificationSettings.businessInfo.name,
-          phone: notificationSettings.businessInfo.phone,
-          email: notificationSettings.businessInfo.email,
-          website: notificationSettings.businessInfo.website || '',
-          address: notificationSettings.businessInfo.address
+          name: notificationSettings.businessInfo?.name || '',
+          phone: notificationSettings.businessInfo?.phone || '',
+          email: notificationSettings.businessInfo?.email || '',
+          website: notificationSettings.businessInfo?.website || '',
+          address: notificationSettings.businessInfo?.address || ''
         }
       })
     }
