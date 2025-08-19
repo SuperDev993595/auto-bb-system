@@ -12,9 +12,24 @@ interface Props {
 }
 
 export default function EditCommunicationLogModal({ onClose, onSave, isLoading = false, log }: Props) {
+  // Extract customerId and customerName from log.customerId (which can be object or string)
+  const getCustomerIdFromLog = () => {
+    if (typeof log.customerId === 'object' && log.customerId !== null) {
+      return (log.customerId as any)._id || (log.customerId as any).id
+    }
+    return log.customerId as string
+  }
+
+  const getCustomerNameFromLog = () => {
+    if (typeof log.customerId === 'object' && log.customerId !== null) {
+      return (log.customerId as any).name || ''
+    }
+    return (log as any).customerName || ''
+  }
+
   const [formData, setFormData] = useState({
-    customerId: log.customerId,
-    customerName: (log as any).customerName || '',
+    customerId: getCustomerIdFromLog(),
+    customerName: getCustomerNameFromLog(),
     date: log.date,
     time: (log as any).time || '09:00',
     type: log.type,
@@ -38,8 +53,8 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
 
   useEffect(() => {
     setFormData({
-      customerId: log.customerId,
-      customerName: (log as any).customerName || '',
+      customerId: getCustomerIdFromLog(),
+      customerName: getCustomerNameFromLog(),
       date: log.date,
       time: (log as any).time || '09:00',
       type: log.type,
