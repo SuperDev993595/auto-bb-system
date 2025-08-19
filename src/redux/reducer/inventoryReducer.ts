@@ -1,5 +1,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { InventoryItem } from '../../utils/CustomerTypes'
+import {
+  fetchInventoryItems,
+  fetchInventoryTransactions,
+  fetchSuppliers,
+  fetchPurchaseOrders,
+  fetchInventoryCategories,
+  fetchInventoryLocations,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+  createPurchaseOrder,
+  updatePurchaseOrder,
+  deletePurchaseOrder
+} from '../actions/inventory'
 
 export interface InventoryTransaction {
   id: string
@@ -66,183 +83,12 @@ interface InventoryState {
 }
 
 const initialState: InventoryState = {
-  items: [
-    {
-      id: 'inv1',
-      partNumber: 'OF-123',
-      name: 'Oil Filter - Standard',
-      description: 'Standard oil filter for most vehicles',
-      category: 'Filters',
-      supplier: 'AutoParts Plus',
-      costPrice: 12.99,
-      sellPrice: 19.99,
-      quantityOnHand: 45,
-      minStockLevel: 10,
-      maxStockLevel: 100,
-      location: 'A1-B2',
-      isActive: true,
-      lastUpdated: '2025-08-03T10:00:00Z'
-    },
-    {
-      id: 'inv2',
-      partNumber: 'OIL-5W30',
-      name: 'Motor Oil 5W-30 (5qt)',
-      description: 'Premium synthetic motor oil 5W-30',
-      category: 'Fluids',
-      supplier: 'Oil Express',
-      costPrice: 28.99,
-      sellPrice: 39.99,
-      quantityOnHand: 25,
-      minStockLevel: 15,
-      maxStockLevel: 50,
-      location: 'B1-C3',
-      isActive: true,
-      lastUpdated: '2025-08-03T10:00:00Z'
-    },
-    {
-      id: 'inv3',
-      partNumber: 'BP-456',
-      name: 'Brake Pads - Front Set',
-      description: 'Ceramic brake pads for front wheels',
-      category: 'Brakes',
-      supplier: 'Brake Masters',
-      costPrice: 45.99,
-      sellPrice: 79.99,
-      quantityOnHand: 8,
-      minStockLevel: 5,
-      maxStockLevel: 30,
-      location: 'C2-D1',
-      isActive: true,
-      lastUpdated: '2025-08-03T10:00:00Z'
-    },
-    {
-      id: 'inv4',
-      partNumber: 'TF-789',
-      name: 'Transmission Filter',
-      description: 'Automatic transmission filter',
-      category: 'Filters',
-      supplier: 'Trans Tech',
-      costPrice: 35.99,
-      sellPrice: 59.99,
-      quantityOnHand: 2,
-      minStockLevel: 5,
-      maxStockLevel: 20,
-      location: 'A2-B1',
-      isActive: true,
-      lastUpdated: '2025-08-03T10:00:00Z'
-    }
-  ],
-  transactions: [
-    {
-      id: 'txn1',
-      itemId: 'inv1',
-      type: 'usage',
-      quantity: -1,
-      date: '2025-08-01T14:30:00Z',
-      reference: 'WO-001',
-      notes: 'Used for oil change - John Smith',
-      employeeId: 'emp1',
-      employeeName: 'Mike Johnson'
-    },
-    {
-      id: 'txn2',
-      itemId: 'inv2',
-      type: 'usage',
-      quantity: -1,
-      date: '2025-08-01T14:30:00Z',
-      reference: 'WO-001',
-      notes: 'Used for oil change - John Smith',
-      employeeId: 'emp1',
-      employeeName: 'Mike Johnson'
-    },
-    {
-      id: 'txn3',
-      itemId: 'inv1',
-      type: 'purchase',
-      quantity: 50,
-      unitCost: 12.99,
-      totalCost: 649.50,
-      date: '2025-07-30T09:00:00Z',
-      reference: 'PO-001',
-      notes: 'Monthly stock replenishment',
-      employeeId: 'emp2',
-      employeeName: 'Sarah Davis'
-    }
-  ],
-  suppliers: [
-    {
-      id: 'sup1',
-      name: 'AutoParts Plus',
-      contactPerson: 'John Martinez',
-      email: 'john@autopartsplus.com',
-      phone: '(555) 234-5678',
-      address: '456 Industrial Blvd, Parts City, ST 67890',
-      website: 'https://autopartsplus.com',
-      paymentTerms: 'Net 30',
-      isActive: true,
-      rating: 4,
-      notes: 'Reliable supplier for filters and basic parts'
-    },
-    {
-      id: 'sup2',
-      name: 'Oil Express',
-      contactPerson: 'Maria Rodriguez',
-      email: 'maria@oilexpress.com',
-      phone: '(555) 345-6789',
-      address: '789 Oil Way, Fluid Town, ST 78901',
-      paymentTerms: 'Net 15',
-      isActive: true,
-      rating: 5,
-      notes: 'Best prices on synthetic oils and fluids'
-    },
-    {
-      id: 'sup3',
-      name: 'Brake Masters',
-      contactPerson: 'David Chen',
-      email: 'david@brakemasters.com',
-      phone: '(555) 456-7890',
-      address: '321 Brake Street, Stop City, ST 89012',
-      paymentTerms: 'Net 30',
-      isActive: true,
-      rating: 4,
-      notes: 'Specializes in brake components and suspension parts'
-    }
-  ],
-  purchaseOrders: [
-    {
-      id: 'po1',
-      supplierId: 'sup1',
-      supplierName: 'AutoParts Plus',
-      orderDate: '2025-08-01T10:00:00Z',
-      expectedDate: '2025-08-05T00:00:00Z',
-      status: 'sent',
-      items: [
-        {
-          itemId: 'inv1',
-          partNumber: 'OF-123',
-          name: 'Oil Filter - Standard',
-          quantity: 50,
-          unitCost: 12.99,
-          totalCost: 649.50
-        },
-        {
-          itemId: 'inv4',
-          partNumber: 'TF-789',
-          name: 'Transmission Filter',
-          quantity: 15,
-          unitCost: 35.99,
-          totalCost: 539.85
-        }
-      ],
-      subtotal: 1189.35,
-      tax: 95.15,
-      shipping: 25.00,
-      total: 1309.50,
-      notes: 'Rush order for low stock items'
-    }
-  ],
-  categories: ['Filters', 'Fluids', 'Brakes', 'Engine', 'Transmission', 'Electrical', 'Belts & Hoses', 'Suspension', 'Tools', 'Accessories'],
-  locations: ['A1-B1', 'A1-B2', 'A2-B1', 'A2-B2', 'B1-C1', 'B1-C2', 'B1-C3', 'C1-D1', 'C2-D1', 'C2-D2'],
+  items: [],
+  transactions: [],
+  suppliers: [],
+  purchaseOrders: [],
+  categories: [],
+  locations: [],
   loading: false,
   error: null
 }
@@ -252,16 +98,16 @@ const inventorySlice = createSlice({
   initialState,
   reducers: {
     // Inventory Item Actions
-    addInventoryItem: (state, action: PayloadAction<InventoryItem>) => {
+    addInventoryItemLocal: (state, action: PayloadAction<InventoryItem>) => {
       state.items.push(action.payload)
     },
-    updateInventoryItem: (state, action: PayloadAction<InventoryItem>) => {
+    updateInventoryItemLocal: (state, action: PayloadAction<InventoryItem>) => {
       const index = state.items.findIndex(item => item.id === action.payload.id)
       if (index !== -1) {
         state.items[index] = { ...action.payload, lastUpdated: new Date().toISOString() }
       }
     },
-    deleteInventoryItem: (state, action: PayloadAction<string>) => {
+    deleteInventoryItemLocal: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter(item => item.id !== action.payload)
     },
     adjustInventoryQuantity: (state, action: PayloadAction<{itemId: string, newQuantity: number, reason: string}>) => {
@@ -300,24 +146,24 @@ const inventorySlice = createSlice({
     },
     
     // Supplier Actions
-    addSupplier: (state, action: PayloadAction<Supplier>) => {
+    addSupplierLocal: (state, action: PayloadAction<Supplier>) => {
       state.suppliers.push(action.payload)
     },
-    updateSupplier: (state, action: PayloadAction<Supplier>) => {
+    updateSupplierLocal: (state, action: PayloadAction<Supplier>) => {
       const index = state.suppliers.findIndex(supplier => supplier.id === action.payload.id)
       if (index !== -1) {
         state.suppliers[index] = action.payload
       }
     },
-    deleteSupplier: (state, action: PayloadAction<string>) => {
+    deleteSupplierLocal: (state, action: PayloadAction<string>) => {
       state.suppliers = state.suppliers.filter(supplier => supplier.id !== action.payload)
     },
     
     // Purchase Order Actions
-    addPurchaseOrder: (state, action: PayloadAction<PurchaseOrder>) => {
+    addPurchaseOrderLocal: (state, action: PayloadAction<PurchaseOrder>) => {
       state.purchaseOrders.push(action.payload)
     },
-    updatePurchaseOrder: (state, action: PayloadAction<PurchaseOrder>) => {
+    updatePurchaseOrderLocal: (state, action: PayloadAction<PurchaseOrder>) => {
       const index = state.purchaseOrders.findIndex(po => po.id === action.payload.id)
       if (index !== -1) {
         state.purchaseOrders[index] = action.payload
@@ -357,7 +203,7 @@ const inventorySlice = createSlice({
         }
       }
     },
-    deletePurchaseOrder: (state, action: PayloadAction<string>) => {
+    deletePurchaseOrderLocal: (state, action: PayloadAction<string>) => {
       state.purchaseOrders = state.purchaseOrders.filter(po => po.id !== action.payload)
     },
     
@@ -389,22 +235,182 @@ const inventorySlice = createSlice({
       state.error = action.payload
       state.loading = false
     }
+  },
+  extraReducers: (builder) => {
+    // Fetch Inventory Items
+    builder
+      .addCase(fetchInventoryItems.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInventoryItems.fulfilled, (state, action) => {
+        state.loading = false
+        state.items = action.payload.data?.items || action.payload.items || action.payload
+      })
+      .addCase(fetchInventoryItems.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Fetch Inventory Transactions
+    builder
+      .addCase(fetchInventoryTransactions.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInventoryTransactions.fulfilled, (state, action) => {
+        state.loading = false
+        state.transactions = action.payload.data?.transactions || action.payload.transactions || action.payload
+      })
+      .addCase(fetchInventoryTransactions.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Fetch Suppliers
+    builder
+      .addCase(fetchSuppliers.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchSuppliers.fulfilled, (state, action) => {
+        state.loading = false
+        state.suppliers = action.payload.data?.suppliers || action.payload.suppliers || action.payload
+      })
+      .addCase(fetchSuppliers.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Fetch Purchase Orders
+    builder
+      .addCase(fetchPurchaseOrders.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchPurchaseOrders.fulfilled, (state, action) => {
+        state.loading = false
+        state.purchaseOrders = action.payload.data?.purchaseOrders || action.payload.purchaseOrders || action.payload
+      })
+      .addCase(fetchPurchaseOrders.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Fetch Categories
+    builder
+      .addCase(fetchInventoryCategories.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInventoryCategories.fulfilled, (state, action) => {
+        state.loading = false
+        state.categories = action.payload.data?.categories || action.payload.categories || action.payload
+      })
+      .addCase(fetchInventoryCategories.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Fetch Locations
+    builder
+      .addCase(fetchInventoryLocations.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchInventoryLocations.fulfilled, (state, action) => {
+        state.loading = false
+        state.locations = action.payload.data?.locations || action.payload.locations || action.payload
+      })
+      .addCase(fetchInventoryLocations.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+    // Create Inventory Item
+    builder
+      .addCase(createInventoryItem.fulfilled, (state, action) => {
+        state.items.push(action.payload.data || action.payload)
+      })
+
+    // Update Inventory Item
+    builder
+      .addCase(updateInventoryItem.fulfilled, (state, action) => {
+        const updatedItem = action.payload.data || action.payload
+        const index = state.items.findIndex(item => (item as any)._id === (updatedItem as any)._id || item.id === updatedItem.id)
+        if (index !== -1) {
+          state.items[index] = updatedItem
+        }
+      })
+
+    // Delete Inventory Item
+    builder
+      .addCase(deleteInventoryItem.fulfilled, (state, action) => {
+        const deletedId = action.payload
+        state.items = state.items.filter(item => (item as any)._id !== deletedId && item.id !== deletedId)
+      })
+
+    // Create Supplier
+    builder
+      .addCase(createSupplier.fulfilled, (state, action) => {
+        state.suppliers.push(action.payload.data || action.payload)
+      })
+
+    // Update Supplier
+    builder
+      .addCase(updateSupplier.fulfilled, (state, action) => {
+        const updatedSupplier = action.payload.data || action.payload
+        const index = state.suppliers.findIndex(supplier => (supplier as any)._id === (updatedSupplier as any)._id || supplier.id === updatedSupplier.id)
+        if (index !== -1) {
+          state.suppliers[index] = updatedSupplier
+        }
+      })
+
+    // Delete Supplier
+    builder
+      .addCase(deleteSupplier.fulfilled, (state, action) => {
+        const deletedId = action.payload
+        state.suppliers = state.suppliers.filter(supplier => (supplier as any)._id !== deletedId && supplier.id !== deletedId)
+      })
+
+    // Create Purchase Order
+    builder
+      .addCase(createPurchaseOrder.fulfilled, (state, action) => {
+        state.purchaseOrders.push(action.payload.data || action.payload)
+      })
+
+    // Update Purchase Order
+    builder
+      .addCase(updatePurchaseOrder.fulfilled, (state, action) => {
+        const updatedPO = action.payload.data || action.payload
+        const index = state.purchaseOrders.findIndex(po => (po as any)._id === (updatedPO as any)._id || po.id === updatedPO.id)
+        if (index !== -1) {
+          state.purchaseOrders[index] = updatedPO
+        }
+      })
+
+    // Delete Purchase Order
+    builder
+      .addCase(deletePurchaseOrder.fulfilled, (state, action) => {
+        const deletedId = action.payload
+        state.purchaseOrders = state.purchaseOrders.filter(po => (po as any)._id !== deletedId && po.id !== deletedId)
+      })
   }
 })
 
 export const {
-  addInventoryItem,
-  updateInventoryItem,
-  deleteInventoryItem,
+  addInventoryItemLocal,
+  updateInventoryItemLocal,
+  deleteInventoryItemLocal,
   adjustInventoryQuantity,
   addTransaction,
-  addSupplier,
-  updateSupplier,
-  deleteSupplier,
-  addPurchaseOrder,
-  updatePurchaseOrder,
+  addSupplierLocal,
+  updateSupplierLocal,
+  deleteSupplierLocal,
+  addPurchaseOrderLocal,
+  updatePurchaseOrderLocal,
   updatePurchaseOrderStatus,
-  deletePurchaseOrder,
+  deletePurchaseOrderLocal,
   addCategory,
   removeCategory,
   addLocation,

@@ -1,22 +1,31 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { toast } from 'react-hot-toast';
-import {
-  inventoryService,
+import inventoryService, {
   InventoryItem,
   InventoryTransaction,
   PurchaseOrder,
   Supplier,
   InventoryStats,
   TransactionStats,
-  PurchaseOrderStats
+  PurchaseOrderStats,
+  CreateInventoryItemData,
+  UpdateInventoryItemData,
+  CreateSupplierData,
+  UpdateSupplierData,
+  CreatePurchaseOrderData,
+  UpdatePurchaseOrderData,
+  InventoryItemFilters,
+  TransactionFilters,
+  PurchaseOrderFilters,
+  SupplierFilters
 } from '../../services/inventory';
 
 // Async thunks for Inventory Items
 export const fetchInventoryItems = createAsyncThunk(
   'inventory/fetchItems',
-  async (_, { rejectWithValue }) => {
+  async (filters: InventoryItemFilters = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getInventoryItems();
+      const response = await inventoryService.getInventoryItems(filters);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch inventory items');
@@ -26,7 +35,7 @@ export const fetchInventoryItems = createAsyncThunk(
 
 export const createInventoryItem = createAsyncThunk(
   'inventory/createItem',
-  async (itemData: Partial<InventoryItem>, { rejectWithValue }) => {
+  async (itemData: CreateInventoryItemData, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createInventoryItem(itemData);
       toast.success('Inventory item created successfully');
@@ -40,7 +49,7 @@ export const createInventoryItem = createAsyncThunk(
 
 export const updateInventoryItem = createAsyncThunk(
   'inventory/updateItem',
-  async ({ id, itemData }: { id: string; itemData: Partial<InventoryItem> }, { rejectWithValue }) => {
+  async ({ id, itemData }: { id: string; itemData: UpdateInventoryItemData }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.updateInventoryItem(id, itemData);
       toast.success('Inventory item updated successfully');
@@ -68,9 +77,9 @@ export const deleteInventoryItem = createAsyncThunk(
 
 export const adjustStock = createAsyncThunk(
   'inventory/adjustStock',
-  async ({ itemId, quantity, type, reason }: { itemId: string; quantity: number; type: 'add' | 'remove'; reason: string }, { rejectWithValue }) => {
+  async ({ itemId, quantity, reason, notes }: { itemId: string; quantity: number; reason: string; notes?: string }, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.adjustStock(itemId, quantity, type, reason);
+      const response = await inventoryService.adjustStock(itemId, quantity, reason, notes);
       toast.success('Stock adjusted successfully');
       return response.data;
     } catch (error: any) {
@@ -95,9 +104,9 @@ export const fetchInventoryStats = createAsyncThunk(
 // Async thunks for Inventory Transactions
 export const fetchInventoryTransactions = createAsyncThunk(
   'inventory/fetchTransactions',
-  async (_, { rejectWithValue }) => {
+  async (filters: TransactionFilters = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getInventoryTransactions();
+      const response = await inventoryService.getTransactions(filters);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions');
@@ -107,9 +116,9 @@ export const fetchInventoryTransactions = createAsyncThunk(
 
 export const createInventoryTransaction = createAsyncThunk(
   'inventory/createTransaction',
-  async (transactionData: Partial<InventoryTransaction>, { rejectWithValue }) => {
+  async (transactionData: any, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.createInventoryTransaction(transactionData);
+      const response = await inventoryService.createTransaction(transactionData);
       toast.success('Transaction created successfully');
       return response.data;
     } catch (error: any) {
@@ -121,9 +130,9 @@ export const createInventoryTransaction = createAsyncThunk(
 
 export const fetchTransactionStats = createAsyncThunk(
   'inventory/fetchTransactionStats',
-  async (_, { rejectWithValue }) => {
+  async ({ startDate, endDate }: { startDate?: string; endDate?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getTransactionStats();
+      const response = await inventoryService.getTransactionStats(startDate, endDate);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch transaction stats');
@@ -134,9 +143,9 @@ export const fetchTransactionStats = createAsyncThunk(
 // Async thunks for Purchase Orders
 export const fetchPurchaseOrders = createAsyncThunk(
   'inventory/fetchPurchaseOrders',
-  async (_, { rejectWithValue }) => {
+  async (filters: PurchaseOrderFilters = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getPurchaseOrders();
+      const response = await inventoryService.getPurchaseOrders(filters);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch purchase orders');
@@ -146,9 +155,9 @@ export const fetchPurchaseOrders = createAsyncThunk(
 
 export const createPurchaseOrder = createAsyncThunk(
   'inventory/createPurchaseOrder',
-  async (orderData: Partial<PurchaseOrder>, { rejectWithValue }) => {
+  async (purchaseOrderData: CreatePurchaseOrderData, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.createPurchaseOrder(orderData);
+      const response = await inventoryService.createPurchaseOrder(purchaseOrderData);
       toast.success('Purchase order created successfully');
       return response.data;
     } catch (error: any) {
@@ -160,9 +169,9 @@ export const createPurchaseOrder = createAsyncThunk(
 
 export const updatePurchaseOrder = createAsyncThunk(
   'inventory/updatePurchaseOrder',
-  async ({ id, orderData }: { id: string; orderData: Partial<PurchaseOrder> }, { rejectWithValue }) => {
+  async ({ id, purchaseOrderData }: { id: string; purchaseOrderData: UpdatePurchaseOrderData }, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.updatePurchaseOrder(id, orderData);
+      const response = await inventoryService.updatePurchaseOrder(id, purchaseOrderData);
       toast.success('Purchase order updated successfully');
       return response.data;
     } catch (error: any) {
@@ -172,9 +181,23 @@ export const updatePurchaseOrder = createAsyncThunk(
   }
 );
 
+export const deletePurchaseOrder = createAsyncThunk(
+  'inventory/deletePurchaseOrder',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await inventoryService.deletePurchaseOrder(id);
+      toast.success('Purchase order deleted successfully');
+      return id;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete purchase order');
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete purchase order');
+    }
+  }
+);
+
 export const receivePurchaseOrder = createAsyncThunk(
   'inventory/receivePurchaseOrder',
-  async ({ id, receivedItems }: { id: string; receivedItems: any[] }, { rejectWithValue }) => {
+  async ({ id, receivedItems }: { id: string; receivedItems: { itemId: string; receivedQuantity: number }[] }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.receivePurchaseOrder(id, receivedItems);
       toast.success('Purchase order received successfully');
@@ -188,9 +211,9 @@ export const receivePurchaseOrder = createAsyncThunk(
 
 export const fetchPurchaseOrderStats = createAsyncThunk(
   'inventory/fetchPurchaseOrderStats',
-  async (_, { rejectWithValue }) => {
+  async ({ startDate, endDate }: { startDate?: string; endDate?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getPurchaseOrderStats();
+      const response = await inventoryService.getPurchaseOrderStats(startDate, endDate);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch purchase order stats');
@@ -201,9 +224,9 @@ export const fetchPurchaseOrderStats = createAsyncThunk(
 // Async thunks for Suppliers
 export const fetchSuppliers = createAsyncThunk(
   'inventory/fetchSuppliers',
-  async (_, { rejectWithValue }) => {
+  async (filters: SupplierFilters = {}, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getSuppliers();
+      const response = await inventoryService.getSuppliers(filters);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch suppliers');
@@ -213,7 +236,7 @@ export const fetchSuppliers = createAsyncThunk(
 
 export const createSupplier = createAsyncThunk(
   'inventory/createSupplier',
-  async (supplierData: Partial<Supplier>, { rejectWithValue }) => {
+  async (supplierData: CreateSupplierData, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createSupplier(supplierData);
       toast.success('Supplier created successfully');
@@ -227,7 +250,7 @@ export const createSupplier = createAsyncThunk(
 
 export const updateSupplier = createAsyncThunk(
   'inventory/updateSupplier',
-  async ({ id, supplierData }: { id: string; supplierData: Partial<Supplier> }, { rejectWithValue }) => {
+  async ({ id, supplierData }: { id: string; supplierData: UpdateSupplierData }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.updateSupplier(id, supplierData);
       toast.success('Supplier updated successfully');
@@ -258,7 +281,7 @@ export const fetchInventoryCategories = createAsyncThunk(
   'inventory/fetchCategories',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getInventoryCategories();
+      const response = await inventoryService.getCategories();
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch categories');
@@ -270,7 +293,7 @@ export const fetchInventoryLocations = createAsyncThunk(
   'inventory/fetchLocations',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.getInventoryLocations();
+      const response = await inventoryService.getLocations();
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch locations');
@@ -343,7 +366,7 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchInventoryItems.fulfilled, (state, action) => {
         state.itemsLoading = false;
-        state.items = action.payload;
+        state.items = action.payload.data || action.payload;
       })
       .addCase(fetchInventoryItems.rejected, (state, action) => {
         state.itemsLoading = false;
@@ -353,16 +376,16 @@ const inventorySlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(updateInventoryItem.fulfilled, (state, action) => {
-        const index = state.items.findIndex(item => item.id === action.payload.id);
+        const index = state.items.findIndex(item => item._id === action.payload._id);
         if (index !== -1) {
           state.items[index] = action.payload;
         }
       })
       .addCase(deleteInventoryItem.fulfilled, (state, action) => {
-        state.items = state.items.filter(item => item.id !== action.payload);
+        state.items = state.items.filter(item => item._id !== action.payload);
       })
       .addCase(adjustStock.fulfilled, (state, action) => {
-        const index = state.items.findIndex(item => item.id === action.payload.itemId);
+        const index = state.items.findIndex(item => item._id === action.payload._id);
         if (index !== -1) {
           state.items[index] = action.payload;
         }
@@ -376,7 +399,7 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchInventoryTransactions.fulfilled, (state, action) => {
         state.transactionsLoading = false;
-        state.transactions = action.payload;
+        state.transactions = action.payload.data || action.payload;
       })
       .addCase(fetchInventoryTransactions.rejected, (state, action) => {
         state.transactionsLoading = false;
@@ -394,7 +417,7 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchPurchaseOrders.fulfilled, (state, action) => {
         state.purchaseOrdersLoading = false;
-        state.purchaseOrders = action.payload;
+        state.purchaseOrders = action.payload.data || action.payload;
       })
       .addCase(fetchPurchaseOrders.rejected, (state, action) => {
         state.purchaseOrdersLoading = false;
@@ -404,13 +427,16 @@ const inventorySlice = createSlice({
         state.purchaseOrders.push(action.payload);
       })
       .addCase(updatePurchaseOrder.fulfilled, (state, action) => {
-        const index = state.purchaseOrders.findIndex(po => po.id === action.payload.id);
+        const index = state.purchaseOrders.findIndex(po => po._id === action.payload._id);
         if (index !== -1) {
           state.purchaseOrders[index] = action.payload;
         }
       })
+      .addCase(deletePurchaseOrder.fulfilled, (state, action) => {
+        state.purchaseOrders = state.purchaseOrders.filter(po => po._id !== action.payload);
+      })
       .addCase(receivePurchaseOrder.fulfilled, (state, action) => {
-        const index = state.purchaseOrders.findIndex(po => po.id === action.payload.id);
+        const index = state.purchaseOrders.findIndex(po => po._id === action.payload._id);
         if (index !== -1) {
           state.purchaseOrders[index] = action.payload;
         }
@@ -424,7 +450,7 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchSuppliers.fulfilled, (state, action) => {
         state.suppliersLoading = false;
-        state.suppliers = action.payload;
+        state.suppliers = action.payload.data || action.payload;
       })
       .addCase(fetchSuppliers.rejected, (state, action) => {
         state.suppliersLoading = false;
@@ -434,13 +460,13 @@ const inventorySlice = createSlice({
         state.suppliers.push(action.payload);
       })
       .addCase(updateSupplier.fulfilled, (state, action) => {
-        const index = state.suppliers.findIndex(supplier => supplier.id === action.payload.id);
+        const index = state.suppliers.findIndex(supplier => supplier._id === action.payload._id);
         if (index !== -1) {
           state.suppliers[index] = action.payload;
         }
       })
       .addCase(deleteSupplier.fulfilled, (state, action) => {
-        state.suppliers = state.suppliers.filter(supplier => supplier.id !== action.payload);
+        state.suppliers = state.suppliers.filter(supplier => supplier._id !== action.payload);
       });
 
     // Stats

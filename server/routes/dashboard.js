@@ -352,28 +352,28 @@ async function getRecentActivity(dateFilter) {
     const recentAppointments = await Appointment.find(dateFilter)
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('customerId', 'firstName lastName');
+      .populate('customer', 'name email phone');
     
     activities.push(...recentAppointments.map(apt => ({
       id: apt._id,
       type: 'appointment',
-      description: `New appointment with ${apt.customerId.firstName} ${apt.customerId.lastName}`,
+      description: `New appointment with ${apt.customer.name}`,
       timestamp: apt.createdAt,
-      amount: apt.totalCost
+      amount: apt.estimatedCost?.total || apt.actualCost?.total || 0
     })));
 
     // Recent invoices
     const recentInvoices = await Invoice.find(dateFilter)
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('customerId', 'firstName lastName');
+      .populate('customerId', 'name email phone');
     
     activities.push(...recentInvoices.map(inv => ({
       id: inv._id,
       type: 'invoice',
-      description: `Invoice generated for ${inv.customerId.firstName} ${inv.customerId.lastName}`,
+      description: `Invoice generated for ${inv.customerId.name}`,
       timestamp: inv.createdAt,
-      amount: inv.totalAmount
+      amount: inv.total
     })));
 
     // Recent tasks
@@ -408,7 +408,7 @@ function convertToCSV(data) {
     rows.push([
       'Customer',
       customer._id,
-      `${customer.firstName} ${customer.lastName}`,
+      customer.name,
       '',
       customer.createdAt
     ]);
@@ -420,7 +420,7 @@ function convertToCSV(data) {
       'Appointment',
       appointment._id,
       appointment.serviceType,
-      appointment.totalCost,
+      appointment.estimatedCost?.total || appointment.actualCost?.total || 0,
       appointment.createdAt
     ]);
   });
@@ -431,7 +431,7 @@ function convertToCSV(data) {
       'Invoice',
       invoice._id,
       `Invoice #${invoice.invoiceNumber}`,
-      invoice.totalAmount,
+      invoice.total,
       invoice.createdAt
     ]);
   });

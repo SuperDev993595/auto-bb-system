@@ -193,7 +193,7 @@ export default function AddInvoiceModal({ onClose, onSuccess }: AddInvoiceModalP
                  required
                >
                  <option value="">Select Customer</option>
-                 {customers.map(customer => (
+                 {(customers && Array.isArray(customers) ? customers : []).map(customer => (
                    <option key={customer._id} value={customer._id}>
                      {customer.name}
                    </option>
@@ -233,7 +233,7 @@ export default function AddInvoiceModal({ onClose, onSuccess }: AddInvoiceModalP
                  <option value="">
                    {serviceCatalogLoading ? 'Loading services...' : 'Select Service Type'}
                  </option>
-                 {serviceCatalog.map(service => (
+                 {(serviceCatalog && Array.isArray(serviceCatalog) ? serviceCatalog : []).map(service => (
                    <option key={service._id} value={service.name}>
                      {service.name}
                    </option>
@@ -259,7 +259,7 @@ export default function AddInvoiceModal({ onClose, onSuccess }: AddInvoiceModalP
                      customerVehicles.length === 0 ? 'No vehicles found for this customer' :
                      'Select Vehicle'}
                   </option>
-                  {customerVehicles.map(vehicle => (
+                  {(customerVehicles && Array.isArray(customerVehicles) ? customerVehicles : []).map(vehicle => (
                     <option key={vehicle._id} value={vehicle._id}>
                       {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
                     </option>

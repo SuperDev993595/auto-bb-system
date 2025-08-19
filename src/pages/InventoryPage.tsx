@@ -10,19 +10,12 @@ import {
   fetchPurchaseOrderStats,
   fetchInventoryCategories,
   fetchInventoryLocations,
-  adjustStock,
-  updatePurchaseOrder,
-  createPurchaseOrder,
-  createSupplier,
-  updateSupplier,
-  deleteSupplier,
-  createInventoryItem,
-  updateInventoryItem,
-  deleteInventoryItem
+  adjustStock
 } from '../redux/actions/inventory'
-import { Supplier, PurchaseOrder } from '../redux/actions/inventory'
-import { InventoryItem, InventoryTransaction } from '../utils/CustomerTypes'
+import { InventoryItem, InventoryTransaction, Supplier, PurchaseOrder } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
+import AddEditInventoryModal from '../components/inventory/AddEditInventoryModal'
+import DeleteInventoryModal from '../components/inventory/DeleteInventoryModal'
 import {
   HiCube,
   HiTruck,
@@ -53,6 +46,12 @@ export default function InventoryPage() {
   const [locationFilter, setLocationFilter] = useState('all')
   const [stockFilter, setStockFilter] = useState('all')
   
+  // Modal states
+  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
+  
   const { 
     items, 
     transactions, 
@@ -60,35 +59,33 @@ export default function InventoryPage() {
     purchaseOrders, 
     categories, 
     locations,
-    itemsLoading,
-    transactionsLoading,
-    suppliersLoading,
-    purchaseOrdersLoading,
-    stats,
-    transactionStats,
-    purchaseOrderStats
+    loading,
+    error
   } = useAppSelector(state => state.inventory)
   const dispatch = useAppDispatch()
 
   // Load data on component mount
   useEffect(() => {
-    dispatch(fetchInventoryItems())
-    dispatch(fetchInventoryTransactions())
-    dispatch(fetchSuppliers())
-    dispatch(fetchPurchaseOrders())
+    dispatch(fetchInventoryItems({}))
+    dispatch(fetchInventoryTransactions({}))
+    dispatch(fetchSuppliers({}))
+    dispatch(fetchPurchaseOrders({}))
     dispatch(fetchInventoryStats())
-    dispatch(fetchTransactionStats())
-    dispatch(fetchPurchaseOrderStats())
+    dispatch(fetchTransactionStats({}))
+    dispatch(fetchPurchaseOrderStats({}))
     dispatch(fetchInventoryCategories())
     dispatch(fetchInventoryLocations())
   }, [dispatch])
 
   // Filter inventory items
-  const filteredItems = items.filter(item => {
+  const filteredItems = (items && Array.isArray(items) ? items : []).filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.partNumber.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
-    const matchesLocation = locationFilter === 'all' || item.location === locationFilter
+    const matchesLocation = locationFilter === 'all' || 
+                           (typeof item.location === 'object' && item.location 
+                             ? `${(item.location as any).warehouse || ''} ${(item.location as any).shelf || ''} ${(item.location as any).bin || ''}`.trim() === locationFilter
+                             : item.location === locationFilter)
     const matchesStock = stockFilter === 'all' || 
                         (stockFilter === 'low' && item.quantityOnHand <= item.minStockLevel) ||
                         (stockFilter === 'out' && item.quantityOnHand === 0) ||
@@ -98,10 +95,10 @@ export default function InventoryPage() {
   })
 
   // Calculate metrics
-  const lowStockItems = items.filter(item => item.quantityOnHand <= item.minStockLevel && item.isActive)
-  const outOfStockItems = items.filter(item => item.quantityOnHand === 0 && item.isActive)
-  const totalValue = items.reduce((sum, item) => sum + (item.quantityOnHand * item.costPrice), 0)
-  const pendingOrders = purchaseOrders.filter(po => po.status === 'sent' || po.status === 'confirmed')
+  const lowStockItems = (items && Array.isArray(items) ? items : []).filter(item => item.quantityOnHand <= item.minStockLevel && item.isActive)
+  const outOfStockItems = (items && Array.isArray(items) ? items : []).filter(item => item.quantityOnHand === 0 && item.isActive)
+  const totalValue = (items && Array.isArray(items) ? items : []).reduce((sum, item) => sum + (item.quantityOnHand * item.costPrice), 0)
+  const pendingOrders = (purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).filter(po => po.status === 'sent' || po.status === 'confirmed')
 
   const getStockStatus = (item: InventoryItem) => {
     if (item.quantityOnHand === 0) return { status: 'Out of Stock', color: 'text-red-600 bg-red-100' }
@@ -116,9 +113,36 @@ export default function InventoryPage() {
     const currentItem = items.find(item => item.id === itemId)
     if (currentItem) {
       const difference = newQuantity - currentItem.quantityOnHand
-      const type = difference > 0 ? 'add' : 'remove'
-      dispatch(adjustStock({ itemId, quantity: Math.abs(difference), type, reason }))
+      dispatch(adjustStock({ itemId, quantity: difference, reason }))
     }
+  }
+
+  // Modal handlers
+  const handleAddItem = () => {
+    setModalMode('add')
+    setSelectedItem(null)
+    setIsAddEditModalOpen(true)
+  }
+
+  const handleEditItem = (item: InventoryItem) => {
+    setModalMode('edit')
+    setSelectedItem(item)
+    setIsAddEditModalOpen(true)
+  }
+
+  const handleDeleteItem = (item: InventoryItem) => {
+    setSelectedItem(item)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleCloseAddEditModal = () => {
+    setIsAddEditModalOpen(false)
+    setSelectedItem(null)
+  }
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setSelectedItem(null)
   }
 
   const renderInventory = () => (
@@ -134,7 +158,10 @@ export default function InventoryPage() {
             <HiDownload className="w-4 h-4" />
             Export
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+          <button 
+            onClick={handleAddItem}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
             <HiPlus className="w-4 h-4" />
             Add Item
           </button>
@@ -147,7 +174,7 @@ export default function InventoryPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Items</p>
-              <p className="text-2xl font-bold text-gray-900">{items.filter(i => i.isActive).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <HiCube className="w-6 h-6 text-blue-600" />
@@ -215,7 +242,7 @@ export default function InventoryPage() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
             >
               <option value="all">All Categories</option>
-              {categories.map(category => (
+              {categories && Array.isArray(categories) && categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
@@ -228,7 +255,7 @@ export default function InventoryPage() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
             >
               <option value="all">All Locations</option>
-              {locations.map(location => (
+              {locations && Array.isArray(locations) && locations.map(location => (
                 <option key={location} value={location}>{location}</option>
               ))}
             </select>
@@ -248,7 +275,15 @@ export default function InventoryPage() {
           </div>
           
           <div>
-            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+            <button 
+              onClick={() => {
+                setSearchTerm('')
+                setCategoryFilter('all')
+                setLocationFilter('all')
+                setStockFilter('all')
+              }}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+            >
               <HiRefresh className="w-4 h-4" />
               Reset
             </button>
@@ -257,7 +292,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Inventory Table */}
-      {itemsLoading ? (
+      {loading ? (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -307,9 +342,15 @@ export default function InventoryPage() {
                           </div>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <HiLocationMarker className="w-3 h-3" />
-                            {item.location}
+                            {typeof item.location === 'object' && item.location 
+                              ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
+                              : item.location || 'N/A'
+                            }
                           </div>
-                          <div className="text-xs text-gray-400">{item.supplier}</div>
+                                                     <div className="text-xs text-gray-400">{typeof item.supplier === 'object' && item.supplier 
+                             ? (item.supplier as any).name 
+                             : item.supplier || 'N/A'
+                           }</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -337,13 +378,13 @@ export default function InventoryPage() {
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="text-sm text-gray-900">
-                            Cost: ${item.costPrice.toFixed(2)}
+                            Cost: ${(item.costPrice || 0).toFixed(2)}
                           </div>
                           <div className="text-sm text-gray-900">
-                            Sell: ${item.sellPrice.toFixed(2)}
+                            Sell: ${(item.sellPrice || 0).toFixed(2)}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Value: ${(item.quantityOnHand * item.costPrice).toFixed(2)}
+                            Value: ${((item.quantityOnHand || 0) * (item.costPrice || 0)).toFixed(2)}
                           </div>
                         </div>
                       </td>
@@ -357,11 +398,19 @@ export default function InventoryPage() {
                           <button className="text-blue-600 hover:text-blue-900" title="View details">
                             <HiEye className="w-4 h-4" />
                           </button>
-                          <button className="text-gray-600 hover:text-gray-900" title="Edit">
+                          <button 
+                            onClick={() => handleEditItem(item)}
+                            className="text-gray-600 hover:text-gray-900" 
+                            title="Edit"
+                          >
                             <HiPencil className="w-4 h-4" />
                           </button>
-                          <button className="text-green-600 hover:text-green-900" title="Adjust quantity">
-                            <HiRefresh className="w-4 h-4" />
+                          <button 
+                            onClick={() => handleDeleteItem(item)}
+                            className="text-red-600 hover:text-red-900" 
+                            title="Delete"
+                          >
+                            <HiTrash className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -414,8 +463,8 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.slice(0, 50).map(transaction => {
-                const item = items.find(i => i.id === transaction.itemId)
+              {(transactions && Array.isArray(transactions) ? transactions : []).slice(0, 50).map(transaction => {
+                const item = (items && Array.isArray(items) ? items : []).find(i => i.id === transaction.itemId)
                 return (
                   <tr key={transaction.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -453,8 +502,8 @@ export default function InventoryPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {transaction.totalCost ? `$${transaction.totalCost.toFixed(2)}` : 
-                         transaction.unitCost ? `$${transaction.unitCost.toFixed(2)} ea` : '-'}
+                        {transaction.totalCost ? `$${(transaction.totalCost || 0).toFixed(2)}` : 
+                         transaction.unitCost ? `$${(transaction.unitCost || 0).toFixed(2)} ea` : '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -490,12 +539,15 @@ export default function InventoryPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {suppliers.filter(s => s.isActive).map(supplier => (
+        {(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).map(supplier => (
           <div key={supplier.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">{supplier.name}</h3>
-                <p className="text-sm text-gray-600">{supplier.contactPerson}</p>
+                                 <p className="text-sm text-gray-600">{typeof supplier.contactPerson === 'object' && supplier.contactPerson 
+                   ? (supplier.contactPerson as any).name 
+                   : supplier.contactPerson || 'N/A'
+                 }</p>
               </div>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -532,7 +584,11 @@ export default function InventoryPage() {
             
             <div className="mt-4 flex justify-between items-center">
               <span className="text-xs text-gray-500">
-                {items.filter(item => item.supplier === supplier.name).length} items
+                                 {(items && Array.isArray(items) ? items : []).filter(item => 
+                   typeof item.supplier === 'object' && item.supplier 
+                     ? (item.supplier as any).name === supplier.name
+                     : item.supplier === supplier.name
+                 ).length} items
               </span>
               <div className="flex gap-2">
                 <button className="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
@@ -590,7 +646,7 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {purchaseOrders.map(po => (
+              {(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).map(po => (
                 <tr key={po.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">#{po.id}</div>
@@ -609,10 +665,10 @@ export default function InventoryPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{po.items.length} items</div>
+                    <div className="text-sm text-gray-900">{(po.items && Array.isArray(po.items) ? po.items : []).length} items</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">${po.total.toFixed(2)}</div>
+                    <div className="text-sm font-medium text-gray-900">${(po.total || 0).toFixed(2)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -655,10 +711,10 @@ export default function InventoryPage() {
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { key: 'inventory', label: 'Inventory', count: items.filter(i => i.isActive).length, icon: HiCube },
-              { key: 'transactions', label: 'Transactions', count: transactions.length, icon: HiClipboardList },
-              { key: 'suppliers', label: 'Suppliers', count: suppliers.filter(s => s.isActive).length, icon: HiUsers },
-              { key: 'purchase-orders', label: 'Purchase Orders', count: purchaseOrders.length, icon: HiTruck }
+              { key: 'inventory', label: 'Inventory', count: (items && Array.isArray(items) ? items : []).filter(i => i.isActive).length, icon: HiCube },
+              { key: 'transactions', label: 'Transactions', count: (transactions && Array.isArray(transactions) ? transactions : []).length, icon: HiClipboardList },
+              { key: 'suppliers', label: 'Suppliers', count: (suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length, icon: HiUsers },
+              { key: 'purchase-orders', label: 'Purchase Orders', count: (purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length, icon: HiTruck }
             ].map(tab => (
               <button
                 key={tab.key}
@@ -683,6 +739,20 @@ export default function InventoryPage() {
           {activeTab === 'purchase-orders' && renderPurchaseOrders()}
         </div>
       </div>
+
+      {/* Modals */}
+      <AddEditInventoryModal
+        isOpen={isAddEditModalOpen}
+        onClose={handleCloseAddEditModal}
+        item={selectedItem}
+        mode={modalMode}
+      />
+
+      <DeleteInventoryModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        item={selectedItem}
+      />
     </div>
   )
 }

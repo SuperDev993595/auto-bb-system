@@ -651,7 +651,7 @@ router.post('/email/daily-activity', requireAdmin, async (req, res) => {
     const pdfBuffer = doc.output('arraybuffer');
 
     // Email configuration (you'll need to set up your email service)
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: false,
@@ -719,7 +719,7 @@ router.post('/email/work-completion', requireAdmin, async (req, res) => {
     }
 
     // Email configuration
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: false,

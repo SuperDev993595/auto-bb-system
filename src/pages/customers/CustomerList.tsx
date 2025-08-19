@@ -77,7 +77,7 @@ function CustomerList() {
   };
 
   // Filter customers based on search (client-side for immediate feedback)
-  const filteredCustomers = customers.filter(customer => {
+  const filteredCustomers = (customers && Array.isArray(customers) ? customers : []).filter(customer => {
     const searchLower = searchTerm.toLowerCase();
     const addressText = formatAddress(customer.address).toLowerCase();
     

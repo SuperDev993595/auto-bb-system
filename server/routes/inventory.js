@@ -1,7 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const { InventoryItem, InventoryTransaction, PurchaseOrder } = require('../models/Inventory');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -63,7 +63,7 @@ const purchaseOrderSchema = Joi.object({
 // @route   GET /api/inventory/items
 // @desc    Get all inventory items
 // @access  Private
-router.get('/items', requireAdmin, async (req, res) => {
+router.get('/items', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -148,7 +148,7 @@ router.get('/items', requireAdmin, async (req, res) => {
 // @route   POST /api/inventory/items
 // @desc    Create new inventory item
 // @access  Private
-router.post('/items', requireAdmin, async (req, res) => {
+router.post('/items', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = inventoryItemSchema.validate(req.body);
@@ -188,7 +188,7 @@ router.post('/items', requireAdmin, async (req, res) => {
 // @route   PUT /api/inventory/items/:id
 // @desc    Update inventory item
 // @access  Private
-router.put('/items/:id', requireAdmin, async (req, res) => {
+router.put('/items/:id', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = inventoryItemSchema.validate(req.body);
@@ -232,7 +232,7 @@ router.put('/items/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/inventory/items/:id/stock
 // @desc    Add stock to inventory item
 // @access  Private
-router.post('/items/:id/stock', requireAdmin, async (req, res) => {
+router.post('/items/:id/stock', requireAnyAdmin, async (req, res) => {
   try {
     const { quantity, unitPrice, reference, notes } = req.body;
 
@@ -271,7 +271,7 @@ router.post('/items/:id/stock', requireAdmin, async (req, res) => {
 // @route   POST /api/inventory/items/:id/remove-stock
 // @desc    Remove stock from inventory item
 // @access  Private
-router.post('/items/:id/remove-stock', requireAdmin, async (req, res) => {
+router.post('/items/:id/remove-stock', requireAnyAdmin, async (req, res) => {
   try {
     const { quantity, unitPrice, reference, notes } = req.body;
 
@@ -311,7 +311,7 @@ router.post('/items/:id/remove-stock', requireAdmin, async (req, res) => {
 // @route   GET /api/inventory/purchase-orders
 // @desc    Get all purchase orders
 // @access  Private
-router.get('/purchase-orders', requireAdmin, async (req, res) => {
+router.get('/purchase-orders', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -377,7 +377,7 @@ router.get('/purchase-orders', requireAdmin, async (req, res) => {
 // @route   POST /api/inventory/purchase-orders
 // @desc    Create new purchase order
 // @access  Private
-router.post('/purchase-orders', requireAdmin, async (req, res) => {
+router.post('/purchase-orders', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = purchaseOrderSchema.validate(req.body);
@@ -408,6 +408,707 @@ router.post('/purchase-orders', requireAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Create purchase order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/items/:id
+// @desc    Get inventory item by ID
+// @access  Private
+router.get('/items/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const item = await InventoryItem.findById(req.params.id)
+      .populate('supplier', 'name email phone');
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { item }
+    });
+
+  } catch (error) {
+    console.error('Get inventory item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   DELETE /api/inventory/items/:id
+// @desc    Delete inventory item
+// @access  Private
+router.delete('/items/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const item = await InventoryItem.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    await InventoryItem.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Inventory item deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete inventory item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/inventory/items/:id/adjust-stock
+// @desc    Adjust stock for inventory item
+// @access  Private
+router.post('/items/:id/adjust-stock', requireAnyAdmin, async (req, res) => {
+  try {
+    const { quantity, reason, notes } = req.body;
+
+    const item = await InventoryItem.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    const previousQuantity = item.currentStock;
+    item.currentStock += quantity;
+
+    if (item.currentStock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reduce stock below 0'
+      });
+    }
+
+    await item.save();
+
+    // Create transaction record
+    const transaction = new InventoryTransaction({
+      item: item._id,
+      type: quantity > 0 ? 'in' : 'out',
+      quantity: Math.abs(quantity),
+      previousQuantity,
+      newQuantity: item.currentStock,
+      reason,
+      notes,
+      performedBy: req.user.id,
+      cost: item.costPrice * Math.abs(quantity)
+    });
+
+    await transaction.save();
+
+    res.json({
+      success: true,
+      message: 'Stock adjusted successfully',
+      data: { item, transaction }
+    });
+
+  } catch (error) {
+    console.error('Adjust stock error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/items/low-stock
+// @desc    Get low stock items
+// @access  Private
+router.get('/items/low-stock', requireAnyAdmin, async (req, res) => {
+  try {
+    const items = await InventoryItem.find({
+      $expr: { $lte: ['$currentStock', '$minimumStock'] },
+      isActive: true
+    }).populate('supplier', 'name email phone');
+
+    res.json({
+      success: true,
+      data: { items }
+    });
+
+  } catch (error) {
+    console.error('Get low stock items error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/items/out-of-stock
+// @desc    Get out of stock items
+// @access  Private
+router.get('/items/out-of-stock', requireAnyAdmin, async (req, res) => {
+  try {
+    const items = await InventoryItem.find({
+      currentStock: 0,
+      isActive: true
+    }).populate('supplier', 'name email phone');
+
+    res.json({
+      success: true,
+      data: { items }
+    });
+
+  } catch (error) {
+    console.error('Get out of stock items error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/items/stats/overview
+// @desc    Get inventory overview stats
+// @access  Private
+router.get('/items/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const totalItems = await InventoryItem.countDocuments({ isActive: true });
+    const lowStockItems = await InventoryItem.countDocuments({
+      $expr: { $lte: ['$currentStock', '$minimumStock'] },
+      isActive: true
+    });
+    const outOfStockItems = await InventoryItem.countDocuments({
+      currentStock: 0,
+      isActive: true
+    });
+
+    const totalValue = await InventoryItem.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: null,
+          totalValue: { $sum: { $multiply: ['$currentStock', '$costPrice'] } }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalItems,
+        lowStockItems,
+        outOfStockItems,
+        totalValue: totalValue.length > 0 ? totalValue[0].totalValue : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get inventory stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/transactions
+// @desc    Get inventory transactions
+// @access  Private
+router.get('/transactions', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      type,
+      itemId,
+      startDate,
+      endDate,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    if (type) query.type = type;
+    if (itemId) query.item = itemId;
+
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const transactions = await InventoryTransaction.find(query)
+      .populate('item', 'name partNumber sku')
+      .populate('performedBy', 'name email')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Get total count
+    const total = await InventoryTransaction.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalTransactions: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get transactions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/transactions/:id
+// @desc    Get transaction by ID
+// @access  Private
+router.get('/transactions/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const transaction = await InventoryTransaction.findById(req.params.id)
+      .populate('item', 'name partNumber sku')
+      .populate('performedBy', 'name email');
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { transaction }
+    });
+
+  } catch (error) {
+    console.error('Get transaction error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/inventory/transactions
+// @desc    Create inventory transaction
+// @access  Private
+router.post('/transactions', requireAnyAdmin, async (req, res) => {
+  try {
+    const { itemId, type, quantity, reason, notes, cost } = req.body;
+
+    const item = await InventoryItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    const previousQuantity = item.currentStock;
+    let newQuantity = previousQuantity;
+
+    if (type === 'in' || type === 'return') {
+      newQuantity += quantity;
+    } else if (type === 'out' || type === 'damage') {
+      newQuantity -= quantity;
+      if (newQuantity < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot reduce stock below 0'
+        });
+      }
+    }
+
+    // Update item stock
+    item.currentStock = newQuantity;
+    await item.save();
+
+    // Create transaction
+    const transaction = new InventoryTransaction({
+      item: itemId,
+      type,
+      quantity,
+      previousQuantity,
+      newQuantity,
+      reason,
+      notes,
+      performedBy: req.user.id,
+      cost: cost || (item.costPrice * quantity)
+    });
+
+    await transaction.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Transaction created successfully',
+      data: { transaction, item }
+    });
+
+  } catch (error) {
+    console.error('Create transaction error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/transactions/stats/overview
+// @desc    Get transaction stats overview
+// @access  Private
+router.get('/transactions/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const query = {};
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const totalTransactions = await InventoryTransaction.countDocuments(query);
+    const totalIn = await InventoryTransaction.aggregate([
+      { $match: { ...query, type: { $in: ['in', 'return'] } } },
+      { $group: { _id: null, total: { $sum: '$quantity' } } }
+    ]);
+    const totalOut = await InventoryTransaction.aggregate([
+      { $match: { ...query, type: { $in: ['out', 'damage'] } } },
+      { $group: { _id: null, total: { $sum: '$quantity' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalTransactions,
+        totalIn: totalIn.length > 0 ? totalIn[0].total : 0,
+        totalOut: totalOut.length > 0 ? totalOut[0].total : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get transaction stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/purchase-orders/:id
+// @desc    Get purchase order by ID
+// @access  Private
+router.get('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const purchaseOrder = await PurchaseOrder.findById(req.params.id)
+      .populate('items.item', 'name partNumber sku')
+      .populate('createdBy', 'name email');
+
+    if (!purchaseOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Purchase order not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { purchaseOrder }
+    });
+
+  } catch (error) {
+    console.error('Get purchase order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/inventory/purchase-orders/:id
+// @desc    Update purchase order
+// @access  Private
+router.put('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const { error, value } = purchaseOrderSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const purchaseOrder = await PurchaseOrder.findById(req.params.id);
+
+    if (!purchaseOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Purchase order not found'
+      });
+    }
+
+    Object.assign(purchaseOrder, value);
+    await purchaseOrder.save();
+
+    await purchaseOrder.populate('items.item', 'name partNumber sku');
+    await purchaseOrder.populate('createdBy', 'name email');
+
+    res.json({
+      success: true,
+      message: 'Purchase order updated successfully',
+      data: { purchaseOrder }
+    });
+
+  } catch (error) {
+    console.error('Update purchase order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   DELETE /api/inventory/purchase-orders/:id
+// @desc    Delete purchase order
+// @access  Private
+router.delete('/purchase-orders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const purchaseOrder = await PurchaseOrder.findById(req.params.id);
+
+    if (!purchaseOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Purchase order not found'
+      });
+    }
+
+    await PurchaseOrder.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Purchase order deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete purchase order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/inventory/purchase-orders/:id/receive
+// @desc    Receive purchase order items
+// @access  Private
+router.post('/purchase-orders/:id/receive', requireAnyAdmin, async (req, res) => {
+  try {
+    const { receivedItems } = req.body;
+
+    const purchaseOrder = await PurchaseOrder.findById(req.params.id);
+
+    if (!purchaseOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Purchase order not found'
+      });
+    }
+
+    // Update received items and add to inventory
+    for (const receivedItem of receivedItems) {
+      const poItem = purchaseOrder.items.find(item => item.item.toString() === receivedItem.itemId);
+      if (poItem) {
+        poItem.receivedQuantity = (poItem.receivedQuantity || 0) + receivedItem.quantity;
+      }
+
+      // Add to inventory
+      const inventoryItem = await InventoryItem.findById(receivedItem.itemId);
+      if (inventoryItem) {
+        inventoryItem.currentStock += receivedItem.quantity;
+        await inventoryItem.save();
+
+        // Create transaction
+        const transaction = new InventoryTransaction({
+          item: receivedItem.itemId,
+          type: 'in',
+          quantity: receivedItem.quantity,
+          previousQuantity: inventoryItem.currentStock - receivedItem.quantity,
+          newQuantity: inventoryItem.currentStock,
+          reason: 'Purchase order received',
+          reference: purchaseOrder.poNumber,
+          performedBy: req.user.id,
+          cost: receivedItem.unitPrice * receivedItem.quantity
+        });
+
+        await transaction.save();
+      }
+    }
+
+    // Update purchase order status
+    const allReceived = purchaseOrder.items.every(item => 
+      (item.receivedQuantity || 0) >= item.quantity
+    );
+    
+    if (allReceived) {
+      purchaseOrder.status = 'received';
+    } else {
+      purchaseOrder.status = 'partially_received';
+    }
+
+    await purchaseOrder.save();
+
+    res.json({
+      success: true,
+      message: 'Purchase order items received successfully',
+      data: { purchaseOrder }
+    });
+
+  } catch (error) {
+    console.error('Receive purchase order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/purchase-orders/stats/overview
+// @desc    Get purchase order stats overview
+// @access  Private
+router.get('/purchase-orders/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const query = {};
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const totalOrders = await PurchaseOrder.countDocuments(query);
+    const pendingOrders = await PurchaseOrder.countDocuments({ ...query, status: 'pending' });
+    const receivedOrders = await PurchaseOrder.countDocuments({ ...query, status: 'received' });
+
+    const totalValue = await PurchaseOrder.aggregate([
+      { $match: query },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalOrders,
+        pendingOrders,
+        receivedOrders,
+        totalValue: totalValue.length > 0 ? totalValue[0].total : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get purchase order stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/suppliers
+// @desc    Get suppliers
+// @access  Private
+router.get('/suppliers', requireAnyAdmin, async (req, res) => {
+  try {
+    const suppliers = await require('../models/Supplier').find({ isActive: true });
+
+    res.json({
+      success: true,
+      data: { suppliers }
+    });
+
+  } catch (error) {
+    console.error('Get suppliers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/categories
+// @desc    Get inventory categories
+// @access  Private
+router.get('/categories', requireAnyAdmin, async (req, res) => {
+  try {
+    const categories = [
+      'engine_parts', 'brake_system', 'electrical', 'suspension', 'transmission',
+      'cooling_system', 'fuel_system', 'exhaust_system', 'interior', 'exterior',
+      'tools', 'supplies', 'fluids', 'other'
+    ];
+
+    res.json({
+      success: true,
+      data: { categories }
+    });
+
+  } catch (error) {
+    console.error('Get categories error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/inventory/locations
+// @desc    Get inventory locations
+// @access  Private
+router.get('/locations', requireAnyAdmin, async (req, res) => {
+  try {
+    const locations = await InventoryItem.distinct('location.warehouse');
+
+    res.json({
+      success: true,
+      data: { locations }
+    });
+
+  } catch (error) {
+    console.error('Get locations error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

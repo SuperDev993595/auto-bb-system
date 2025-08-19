@@ -206,15 +206,101 @@ export interface InventoryItem {
     name: string
     description: string
     category: string
-    supplier: string
+    supplier: string | { name: string; contact?: string; email?: string; phone?: string; website?: string }
     costPrice: number
     sellPrice: number
     quantityOnHand: number
     minStockLevel: number
     maxStockLevel: number
-    location: string
+    location: string | { warehouse?: string; shelf?: string; bin?: string }
     isActive: boolean
     lastUpdated: string
+}
+
+// Create Inventory Item Data
+export interface CreateInventoryItemData {
+    name: string
+    description: string
+    partNumber: string
+    category: string
+    subcategory?: string
+    brand?: string
+    model?: string
+    year?: string
+    location: string | { warehouse?: string; shelf?: string; bin?: string }
+    quantityOnHand: number
+    minStockLevel: number
+    maxStockLevel: number
+    reorderPoint: number
+    costPrice: number
+    sellingPrice: number
+    supplierId: string
+    isActive?: boolean
+}
+
+// Update Inventory Item Data
+export interface UpdateInventoryItemData {
+    name?: string
+    description?: string
+    partNumber?: string
+    category?: string
+    subcategory?: string
+    brand?: string
+    model?: string
+    year?: string
+    location?: string | { warehouse?: string; shelf?: string; bin?: string }
+    quantityOnHand?: number
+    minStockLevel?: number
+    maxStockLevel?: number
+    reorderPoint?: number
+    costPrice?: number
+    sellingPrice?: number
+    supplierId?: string
+    isActive?: boolean
+}
+
+// Inventory Transaction
+export interface InventoryTransaction {
+    id: string
+    itemId: string
+    type: 'purchase' | 'usage' | 'adjustment' | 'return' | 'damage' | 'transfer'
+    quantity: number
+    unitCost?: number
+    totalCost?: number
+    reference: string
+    notes?: string
+    employeeName: string
+    date: string
+}
+
+// Supplier
+export interface Supplier {
+    id: string
+    name: string
+    contactPerson: string | { name: string; email: string; phone?: string; position?: string }
+    email: string
+    phone: string
+    paymentTerms: string
+    rating: number
+    notes?: string
+    isActive: boolean
+}
+
+// Purchase Order
+export interface PurchaseOrder {
+    id: string
+    supplierName: string
+    orderDate: string
+    expectedDate?: string
+    items: Array<{
+        itemId: string
+        name: string
+        quantity: number
+        unitPrice: number
+        totalPrice: number
+    }>
+    total: number
+    status: 'draft' | 'sent' | 'confirmed' | 'received' | 'cancelled'
 }
 
 // Reminder/Notification

@@ -143,7 +143,7 @@ export default function AppointmentsPage() {
     }, [statusFilter, technicianFilter, searchTerm])
     
     // Filter appointments (client-side filtering for immediate UI updates)
-    const filteredAppointments = appointments.filter(apt => {
+    const filteredAppointments = (appointments && Array.isArray(appointments) ? appointments : []).filter(apt => {
         if (statusFilter !== 'all' && apt.status !== statusFilter) return false
         if (technicianFilter !== 'all' && apt.technicianId !== technicianFilter) return false
         if (searchTerm && !apt.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) && 
@@ -159,7 +159,7 @@ export default function AppointmentsPage() {
             filterValue: technicianFilter,
             totalAppointments: appointments.length,
             filteredCount: filteredAppointments.length,
-            appointmentsWithTechnician: appointments.filter(apt => apt.technicianId).map(apt => ({
+            appointmentsWithTechnician: (appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.technicianId).map(apt => ({
                 id: apt.id,
                 technicianId: apt.technicianId,
                 technicianName: apt.technicianName
@@ -168,7 +168,7 @@ export default function AppointmentsPage() {
     }
 
     // Get unique statuses for filter
-    const statuses = Array.from(new Set(appointments.map(apt => apt.status)))
+    const statuses = Array.from(new Set((appointments && Array.isArray(appointments) ? appointments : []).map(apt => apt.status)))
 
     // Handle new appointment creation
     const handleCreateAppointment = async (appointmentData: any) => {
@@ -287,7 +287,7 @@ export default function AppointmentsPage() {
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
                         >
                             <option value="all">All Status</option>
-                            {statuses.map(status => (
+                            {(statuses && Array.isArray(statuses) ? statuses : []).map(status => (
                                 <option key={status} value={status} className="capitalize">
                                     {status.replace('-', ' ')}
                                 </option>
@@ -300,7 +300,7 @@ export default function AppointmentsPage() {
                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
                         >
                             <option value="all">All Technicians</option>
-                            {technicians.map(tech => (
+                            {(technicians && Array.isArray(technicians) ? technicians : []).map(tech => (
                                 <option key={(tech as any).id || (tech as any)._id} value={(tech as any).id || (tech as any)._id}>
                                     {tech.name}
                                 </option>
@@ -343,7 +343,7 @@ export default function AppointmentsPage() {
                         <div>
                             <p className="text-sm text-gray-600">Today's Appointments</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {appointments.filter(apt => apt.date === new Date().toISOString().split('T')[0]).length}
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.date === new Date().toISOString().split('T')[0]).length}
                             </p>
                         </div>
                         <div className="bg-blue-100 p-3 rounded-full">
@@ -357,7 +357,7 @@ export default function AppointmentsPage() {
                         <div>
                             <p className="text-sm text-gray-600">Confirmed</p>
                             <p className="text-2xl font-bold text-green-600">
-                                {appointments.filter(apt => apt.status === 'confirmed').length}
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
                             </p>
                         </div>
                         <div className="bg-green-100 p-3 rounded-full">
@@ -371,7 +371,7 @@ export default function AppointmentsPage() {
                         <div>
                             <p className="text-sm text-gray-600">In Progress</p>
                             <p className="text-2xl font-bold text-yellow-600">
-                                {appointments.filter(apt => apt.status === 'in-progress').length}
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
                             </p>
                         </div>
                         <div className="bg-yellow-100 p-3 rounded-full">
@@ -385,7 +385,7 @@ export default function AppointmentsPage() {
                         <div>
                             <p className="text-sm text-gray-600">Completed</p>
                             <p className="text-2xl font-bold text-gray-600">
-                                {appointments.filter(apt => apt.status === 'completed').length}
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
                             </p>
                         </div>
                         <div className="bg-gray-100 p-3 rounded-full">
