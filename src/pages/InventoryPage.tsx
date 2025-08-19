@@ -44,6 +44,38 @@ import {
 
 type TabType = 'inventory' | 'transactions' | 'suppliers' | 'purchase-orders'
 
+// Helper function to convert data to CSV
+const convertToCSV = (data: any[], headers: string[]): string => {
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => 
+      headers.map(header => {
+        const value = row[header] || row[header.toLowerCase()] || ''
+        // Escape commas and quotes in the value
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`
+        }
+        return value
+      }).join(',')
+    )
+  ].join('\n')
+  
+  return csvContent
+}
+
+// Helper function to download CSV file
+const downloadCSV = (csvContent: string, filename: string) => {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', filename)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState<TabType>('inventory')
   const [searchTerm, setSearchTerm] = useState('')
@@ -93,6 +125,178 @@ export default function InventoryPage() {
     dispatch(fetchInventoryCategories())
     dispatch(fetchInventoryLocations())
   }, [dispatch])
+
+  // Export functionality
+  const handleExport = () => {
+    const timestamp = new Date().toISOString().split('T')[0]
+    
+    switch (activeTab) {
+      case 'inventory':
+        exportInventoryItems(timestamp)
+        break
+      case 'transactions':
+        exportTransactions(timestamp)
+        break
+      case 'suppliers':
+        exportSuppliers(timestamp)
+        break
+      case 'purchase-orders':
+        exportPurchaseOrders(timestamp)
+        break
+    }
+  }
+
+  const exportInventoryItems = (timestamp: string) => {
+    const activeItems = (items && Array.isArray(items) ? items : []).filter(item => item.isActive)
+    const headers = [
+      'Name',
+      'Part Number',
+      'Description',
+      'Category',
+      'Location',
+      'Supplier',
+      'Quantity On Hand',
+      'Min Stock Level',
+      'Max Stock Level',
+      'Cost Price',
+      'Selling Price',
+      'Total Value',
+      'Status'
+    ]
+    
+    const csvData = activeItems.map(item => ({
+      'Name': item.name,
+      'Part Number': item.partNumber,
+      'Description': item.description || '',
+      'Category': item.category,
+      'Location': typeof item.location === 'object' && item.location 
+        ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
+        : item.location || '',
+      'Supplier': typeof item.supplier === 'object' && item.supplier 
+        ? (item.supplier as any).name 
+        : item.supplier || '',
+      'Quantity On Hand': item.quantityOnHand,
+      'Min Stock Level': item.minStockLevel,
+      'Max Stock Level': item.maxStockLevel,
+      'Cost Price': item.costPrice,
+      'Selling Price': item.sellingPrice,
+      'Total Value': (item.quantityOnHand * item.costPrice).toFixed(2),
+      'Status': getStockStatus(item).status
+    }))
+    
+    const csvContent = convertToCSV(csvData, headers)
+    downloadCSV(csvContent, `inventory-items-${timestamp}.csv`)
+  }
+
+  const exportTransactions = (timestamp: string) => {
+    const recentTransactions = (transactions && Array.isArray(transactions) ? transactions : []).slice(0, 1000)
+    const headers = [
+      'Date',
+      'Time',
+      'Item Name',
+      'Part Number',
+      'Type',
+      'Quantity',
+      'Unit Cost',
+      'Total Cost',
+      'Reference',
+      'Notes',
+      'Employee'
+    ]
+    
+    const csvData = recentTransactions.map(transaction => {
+      const item = (items && Array.isArray(items) ? items : []).find(i => (i._id || i.id) === transaction.itemId)
+      const date = new Date(transaction.date)
+      return {
+        'Date': date.toLocaleDateString(),
+        'Time': date.toLocaleTimeString(),
+        'Item Name': item?.name || 'Unknown Item',
+        'Part Number': item?.partNumber || 'N/A',
+        'Type': transaction.type,
+        'Quantity': transaction.quantity,
+        'Unit Cost': transaction.unitCost || 0,
+        'Total Cost': transaction.totalCost || 0,
+        'Reference': transaction.reference,
+        'Notes': transaction.notes || '',
+        'Employee': transaction.employeeName
+      }
+    })
+    
+    const csvContent = convertToCSV(csvData, headers)
+    downloadCSV(csvContent, `inventory-transactions-${timestamp}.csv`)
+  }
+
+  const exportSuppliers = (timestamp: string) => {
+    const activeSuppliers = (suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive)
+    const headers = [
+      'Name',
+      'Contact Person',
+      'Email',
+      'Phone',
+      'Address',
+      'Website',
+      'Payment Terms',
+      'Rating',
+      'Notes',
+      'Item Count'
+    ]
+    
+    const csvData = activeSuppliers.map(supplier => ({
+      'Name': supplier.name,
+      'Contact Person': supplier.contactPerson?.name || '',
+      'Email': supplier.email,
+      'Phone': supplier.phone,
+      'Address': typeof supplier.address === 'object' && supplier.address
+        ? `${supplier.address.street || ''}, ${supplier.address.city || ''}, ${supplier.address.state || ''} ${supplier.address.zipCode || ''}`
+        : supplier.address || '',
+      'Website': supplier.website || '',
+      'Payment Terms': supplier.paymentTerms,
+      'Rating': supplier.rating,
+      'Notes': supplier.notes || '',
+      'Item Count': (items && Array.isArray(items) ? items : []).filter(item => 
+        typeof item.supplier === 'object' && item.supplier 
+          ? (item.supplier as any).name === supplier.name
+          : item.supplier === supplier.name
+      ).length
+    }))
+    
+    const csvContent = convertToCSV(csvData, headers)
+    downloadCSV(csvContent, `suppliers-${timestamp}.csv`)
+  }
+
+  const exportPurchaseOrders = (timestamp: string) => {
+    const allPurchaseOrders = (purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : [])
+    const headers = [
+      'PO Number',
+      'Supplier',
+      'Order Date',
+      'Expected Date',
+      'Items Count',
+      'Subtotal',
+      'Tax',
+      'Shipping',
+      'Total',
+      'Status',
+      'Notes'
+    ]
+    
+    const csvData = allPurchaseOrders.map(po => ({
+      'PO Number': po.poNumber || po.id,
+      'Supplier': po.supplierName || '',
+      'Order Date': new Date(po.orderDate).toLocaleDateString(),
+      'Expected Date': po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : '',
+      'Items Count': (po.items && Array.isArray(po.items) ? po.items : []).length,
+      'Subtotal': po.subtotal || 0,
+      'Tax': po.tax || 0,
+      'Shipping': po.shipping || 0,
+      'Total': po.total || 0,
+      'Status': po.status,
+      'Notes': po.notes || ''
+    }))
+    
+    const csvContent = convertToCSV(csvData, headers)
+    downloadCSV(csvContent, `purchase-orders-${timestamp}.csv`)
+  }
 
   // Filter inventory items
   const filteredItems = (items && Array.isArray(items) ? items : []).filter(item => {
@@ -227,7 +431,10 @@ export default function InventoryPage() {
           <p className="text-gray-600">Track parts, supplies, and stock levels</p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+          <button 
+            onClick={handleExport}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
             <HiDownload className="w-4 h-4" />
             Export
           </button>
@@ -505,6 +712,13 @@ export default function InventoryPage() {
           <h2 className="text-xl font-semibold text-gray-800">Inventory Transactions</h2>
           <p className="text-gray-600">Track all inventory movements and adjustments</p>
         </div>
+        <button 
+          onClick={handleExport}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
+          <HiDownload className="w-4 h-4" />
+          Export
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -605,13 +819,22 @@ export default function InventoryPage() {
           <h2 className="text-xl font-semibold text-gray-800">Suppliers</h2>
           <p className="text-gray-600">Manage your parts suppliers and vendors</p>
         </div>
-        <button 
-          onClick={handleAddSupplier}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Add Supplier
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleExport}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
+            <HiDownload className="w-4 h-4" />
+            Export
+          </button>
+          <button 
+            onClick={handleAddSupplier}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
+            <HiPlus className="w-4 h-4" />
+            Add Supplier
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -693,13 +916,22 @@ export default function InventoryPage() {
           <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
           <p className="text-gray-600">Track and manage purchase orders</p>
         </div>
-        <button 
-          onClick={handleAddPurchaseOrder}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create PO
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleExport}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
+            <HiDownload className="w-4 h-4" />
+            Export
+          </button>
+          <button 
+            onClick={handleAddPurchaseOrder}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
+            <HiPlus className="w-4 h-4" />
+            Create PO
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -737,10 +969,15 @@ export default function InventoryPage() {
               {(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).map((po, index) => (
                 <tr key={po.id || `po-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">#{po.id}</div>
+                    <div className="text-sm font-medium text-gray-900">#{po.poNumber || po.id}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{po.supplierName}</div>
+                    <div className="text-sm text-gray-900">
+                      {typeof po.supplier === 'object' && po.supplier 
+                        ? (po.supplier as any).name 
+                        : po.supplierName || po.supplier || 'N/A'
+                      }
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
