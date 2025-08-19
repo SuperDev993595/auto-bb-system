@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useAppSelector } from '../../redux'
+import { useAppSelector, useAppDispatch } from '../../redux'
+import { fetchCustomers } from '../../redux/actions/customers'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { HiClock, HiUser, HiMail, HiPhone, HiCalendar } from 'react-icons/hi'
 import { Reminder } from '../../utils/CustomerTypes'
@@ -35,7 +36,15 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
     notes: ''
   })
 
-  const { customers } = useAppSelector(state => state.customers)
+  const { list: customers = [] } = useAppSelector(state => state.customers)
+  const dispatch = useAppDispatch()
+
+  // Load customers if not already loaded
+  useEffect(() => {
+    if (!customers || customers.length === 0) {
+      dispatch(fetchCustomers())
+    }
+  }, [dispatch, customers])
 
   const handleChange = (field: keyof CreateReminderData, value: any) => {
     setFormData(prev => ({
@@ -45,7 +54,7 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
   }
 
   const handleCustomerChange = (customerId: string) => {
-    const customer = customers.find(c => c.id === customerId)
+    const customer = customers?.find(c => c.id === customerId)
     setFormData(prev => ({
       ...prev,
       customerId,
@@ -96,11 +105,15 @@ export default function CreateReminderModal({ onClose, onSave, isLoading = false
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a customer</option>
-              {customers.map(customer => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.firstName} {customer.lastName} - {customer.email}
-                </option>
-              ))}
+              {customers && customers.length > 0 ? (
+                customers.map(customer => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.firstName} {customer.lastName} - {customer.email}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>No customers available</option>
+              )}
             </select>
           </div>
 
