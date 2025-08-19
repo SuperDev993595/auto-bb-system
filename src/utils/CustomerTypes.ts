@@ -214,9 +214,9 @@ export interface InventoryItem {
     supplier: string | { name: string; contact?: string; email?: string; phone?: string; website?: string }
     costPrice: number
     sellingPrice: number
-    quantityOnHand: number
-    minStockLevel: number
-    maxStockLevel: number
+    currentStock: number
+    minimumStock: number
+    maximumStock: number
     reorderPoint?: number
     location: string | { warehouse?: string; shelf?: string; bin?: string }
     isActive: boolean
@@ -234,9 +234,9 @@ export interface CreateInventoryItemData {
     model?: string
     year?: string
     location: string | { warehouse?: string; shelf?: string; bin?: string }
-    quantityOnHand: number
-    minStockLevel: number
-    maxStockLevel: number
+    currentStock: number
+    minimumStock: number
+    maximumStock: number
     reorderPoint: number
     costPrice: number
     sellingPrice: number
@@ -255,9 +255,9 @@ export interface UpdateInventoryItemData {
     model?: string
     year?: string
     location?: string | { warehouse?: string; shelf?: string; bin?: string }
-    quantityOnHand?: number
-    minStockLevel?: number
-    maxStockLevel?: number
+    currentStock?: number
+    minimumStock?: number
+    maximumStock?: number
     reorderPoint?: number
     costPrice?: number
     sellingPrice?: number

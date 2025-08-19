@@ -16,28 +16,29 @@ const inventoryItemSchema = Joi.object({
     'cooling_system', 'fuel_system', 'exhaust_system', 'interior', 'exterior',
     'tools', 'supplies', 'fluids', 'other'
   ).required(),
-  subcategory: Joi.string().optional(),
+  subcategory: Joi.string().allow('').optional(),
   description: Joi.string().optional(),
-  brand: Joi.string().optional(),
-  manufacturer: Joi.string().optional(),
+  brand: Joi.string().allow('').optional(),
+  model: Joi.string().allow('').optional(),
+  year: Joi.string().allow('').optional(),
+  manufacturer: Joi.string().allow('').optional(),
   unit: Joi.string().valid('piece', 'box', 'set', 'kit', 'liter', 'gallon', 'foot', 'meter', 'other').default('piece'),
   costPrice: Joi.number().min(0).required(),
   sellingPrice: Joi.number().min(0).required(),
   currentStock: Joi.number().min(0).default(0),
   minimumStock: Joi.number().min(0).default(0),
   maximumStock: Joi.number().min(0).optional(),
-  location: Joi.object({
-    warehouse: Joi.string().optional(),
-    shelf: Joi.string().optional(),
-    bin: Joi.string().optional()
-  }).optional(),
-  supplier: Joi.object({
-    name: Joi.string().optional(),
-    contact: Joi.string().optional(),
-    email: Joi.string().email().optional(),
-    phone: Joi.string().optional(),
-    website: Joi.string().optional()
-  }).optional(),
+  reorderPoint: Joi.number().min(0).optional(),
+  location: Joi.alternatives().try(
+    Joi.object({
+      warehouse: Joi.string().allow('').optional(),
+      shelf: Joi.string().allow('').optional(),
+      bin: Joi.string().allow('').optional()
+    }),
+    Joi.string()
+  ).optional(),
+  supplierId: Joi.string().optional(),
+  supplier: Joi.string().optional(),
   isActive: Joi.boolean().default(true)
 });
 
@@ -221,7 +222,7 @@ router.delete('/suppliers/:id', requireAnyAdmin, async (req, res) => {
     }
 
     // Check if supplier is used in any inventory items
-    const usedInInventory = await InventoryItem.findOne({ 'supplier.name': supplier.name });
+    const usedInInventory = await InventoryItem.findOne({ supplier: supplier._id });
     if (usedInInventory) {
       return res.status(400).json({
         success: false,
@@ -303,6 +304,7 @@ router.get('/items', requireAnyAdmin, async (req, res) => {
     // Execute query with pagination
     const items = await InventoryItem.find(query)
       .populate('createdBy', 'name email')
+      .populate('supplier', 'name contactPerson email phone')
       .sort(sort)
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -339,8 +341,60 @@ router.get('/items', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.post('/items', requireAnyAdmin, async (req, res) => {
   try {
+    // Transform data before validation
+    const createData = { ...req.body };
+    
+    // Handle empty strings for optional fields
+    if (createData.subcategory === '') {
+      createData.subcategory = undefined;
+    }
+    if (createData.description === '') {
+      createData.description = undefined;
+    }
+    if (createData.brand === '') {
+      createData.brand = undefined;
+    }
+    if (createData.model === '') {
+      createData.model = undefined;
+    }
+    if (createData.year === '') {
+      createData.year = undefined;
+    }
+    if (createData.manufacturer === '') {
+      createData.manufacturer = undefined;
+    }
+    
+    // Handle location conversion
+    if (typeof createData.location === 'string' && createData.location.trim() !== '') {
+      // Convert string location to object format
+      createData.location = {
+        warehouse: createData.location,
+        shelf: undefined,
+        bin: undefined
+      };
+    } else if (typeof createData.location === 'string' && createData.location.trim() === '') {
+      createData.location = undefined;
+    } else if (typeof createData.location === 'object' && createData.location) {
+      // Handle empty strings in location object properties
+      if (createData.location.warehouse === '') {
+        createData.location.warehouse = undefined;
+      }
+      if (createData.location.shelf === '') {
+        createData.location.shelf = undefined;
+      }
+      if (createData.location.bin === '') {
+        createData.location.bin = undefined;
+      }
+    }
+
+    // Handle supplierId to supplier conversion
+    if (createData.supplierId) {
+      createData.supplier = createData.supplierId;
+      delete createData.supplierId;
+    }
+
     // Validate input
-    const { error, value } = inventoryItemSchema.validate(req.body);
+    const { error, value } = inventoryItemSchema.validate(createData);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -358,6 +412,7 @@ router.post('/items', requireAnyAdmin, async (req, res) => {
 
     // Populate references
     await item.populate('createdBy', 'name email');
+    await item.populate('supplier', 'name contactPerson email phone');
 
     res.status(201).json({
       success: true,
@@ -379,8 +434,60 @@ router.post('/items', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.put('/items/:id', requireAnyAdmin, async (req, res) => {
   try {
+    // Transform data before validation
+    const updateData = { ...req.body };
+    
+    // Handle empty strings for optional fields
+    if (updateData.subcategory === '') {
+      updateData.subcategory = undefined;
+    }
+    if (updateData.description === '') {
+      updateData.description = undefined;
+    }
+    if (updateData.brand === '') {
+      updateData.brand = undefined;
+    }
+    if (updateData.model === '') {
+      updateData.model = undefined;
+    }
+    if (updateData.year === '') {
+      updateData.year = undefined;
+    }
+    if (updateData.manufacturer === '') {
+      updateData.manufacturer = undefined;
+    }
+    
+    // Handle location conversion
+    if (typeof updateData.location === 'string' && updateData.location.trim() !== '') {
+      // Convert string location to object format
+      updateData.location = {
+        warehouse: updateData.location,
+        shelf: undefined,
+        bin: undefined
+      };
+    } else if (typeof updateData.location === 'string' && updateData.location.trim() === '') {
+      updateData.location = undefined;
+    } else if (typeof updateData.location === 'object' && updateData.location) {
+      // Handle empty strings in location object properties
+      if (updateData.location.warehouse === '') {
+        updateData.location.warehouse = undefined;
+      }
+      if (updateData.location.shelf === '') {
+        updateData.location.shelf = undefined;
+      }
+      if (updateData.location.bin === '') {
+        updateData.location.bin = undefined;
+      }
+    }
+
+    // Handle supplierId to supplier conversion
+    if (updateData.supplierId) {
+      updateData.supplier = updateData.supplierId;
+      delete updateData.supplierId;
+    }
+
     // Validate input
-    const { error, value } = inventoryItemSchema.validate(req.body);
+    const { error, value } = inventoryItemSchema.validate(updateData);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -402,6 +509,7 @@ router.put('/items/:id', requireAnyAdmin, async (req, res) => {
 
     // Populate references
     await item.populate('createdBy', 'name email');
+    await item.populate('supplier', 'name contactPerson email phone');
 
     res.json({
       success: true,

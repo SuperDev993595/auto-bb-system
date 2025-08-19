@@ -68,7 +68,7 @@ export default function DeleteInventoryModal({ isOpen, onClose, item }: DeleteIn
               <p><strong>Name:</strong> {item.name}</p>
               <p><strong>Part Number:</strong> {item.partNumber}</p>
               <p><strong>Category:</strong> {item.category}</p>
-              <p><strong>Current Stock:</strong> {item.quantityOnHand}</p>
+                              <p><strong>Current Stock:</strong> {item.currentStock}</p>
               <p><strong>Location:</strong> {typeof item.location === 'object' && item.location 
                 ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
                 : item.location || 'N/A'

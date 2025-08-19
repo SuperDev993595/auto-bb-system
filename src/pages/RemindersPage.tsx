@@ -4,23 +4,20 @@ import {
   fetchReminders,
   fetchReminderTemplates,
   fetchNotificationSettings,
-  fetchReminderStats,
-  fetchUpcomingReminders,
-  fetchOverdueReminders,
+  createReminder,
   updateReminder,
   deleteReminder,
-  markReminderSent,
-  markReminderAcknowledged,
-  markReminderCompleted,
-  cancelReminder,
-  updateNotificationSettings,
   createReminderTemplate,
   updateReminderTemplate,
-  deleteReminderTemplate
+  deleteReminderTemplate,
+  updateNotificationSettings
 } from '../redux/actions/reminders'
-import { ReminderTemplate, NotificationSettings } from '../redux/actions/reminders'
+import { ReminderTemplate, NotificationSettings } from '../redux/reducer/remindersReducer'
 import { Reminder } from '../utils/CustomerTypes'
 import PageTitle from '../components/Shared/PageTitle'
+import CreateReminderModal from '../components/Reminders/CreateReminderModal'
+import CreateTemplateModal from '../components/Reminders/CreateTemplateModal'
+import DeleteConfirmationModal from '../components/Reminders/DeleteConfirmationModal'
 import {
   HiBell,
   HiMail,
@@ -35,7 +32,8 @@ import {
   HiPlay,
   HiPause,
   HiPlus,
-  HiRefresh
+  HiRefresh,
+  HiPencil
 } from 'react-icons/hi'
 
 type TabType = 'reminders' | 'templates' | 'settings'
@@ -45,17 +43,39 @@ export default function RemindersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   
+  // Modal states
+  const [showCreateReminderModal, setShowCreateReminderModal] = useState(false)
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<ReminderTemplate | null>(null)
+  const [deleteItem, setDeleteItem] = useState<{ type: 'reminder' | 'template', id: string, name: string } | null>(null)
+  
+  const [settingsForm, setSettingsForm] = useState({
+    emailEnabled: false,
+    smsEnabled: false,
+    emailProvider: {
+      smtp: '',
+      port: '',
+      username: '',
+      password: ''
+    },
+    smsProvider: {
+      apiKey: ''
+    },
+    businessInfo: {
+      name: '',
+      phone: '',
+      email: '',
+      website: '',
+      address: ''
+    }
+  })
+  
   const { 
     reminders, 
     templates, 
-    notificationSettings, 
-    upcomingReminders,
-    overdueReminders,
-    stats,
-    remindersLoading,
-    templatesLoading,
-    settingsLoading,
-    statsLoading
+    settings: notificationSettings, 
+    loading: remindersLoading
   } = useAppSelector(state => state.reminders)
   const dispatch = useAppDispatch()
 
@@ -64,10 +84,33 @@ export default function RemindersPage() {
     dispatch(fetchReminders())
     dispatch(fetchReminderTemplates())
     dispatch(fetchNotificationSettings())
-    dispatch(fetchReminderStats())
-    dispatch(fetchUpcomingReminders())
-    dispatch(fetchOverdueReminders())
   }, [dispatch])
+
+  // Initialize settings form when notificationSettings are loaded
+  useEffect(() => {
+    if (notificationSettings) {
+      setSettingsForm({
+        emailEnabled: notificationSettings.emailEnabled,
+        smsEnabled: notificationSettings.smsEnabled,
+        emailProvider: { 
+          smtp: notificationSettings.emailProvider.smtp,
+          port: notificationSettings.emailProvider.port.toString(),
+          username: notificationSettings.emailProvider.username,
+          password: notificationSettings.emailProvider.password
+        },
+        smsProvider: { 
+          apiKey: notificationSettings.smsProvider.apiKey
+        },
+        businessInfo: { 
+          name: notificationSettings.businessInfo.name,
+          phone: notificationSettings.businessInfo.phone,
+          email: notificationSettings.businessInfo.email,
+          website: notificationSettings.businessInfo.website || '',
+          address: notificationSettings.businessInfo.address
+        }
+      })
+    }
+  }, [notificationSettings])
 
   // Filter reminders
   const filteredReminders = reminders.filter(reminder => {
@@ -76,19 +119,65 @@ export default function RemindersPage() {
     return true
   })
 
-  const handleStatusUpdate = (id: string, status: Reminder['status']) => {
+  const handleStatusUpdate = (id: string, status: 'pending' | 'sent' | 'delivered' | 'failed') => {
     dispatch(updateReminder({ 
       id, 
       reminderData: { 
-        status, 
-        sentDate: status === 'sent' ? new Date().toISOString() : undefined 
+        status: status as any
       }
     }))
   }
 
-  const handleDeleteReminder = (id: string) => {
-    if (confirm('Are you sure you want to delete this reminder?')) {
-      dispatch(deleteReminder(id))
+  const handleDeleteReminder = (id: string, name: string) => {
+    setDeleteItem({ type: 'reminder', id, name })
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteTemplate = (id: string, name: string) => {
+    setDeleteItem({ type: 'template', id, name })
+    setShowDeleteModal(true)
+  }
+
+  const handleEditTemplate = (template: ReminderTemplate) => {
+    setEditingTemplate(template)
+    setShowCreateTemplateModal(true)
+  }
+
+  const handleCreateReminder = (data: any) => {
+    const reminderData = {
+      customerId: data.customerId,
+      customerName: data.customerName,
+      type: data.type,
+      message: data.message,
+      scheduledDate: `${data.scheduledDate}T${data.scheduledTime}`,
+      method: data.method,
+      priority: data.priority,
+      notes: data.notes || '',
+      status: 'pending' as const
+    }
+    dispatch(createReminder(reminderData))
+    setShowCreateReminderModal(false)
+  }
+
+  const handleCreateTemplate = (data: any) => {
+    if (editingTemplate) {
+      dispatch(updateReminderTemplate({ id: editingTemplate.id, templateData: data }))
+      setEditingTemplate(null)
+    } else {
+      dispatch(createReminderTemplate(data))
+    }
+    setShowCreateTemplateModal(false)
+  }
+
+  const handleConfirmDelete = () => {
+    if (deleteItem) {
+      if (deleteItem.type === 'reminder') {
+        dispatch(deleteReminder(deleteItem.id))
+      } else {
+        dispatch(deleteReminderTemplate(deleteItem.id))
+      }
+      setDeleteItem(null)
+      setShowDeleteModal(false)
     }
   }
 
@@ -104,10 +193,81 @@ export default function RemindersPage() {
     }
   }
 
-  const getStatusColor = (status: Reminder['status']) => {
+  const handleSettingsChange = (field: string, value: any) => {
+    setSettingsForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleEmailProviderChange = (field: string, value: string) => {
+    setSettingsForm(prev => ({
+      ...prev,
+      emailProvider: {
+        ...prev.emailProvider,
+        [field]: value
+      }
+    }))
+  }
+
+  const handleSmsProviderChange = (field: string, value: string) => {
+    setSettingsForm(prev => ({
+      ...prev,
+      smsProvider: {
+        ...prev.smsProvider,
+        [field]: value
+      }
+    }))
+  }
+
+  const handleBusinessInfoChange = (field: string, value: string) => {
+    setSettingsForm(prev => ({
+      ...prev,
+      businessInfo: {
+        ...prev.businessInfo,
+        [field]: value
+      }
+    }))
+  }
+
+  const handleSaveSettings = () => {
+    // Create a proper mapping to match the expected interface
+    const updateData = {
+      emailNotifications: {
+        enabled: settingsForm.emailEnabled,
+        types: ['appointment', 'service-due', 'follow-up', 'payment-due'],
+        frequency: 'immediate' as const
+      },
+      smsNotifications: {
+        enabled: settingsForm.smsEnabled,
+        types: ['appointment', 'service-due', 'follow-up', 'payment-due'],
+        phoneNumber: settingsForm.businessInfo.phone
+      },
+      pushNotifications: {
+        enabled: false,
+        types: ['appointment', 'service-due']
+      },
+      inAppNotifications: {
+        enabled: true,
+        types: ['appointment', 'service-due', 'follow-up', 'payment-due']
+      },
+      quietHours: {
+        enabled: false,
+        startTime: '22:00',
+        endTime: '08:00',
+        timezone: 'UTC'
+      }
+    }
+    dispatch(updateNotificationSettings(updateData))
+  }
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       case 'sent': return 'bg-green-100 text-green-800'
+      case 'acknowledged': return 'bg-blue-100 text-blue-800'
+      case 'completed': return 'bg-green-100 text-green-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
       case 'delivered': return 'bg-blue-100 text-blue-800'
       case 'failed': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -137,7 +297,10 @@ export default function RemindersPage() {
             <HiRefresh className="w-4 h-4" />
             Process Queue
           </button>
-          <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+          <button 
+            onClick={() => setShowCreateReminderModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+          >
             <HiPlus className="w-4 h-4" />
             Create Reminder
           </button>
@@ -194,8 +357,7 @@ export default function RemindersPage() {
             <div>
               <p className="text-sm text-gray-600">Sent Today</p>
               <p className="text-2xl font-bold text-green-600">
-                {reminders.filter(r => r.status === 'sent' && r.sentDate && 
-                  new Date(r.sentDate).toDateString() === new Date().toDateString()).length}
+                {reminders.filter(r => r.status === 'sent').length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -323,7 +485,7 @@ export default function RemindersPage() {
                         </button>
                       )}
                       <button 
-                        onClick={() => handleDeleteReminder(reminder.id)}
+                        onClick={() => handleDeleteReminder(reminder.id, reminder.customerName)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete reminder"
                       >
@@ -348,7 +510,10 @@ export default function RemindersPage() {
           <h2 className="text-xl font-semibold text-gray-800">Reminder Templates</h2>
           <p className="text-gray-600">Manage automated reminder templates</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={() => setShowCreateTemplateModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Create Template
         </button>
@@ -424,10 +589,18 @@ export default function RemindersPage() {
                 {template.isActive ? 'Active' : 'Inactive'}
               </span>
               <div className="flex gap-2">
-                <button className="text-blue-600 hover:text-blue-900 text-sm">
+                <button 
+                  onClick={() => handleEditTemplate(template)}
+                  className="text-blue-600 hover:text-blue-900 text-sm flex items-center gap-1"
+                >
+                  <HiPencil className="w-3 h-3" />
                   Edit
                 </button>
-                <button className="text-red-600 hover:text-red-900 text-sm">
+                <button 
+                  onClick={() => handleDeleteTemplate(template.id, template.name)}
+                  className="text-red-600 hover:text-red-900 text-sm flex items-center gap-1"
+                >
+                  <HiTrash className="w-3 h-3" />
                   Delete
                 </button>
               </div>
@@ -460,11 +633,14 @@ export default function RemindersPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">Enable Email</span>
-              <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                settings.emailEnabled ? 'bg-blue-600' : 'bg-gray-200'
-              }`}>
+              <button 
+                onClick={() => handleSettingsChange('emailEnabled', !settingsForm.emailEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                  settingsForm.emailEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+              >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                  settings.emailEnabled ? 'translate-x-6' : 'translate-x-1'
+                  settingsForm.emailEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </button>
             </div>
@@ -473,7 +649,8 @@ export default function RemindersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">SMTP Server</label>
               <input
                 type="text"
-                value={settings.emailProvider.smtp}
+                value={settingsForm.emailProvider.smtp}
+                onChange={(e) => handleEmailProviderChange('smtp', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="smtp.gmail.com"
               />
@@ -483,7 +660,8 @@ export default function RemindersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
               <input
                 type="number"
-                value={settings.emailProvider.port}
+                value={settingsForm.emailProvider.port}
+                onChange={(e) => handleEmailProviderChange('port', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="587"
               />
@@ -493,7 +671,8 @@ export default function RemindersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
                 type="email"
-                value={settings.emailProvider.username}
+                value={settingsForm.emailProvider.username}
+                onChange={(e) => handleEmailProviderChange('username', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="your-email@gmail.com"
               />
@@ -503,7 +682,8 @@ export default function RemindersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password"
-                value={settings.emailProvider.password}
+                value={settingsForm.emailProvider.password}
+                onChange={(e) => handleEmailProviderChange('password', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="••••••••"
               />
@@ -524,11 +704,14 @@ export default function RemindersPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">Enable SMS</span>
-              <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                settings.smsEnabled ? 'bg-green-600' : 'bg-gray-200'
-              }`}>
+              <button 
+                onClick={() => handleSettingsChange('smsEnabled', !settingsForm.smsEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                  settingsForm.smsEnabled ? 'bg-green-600' : 'bg-gray-200'
+                }`}
+              >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                  settings.smsEnabled ? 'translate-x-6' : 'translate-x-1'
+                  settingsForm.smsEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </button>
             </div>
@@ -546,7 +729,8 @@ export default function RemindersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
               <input
                 type="password"
-                value={settings.smsProvider.apiKey}
+                value={settingsForm.smsProvider.apiKey}
+                onChange={(e) => handleSmsProviderChange('apiKey', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="••••••••••••••••"
               />
@@ -572,7 +756,8 @@ export default function RemindersPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
             <input
               type="text"
-              value={settings.businessInfo.name}
+              value={settingsForm.businessInfo.name}
+              onChange={(e) => handleBusinessInfoChange('name', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -581,7 +766,8 @@ export default function RemindersPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
             <input
               type="tel"
-              value={settings.businessInfo.phone}
+              value={settingsForm.businessInfo.phone}
+              onChange={(e) => handleBusinessInfoChange('phone', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -590,7 +776,8 @@ export default function RemindersPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input
               type="email"
-              value={settings.businessInfo.email}
+              value={settingsForm.businessInfo.email}
+              onChange={(e) => handleBusinessInfoChange('email', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -599,7 +786,8 @@ export default function RemindersPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Website (Optional)</label>
             <input
               type="url"
-              value={settings.businessInfo.website || ''}
+              value={settingsForm.businessInfo.website || ''}
+              onChange={(e) => handleBusinessInfoChange('website', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
@@ -607,7 +795,8 @@ export default function RemindersPage() {
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
             <textarea
-              value={settings.businessInfo.address}
+              value={settingsForm.businessInfo.address}
+              onChange={(e) => handleBusinessInfoChange('address', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               rows={2}
             />
@@ -615,7 +804,10 @@ export default function RemindersPage() {
         </div>
         
         <div className="mt-6 flex justify-end">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium">
+          <button 
+            onClick={handleSaveSettings}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium"
+          >
             Save Settings
           </button>
         </div>
@@ -657,6 +849,42 @@ export default function RemindersPage() {
           {activeTab === 'settings' && renderSettings()}
         </div>
       </div>
+
+      {/* Modals */}
+      {showCreateReminderModal && (
+        <CreateReminderModal
+          onClose={() => setShowCreateReminderModal(false)}
+          onSave={handleCreateReminder}
+          isLoading={remindersLoading}
+        />
+      )}
+
+      {showCreateTemplateModal && (
+        <CreateTemplateModal
+          onClose={() => {
+            setShowCreateTemplateModal(false)
+            setEditingTemplate(null)
+          }}
+          onSave={handleCreateTemplate}
+          isLoading={remindersLoading}
+          template={editingTemplate || undefined}
+          isEditing={!!editingTemplate}
+        />
+      )}
+
+      {showDeleteModal && deleteItem && (
+        <DeleteConfirmationModal
+          onClose={() => {
+            setShowDeleteModal(false)
+            setDeleteItem(null)
+          }}
+          onConfirm={handleConfirmDelete}
+          title={`Delete ${deleteItem.type === 'reminder' ? 'Reminder' : 'Template'}`}
+          message={`Are you sure you want to delete this ${deleteItem.type}? This action cannot be undone.`}
+          itemName={deleteItem.name}
+          isLoading={remindersLoading}
+        />
+      )}
     </div>
   )
 }

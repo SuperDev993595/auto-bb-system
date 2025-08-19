@@ -165,22 +165,22 @@ export default function InventoryPage() {
     ]
     
     const csvData = activeItems.map(item => ({
-      'Name': item.name,
-      'Part Number': item.partNumber,
+      'Name': item.name || '',
+      'Part Number': item.partNumber || '',
       'Description': item.description || '',
-      'Category': item.category,
+      'Category': item.category || '',
       'Location': typeof item.location === 'object' && item.location 
         ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
         : item.location || '',
       'Supplier': typeof item.supplier === 'object' && item.supplier 
         ? (item.supplier as any).name 
         : item.supplier || '',
-      'Quantity On Hand': item.quantityOnHand || 0,
-      'Min Stock Level': item.minStockLevel || 0,
-      'Max Stock Level': item.maxStockLevel || 0,
+      'Quantity On Hand': item.currentStock || 0,
+      'Min Stock Level': item.minimumStock || 0,
+      'Max Stock Level': item.maximumStock || 0,
       'Cost Price': item.costPrice || 0,
       'Selling Price': item.sellingPrice || 0,
-      'Total Value': ((item.quantityOnHand || 0) * (item.costPrice || 0)).toFixed(2),
+      'Total Value': ((item.currentStock || 0) * (item.costPrice || 0)).toFixed(2),
       'Status': getStockStatus(item).status
     }))
     
@@ -300,35 +300,35 @@ export default function InventoryPage() {
 
   // Filter inventory items
   const filteredItems = (items && Array.isArray(items) ? items : []).filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.partNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.partNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
     const matchesLocation = locationFilter === 'all' || 
                            (typeof item.location === 'object' && item.location 
                              ? `${(item.location as any).warehouse || ''} ${(item.location as any).shelf || ''} ${(item.location as any).bin || ''}`.trim() === locationFilter
                              : item.location === locationFilter)
     const matchesStock = stockFilter === 'all' || 
-                        (stockFilter === 'low' && item.quantityOnHand <= item.minStockLevel) ||
-                        (stockFilter === 'out' && item.quantityOnHand === 0) ||
-                        (stockFilter === 'overstock' && item.quantityOnHand > item.maxStockLevel)
+                        (stockFilter === 'low' && (item.currentStock || 0) <= (item.minimumStock || 0)) ||
+                        (stockFilter === 'out' && (item.currentStock || 0) === 0) ||
+                        (stockFilter === 'overstock' && (item.currentStock || 0) > (item.maximumStock || 0))
     
     return matchesSearch && matchesCategory && matchesLocation && matchesStock && item.isActive
   })
 
   // Calculate metrics
-  const lowStockItems = (items && Array.isArray(items) ? items : []).filter(item => (item.quantityOnHand || 0) <= (item.minStockLevel || 0) && item.isActive)
-  const outOfStockItems = (items && Array.isArray(items) ? items : []).filter(item => (item.quantityOnHand || 0) === 0 && item.isActive)
+  const lowStockItems = (items && Array.isArray(items) ? items : []).filter(item => (item.currentStock || 0) <= (item.minimumStock || 0) && item.isActive)
+  const outOfStockItems = (items && Array.isArray(items) ? items : []).filter(item => (item.currentStock || 0) === 0 && item.isActive)
   const totalValue = (items && Array.isArray(items) ? items : []).reduce((sum, item) => {
-    const quantity = item.quantityOnHand || 0
+    const quantity = item.currentStock || 0
     const cost = item.costPrice || 0
     return sum + (quantity * cost)
   }, 0)
   const pendingOrders = (purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).filter(po => po.status === 'sent' || po.status === 'confirmed')
 
   const getStockStatus = (item: InventoryItem) => {
-    const quantity = item.quantityOnHand || 0
-    const minLevel = item.minStockLevel || 0
-    const maxLevel = item.maxStockLevel || 0
+    const quantity = item.currentStock || 0
+    const minLevel = item.minimumStock || 0
+    const maxLevel = item.maximumStock || 0
     
     if (quantity === 0) return { status: 'Out of Stock', color: 'text-red-600 bg-red-100' }
     if (quantity <= minLevel) return { status: 'Low Stock', color: 'text-yellow-600 bg-yellow-100' }
@@ -341,7 +341,7 @@ export default function InventoryPage() {
     // For now, we'll use the adjustStock action
     const currentItem = items.find(item => (item._id || item.id) === itemId)
     if (currentItem) {
-      const difference = newQuantity - currentItem.quantityOnHand
+      const difference = newQuantity - (currentItem.currentStock || 0)
       dispatch(adjustStock({ itemId, quantity: difference, reason }))
     }
   }
@@ -617,16 +617,16 @@ export default function InventoryPage() {
                     <tr key={item._id || item.id || `item-${index}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                          <div className="text-sm text-gray-500">#{item.partNumber}</div>
-                          <div className="text-xs text-gray-400 mt-1">{item.description}</div>
+                          <div className="text-sm font-medium text-gray-900">{item.name || 'N/A'}</div>
+                          <div className="text-sm text-gray-500">#{item.partNumber || 'N/A'}</div>
+                          <div className="text-xs text-gray-400 mt-1">{item.description || ''}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1 text-sm text-gray-900">
                             <HiTag className="w-3 h-3" />
-                            {item.category}
+                            {item.category || 'N/A'}
                           </div>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <HiLocationMarker className="w-3 h-3" />
@@ -644,20 +644,20 @@ export default function InventoryPage() {
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="text-sm font-medium text-gray-900">
-                            On Hand: {item.quantityOnHand || 0}
+                            On Hand: {item.currentStock || 0}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Min: {item.minStockLevel || 0} | Max: {item.maxStockLevel || 0}
+                            Min: {item.minimumStock || 0} | Max: {item.maximumStock || 0}
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full ${
-                                (item.quantityOnHand || 0) <= (item.minStockLevel || 0) ? 'bg-red-500' :
-                                (item.quantityOnHand || 0) > (item.maxStockLevel || 0) ? 'bg-purple-500' :
+                                (item.currentStock || 0) <= (item.minimumStock || 0) ? 'bg-red-500' :
+                                (item.currentStock || 0) > (item.maximumStock || 0) ? 'bg-purple-500' :
                                 'bg-green-500'
                               }`}
                               style={{ 
-                                width: `${Math.min(((item.quantityOnHand || 0) / (item.maxStockLevel || 1)) * 100, 100)}%` 
+                                width: `${Math.min(((item.currentStock || 0) / (item.maximumStock || 1)) * 100, 100)}%` 
                               }}
                             ></div>
                           </div>
@@ -672,7 +672,7 @@ export default function InventoryPage() {
                             Sell: ${(item.sellingPrice || 0).toFixed(2)}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Value: ${(((item.quantityOnHand || 0) * (item.costPrice || 0))).toFixed(2)}
+                            Value: ${(((item.currentStock || 0) * (item.costPrice || 0))).toFixed(2)}
                           </div>
                         </div>
                       </td>

@@ -101,27 +101,8 @@ const inventoryItemSchema = new mongoose.Schema({
     }
   },
   supplier: {
-    name: {
-      type: String,
-      trim: true
-    },
-    contact: {
-      type: String,
-      trim: true
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true
-    },
-    phone: {
-      type: String,
-      trim: true
-    },
-    website: {
-      type: String,
-      trim: true
-    }
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Supplier'
   },
   isActive: {
     type: Boolean,

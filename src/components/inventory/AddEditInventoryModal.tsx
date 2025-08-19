@@ -25,9 +25,9 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     model: '',
     year: '',
     location: '',
-    quantityOnHand: 0,
-    minStockLevel: 0,
-    maxStockLevel: 0,
+            currentStock: 0,
+        minimumStock: 0,
+        maximumStock: 0,
     reorderPoint: 0,
     costPrice: 0,
     sellingPrice: 0,
@@ -52,14 +52,14 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         location: typeof item.location === 'object' && item.location 
           ? `${(item.location as any).warehouse || ''} ${(item.location as any).shelf || ''} ${(item.location as any).bin || ''}`.trim()
           : item.location,
-        quantityOnHand: item.quantityOnHand,
-        minStockLevel: item.minStockLevel,
-        maxStockLevel: item.maxStockLevel,
+        currentStock: item.currentStock,
+        minimumStock: item.minimumStock,
+        maximumStock: item.maximumStock,
         reorderPoint: item.reorderPoint || 0,
         costPrice: item.costPrice,
         sellingPrice: item.sellingPrice,
         supplierId: typeof item.supplier === 'object' && item.supplier 
-          ? (item.supplier as any).name 
+          ? (item.supplier as any)._id || (item.supplier as any).id
           : item.supplier,
         isActive: item.isActive
       });
@@ -74,9 +74,9 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         model: '',
         year: '',
         location: '',
-        quantityOnHand: 0,
-        minStockLevel: 0,
-        maxStockLevel: 0,
+        currentStock: 0,
+        minimumStock: 0,
+        maximumStock: 0,
         reorderPoint: 0,
         costPrice: 0,
         sellingPrice: 0,
@@ -97,10 +97,10 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     if (!formData.supplierId) newErrors.supplierId = 'Supplier is required';
     if (formData.costPrice < 0) newErrors.costPrice = 'Cost price must be positive';
     if (formData.sellingPrice < 0) newErrors.sellingPrice = 'Selling price must be positive';
-    if (formData.quantityOnHand < 0) newErrors.quantityOnHand = 'Quantity must be positive';
-    if (formData.minStockLevel < 0) newErrors.minStockLevel = 'Minimum stock level must be positive';
-    if (formData.maxStockLevel < formData.minStockLevel) {
-      newErrors.maxStockLevel = 'Maximum stock level must be greater than minimum';
+    if (formData.currentStock < 0) newErrors.currentStock = 'Quantity must be positive';
+    if (formData.minimumStock < 0) newErrors.minimumStock = 'Minimum stock level must be positive';
+    if (formData.maximumStock < formData.minimumStock) {
+      newErrors.maximumStock = 'Maximum stock level must be greater than minimum';
     }
 
     setErrors(newErrors);
@@ -327,14 +327,14 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
               </label>
               <input
                 type="number"
-                value={formData.quantityOnHand}
-                onChange={(e) => handleInputChange('quantityOnHand', parseInt(e.target.value) || 0)}
+                value={formData.currentStock}
+                onChange={(e) => handleInputChange('currentStock', parseInt(e.target.value) || 0)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.quantityOnHand ? 'border-red-500' : 'border-gray-300'
+                  errors.currentStock ? 'border-red-500' : 'border-gray-300'
                 }`}
                 min="0"
               />
-              {errors.quantityOnHand && <p className="mt-1 text-sm text-red-600">{errors.quantityOnHand}</p>}
+              {errors.currentStock && <p className="mt-1 text-sm text-red-600">{errors.currentStock}</p>}
             </div>
 
             <div>

@@ -129,8 +129,8 @@ const inventorySlice = createSlice({
     adjustInventoryQuantity: (state, action: PayloadAction<{itemId: string, newQuantity: number, reason: string}>) => {
       const item = state.items.find(item => item.id === action.payload.itemId)
       if (item) {
-        const oldQuantity = item.quantityOnHand
-        item.quantityOnHand = action.payload.newQuantity
+        const oldQuantity = item.currentStock || 0
+        item.currentStock = action.payload.newQuantity
         item.lastUpdated = new Date().toISOString()
         
         // Create adjustment transaction
@@ -156,7 +156,7 @@ const inventorySlice = createSlice({
       // Update inventory quantity based on transaction
       const item = state.items.find(item => item.id === action.payload.itemId)
       if (item) {
-        item.quantityOnHand += action.payload.quantity
+        item.currentStock = (item.currentStock || 0) + action.payload.quantity
         item.lastUpdated = new Date().toISOString()
       }
     },
@@ -212,7 +212,7 @@ const inventorySlice = createSlice({
               // Update inventory quantity
               const item = state.items.find(item => item.id === poItem.item)
               if (item) {
-                item.quantityOnHand += poItem.quantity
+                item.currentStock = (item.currentStock || 0) + poItem.quantity
                 item.lastUpdated = new Date().toISOString()
               }
             })
@@ -346,13 +346,14 @@ const inventorySlice = createSlice({
     // Create Inventory Item
     builder
       .addCase(createInventoryItem.fulfilled, (state, action) => {
-        state.items.push(action.payload.data || action.payload)
+        const newItem = action.payload.data?.item || action.payload.data || action.payload
+        state.items.push(newItem)
       })
 
     // Update Inventory Item
     builder
       .addCase(updateInventoryItem.fulfilled, (state, action) => {
-        const updatedItem = action.payload.data || action.payload
+        const updatedItem = action.payload.data?.item || action.payload.data || action.payload
         const index = state.items.findIndex(item => (item as any)._id === (updatedItem as any)._id || item.id === updatedItem.id)
         if (index !== -1) {
           state.items[index] = updatedItem
