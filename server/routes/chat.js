@@ -521,4 +521,58 @@ router.post('/:id/rating', async (req, res) => {
   }
 });
 
+// @route   GET /api/chat/stats
+// @desc    Get chat statistics
+// @access  Private
+router.get('/stats', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const query = {};
+    
+    // Date range filter
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    // Filter by assigned user for Sub Admins
+    if (req.user.role === 'admin') {
+      query.$or = [
+        { assignedTo: req.user.id },
+        { status: 'waiting' }
+      ];
+    }
+
+    const stats = await Chat.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalChats: { $sum: 1 },
+          activeChats: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+          waitingChats: { $sum: { $cond: [{ $eq: ['$status', 'waiting'] }, 1, 0] } },
+          resolvedChats: { $sum: { $cond: [{ $eq: ['$status', 'resolved'] }, 1, 0] } },
+          closedChats: { $sum: { $cond: [{ $eq: ['$status', 'closed'] }, 1, 0] } },
+          avgResponseTime: { $avg: '$responseTime' }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      data: { stats: stats[0] || {} }
+    });
+
+  } catch (error) {
+    console.error('Get chat stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 module.exports = router;

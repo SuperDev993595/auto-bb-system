@@ -124,8 +124,8 @@ export default function App() {
         <Route path="sms" element={<SMSPage />} />
         <Route path="live-chat" element={<LiveChatPage />} />
         <Route path="yellowpages" element={<YellowPagesPage />} />
-        <Route path="files" element={<FileUploadPage />} />
-        <Route path="pdf-generation" element={<PDFGenerationPage />} />
+        {/* <Route path="files" element={<FileUploadPage />} />
+        <Route path="pdf-generation" element={<PDFGenerationPage />} /> */}
         <Route 
           path="system-admin" 
           element={

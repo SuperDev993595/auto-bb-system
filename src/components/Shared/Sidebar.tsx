@@ -58,8 +58,8 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <Mail size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <MessageSquare size={18} /> },
     { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
-    { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
-    { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <File size={18} /> },
+    // { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
+    // { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <File size={18} /> },
     
     // System Administration (Super Admin Only)
     { to: "/admin/dashboard/system-admin", label: "System Administration", icon: <Settings size={18} />, roles: ['super_admin'] },

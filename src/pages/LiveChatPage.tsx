@@ -95,21 +95,21 @@ export default function LiveChatPage() {
   const checkAuthentication = () => {
     if (!authService.isAuthenticated()) {
       toast.error('Please login to access chat management');
-      navigate('/admin/login');
+      navigate('/auth/login');
       return;
     }
 
     const user = authService.getCurrentUserFromStorage();
     if (!user) {
       toast.error('User information not found');
-      navigate('/admin/login');
+      navigate('/auth/login');
       return;
     }
 
     // Check if user has admin role
-    if (user.role !== 'super_admin' && user.role !== 'sub_admin') {
+    if (user.role !== 'super_admin' && user.role !== 'admin') {
       toast.error('Access denied. Admin privileges required.');
-      navigate('/admin/login');
+      navigate('/auth/login');
       return;
     }
 
@@ -137,7 +137,7 @@ export default function LiveChatPage() {
       console.error('Error fetching chats:', error);
       if (error.response?.status === 401) {
         toast.error('Session expired. Please login again.');
-        navigate('/admin/login');
+        navigate('/auth/login');
       } else if (error.response?.status === 403) {
         toast.error('Access denied. You don\'t have permission to view chats.');
       } else {
@@ -319,7 +319,7 @@ export default function LiveChatPage() {
           <div className="text-sm text-gray-600">
             Welcome, <span className="font-medium">{currentUser.name}</span>
             <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              {currentUser.role === 'super_admin' ? 'Super Admin' : 'Sub Admin'}
+              {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
             </span>
           </div>
           <button

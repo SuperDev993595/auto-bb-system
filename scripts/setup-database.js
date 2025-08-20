@@ -14,8 +14,10 @@ const Promotion = require('../server/models/Promotion');
 const SMS = require('../server/models/SMS');
 const SMSTemplate = require('../server/models/SMSTemplate');
 const MailChimpCampaign = require('../server/models/MailChimpCampaign');
+const Chat = require('../server/models/Chat');
 const Invoice = require('../server/models/Invoice');
 const Reminder = require('../server/models/Reminder');
+const YellowPagesData = require('../server/models/YellowPagesData');
 const { ServiceCatalog, WorkOrder, Technician } = require('../server/models/Service');
 const { InventoryItem } = require('../server/models/Inventory');
 
@@ -442,6 +444,12 @@ async function setupDatabase() {
     await WorkOrder.deleteMany({});
     await Technician.deleteMany({});
     await InventoryItem.deleteMany({});
+    await Promotion.deleteMany({});
+    await MailChimpCampaign.deleteMany({});
+    await Chat.deleteMany({});
+    await SMS.deleteMany({});
+    await SMSTemplate.deleteMany({});
+    await YellowPagesData.deleteMany({});
 
     // Create default Super Admin user
     console.log('👤 Creating default Super Admin user...');
@@ -754,6 +762,135 @@ async function setupDatabase() {
     const mailchimpCampaigns = await MailChimpCampaign.insertMany(sampleMailChimpCampaigns);
     console.log(`✅ Created ${mailchimpCampaigns.length} sample MailChimp campaigns`);
 
+    // Create sample chat conversations
+    const sampleChats = [
+      {
+        customer: {
+          name: 'John Smith',
+          email: 'john.smith@email.com',
+          phone: '(555) 123-4567',
+          sessionId: 'session_123456789'
+        },
+        subject: 'Oil Change Appointment',
+        category: 'service',
+        priority: 'medium',
+        status: 'active',
+        assignedTo: superAdmin._id,
+        messages: [
+          {
+            sender: {
+              name: 'Customer',
+              email: 'john.smith@email.com'
+            },
+            content: 'Hi, I need to schedule an oil change for my 2020 Toyota Camry. What\'s your availability this week?',
+            messageType: 'text',
+            isRead: true,
+            createdAt: new Date(Date.now() - 3600000) // 1 hour ago
+          },
+          {
+            sender: {
+              name: 'Super Admin',
+              email: 'admin@autocrm.com'
+            },
+            content: 'Hello John! We have several slots available this week. What day works best for you? We have openings on Tuesday, Wednesday, and Friday.',
+            messageType: 'text',
+            isRead: true,
+            createdAt: new Date(Date.now() - 1800000) // 30 minutes ago
+          },
+          {
+            sender: {
+              name: 'Customer',
+              email: 'john.smith@email.com'
+            },
+            content: 'Tuesday would be perfect. What time slots do you have available?',
+            messageType: 'text',
+            isRead: false,
+            createdAt: new Date(Date.now() - 900000) // 15 minutes ago
+          }
+        ],
+        lastActivity: new Date(Date.now() - 900000),
+        tags: ['oil-change', 'toyota-camry'],
+        notes: 'Customer interested in Tuesday appointment'
+      },
+      {
+        customer: {
+          name: 'Sarah Johnson',
+          email: 'sarah.johnson@email.com',
+          phone: '(555) 987-6543',
+          sessionId: 'session_987654321'
+        },
+        subject: 'Brake Service Quote',
+        category: 'billing',
+        priority: 'high',
+        status: 'waiting',
+        messages: [
+          {
+            sender: {
+              name: 'Customer',
+              email: 'sarah.johnson@email.com'
+            },
+            content: 'I need a quote for brake pad replacement on my 2019 Honda Accord. Can you provide an estimate?',
+            messageType: 'text',
+            isRead: true,
+            createdAt: new Date(Date.now() - 7200000) // 2 hours ago
+          }
+        ],
+        lastActivity: new Date(Date.now() - 7200000),
+        tags: ['brake-service', 'honda-accord'],
+        notes: 'Customer needs brake service quote'
+      },
+      {
+        customer: {
+          name: 'Mike Davis',
+          email: 'mike.davis@email.com',
+          phone: '(555) 456-7890',
+          sessionId: 'session_456789123'
+        },
+        subject: 'Engine Check Light',
+        category: 'technical',
+        priority: 'urgent',
+        status: 'active',
+        assignedTo: subAdmin._id,
+        messages: [
+          {
+            sender: {
+              name: 'Customer',
+              email: 'mike.davis@email.com'
+            },
+            content: 'My check engine light came on this morning. The car is running fine but I\'m worried. Can you help?',
+            messageType: 'text',
+            isRead: true,
+            createdAt: new Date(Date.now() - 5400000) // 1.5 hours ago
+          },
+          {
+            sender: {
+              name: 'Sub Admin',
+              email: 'subadmin@autocrm.com'
+            },
+            content: 'Hi Mike, we can definitely help! We\'ll need to run a diagnostic scan to see what\'s causing the check engine light. Can you bring it in today?',
+            messageType: 'text',
+            isRead: true,
+            createdAt: new Date(Date.now() - 3600000) // 1 hour ago
+          },
+          {
+            sender: {
+              name: 'Customer',
+              email: 'mike.davis@email.com'
+            },
+            content: 'Yes, I can come in today. What time works best?',
+            messageType: 'text',
+            isRead: false,
+            createdAt: new Date(Date.now() - 1800000) // 30 minutes ago
+          }
+        ],
+        lastActivity: new Date(Date.now() - 1800000),
+        tags: ['check-engine', 'diagnostic'],
+        notes: 'Customer needs diagnostic scan for check engine light'
+      }
+    ];
+    const chats = await Chat.insertMany(sampleChats);
+    console.log(`✅ Created ${chats.length} sample chat conversations`);
+
     // Create sample SMS templates
     console.log('📱 Creating sample SMS templates...');
     const sampleSMSTemplates = [
@@ -881,6 +1018,210 @@ async function setupDatabase() {
     const smsRecords = await SMS.insertMany(sampleSMSRecords);
     console.log(`✅ Created ${smsRecords.length} sample SMS records`);
 
+    // Create sample YellowPages data
+    console.log('📞 Creating sample YellowPages data...');
+    const sampleYellowPagesData = [
+      {
+        businessName: 'ABC Auto Repair',
+        category: 'Automotive',
+        subcategory: 'Auto Repair',
+        contact: {
+          phone: '(555) 123-4567',
+          email: 'info@abcautorepair.com',
+          website: 'https://abcautorepair.com'
+        },
+        address: {
+          street: '123 Main Street',
+          city: 'New York',
+          state: 'NY',
+          zipCode: '10001'
+        },
+        businessInfo: {
+          yearsInBusiness: 15,
+          employeeCount: '5-10',
+          services: ['Oil Change', 'Brake Service', 'Engine Repair', 'Diagnostics'],
+          specialties: ['European Cars', 'Hybrid Vehicles']
+        },
+        reviews: {
+          averageRating: 4.5,
+          totalReviews: 127
+        },
+        leadInfo: {
+          status: 'new',
+          priority: 'high',
+          notes: 'High potential lead - established business with good reviews',
+          contactAttempts: []
+        },
+        leadQualityScore: 8
+      },
+      {
+        businessName: 'City Car Service',
+        category: 'Automotive',
+        subcategory: 'Auto Service',
+        contact: {
+          phone: '(555) 987-6543',
+          email: 'service@citycarservice.com',
+          website: 'https://citycarservice.com'
+        },
+        address: {
+          street: '456 Oak Avenue',
+          city: 'Los Angeles',
+          state: 'CA',
+          zipCode: '90210'
+        },
+        businessInfo: {
+          yearsInBusiness: 8,
+          employeeCount: '3-5',
+          services: ['Tire Rotation', 'Diagnostic', 'Transmission Service'],
+          specialties: ['Japanese Cars', 'Luxury Vehicles']
+        },
+        reviews: {
+          averageRating: 4.2,
+          totalReviews: 89
+        },
+        leadInfo: {
+          status: 'contacted',
+          priority: 'medium',
+          notes: 'Contacted via phone - interested in partnership',
+          contactAttempts: [
+            {
+              date: new Date(Date.now() - 86400000), // 1 day ago
+              method: 'phone',
+              outcome: 'spoke_to_decision_maker',
+              notes: 'Spoke with owner John Smith. Interested in bulk pricing for fleet services.'
+            }
+          ]
+        },
+        leadQualityScore: 7
+      },
+      {
+        businessName: 'Quick Fix Auto',
+        category: 'Automotive',
+        subcategory: 'Quick Service',
+        contact: {
+          phone: '(555) 456-7890',
+          email: 'info@quickfixauto.com'
+        },
+        address: {
+          street: '789 Pine Street',
+          city: 'Chicago',
+          state: 'IL',
+          zipCode: '60601'
+        },
+        businessInfo: {
+          yearsInBusiness: 3,
+          employeeCount: '2-3',
+          services: ['Oil Change', 'Tire Service', 'Basic Maintenance'],
+          specialties: ['Quick Service', 'Budget Friendly']
+        },
+        reviews: {
+          averageRating: 3.8,
+          totalReviews: 45
+        },
+        leadInfo: {
+          status: 'interested',
+          priority: 'low',
+          notes: 'Small business but growing - potential for long-term relationship',
+          contactAttempts: [
+            {
+              date: new Date(Date.now() - 172800000), // 2 days ago
+              method: 'email',
+              outcome: 'interested',
+              notes: 'Sent pricing information. Owner responded positively.'
+            },
+            {
+              date: new Date(Date.now() - 86400000), // 1 day ago
+              method: 'phone',
+              outcome: 'follow_up_needed',
+              notes: 'Follow up needed on pricing proposal.'
+            }
+          ]
+        },
+        leadQualityScore: 6
+      },
+      {
+        businessName: 'Premium Auto Care',
+        category: 'Automotive',
+        subcategory: 'Luxury Auto Service',
+        contact: {
+          phone: '(555) 321-6540',
+          email: 'service@premiumautocare.com',
+          website: 'https://premiumautocare.com'
+        },
+        address: {
+          street: '321 Luxury Lane',
+          city: 'Miami',
+          state: 'FL',
+          zipCode: '33101'
+        },
+        businessInfo: {
+          yearsInBusiness: 12,
+          employeeCount: '8-12',
+          services: ['Luxury Car Service', 'Performance Tuning', 'Restoration'],
+          specialties: ['Luxury Vehicles', 'Classic Cars', 'Performance Cars']
+        },
+        reviews: {
+          averageRating: 4.8,
+          totalReviews: 203
+        },
+        leadInfo: {
+          status: 'converted',
+          priority: 'high',
+          notes: 'Successfully converted - now using our parts and services',
+          contactAttempts: [
+            {
+              date: new Date(Date.now() - 259200000), // 3 days ago
+              method: 'in_person',
+              outcome: 'converted',
+              notes: 'Met with owner. Signed partnership agreement.'
+            }
+          ]
+        },
+        leadQualityScore: 9
+      },
+      {
+        businessName: 'Express Auto Solutions',
+        category: 'Automotive',
+        subcategory: 'Mobile Service',
+        contact: {
+          phone: '(555) 789-0123',
+          email: 'mobile@expressautosolutions.com'
+        },
+        address: {
+          street: '654 Mobile Way',
+          city: 'Phoenix',
+          state: 'AZ',
+          zipCode: '85001'
+        },
+        businessInfo: {
+          yearsInBusiness: 5,
+          employeeCount: '4-6',
+          services: ['Mobile Oil Change', 'Mobile Diagnostics', 'Emergency Service'],
+          specialties: ['Mobile Service', 'Emergency Repairs', 'Fleet Service']
+        },
+        reviews: {
+          averageRating: 4.1,
+          totalReviews: 67
+        },
+        leadInfo: {
+          status: 'not_interested',
+          priority: 'low',
+          notes: 'Not interested in partnership at this time',
+          contactAttempts: [
+            {
+              date: new Date(Date.now() - 345600000), // 4 days ago
+              method: 'phone',
+              outcome: 'not_interested',
+              notes: 'Owner said they have existing suppliers and are not looking to change.'
+            }
+          ]
+        },
+        leadQualityScore: 4
+      }
+    ];
+    const yellowPagesData = await YellowPagesData.insertMany(sampleYellowPagesData);
+    console.log(`✅ Created ${yellowPagesData.length} sample YellowPages records`);
+
     console.log('\n🎉 Database setup completed successfully!');
     console.log('\n📋 Summary:');
     console.log(`- Database: ${mongoose.connection.name}`);
@@ -894,8 +1235,10 @@ async function setupDatabase() {
     console.log(`- Tasks created: ${tasks.length}`);
     console.log(`- Promotions created: ${promotions.length}`);
     console.log(`- MailChimp Campaigns created: ${mailchimpCampaigns.length}`);
+    console.log(`- Chat Conversations created: ${chats.length}`);
     console.log(`- SMS Templates created: ${smsTemplates.length}`);
     console.log(`- SMS Records created: ${smsRecords.length}`);
+    console.log(`- YellowPages Records created: ${yellowPagesData.length}`);
     
     console.log('\n🔑 Default Login Credentials:');
     console.log('Super Admin: admin@autocrm.com / admin123');

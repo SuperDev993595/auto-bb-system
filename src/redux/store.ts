@@ -14,6 +14,7 @@ import emailReducer from "./actions/email";
 import vehiclesReducer from "./actions/vehicles";
 import communicationLogsReducer from "./reducer/communicationLogsReducer";
 import smsReducer from "./actions/sms";
+import chatReducer from "./actions/chat";
 
 const store = configureStore({
   reducer: {
@@ -32,6 +33,7 @@ const store = configureStore({
     vehicles: vehiclesReducer,
     communicationLogs: communicationLogsReducer,
     sms: smsReducer,
+    chat: chatReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

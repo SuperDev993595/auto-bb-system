@@ -59,6 +59,7 @@ const campaignSchema = Joi.object({
 const campaignUpdateSchema = Joi.object({
   name: Joi.string().optional(),
   subject: Joi.string().optional(),
+  type: Joi.string().valid('regular', 'plaintext', 'absplit', 'rss', 'variate').optional(),
   content: Joi.object({
     html: Joi.string().optional(),
     plainText: Joi.string().optional(),

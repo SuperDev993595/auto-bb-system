@@ -3,7 +3,7 @@ const Joi = require('joi');
 const YellowPagesData = require('../models/YellowPagesData');
 const Customer = require('../models/Customer');
 const User = require('../models/User');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ const contactAttemptSchema = Joi.object({
 // @route   GET /api/yellowpages
 // @desc    Get all YellowPages data with filtering and pagination
 // @access  Private
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -135,7 +135,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // @route   GET /api/yellowpages/:id
 // @desc    Get single YellowPages record
 // @access  Private
-router.get('/:id', requireAdmin, async (req, res) => {
+router.get('/:id', requireAnyAdmin, async (req, res) => {
   try {
     const record = await YellowPagesData.findById(req.params.id)
       .populate('leadInfo.assignedTo', 'name email');
@@ -175,7 +175,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/yellowpages/search
 // @desc    Search YellowPages (simulated)
 // @access  Private
-router.post('/search', requireAdmin, async (req, res) => {
+router.post('/search', requireAnyAdmin, async (req, res) => {
   try {
     const { keywords, location, radius, category } = req.body;
 
@@ -254,7 +254,7 @@ router.post('/search', requireAdmin, async (req, res) => {
 // @route   POST /api/yellowpages/bulk-import
 // @desc    Bulk import YellowPages data
 // @access  Private
-router.post('/bulk-import', requireAdmin, async (req, res) => {
+router.post('/bulk-import', requireAnyAdmin, async (req, res) => {
   try {
     const { records } = req.body;
 
@@ -310,7 +310,7 @@ router.post('/bulk-import', requireAdmin, async (req, res) => {
 // @route   PUT /api/yellowpages/:id/lead
 // @desc    Update lead information
 // @access  Private
-router.put('/:id/lead', requireAdmin, async (req, res) => {
+router.put('/:id/lead', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = leadUpdateSchema.validate(req.body);
@@ -380,7 +380,7 @@ router.put('/:id/lead', requireAdmin, async (req, res) => {
 // @route   POST /api/yellowpages/:id/contact-attempt
 // @desc    Add contact attempt
 // @access  Private
-router.post('/:id/contact-attempt', requireAdmin, async (req, res) => {
+router.post('/:id/contact-attempt', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = contactAttemptSchema.validate(req.body);
@@ -451,7 +451,7 @@ router.post('/:id/contact-attempt', requireAdmin, async (req, res) => {
 // @route   POST /api/yellowpages/:id/convert-to-customer
 // @desc    Convert lead to customer
 // @access  Private
-router.post('/:id/convert-to-customer', requireAdmin, async (req, res) => {
+router.post('/:id/convert-to-customer', requireAnyAdmin, async (req, res) => {
   try {
     const { customerData } = req.body;
 

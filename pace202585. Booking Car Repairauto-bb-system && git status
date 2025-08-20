@@ -1,0 +1,20 @@
+[1mdiff --git a/src/redux/store.ts b/src/redux/store.ts[m
+[1mindex 1236ed0..34baebe 100644[m
+[1m--- a/src/redux/store.ts[m
+[1m+++ b/src/redux/store.ts[m
+[36m@@ -14,6 +14,7 @@[m [mimport emailReducer from "./actions/email";[m
+ import vehiclesReducer from "./actions/vehicles";[m
+ import communicationLogsReducer from "./reducer/communicationLogsReducer";[m
+ import smsReducer from "./actions/sms";[m
+[32m+[m[32mimport chatReducer from "./actions/chat";[m
+ [m
+ const store = configureStore({[m
+   reducer: {[m
+[36m@@ -32,6 +33,7 @@[m [mconst store = configureStore({[m
+     vehicles: vehiclesReducer,[m
+     communicationLogs: communicationLogsReducer,[m
+     sms: smsReducer,[m
+[32m+[m[32m    chat: chatReducer,[m
+   },[m
+   middleware: (getDefaultMiddleware) =>[m
+     getDefaultMiddleware({[m
