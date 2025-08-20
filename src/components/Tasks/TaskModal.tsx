@@ -3,7 +3,7 @@ import { HiX, HiCalendar, HiUser, HiClock, HiExclamation } from 'react-icons/hi'
 import { Task, CreateTaskData, UpdateTaskData } from '../../services/tasks'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers } from '../../redux/actions/customers'
-import { fetchUsers } from '../../redux/actions/admin'
+import { fetchTechnicians } from '../../redux/actions/services'
 
 interface TaskModalProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ interface TaskModalProps {
 export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = false }: TaskModalProps) {
   const dispatch = useAppDispatch()
   const { list: customers } = useAppSelector(state => state.customers)
-  const { users } = useAppSelector(state => state.admin)
+  const { technicians } = useAppSelector(state => state.services)
   
   const [formData, setFormData] = useState<CreateTaskData>({
     title: '',
@@ -30,11 +30,11 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Fetch customers and users when modal opens
+  // Fetch customers and technicians when modal opens
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchCustomers({ limit: 100 })) // Fetch up to 100 customers for dropdown
-      dispatch(fetchUsers({ limit: 100 })) // Fetch up to 100 users for dropdown
+      dispatch(fetchTechnicians({ limit: 100 })) // Fetch up to 100 technicians for dropdown
     }
   }, [isOpen, dispatch])
 
@@ -199,7 +199,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div>
                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assigned To (User) *
+                  Assigned To (Technician) *
                 </label>
                                <select
                   value={formData.assignedTo}
@@ -208,10 +208,10 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                     errors.assignedTo ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
-                                                       <option value="">Select a user</option>
-                  {users?.map(user => (
-                    <option key={user._id} value={user._id}>
-                      {user.name} ({user.role})
+                                                       <option value="">Select a technician</option>
+                  {technicians?.map(technician => (
+                    <option key={technician._id} value={technician._id}>
+                      {technician.name} {technician.specializations && technician.specializations.length > 0 ? `(${technician.specializations.join(', ')})` : ''}
                     </option>
                   ))}
                 </select>

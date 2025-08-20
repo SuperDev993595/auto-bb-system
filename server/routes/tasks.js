@@ -2,6 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const { Technician } = require('../models/Service');
 const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -177,12 +178,12 @@ router.post('/', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    // Check if assigned user exists and is active
-    const assignedUser = await User.findById(value.assignedTo);
-    if (!assignedUser || !assignedUser.isActive) {
+    // Check if assigned technician exists and is active
+    const assignedTechnician = await Technician.findById(value.assignedTo);
+    if (!assignedTechnician || !assignedTechnician.isActive) {
       return res.status(400).json({
         success: false,
-        message: 'Assigned user not found or inactive'
+        message: 'Assigned technician not found or inactive'
       });
     }
 
