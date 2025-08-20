@@ -293,7 +293,7 @@ export default function MarketingDashboard() {
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign.id}>
+                  <tr key={campaign._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
@@ -315,13 +315,13 @@ export default function MarketingDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {campaign.recipients.toLocaleString()}
+                      {campaign.recipientCount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {campaign.sent} sent
-                        {campaign.opened && ` • ${campaign.opened} opened`}
-                        {campaign.clicked && ` • ${campaign.clicked} clicked`}
+                        {campaign.sentCount} sent
+                        {campaign.openedCount > 0 && ` • ${campaign.openedCount} opened`}
+                        {campaign.clickedCount > 0 && ` • ${campaign.clickedCount} clicked`}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -330,7 +330,7 @@ export default function MarketingDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => handleSendCampaign(campaign.id, campaign.type)}
+                          onClick={() => handleStatusUpdate(campaign._id, 'sent')}
                           disabled={campaign.status === 'sent'}
                           className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
                         >
@@ -343,7 +343,7 @@ export default function MarketingDashboard() {
                           <HiPencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteCampaign(campaign.id, campaign.type)}
+                          onClick={() => handleDeleteCampaign(campaign._id)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <HiTrash className="w-4 h-4" />
