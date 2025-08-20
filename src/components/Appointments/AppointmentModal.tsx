@@ -50,36 +50,9 @@ type Props = {
     selectedTime?: string;
 };
 
-// Common service types for auto-suggestions
-const COMMON_SERVICES = [
-    'Oil Change',
-    'Brake Inspection',
-    'Tire Rotation',
-    'Transmission Service',
-    'Battery Replacement',
-    'Air Filter Replacement',
-    'Spark Plug Replacement',
-    'Wheel Alignment',
-    'AC Service',
-    'Engine Tune-up',
-    'Fuel Filter Replacement',
-    'Timing Belt Replacement',
-    'Water Pump Replacement',
-    'Radiator Flush',
-    'Power Steering Fluid',
-    'Brake Fluid Change',
-    'Coolant Flush',
-    'Exhaust System Repair',
-    'Suspension Repair',
-    'Electrical Diagnostics'
-];
-
-// Common vehicle makes for auto-suggestions
-const VEHICLE_MAKES = [
-    'Toyota', 'Honda', 'Ford', 'Chevrolet', 'Nissan', 'BMW', 'Mercedes-Benz',
-    'Audi', 'Volkswagen', 'Hyundai', 'Kia', 'Mazda', 'Subaru', 'Jeep',
-    'Dodge', 'Chrysler', 'Lexus', 'Acura', 'Infiniti', 'Volvo', 'Porsche'
-];
+// Service types and vehicle makes will be loaded from database
+const [serviceTypes, setServiceTypes] = useState<Array<{name: string, category: string, estimatedDuration: number}>>([]);
+const [vehicleMakes, setVehicleMakes] = useState<string[]>([]);
 
 export default function AppointmentModal({ onClose, onSave, isLoading = false, appointment, isEditing = false, selectedDate, selectedTime }: Props) {
     const [form, setForm] = useState<AppointmentData>({
@@ -207,6 +180,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     useEffect(() => {
         loadAvailableVehicles();
         loadAvailableCustomers();
+        loadServiceTypes();
+        loadVehicleMakes();
     }, []);
 
     // Fetch technicians when modal loads
@@ -262,6 +237,42 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             }
         } catch (error) {
             console.warn('Failed to load customers:', error);
+        }
+    };
+
+    const loadServiceTypes = async () => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.SERVICES}/types`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setServiceTypes(data.data || []);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load service types:', error);
+            // Fallback to empty array
+            setServiceTypes([]);
+        }
+    };
+
+    const loadVehicleMakes = async () => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.SERVICES}/vehicle-makes`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setVehicleMakes(data.data || []);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load vehicle makes:', error);
+            // Fallback to empty array
+            setVehicleMakes([]);
         }
     };
 
@@ -367,7 +378,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             const input = form.vehicle.toLowerCase().trim();
             
             // First, filter makes that match the input
-            const matchingMakes = VEHICLE_MAKES.filter(make =>
+            const matchingMakes = vehicleMakes.filter((make: string) =>
                 make.toLowerCase().includes(input)
             );
             
@@ -540,6 +551,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             // Handle customer creation/finding based on customer type
             let customerId = null;
             let userId = null;
+            let securePassword = ''; // Declare outside try block for scope
             
             try {
                 if (appointmentData.customerType === 'existing' && appointmentData.existingCustomerId) {
@@ -567,6 +579,18 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                          }
                      }
 
+                     // Generate a secure random password
+                     const generatePassword = () => {
+                         const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+                         let password = '';
+                         for (let i = 0; i < 12; i++) {
+                             password += charset.charAt(Math.floor(Math.random() * charset.length));
+                         }
+                         return password;
+                     };
+
+                     securePassword = generatePassword();
+
                      // First, create a new user account
                      const userResponse = await fetch(`${API_ENDPOINTS.AUTH}/register`, {
                         method: 'POST',
@@ -576,7 +600,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                         body: JSON.stringify({
                             name: appointmentData.customer,
                              email: appointmentData.email,
-                             password: 'customer123', // Default password
+                             password: securePassword, // Secure random password
                              role: 'customer',
                             phone: appointmentData.phone || '',
                              businessName: appointmentData.businessName || ''
@@ -660,7 +684,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                         model = parts.slice(1).join(' ');
                     } else if (parts.length === 1) {
                         make = parts[0];
-                        model = 'Unknown Model';
+                        model = ''; // Leave empty instead of placeholder
                     }
                 } else {
                     const parts = vehicleText.split(' ').filter(part => part.length > 0);
@@ -669,12 +693,17 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                         model = parts.slice(1).join(' ');
                     } else if (parts.length === 1) {
                         make = parts[0];
-                        model = 'Unknown Model';
+                        model = ''; // Leave empty instead of placeholder
                     }
                 }
 
                 if (!make.trim()) {
                     throw new Error('Please enter a vehicle make (e.g., Toyota, Honda, Ford)');
+                }
+
+                // Validate that we have a model if make is provided
+                if (!model.trim()) {
+                    throw new Error('Please enter a vehicle model (e.g., Camry, Civic, F-150)');
                 }
 
                 if (year < 1900 || year > new Date().getFullYear() + 1) {
@@ -688,8 +717,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                         year,
                         make: make.trim(),
                         model: model.trim(),
-                        vin: appointmentData.vin.trim() || 'N/A',
-                        licensePlate: appointmentData.licensePlate.trim() || 'N/A',
+                        vin: appointmentData.vin.trim() || '',
+                        licensePlate: appointmentData.licensePlate.trim() || '',
                         customer: customerId
                     });
 
@@ -700,9 +729,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             year,
                             make: make.trim(),
                             model: model.trim(),
-                            vin: appointmentData.vin.trim() || 'N/A',
-                            licensePlate: appointmentData.licensePlate.trim() || 'N/A',
-                            color: 'Unknown',
+                            vin: appointmentData.vin.trim() || '',
+                            licensePlate: appointmentData.licensePlate.trim() || '',
+                            color: '',
                             mileage: 0,
                             status: 'active',
                             customer: customerId // Associate with the customer (new or existing)
@@ -836,7 +865,15 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (shouldCreateNewVehicle) {
                 toast.success('Appointment saved and new vehicle created successfully!');
             } else {
-            toast.success('Appointment saved to database successfully!');
+                toast.success('Appointment saved to database successfully!');
+            }
+            
+            // If a new customer was created, show password information
+            if (appointmentData.customerType === 'new') {
+                toast.success(`New customer account created! Password: ${securePassword}`, {
+                    duration: 8000, // Show for 8 seconds
+                    icon: '🔑'
+                });
             }
             
             return savedAppointment;
@@ -1432,11 +1469,15 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             disabled={isLoading || isSavingToDatabase}
                         >
                             <option value="">Select a service type</option>
-                            {COMMON_SERVICES.map((service) => (
-                                <option key={service} value={service}>
-                                    {service}
-                                </option>
-                            ))}
+                            {serviceTypes.length > 0 ? (
+                                serviceTypes.map((service: {name: string, category: string, estimatedDuration: number}) => (
+                                    <option key={service.name} value={service.name}>
+                                        {service.name}
+                                    </option>
+                                ))
+                            ) : (
+                                <option value="" disabled>Loading service types...</option>
+                            )}
                         </select>
                         {errors.serviceType && (
                             <p className="text-red-500 text-sm mt-1">{errors.serviceType}</p>
