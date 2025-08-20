@@ -175,7 +175,7 @@ app.use('/api/communication-logs', authenticateToken, communicationLogsRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api/email', emailRoutes);
-app.use('/api/sms', smsRoutes);
+app.use('/api/sms', authenticateToken, smsRoutes);
 app.use('/api/system-admin', authenticateToken, systemAdminRoutes);
 
 // Health check
