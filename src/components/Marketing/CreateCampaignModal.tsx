@@ -58,7 +58,13 @@ export default function CreateCampaignModal({
       return;
     }
 
-    onSave(formData);
+    // Clean up form data - remove empty subject for non-email campaigns
+    const cleanFormData = { ...formData };
+    if (cleanFormData.type !== 'email' || !cleanFormData.subject?.trim()) {
+      delete cleanFormData.subject;
+    }
+
+    onSave(cleanFormData);
   };
 
   if (!isOpen) return null;

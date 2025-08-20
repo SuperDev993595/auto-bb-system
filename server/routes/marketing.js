@@ -9,7 +9,7 @@ const router = express.Router();
 const campaignSchema = Joi.object({
   name: Joi.string().min(3).max(200).required(),
   type: Joi.string().valid('email', 'sms', 'mailchimp').required(),
-  subject: Joi.string().max(500).optional(),
+  subject: Joi.string().max(500).allow('', null).optional(),
   content: Joi.string().required(),
   recipients: Joi.array().items(Joi.string()).optional(),
   scheduledAt: Joi.date().optional(),
