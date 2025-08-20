@@ -1,250 +1,246 @@
-const twilio = require('twilio');
-const axios = require('axios');
+const SMS = require('../models/SMS');
+const SMSTemplate = require('../models/SMSTemplate');
 
 class SMSService {
   constructor() {
-    this.provider = process.env.SMS_PROVIDER || 'twilio';
-    this.config = this.loadConfig();
+    this.provider = 'mock'; // Can be changed to 'twilio', 'aws-sns', etc.
   }
 
-  loadConfig() {
-    switch (this.provider) {
-      case 'twilio':
-        return {
-          accountSid: process.env.TWILIO_ACCOUNT_SID,
-          authToken: process.env.TWILIO_AUTH_TOKEN,
-          fromNumber: process.env.TWILIO_FROM_NUMBER
-        };
-      case 'nexmo':
-        return {
-          apiKey: process.env.NEXMO_API_KEY,
-          apiSecret: process.env.NEXMO_API_SECRET,
-          fromNumber: process.env.NEXMO_FROM_NUMBER
-        };
-      case 'aws-sns':
-        return {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-          region: process.env.AWS_REGION || 'us-east-1'
-        };
-      default:
-        throw new Error(`Unsupported SMS provider: ${this.provider}`);
-    }
-  }
-
-  async sendSMS(to, message, options = {}) {
+  // Send single SMS
+  async sendSMS(smsData, userId) {
     try {
-      switch (this.provider) {
-        case 'twilio':
-          return await this.sendViaTwilio(to, message, options);
-        case 'nexmo':
-          return await this.sendViaNexmo(to, message, options);
-        case 'aws-sns':
-          return await this.sendViaAWSSNS(to, message, options);
-        default:
-          throw new Error(`Unsupported SMS provider: ${this.provider}`);
-      }
+      const sms = new SMS({
+        ...smsData,
+        createdBy: userId,
+        provider: this.provider
+      });
+
+      await sms.save();
+
+      // Simulate SMS sending with mock provider
+      const result = await this.sendViaProvider(sms);
+      
+      // Update SMS status based on provider response
+      await sms.updateStatus(result.status, {
+        providerMessageId: result.messageId,
+        errorMessage: result.error,
+        cost: result.cost
+      });
+
+      return {
+        success: true,
+        data: sms,
+        messageId: result.messageId
+      };
     } catch (error) {
       console.error('SMS sending error:', error);
       throw error;
     }
   }
 
-  async sendViaTwilio(to, message, options = {}) {
-    if (!this.config.accountSid || !this.config.authToken || !this.config.fromNumber) {
-      throw new Error('Twilio configuration incomplete');
-    }
+  // Send bulk SMS
+  async sendBulkSMS(recipients, message, options = {}, userId) {
+    try {
+      const smsPromises = recipients.map(recipient => {
+        const smsData = {
+          to: recipient.phone || recipient,
+          message,
+          priority: options.priority || 'normal',
+          scheduledAt: options.scheduledAt || null
+        };
+        return this.sendSMS(smsData, userId);
+      });
 
-    const client = twilio(this.config.accountSid, this.config.authToken);
-    
-    const result = await client.messages.create({
-      body: message,
-      from: this.config.fromNumber,
-      to: to,
-      ...options
-    });
+      const results = await Promise.allSettled(smsPromises);
+      
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
 
-    return {
-      success: true,
-      messageId: result.sid,
-      status: result.status,
-      provider: 'twilio',
-      timestamp: new Date()
-    };
-  }
-
-  async sendViaNexmo(to, message, options = {}) {
-    if (!this.config.apiKey || !this.config.apiSecret || !this.config.fromNumber) {
-      throw new Error('Nexmo configuration incomplete');
-    }
-
-    const url = 'https://rest.nexmo.com/sms/json';
-    const params = new URLSearchParams({
-      api_key: this.config.apiKey,
-      api_secret: this.config.apiSecret,
-      to: to,
-      from: this.config.fromNumber,
-      text: message,
-      ...options
-    });
-
-    const response = await axios.post(url, params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
-
-    if (response.data.messages && response.data.messages[0].status === '0') {
       return {
         success: true,
-        messageId: response.data.messages[0]['message-id'],
-        status: 'sent',
-        provider: 'nexmo',
-        timestamp: new Date()
-      };
-    } else {
-      throw new Error(`Nexmo error: ${response.data.messages[0]['error-text']}`);
-    }
-  }
-
-  async sendViaAWSSNS(to, message, options = {}) {
-    if (!this.config.accessKeyId || !this.config.secretAccessKey) {
-      throw new Error('AWS SNS configuration incomplete');
-    }
-
-    // This is a simplified implementation
-    // In a real application, you would use the AWS SDK
-    const url = `https://sns.${this.config.region}.amazonaws.com/`;
-    
-    // Mock implementation - replace with actual AWS SDK
-    console.log(`AWS SNS SMS to ${to}: ${message}`);
-    
-    return {
-      success: true,
-      messageId: `aws_${Date.now()}`,
-      status: 'sent',
-      provider: 'aws-sns',
-      timestamp: new Date()
-    };
-  }
-
-  async sendBulkSMS(recipients, message, options = {}) {
-    const results = [];
-    const errors = [];
-
-    for (const recipient of recipients) {
-      try {
-        const result = await this.sendSMS(recipient.phone, message, {
-          ...options,
-          customData: recipient.customData || {}
-        });
-        results.push({
-          phone: recipient.phone,
-          ...result
-        });
-      } catch (error) {
-        errors.push({
-          phone: recipient.phone,
-          error: error.message
-        });
-      }
-    }
-
-    return {
-      success: results.length > 0,
-      results,
-      errors,
-      totalSent: results.length,
-      totalErrors: errors.length
-    };
-  }
-
-  async sendScheduledSMS(to, message, scheduledTime, options = {}) {
-    // For scheduled SMS, you would typically:
-    // 1. Store the SMS in a queue/database
-    // 2. Use a cron job or scheduler to send at the specified time
-    // 3. Update the status when sent
-    
-    const scheduledSMS = {
-      to,
-      message,
-      scheduledTime: new Date(scheduledTime),
-      status: 'scheduled',
-      provider: this.provider,
-      options,
-      createdAt: new Date()
-    };
-
-    // In a real implementation, save to database
-    console.log('Scheduled SMS:', scheduledSMS);
-
-    return {
-      success: true,
-      scheduledId: `sched_${Date.now()}`,
-      scheduledTime: scheduledSMS.scheduledTime,
-      status: 'scheduled'
-    };
-  }
-
-  validatePhoneNumber(phone) {
-    // Basic phone number validation
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(phone.replace(/\D/g, ''));
-  }
-
-  formatPhoneNumber(phone) {
-    // Remove all non-digit characters except +
-    let cleaned = phone.replace(/[^\d+]/g, '');
-    
-    // Ensure it starts with +
-    if (!cleaned.startsWith('+')) {
-      cleaned = '+1' + cleaned; // Default to US
-    }
-    
-    return cleaned;
-  }
-
-  async getDeliveryStatus(messageId) {
-    // This would check the delivery status with the SMS provider
-    // Implementation varies by provider
-    
-    switch (this.provider) {
-      case 'twilio':
-        return await this.getTwilioDeliveryStatus(messageId);
-      case 'nexmo':
-        return await this.getNexmoDeliveryStatus(messageId);
-      default:
-        return { status: 'unknown', provider: this.provider };
-    }
-  }
-
-  async getTwilioDeliveryStatus(messageId) {
-    if (!this.config.accountSid || !this.config.authToken) {
-      throw new Error('Twilio configuration incomplete');
-    }
-
-    const client = twilio(this.config.accountSid, this.config.authToken);
-    
-    try {
-      const message = await client.messages(messageId).fetch();
-      return {
-        status: message.status,
-        provider: 'twilio',
-        timestamp: new Date()
+        data: {
+          total: recipients.length,
+          successful,
+          failed,
+          results: results.map(r => r.status === 'fulfilled' ? r.value : r.reason)
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to get Twilio delivery status: ${error.message}`);
+      console.error('Bulk SMS sending error:', error);
+      throw error;
     }
   }
 
-  async getNexmoDeliveryStatus(messageId) {
-    // Nexmo delivery status check implementation
-    // This would typically involve webhooks or API calls
-    return {
-      status: 'delivered',
-      provider: 'nexmo',
-      timestamp: new Date()
-    };
+  // Mock SMS provider (replace with real provider)
+  async sendViaProvider(sms) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Simulate different outcomes
+    const random = Math.random();
+    
+    if (random < 0.8) {
+      // 80% success rate
+      return {
+        status: 'delivered',
+        messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        cost: 0.05,
+        error: null
+      };
+    } else if (random < 0.9) {
+      // 10% sent but not delivered
+      return {
+        status: 'sent',
+        messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        cost: 0.05,
+        error: null
+      };
+    } else {
+      // 10% failed
+      const errors = [
+        'Invalid phone number',
+        'Number not reachable',
+        'Insufficient credits',
+        'Service temporarily unavailable'
+      ];
+      return {
+        status: 'failed',
+        messageId: null,
+        cost: 0,
+        error: errors[Math.floor(Math.random() * errors.length)]
+      };
+    }
+  }
+
+  // Get SMS statistics
+  async getStats() {
+    try {
+      const [stats, deliveryRate] = await Promise.all([
+        SMS.getStats(),
+        SMS.getDeliveryRate()
+      ]);
+
+      const statsData = stats[0] || {
+        totalSent: 0,
+        delivered: 0,
+        failed: 0,
+        pending: 0,
+        totalCost: 0
+      };
+
+      const rateData = deliveryRate[0] || { deliveryRate: 0 };
+
+      return {
+        totalSent: statsData.totalSent,
+        delivered: statsData.delivered,
+        failed: statsData.failed,
+        pending: statsData.pending,
+        deliveryRate: rateData.deliveryRate || 0,
+        totalCost: statsData.totalCost
+      };
+    } catch (error) {
+      console.error('Error getting SMS stats:', error);
+      throw error;
+    }
+  }
+
+  // Get SMS history
+  async getHistory(filters = {}, page = 1, limit = 20) {
+    try {
+      const query = { isActive: true };
+      
+      if (filters.status) {
+        query.status = filters.status;
+      }
+      
+      if (filters.to) {
+        query.to = { $regex: filters.to, $options: 'i' };
+      }
+
+      const skip = (page - 1) * limit;
+      
+      const [smsRecords, total] = await Promise.all([
+        SMS.find(query)
+          .populate('createdBy', 'name email')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        SMS.countDocuments(query)
+      ]);
+
+      return {
+        data: smsRecords,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalRecords: total,
+          hasNext: page * limit < total,
+          hasPrev: page > 1
+        }
+      };
+    } catch (error) {
+      console.error('Error getting SMS history:', error);
+      throw error;
+    }
+  }
+
+  // Template management
+  async createTemplate(templateData, userId) {
+    try {
+      const template = new SMSTemplate({
+        ...templateData,
+        createdBy: userId
+      });
+      
+      await template.save();
+      return template;
+    } catch (error) {
+      console.error('Error creating SMS template:', error);
+      throw error;
+    }
+  }
+
+  async getTemplates(filters = {}) {
+    try {
+      const query = { isActive: true };
+      
+      if (filters.category) {
+        query.category = filters.category;
+      }
+
+      const templates = await SMSTemplate.find(query)
+        .populate('createdBy', 'name email')
+        .sort({ usageCount: -1, name: 1 });
+
+      return templates;
+    } catch (error) {
+      console.error('Error getting SMS templates:', error);
+      throw error;
+    }
+  }
+
+  async useTemplate(templateId, variables = {}) {
+    try {
+      const template = await SMSTemplate.findById(templateId);
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
+      const message = template.renderMessage(variables);
+      await template.incrementUsage();
+
+      return {
+        message,
+        template: {
+          id: template._id,
+          name: template.name,
+          category: template.category
+        }
+      };
+    } catch (error) {
+      console.error('Error using SMS template:', error);
+      throw error;
+    }
   }
 }
 

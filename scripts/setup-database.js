@@ -11,6 +11,8 @@ const Vehicle = require('../server/models/Vehicle');
 const Appointment = require('../server/models/Appointment');
 const Task = require('../server/models/Task');
 const Promotion = require('../server/models/Promotion');
+const SMS = require('../server/models/SMS');
+const SMSTemplate = require('../server/models/SMSTemplate');
 const Invoice = require('../server/models/Invoice');
 const Reminder = require('../server/models/Reminder');
 const { ServiceCatalog, WorkOrder, Technician } = require('../server/models/Service');
@@ -689,6 +691,133 @@ async function setupDatabase() {
     const promotions = await Promotion.insertMany(samplePromotions);
     console.log(`✅ Created ${promotions.length} sample promotions`);
 
+    // Create sample SMS templates
+    console.log('📱 Creating sample SMS templates...');
+    const sampleSMSTemplates = [
+      {
+        name: 'Appointment Reminder',
+        message: 'Hi {{customerName}}, your appointment is scheduled for {{appointmentDate}} at {{appointmentTime}}. Please arrive 10 minutes early. Reply STOP to unsubscribe.',
+        variables: ['customerName', 'appointmentDate', 'appointmentTime'],
+        category: 'appointment',
+        description: 'Remind customers about upcoming appointments',
+        usageCount: 45,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        name: 'Service Due Reminder',
+        message: 'Hi {{customerName}}, your {{vehicleInfo}} is due for service. Current mileage: {{currentMileage}}. Call us to schedule: {{businessPhone}}.',
+        variables: ['customerName', 'vehicleInfo', 'currentMileage', 'businessPhone'],
+        category: 'reminder',
+        description: 'Notify customers about service due',
+        usageCount: 32,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        name: 'Payment Reminder',
+        message: 'Hi {{customerName}}, payment for invoice #{{invoiceNumber}} is due on {{dueDate}}. Amount: ${{amount}}. Pay online: {{paymentLink}}.',
+        variables: ['customerName', 'invoiceNumber', 'dueDate', 'amount', 'paymentLink'],
+        category: 'notification',
+        description: 'Remind customers about payment due',
+        usageCount: 28,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        name: 'Service Completion',
+        message: 'Hi {{customerName}}, your vehicle service is complete and ready for pickup. Total: ${{totalAmount}}. Thank you for choosing {{businessName}}!',
+        variables: ['customerName', 'totalAmount', 'businessName'],
+        category: 'notification',
+        description: 'Notify customers when service is complete',
+        usageCount: 19,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        name: 'Follow-up',
+        message: 'Hi {{customerName}}, how was your recent service experience? We value your feedback. Call us: {{businessPhone}}.',
+        variables: ['customerName', 'businessPhone'],
+        category: 'custom',
+        description: 'Follow up with customers after service',
+        usageCount: 15,
+        isActive: true,
+        createdBy: superAdmin._id
+      }
+    ];
+    const smsTemplates = await SMSTemplate.insertMany(sampleSMSTemplates);
+    console.log(`✅ Created ${smsTemplates.length} sample SMS templates`);
+
+    // Create sample SMS records
+    console.log('📨 Creating sample SMS records...');
+    const sampleSMSRecords = [
+      {
+        to: '+1234567890',
+        message: 'Hi John, your appointment is confirmed for tomorrow at 2 PM.',
+        status: 'delivered',
+        priority: 'normal',
+        sentAt: new Date(Date.now() - 3600000),
+        deliveredAt: new Date(Date.now() - 3500000),
+        provider: 'mock',
+        providerMessageId: 'msg_1234567890_abc123',
+        cost: 0.05,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        to: '+1234567891',
+        message: 'Service reminder: Your vehicle is due for oil change.',
+        status: 'sent',
+        priority: 'normal',
+        sentAt: new Date(Date.now() - 7200000),
+        provider: 'mock',
+        providerMessageId: 'msg_1234567891_def456',
+        cost: 0.05,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        to: '+1234567892',
+        message: 'Payment reminder: Invoice #1234 is due on 2025-01-15.',
+        status: 'failed',
+        priority: 'high',
+        sentAt: new Date(Date.now() - 10800000),
+        errorMessage: 'Invalid phone number',
+        provider: 'mock',
+        cost: 0,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        to: '+1234567893',
+        message: 'Your vehicle service is complete and ready for pickup. Total: $150. Thank you!',
+        status: 'delivered',
+        priority: 'normal',
+        sentAt: new Date(Date.now() - 14400000),
+        deliveredAt: new Date(Date.now() - 14300000),
+        provider: 'mock',
+        providerMessageId: 'msg_1234567893_ghi789',
+        cost: 0.05,
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        to: '+1234567894',
+        message: 'How was your recent service experience? We value your feedback. Call us: 555-0123.',
+        status: 'delivered',
+        priority: 'low',
+        sentAt: new Date(Date.now() - 18000000),
+        deliveredAt: new Date(Date.now() - 17900000),
+        provider: 'mock',
+        providerMessageId: 'msg_1234567894_jkl012',
+        cost: 0.05,
+        isActive: true,
+        createdBy: superAdmin._id
+      }
+    ];
+    const smsRecords = await SMS.insertMany(sampleSMSRecords);
+    console.log(`✅ Created ${smsRecords.length} sample SMS records`);
+
     console.log('\n🎉 Database setup completed successfully!');
     console.log('\n📋 Summary:');
     console.log(`- Database: ${mongoose.connection.name}`);
@@ -701,6 +830,8 @@ async function setupDatabase() {
     console.log(`- Vehicles created: ${vehicles.length}`);
     console.log(`- Tasks created: ${tasks.length}`);
     console.log(`- Promotions created: ${promotions.length}`);
+    console.log(`- SMS Templates created: ${smsTemplates.length}`);
+    console.log(`- SMS Records created: ${smsRecords.length}`);
     
     console.log('\n🔑 Default Login Credentials:');
     console.log('Super Admin: admin@autocrm.com / admin123');

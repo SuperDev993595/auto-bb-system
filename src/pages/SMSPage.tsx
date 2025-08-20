@@ -16,33 +16,15 @@ import {
   HiChartBar
 } from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
-import api from '../services/api';
-
-interface SMSTemplate {
-  id: string;
-  name: string;
-  message: string;
-  variables: string[];
-  category: string;
-}
-
-interface SMSRecord {
-  id: string;
-  to: string;
-  message: string;
-  status: 'sent' | 'delivered' | 'failed' | 'pending';
-  sentAt: string;
-  deliveredAt?: string;
-  errorMessage?: string;
-}
-
-interface SMSStats {
-  totalSent: number;
-  delivered: number;
-  failed: number;
-  deliveryRate: number;
-  totalRecipients: number;
-}
+import smsService, { 
+  SMSTemplate, 
+  SMSRecord, 
+  SMSStats, 
+  SendSMSData, 
+  BulkSMSData,
+  SMSFilters,
+  SMSTemplateFilters
+} from '../services/sms';
 
 export default function SMSPage() {
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
@@ -51,8 +33,9 @@ export default function SMSPage() {
     totalSent: 0,
     delivered: 0,
     failed: 0,
+    pending: 0,
     deliveryRate: 0,
-    totalRecipients: 0
+    totalCost: 0
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'send' | 'templates' | 'history' | 'analytics'>('send');
@@ -80,54 +63,18 @@ export default function SMSPage() {
     try {
       setLoading(true);
       
-      const [templatesRes, analyticsRes] = await Promise.all([
-        api.get('/sms/templates').catch(() => ({ data: { data: [] } })),
-        api.get('/sms/analytics').catch(() => ({ data: { data: { overview: {} } } }))
+      const [templatesRes, analyticsRes, historyRes] = await Promise.all([
+        smsService.getTemplates().catch(() => ({ success: true, data: [] })),
+        smsService.getAnalytics().catch(() => ({ success: true, data: { overview: stats } })),
+        smsService.getHistory().catch(() => ({ data: [], pagination: { currentPage: 1, totalPages: 1, totalRecords: 0, hasNext: false, hasPrev: false } }))
       ]);
 
-      setTemplates(templatesRes.data.data || []);
+      setTemplates(templatesRes.data || []);
+      setSmsHistory(historyRes.data || []);
       
-      // Mock SMS history
-      const mockHistory: SMSRecord[] = [
-        {
-          id: '1',
-          to: '+1234567890',
-          message: 'Hi John, your appointment is confirmed for tomorrow at 2 PM.',
-          status: 'delivered',
-          sentAt: new Date(Date.now() - 3600000).toISOString(),
-          deliveredAt: new Date(Date.now() - 3500000).toISOString()
-        },
-        {
-          id: '2',
-          to: '+1234567891',
-          message: 'Service reminder: Your vehicle is due for oil change.',
-          status: 'sent',
-          sentAt: new Date(Date.now() - 7200000).toISOString()
-        },
-        {
-          id: '3',
-          to: '+1234567892',
-          message: 'Payment reminder: Invoice #1234 is due on 2025-01-15.',
-          status: 'failed',
-          sentAt: new Date(Date.now() - 10800000).toISOString(),
-          errorMessage: 'Invalid phone number'
-        }
-      ];
-      
-      setSmsHistory(mockHistory);
-      
-      // Calculate stats
-      const totalSent = mockHistory.length;
-      const delivered = mockHistory.filter(sms => sm.status === 'delivered').length;
-      const failed = mockHistory.filter(sms => sm.status === 'failed').length;
-      
-      setStats({
-        totalSent,
-        delivered,
-        failed,
-        deliveryRate: totalSent > 0 ? (delivered / totalSent) * 100 : 0,
-        totalRecipients: totalSent
-      });
+      if (analyticsRes.data?.overview) {
+        setStats(analyticsRes.data.overview);
+      }
 
     } catch (error) {
       console.error('Error loading SMS data:', error);
@@ -146,14 +93,14 @@ export default function SMSPage() {
     }
 
     try {
-      const response = await api.post('/sms/send', {
+      const response = await smsService.sendSMS({
         to: sendForm.to,
         message: sendForm.message,
         scheduledAt: sendForm.scheduledAt || undefined,
         priority: sendForm.priority
       });
 
-      if (response.data.success) {
+      if (response.success) {
         toast.success('SMS sent successfully');
         setSendForm({ to: '', message: '', scheduledAt: '', priority: 'normal' });
         loadSMSData();
@@ -181,14 +128,14 @@ export default function SMSPage() {
     }
 
     try {
-      const response = await api.post('/sms/bulk', {
+      const response = await smsService.sendBulkSMS({
         recipients: recipients.map(phone => ({ phone })),
         message: bulkForm.message,
         scheduledAt: bulkForm.scheduledAt || undefined,
-        priority: bulkForm.priority
+        priority: bulkForm.priority as 'low' | 'normal' | 'high'
       });
 
-      if (response.data.success) {
+      if (response.success) {
         toast.success(`Bulk SMS sent to ${recipients.length} recipients`);
         setBulkForm({ recipients: '', message: '', scheduledAt: '', priority: 'normal' });
         loadSMSData();
