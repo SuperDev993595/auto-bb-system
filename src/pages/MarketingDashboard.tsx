@@ -18,154 +18,106 @@ import {
   HiExclamation
 } from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
-import api from '../services/api';
-
-interface MarketingCampaign {
-  id: string;
-  name: string;
-  type: 'email' | 'sms' | 'mailchimp';
-  status: 'draft' | 'scheduled' | 'sent' | 'failed';
-  recipients: number;
-  sent: number;
-  opened?: number;
-  clicked?: number;
-  delivered?: number;
-  failed?: number;
-  scheduledAt?: string;
-  sentAt?: string;
-  createdAt: string;
-}
-
-interface MarketingStats {
-  totalCampaigns: number;
-  activeCampaigns: number;
-  totalRecipients: number;
-  totalSent: number;
-  totalOpened: number;
-  totalClicked: number;
-  deliveryRate: number;
-  openRate: number;
-  clickRate: number;
-}
+import { useAppSelector, useAppDispatch } from '../redux';
+import { 
+  fetchCampaigns, 
+  fetchCampaignStats, 
+  createCampaign, 
+  deleteCampaign, 
+  updateCampaignStatus 
+} from '../redux/actions/marketing';
+import { MarketingCampaign, CreateCampaignData } from '../services/marketing';
+import CreateCampaignModal from '../components/Marketing/CreateCampaignModal';
 
 export default function MarketingDashboard() {
-  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
-  const [stats, setStats] = useState<MarketingStats>({
-    totalCampaigns: 0,
-    activeCampaigns: 0,
-    totalRecipients: 0,
-    totalSent: 0,
-    totalOpened: 0,
-    totalClicked: 0,
-    deliveryRate: 0,
-    openRate: 0,
-    clickRate: 0
-  });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'templates' | 'analytics'>('overview');
+  const dispatch = useAppDispatch();
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { campaigns, stats, loading } = useAppSelector(state => state.marketing);
+
+  // Fetch campaigns and stats on component mount
   useEffect(() => {
-    loadMarketingData();
-  }, []);
-
-  const loadMarketingData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load campaigns from different sources
-      const [emailCampaigns, smsAnalytics, mailchimpCampaigns] = await Promise.all([
-        api.get('/email/campaigns').catch(() => ({ data: { data: [] } })),
-        api.get('/sms/analytics').catch(() => ({ data: { data: { overview: {} } } })),
-        api.get('/mailchimp/campaigns').catch(() => ({ data: { data: { campaigns: [] } } }))
-      ]);
-
-      // Combine and format campaigns
-      const allCampaigns: MarketingCampaign[] = [
-        ...(emailCampaigns.data.data || []).map((campaign: any) => ({
-          ...campaign,
-          type: 'email' as const
-        })),
-        ...(mailchimpCampaigns.data.data.campaigns || []).map((campaign: any) => ({
-          ...campaign,
-          type: 'mailchimp' as const
-        }))
-      ];
-
-      setCampaigns(allCampaigns);
-
-      // Calculate stats
-      const totalCampaigns = allCampaigns.length;
-      const activeCampaigns = allCampaigns.filter(c => c.status === 'scheduled').length;
-      const totalRecipients = allCampaigns.reduce((sum, c) => sum + c.recipients, 0);
-      const totalSent = allCampaigns.reduce((sum, c) => sum + c.sent, 0);
-      const totalOpened = allCampaigns.reduce((sum, c) => sum + (c.opened || 0), 0);
-      const totalClicked = allCampaigns.reduce((sum, c) => sum + (c.clicked || 0), 0);
-
-      setStats({
-        totalCampaigns,
-        activeCampaigns,
-        totalRecipients,
-        totalSent,
-        totalOpened,
-        totalClicked,
-        deliveryRate: totalRecipients > 0 ? (totalSent / totalRecipients) * 100 : 0,
-        openRate: totalSent > 0 ? (totalOpened / totalSent) * 100 : 0,
-        clickRate: totalOpened > 0 ? (totalClicked / totalOpened) * 100 : 0
-      });
-
-    } catch (error) {
-      console.error('Error loading marketing data:', error);
-      toast.error('Failed to load marketing data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendCampaign = async (campaignId: string, type: string) => {
-    try {
-      let endpoint = '';
-      switch (type) {
-        case 'email':
-          endpoint = `/email/campaigns/${campaignId}/send`;
-          break;
-        case 'mailchimp':
-          endpoint = `/mailchimp/campaigns/${campaignId}/send`;
-          break;
-        default:
-          toast.error('Unsupported campaign type');
-          return;
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          dispatch(fetchCampaigns({
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            type: typeFilter !== 'all' ? typeFilter : undefined,
+            search: searchTerm || undefined
+          })),
+          dispatch(fetchCampaignStats())
+        ]);
+      } catch (error) {
+        console.error('Error loading marketing data:', error);
+        toast.error('Failed to load marketing data');
       }
+    };
 
-      await api.post(endpoint);
-      toast.success('Campaign sent successfully');
-      loadMarketingData();
+    loadData();
+  }, [dispatch]);
+
+  // Refetch campaigns when filters change
+  useEffect(() => {
+    if (!loading) {
+      dispatch(fetchCampaigns({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }));
+    }
+  }, [statusFilter, typeFilter, searchTerm, dispatch]);
+
+  const handleCreateCampaign = async (campaignData: CreateCampaignData) => {
+    try {
+      setIsSubmitting(true);
+      await dispatch(createCampaign(campaignData));
+      toast.success('Campaign created successfully!');
+      setShowCreateModal(false);
+      
+      // Refresh data
+      dispatch(fetchCampaigns({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }));
+      dispatch(fetchCampaignStats());
     } catch (error) {
-      toast.error('Failed to send campaign');
+      console.error('Error creating campaign:', error);
+      toast.error('Failed to create campaign');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteCampaign = async (campaignId: string, type: string) => {
+  const handleDeleteCampaign = async (campaignId: string) => {
     if (!confirm('Are you sure you want to delete this campaign?')) return;
 
     try {
-      let endpoint = '';
-      switch (type) {
-        case 'email':
-          endpoint = `/email/campaigns/${campaignId}`;
-          break;
-        case 'mailchimp':
-          endpoint = `/mailchimp/campaigns/${campaignId}`;
-          break;
-        default:
-          toast.error('Unsupported campaign type');
-          return;
-      }
-
-      await api.delete(endpoint);
-      toast.success('Campaign deleted successfully');
-      loadMarketingData();
+      await dispatch(deleteCampaign(campaignId));
+      toast.success('Campaign deleted successfully!');
+      
+      // Refresh data
+      dispatch(fetchCampaignStats());
     } catch (error) {
+      console.error('Error deleting campaign:', error);
       toast.error('Failed to delete campaign');
+    }
+  };
+
+  const handleStatusUpdate = async (campaignId: string, status: MarketingCampaign['status']) => {
+    try {
+      await dispatch(updateCampaignStatus({ id: campaignId, status }));
+      toast.success('Campaign status updated successfully!');
+      
+      // Refresh data
+      dispatch(fetchCampaignStats());
+    } catch (error) {
+      console.error('Error updating campaign status:', error);
+      toast.error('Failed to update campaign status');
     }
   };
 
@@ -235,7 +187,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalCampaigns || 0}</p>
             </div>
           </div>
         </div>
@@ -247,7 +199,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Recipients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalRecipients.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{(stats?.totalRecipients || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -259,7 +211,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Delivery Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.deliveryRate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalSent ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) : '0.0'}%</p>
             </div>
           </div>
         </div>
@@ -271,7 +223,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Open Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.openRate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalSent ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) : '0.0'}%</p>
             </div>
           </div>
         </div>
@@ -309,7 +261,10 @@ export default function MarketingDashboard() {
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">Recent Campaigns</h2>
-            <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               <HiPlus className="h-5 w-5 mr-2" />
               Create Campaign
             </button>
@@ -402,6 +357,14 @@ export default function MarketingDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Create Campaign Modal */}
+      <CreateCampaignModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={handleCreateCampaign}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

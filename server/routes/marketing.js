@@ -1,109 +1,71 @@
 const express = require('express');
 const Joi = require('joi');
-const Task = require('../models/Task');
-const Customer = require('../models/Customer');
-const { requireAdmin } = require('../middleware/auth');
-
+const MarketingCampaign = require('../models/MarketingCampaign');
+const MarketingTemplate = require('../models/MarketingTemplate');
+const { requireAnyAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 // Validation schemas
-const marketingTaskSchema = Joi.object({
-  customer: Joi.string().optional(),
-  title: Joi.string().min(3).max(200).required(),
-  description: Joi.string().max(1000).optional(),
-  marketingType: Joi.string().valid('email', 'phone', 'social_media', 'direct_mail', 'advertising', 'promotion', 'other').required(),
-  targetAudience: Joi.string().max(200).optional(),
-  budget: Joi.number().min(0).optional(),
-  dueDate: Joi.date().required(),
-  assignedTo: Joi.string().required(),
-  priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
-  expectedOutcome: Joi.string().max(500).optional()
+const campaignSchema = Joi.object({
+  name: Joi.string().min(3).max(200).required(),
+  type: Joi.string().valid('email', 'sms', 'mailchimp').required(),
+  subject: Joi.string().max(500).optional(),
+  content: Joi.string().required(),
+  recipients: Joi.array().items(Joi.string()).optional(),
+  scheduledAt: Joi.date().optional(),
+  template: Joi.string().optional(),
+  tags: Joi.array().items(Joi.string()).optional()
 });
 
-// @route   GET /api/marketing
-// @desc    Get all marketing tasks
+// @route   GET /api/marketing/campaigns
+// @desc    Get all marketing campaigns
 // @access  Private
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/campaigns', requireAnyAdmin, async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      customer,
-      assignedTo,
-      marketingType,
-      status,
-      search,
-      sortBy = 'dueDate',
-      sortOrder = 'asc'
-    } = req.query;
-
-    // Build query
-    const query = { type: 'marketing' };
-
-    // Filter by assigned user (Sub Admins can only see their own tasks)
-    if (req.user.role === 'admin') {
-      query.assignedTo = req.user.id;
-    } else if (assignedTo) {
-      query.assignedTo = assignedTo;
-    }
-
-    if (customer) query.customer = customer;
-    if (marketingType) query.marketingType = marketingType;
+    const { page = 1, limit = 10, status, type, search } = req.query;
+    const query = { isActive: true };
+    
     if (status) query.status = status;
-
+    if (type) query.type = type;
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } }
       ];
     }
 
-    // Build sort object
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-    // Execute query with pagination
-    const marketingTasks = await Task.find(query)
-      .populate('assignedTo', 'name email')
-      .populate('customer', 'businessName contactPerson.name')
-      .sort(sort)
+    const campaigns = await MarketingCampaign.find(query)
+      .populate('createdBy', 'name email')
+      .populate('template', 'name')
+      .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
+      .skip((page - 1) * limit);
 
-    // Get total count
-    const total = await Task.countDocuments(query);
+    const total = await MarketingCampaign.countDocuments(query);
 
     res.json({
       success: true,
       data: {
-        marketingTasks,
+        campaigns,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(total / limit),
-          totalTasks: total,
-          hasNextPage: page * limit < total,
-          hasPrevPage: page > 1
+          totalCampaigns: total
         }
       }
     });
-
   } catch (error) {
-    console.error('Get marketing tasks error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    console.error('Get campaigns error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// @route   POST /api/marketing
-// @desc    Create new marketing task
+// @route   POST /api/marketing/campaigns
+// @desc    Create new campaign
 // @access  Private
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/campaigns', requireAnyAdmin, async (req, res) => {
   try {
-    // Validate input
-    const { error, value } = marketingTaskSchema.validate(req.body);
+    const { error, value } = campaignSchema.validate(req.body);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -111,118 +73,103 @@ router.post('/', requireAdmin, async (req, res) => {
       });
     }
 
-    // Check if customer exists (if provided)
-    if (value.customer) {
-      const customer = await Customer.findById(value.customer);
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          message: 'Customer not found'
-        });
-      }
-    }
-
-    // Create marketing task
-    const marketingTask = new Task({
+    const campaign = new MarketingCampaign({
       ...value,
-      type: 'marketing',
-      assignedBy: req.user.id
+      recipientCount: value.recipients ? value.recipients.length : 0,
+      createdBy: req.user.id
     });
 
-    await marketingTask.save();
-
-    // Populate references
-    await marketingTask.populate('assignedTo', 'name email');
-    if (marketingTask.customer) {
-      await marketingTask.populate('customer', 'businessName contactPerson.name');
-    }
+    await campaign.save();
+    await campaign.populate('createdBy', 'name email');
 
     res.status(201).json({
       success: true,
-      message: 'Marketing task created successfully',
-      data: { marketingTask }
+      message: 'Campaign created successfully',
+      data: { campaign }
     });
-
   } catch (error) {
-    console.error('Create marketing task error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    console.error('Create campaign error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// @route   GET /api/marketing/stats
-// @desc    Get marketing statistics
+// @route   PUT /api/marketing/campaigns/:id/status
+// @desc    Update campaign status
 // @access  Private
-router.get('/stats', requireAdmin, async (req, res) => {
+router.put('/campaigns/:id/status', requireAnyAdmin, async (req, res) => {
   try {
-    const { startDate, endDate, assignedTo } = req.query;
-
-    const query = { type: 'marketing' };
-
-    // Filter by assigned user
-    if (req.user.role === 'admin') {
-      query.assignedTo = req.user.id;
-    } else if (assignedTo) {
-      query.assignedTo = assignedTo;
+    const { status } = req.body;
+    const campaign = await MarketingCampaign.findById(req.params.id);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
     }
 
-    // Date range filter
-    if (startDate && endDate) {
-      query.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
-    }
-
-    // Get marketing tasks by type
-    const marketingTypeStats = await Task.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: '$marketingType',
-          count: { $sum: 1 },
-          completed: {
-            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
-          }
-        }
-      }
-    ]);
-
-    // Get overall stats
-    const overallStats = await Task.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalTasks: { $sum: 1 },
-          completedTasks: {
-            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
-          },
-          totalBudget: { $sum: '$budget' }
-        }
-      }
-    ]);
+    await campaign.updateStatus(status);
+    await campaign.populate('createdBy', 'name email');
 
     res.json({
       success: true,
+      message: 'Campaign status updated successfully',
+      data: { campaign }
+    });
+  } catch (error) {
+    console.error('Update campaign status error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @route   DELETE /api/marketing/campaigns/:id
+// @desc    Delete campaign
+// @access  Private
+router.delete('/campaigns/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const campaign = await MarketingCampaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    campaign.isActive = false;
+    await campaign.save();
+
+    res.json({
+      success: true,
+      message: 'Campaign deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete campaign error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @route   GET /api/marketing/campaigns/stats/overview
+// @desc    Get campaign statistics
+// @access  Private
+router.get('/campaigns/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    const stats = await MarketingCampaign.getStats();
+    res.json({
+      success: true,
       data: {
-        marketingTypeStats,
-        overallStats: overallStats[0] || {
-          totalTasks: 0,
-          completedTasks: 0,
-          totalBudget: 0
+        overview: stats[0] || {
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          totalRecipients: 0,
+          totalSent: 0,
+          totalOpened: 0,
+          totalClicked: 0
         }
       }
     });
-
   } catch (error) {
-    console.error('Get marketing stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    console.error('Get campaign stats error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
