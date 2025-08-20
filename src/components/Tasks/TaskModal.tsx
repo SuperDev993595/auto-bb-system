@@ -3,7 +3,7 @@ import { HiX, HiCalendar, HiUser, HiClock, HiExclamation } from 'react-icons/hi'
 import { Task, CreateTaskData, UpdateTaskData } from '../../services/tasks'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers } from '../../redux/actions/customers'
-import { fetchTechnicians } from '../../redux/actions/services'
+import { fetchUsers } from '../../redux/actions/admin'
 
 interface TaskModalProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ interface TaskModalProps {
 export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = false }: TaskModalProps) {
   const dispatch = useAppDispatch()
   const { list: customers } = useAppSelector(state => state.customers)
-  const { technicians } = useAppSelector(state => state.services)
+  const { users } = useAppSelector(state => state.admin)
   
   const [formData, setFormData] = useState<CreateTaskData>({
     title: '',
@@ -30,11 +30,11 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Fetch customers and technicians when modal opens
+  // Fetch customers and users when modal opens
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchCustomers({ limit: 100 })) // Fetch up to 100 customers for dropdown
-      dispatch(fetchTechnicians({ limit: 100 })) // Fetch up to 100 technicians for dropdown
+      dispatch(fetchUsers({ limit: 100 })) // Fetch up to 100 users for dropdown
     }
   }, [isOpen, dispatch])
 
@@ -198,9 +198,9 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                      {/* Assigned To and Due Date */}
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 Assigned To *
-               </label>
+                               <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assigned To (User) *
+                </label>
                                <select
                   value={formData.assignedTo}
                   onChange={(e) => handleInputChange('assignedTo', e.target.value)}
@@ -208,12 +208,12 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                     errors.assignedTo ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
-                                     <option value="">Select a technician</option>
-                   {technicians?.map(technician => (
-                     <option key={technician._id} value={technician._id}>
-                       {technician.name} {technician.specialization && technician.specialization.length > 0 ? `(${technician.specialization.join(', ')})` : ''}
-                     </option>
-                   ))}
+                                                       <option value="">Select a user</option>
+                  {users?.map(user => (
+                    <option key={user._id} value={user._id}>
+                      {user.name} ({user.role})
+                    </option>
+                  ))}
                 </select>
                {errors.assignedTo && (
                  <p className="mt-1 text-sm text-red-600">{errors.assignedTo}</p>
