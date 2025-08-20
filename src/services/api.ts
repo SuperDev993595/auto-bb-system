@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
   COLLECTIONS: `${API_BASE_URL}/api/collections`,
   YELLOWPAGES: `${API_BASE_URL}/api/yellowpages`,
   MAILCHIMP: `${API_BASE_URL}/api/mailchimp`,
+  SMS: `${API_BASE_URL}/api/sms`,
 };
 
 // Helper function to get auth headers

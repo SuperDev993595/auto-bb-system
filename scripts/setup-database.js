@@ -13,6 +13,7 @@ const Task = require('../server/models/Task');
 const Promotion = require('../server/models/Promotion');
 const SMS = require('../server/models/SMS');
 const SMSTemplate = require('../server/models/SMSTemplate');
+const MailChimpCampaign = require('../server/models/MailChimpCampaign');
 const Invoice = require('../server/models/Invoice');
 const Reminder = require('../server/models/Reminder');
 const { ServiceCatalog, WorkOrder, Technician } = require('../server/models/Service');
@@ -691,6 +692,68 @@ async function setupDatabase() {
     const promotions = await Promotion.insertMany(samplePromotions);
     console.log(`✅ Created ${promotions.length} sample promotions`);
 
+    // Create sample MailChimp campaigns
+    const sampleMailChimpCampaigns = [
+      {
+        name: 'Welcome Newsletter',
+        subject: 'Welcome to Our Auto Repair Service!',
+        type: 'regular',
+        content: {
+          html: '<h1>Welcome!</h1><p>Thank you for choosing our auto repair service.</p>',
+          plainText: 'Welcome! Thank you for choosing our auto repair service.'
+        },
+        settings: {
+          fromName: 'Auto Repair Service',
+          fromEmail: 'info@autorepair.com',
+          replyTo: 'support@autorepair.com'
+        },
+        recipients: {
+          listId: 'list123456',
+          listName: 'Newsletter Subscribers',
+          recipientCount: 150
+        },
+        status: 'save',
+        analytics: {
+          opens: 45,
+          openRate: 30.0,
+          clicks: 12,
+          clickRate: 8.0
+        },
+        isActive: true,
+        createdBy: superAdmin._id
+      },
+      {
+        name: 'Service Reminder',
+        subject: 'Your Vehicle is Due for Service',
+        type: 'regular',
+        content: {
+          html: '<h1>Service Reminder</h1><p>Your vehicle is due for maintenance. Schedule your appointment today!</p>',
+          plainText: 'Service Reminder: Your vehicle is due for maintenance. Schedule your appointment today!'
+        },
+        settings: {
+          fromName: 'Auto Repair Service',
+          fromEmail: 'reminders@autorepair.com',
+          replyTo: 'appointments@autorepair.com'
+        },
+        recipients: {
+          listId: 'list789012',
+          listName: 'Service Customers',
+          recipientCount: 75
+        },
+        status: 'save',
+        analytics: {
+          opens: 25,
+          openRate: 33.3,
+          clicks: 8,
+          clickRate: 10.7
+        },
+        isActive: true,
+        createdBy: superAdmin._id
+      }
+    ];
+    const mailchimpCampaigns = await MailChimpCampaign.insertMany(sampleMailChimpCampaigns);
+    console.log(`✅ Created ${mailchimpCampaigns.length} sample MailChimp campaigns`);
+
     // Create sample SMS templates
     console.log('📱 Creating sample SMS templates...');
     const sampleSMSTemplates = [
@@ -830,6 +893,7 @@ async function setupDatabase() {
     console.log(`- Vehicles created: ${vehicles.length}`);
     console.log(`- Tasks created: ${tasks.length}`);
     console.log(`- Promotions created: ${promotions.length}`);
+    console.log(`- MailChimp Campaigns created: ${mailchimpCampaigns.length}`);
     console.log(`- SMS Templates created: ${smsTemplates.length}`);
     console.log(`- SMS Records created: ${smsRecords.length}`);
     

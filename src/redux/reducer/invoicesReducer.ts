@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { Invoice } from '../../utils/CustomerTypes'
 import { 
   fetchInvoices, 
   createInvoice, 
@@ -9,9 +8,43 @@ import {
   addPayment, 
   fetchInvoiceStats, 
   fetchPaymentStats, 
-  fetchInvoiceTemplates,
-  markAsOverdue
+  fetchInvoiceTemplates, 
+  markAsOverdue 
 } from '../actions/invoices'
+
+export interface Invoice {
+  _id: string
+  workOrderId?: string
+  customerId: string
+  customerName: string
+  vehicleInfo: string
+  date: string
+  dueDate: string
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+  services: Array<{
+    description: string
+    quantity: number
+    rate: number
+    amount: number
+  }>
+  parts: Array<{
+    description: string
+    quantity: number
+    rate: number
+    amount: number
+  }>
+  laborHours: number
+  laborRate: number
+  subtotal: number
+  tax: number
+  total: number
+  paidAmount: number
+  paymentMethod?: 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'online'
+  paidDate?: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
 
 export interface InvoiceSettings {
   companyInfo: {
@@ -19,82 +52,56 @@ export interface InvoiceSettings {
     address: string
     phone: string
     email: string
-    website?: string
-    taxId?: string
-    license?: string
+    website: string
+    logo?: string
   }
   invoiceDefaults: {
-    taxRate: number
-    paymentTerms: string
-    lateFeePenalty: number
-    currency: string
     invoicePrefix: string
     nextInvoiceNumber: number
-  }
-  paymentMethods: {
-    cash: boolean
-    check: boolean
-    creditCard: boolean
-    debitCard: boolean
-    bankTransfer: boolean
-    other: boolean
+    paymentTerms: number
+    taxRate: number
+    currency: string
   }
   template: {
-    logoUrl?: string
-    primaryColor: string
-    showCompanyLogo: boolean
-    showTaxBreakdown: boolean
-    showLaborDetails: boolean
-    showPartsDetails: boolean
+    headerColor: string
     footerText: string
+    includeLogo: boolean
+    includeTerms: boolean
   }
 }
 
 interface InvoicesState {
   invoices: Invoice[]
-  settings: InvoiceSettings
   loading: boolean
   error: string | null
   stats: any
   paymentStats: any
   templates: any[]
+  settings: InvoiceSettings
 }
 
 const initialState: InvoicesState = {
   invoices: [],
   settings: {
     companyInfo: {
-      name: 'B&B Auto Repair Shop',
-      address: '123 Main Street\nAnytown, ST 12345',
+      name: 'Auto Repair Service',
+      address: '123 Main St, City, State 12345',
       phone: '(555) 123-4567',
-      email: 'info@bbautorepair.com',
-      website: 'https://bbautorepair.com',
-      taxId: '12-3456789',
-      license: 'AR-12345'
+      email: 'info@autorepair.com',
+      website: 'www.autorepair.com'
     },
     invoiceDefaults: {
-      taxRate: 8.0,
-      paymentTerms: 'Net 30',
-      lateFeePenalty: 1.5,
-      currency: 'USD',
-      invoicePrefix: 'INV',
-      nextInvoiceNumber: 1003
-    },
-    paymentMethods: {
-      cash: true,
-      check: true,
-      creditCard: true,
-      debitCard: true,
-      bankTransfer: false,
-      other: true
+      invoicePrefix: 'INV-',
+      nextInvoiceNumber: 1001,
+      paymentTerms: 30,
+      taxRate: 8.5,
+      currency: 'USD'
     },
     template: {
-      primaryColor: '#2563eb',
-      showCompanyLogo: true,
-      showTaxBreakdown: true,
-      showLaborDetails: true,
-      showPartsDetails: true,
-      footerText: 'Thank you for your business! Please remit payment by the due date to avoid late fees.'
+      headerColor: '#3B82F6',
+      footerText: 'Thank you for your business!',
+      includeLogo: true,
+      includeTerms: true
     }
   },
   loading: false,
@@ -121,6 +128,7 @@ const invoicesSlice = createSlice({
         invoice.status = action.payload.status
       }
     },
+    
     recordPayment: (state, action: PayloadAction<{
       invoiceId: string
       amount: number
@@ -142,9 +150,6 @@ const invoicesSlice = createSlice({
         }
       }
     },
-    
-    // Bulk Actions
-
     
     // Settings Actions
     updateInvoiceSettings: (state, action: PayloadAction<Partial<InvoiceSettings>>) => {
@@ -168,10 +173,10 @@ const invoicesSlice = createSlice({
       const { workOrder, customer } = action.payload
       const vehicle = customer.vehicles?.find((v: any) => v.id === workOrder.vehicleId)
       
-             const newInvoice: Invoice = {
-         _id: `${state.settings.invoiceDefaults.invoicePrefix}${state.settings.invoiceDefaults.nextInvoiceNumber.toString().padStart(3, '0')}`,
-         workOrderId: workOrder.id,
-         customerId: customer.id,
+      const newInvoice: Invoice = {
+        _id: `${state.settings.invoiceDefaults.invoicePrefix}${state.settings.invoiceDefaults.nextInvoiceNumber.toString().padStart(3, '0')}`,
+        workOrderId: workOrder.id,
+        customerId: customer.id,
         customerName: customer.name,
         vehicleInfo: vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle',
         date: new Date().toISOString().split('T')[0],
@@ -185,7 +190,9 @@ const invoicesSlice = createSlice({
         tax: (workOrder.subtotal || 0) * (state.settings.invoiceDefaults.taxRate / 100),
         total: workOrder.total || 0,
         paidAmount: 0,
-        notes: workOrder.notes || ''
+        notes: workOrder.notes || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
       
       state.invoices.push(newInvoice)
