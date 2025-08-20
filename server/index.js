@@ -164,7 +164,7 @@ app.use('/api/promotions', authenticateToken, promotionRoutes);
 app.use('/api/reports', authenticateToken, reportRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
-app.use('/api/chat', chatRoutes);
+app.use('/api/chat', authenticateToken, chatRoutes);
 app.use('/api/yellowpages', authenticateToken, yellowPagesRoutes);
 app.use('/api/mailchimp', authenticateToken, mailchimpRoutes);
 app.use('/api/services', authenticateToken, servicesRoutes);
@@ -174,7 +174,7 @@ app.use('/api/reminders', authenticateToken, remindersRoutes);
 app.use('/api/communication-logs', authenticateToken, communicationLogsRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);
-app.use('/api/email', emailRoutes);
+app.use('/api/email', authenticateToken, emailRoutes);
 app.use('/api/sms', authenticateToken, smsRoutes);
 app.use('/api/system-admin', authenticateToken, systemAdminRoutes);
 

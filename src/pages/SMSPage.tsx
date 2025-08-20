@@ -97,7 +97,7 @@ export default function SMSPage() {
         to: sendForm.to,
         message: sendForm.message,
         scheduledAt: sendForm.scheduledAt || undefined,
-        priority: sendForm.priority
+        priority: sendForm.priority as 'low' | 'normal' | 'high'
       });
 
       if (response.success) {
@@ -440,7 +440,7 @@ export default function SMSPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map((template) => (
-                  <div key={template.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div key={template._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex justify-between items-start mb-3">
                       <h4 className="font-medium text-gray-900">{template.name}</h4>
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -490,7 +490,7 @@ export default function SMSPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {smsHistory.map((sms) => (
-                      <tr key={sms.id}>
+                      <tr key={sms._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {sms.to}
                         </td>
@@ -513,7 +513,7 @@ export default function SMSPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(sms.sentAt).toLocaleString()}
+                          {sms.sentAt ? new Date(sms.sentAt).toLocaleString() : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {sms.deliveredAt ? new Date(sms.deliveredAt).toLocaleString() : '-'}

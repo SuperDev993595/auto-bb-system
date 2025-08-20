@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const Chat = require('../models/Chat');
 const User = require('../models/User');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ const messageSchema = Joi.object({
 // @route   GET /api/chat
 // @desc    Get all chats with filtering and pagination
 // @access  Private
-router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -114,7 +114,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
 // @route   GET /api/chat/:id
 // @desc    Get single chat with messages
 // @access  Private
-router.get('/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const chat = await Chat.findById(req.params.id)
       .populate('assignedTo', 'name email')
@@ -215,7 +215,7 @@ router.post('/', async (req, res) => {
 // @route   POST /api/chat/:id/messages
 // @desc    Add message to chat
 // @access  Private
-router.post('/:id/messages', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/:id/messages', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = messageSchema.validate(req.body);
@@ -296,7 +296,7 @@ router.post('/:id/messages', authenticateToken, requireAdmin, async (req, res) =
 // @route   PUT /api/chat/:id/assign
 // @desc    Assign chat to user
 // @access  Private
-router.put('/:id/assign', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id/assign', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const { assignedTo, reason } = req.body;
 
@@ -364,7 +364,7 @@ router.put('/:id/assign', authenticateToken, requireAdmin, async (req, res) => {
 // @route   PUT /api/chat/:id/resolve
 // @desc    Resolve chat
 // @access  Private
-router.put('/:id/resolve', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id/resolve', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const { notes } = req.body;
 
@@ -428,7 +428,7 @@ router.put('/:id/resolve', authenticateToken, requireAdmin, async (req, res) => 
 // @route   PUT /api/chat/:id/close
 // @desc    Close chat
 // @access  Private
-router.put('/:id/close', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/:id/close', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     const chat = await Chat.findById(req.params.id);
     if (!chat) {
