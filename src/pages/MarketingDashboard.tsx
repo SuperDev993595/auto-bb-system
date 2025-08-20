@@ -28,6 +28,7 @@ import {
 } from '../redux/actions/marketing';
 import { MarketingCampaign, CreateCampaignData } from '../services/marketing';
 import CreateCampaignModal from '../components/Marketing/CreateCampaignModal';
+import DeleteCampaignModal from '../components/Marketing/DeleteCampaignModal';
 
 export default function MarketingDashboard() {
   const dispatch = useAppDispatch();
@@ -35,6 +36,8 @@ export default function MarketingDashboard() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<MarketingCampaign | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { campaigns, stats, loading } = useAppSelector(state => state.marketing);
@@ -93,18 +96,28 @@ export default function MarketingDashboard() {
     }
   };
 
-  const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
+  const handleDeleteClick = (campaign: MarketingCampaign) => {
+    setSelectedCampaign(campaign);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteCampaign = async () => {
+    if (!selectedCampaign) return;
 
     try {
-      await dispatch(deleteCampaign(campaignId));
+      setIsSubmitting(true);
+      await dispatch(deleteCampaign(selectedCampaign._id));
       toast.success('Campaign deleted successfully!');
+      setShowDeleteModal(false);
+      setSelectedCampaign(null);
       
       // Refresh data
       dispatch(fetchCampaignStats());
     } catch (error) {
       console.error('Error deleting campaign:', error);
       toast.error('Failed to delete campaign');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,7 +356,7 @@ export default function MarketingDashboard() {
                           <HiPencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteCampaign(campaign._id)}
+                          onClick={() => handleDeleteClick(campaign)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <HiTrash className="w-4 h-4" />
@@ -363,6 +376,18 @@ export default function MarketingDashboard() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleCreateCampaign}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Campaign Modal */}
+      <DeleteCampaignModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedCampaign(null);
+        }}
+        onConfirm={handleDeleteCampaign}
+        campaignName={selectedCampaign?.name}
         isLoading={isSubmitting}
       />
     </div>
