@@ -128,6 +128,11 @@ export default function AddPromotionModal({
       endDate: new Date(formData.endDate).toISOString()
     };
 
+    // Remove empty conditions field
+    if (!promotionData.conditions || promotionData.conditions.trim() === '') {
+      delete promotionData.conditions;
+    }
+
     onSave(promotionData);
   };
 

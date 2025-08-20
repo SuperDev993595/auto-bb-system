@@ -17,7 +17,7 @@ const promotionSchema = Joi.object({
   status: Joi.string().valid('active', 'scheduled', 'ended', 'paused').default('scheduled'),
   targetAudience: Joi.string().required(),
   maxUsage: Joi.number().min(1).optional(),
-  conditions: Joi.string().max(500).optional()
+  conditions: Joi.string().max(500).allow('', null).optional()
 });
 
 const promotionUpdateSchema = Joi.object({
@@ -31,7 +31,7 @@ const promotionUpdateSchema = Joi.object({
   status: Joi.string().valid('active', 'scheduled', 'ended', 'paused').optional(),
   targetAudience: Joi.string().optional(),
   maxUsage: Joi.number().min(1).optional(),
-  conditions: Joi.string().max(500).optional()
+  conditions: Joi.string().max(500).allow('', null).optional()
 });
 
 // @route   GET /api/promotions
