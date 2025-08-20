@@ -88,6 +88,15 @@ export interface Appointment {
     customerName: string
     vehicleId: string
     vehicleInfo: string
+    vehicle?: {
+        id: string
+        year: number
+        make: string
+        model: string
+        vin: string
+        licensePlate: string
+        mileage: number
+    }
     scheduledDate: string
     scheduledTime: string
     estimatedDuration: number // in minutes

@@ -15,12 +15,6 @@ type AppointmentData = {
     vehicleId?: string; // Add vehicle ID for existing vehicles
     vin: string;
     licensePlate: string;
-    address: {
-        street: string;
-        city: string;
-        state: string;
-        zipCode: string;
-    };
     scheduledDate: string;
     scheduledTime: string;
     serviceType: string;
@@ -32,6 +26,9 @@ type AppointmentData = {
     technicianName?: string;
     customerType: 'existing' | 'new';
     existingCustomerId?: string;
+    // Add these fields for form handling
+    date?: string;
+    time?: string;
 };
 
 type Vehicle = {
@@ -94,12 +91,6 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         vehicleId: "",
         vin: "",
         licensePlate: "",
-        address: {
-            street: "",
-            city: "",
-            state: "",
-            zipCode: ""
-        },
         scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
         scheduledTime: selectedTime || "09:00",
         serviceType: "",
@@ -110,11 +101,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         technicianId: "",
         technicianName: "",
         customerType: 'new',
-        existingCustomerId: ""
+        existingCustomerId: "",
+        date: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
+        time: selectedTime || "09:00"
     });
 
     const [errors, setErrors] = useState<Partial<AppointmentData>>({});
-    const [addressError, setAddressError] = useState<string>('');
     const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
     const [filteredVehicles, setFilteredVehicles] = useState<string[]>([]);
     const [isSavingToDatabase, setIsSavingToDatabase] = useState(false);
@@ -135,23 +127,35 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     useEffect(() => {
         if (isEditing && appointment) {
             // Populate form with existing appointment data
-            const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
+            let appointmentDate: Date;
+            
+            // Validate and create date safely
+            if (appointment.scheduledDate && appointment.scheduledTime) {
+                appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
+                // Check if the date is valid
+                if (isNaN(appointmentDate.getTime())) {
+                    // Fallback to current date if invalid
+                    appointmentDate = new Date();
+                    appointmentDate.setDate(appointmentDate.getDate() + 1);
+                    appointmentDate.setHours(9, 0, 0, 0);
+                }
+            } else {
+                // Fallback to tomorrow at 9 AM if date/time is missing
+                appointmentDate = new Date();
+                appointmentDate.setDate(appointmentDate.getDate() + 1);
+                appointmentDate.setHours(9, 0, 0, 0);
+            }
+            
             setForm({
                 customer: appointment.customerName,
                 email: "", // Will be populated from customer data
                 phone: "", // Will be populated from customer data
                 businessName: "",
-                vehicle: appointment.vehicleInfo,
-                vehicleId: appointment.vehicleId,
-                vin: "",
-                licensePlate: "",
-                address: {
-                    street: "",
-                    city: "",
-                    state: "",
-                    zipCode: ""
-                },
-                                scheduledDate: appointmentDate.toISOString().split('T')[0],
+                vehicle: appointment.vehicleInfo || "",
+                vehicleId: appointment.vehicleId || "",
+                vin: appointment.vehicle?.vin || "", // Use vehicle data if available
+                licensePlate: appointment.vehicle?.licensePlate || "", // Use vehicle data if available
+                scheduledDate: appointmentDate.toISOString().split('T')[0],
                 scheduledTime: appointmentDate.toTimeString().slice(0, 5),
                 serviceType: appointment.serviceType,
                 notes: appointment.notes || "",
@@ -161,7 +165,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 technicianId: appointment.technicianId || "",
                 technicianName: appointment.technicianName || "",
                 customerType: 'existing',
-                existingCustomerId: appointment.customerId
+                existingCustomerId: appointment.customerId,
+                date: appointmentDate.toISOString().split('T')[0],
+                time: appointmentDate.toTimeString().slice(0, 5)
             });
         } else {
             // Set date based on selected date from calendar or default to tomorrow
@@ -186,6 +192,16 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         }));
         }
     }, [isEditing, appointment, selectedDate, selectedTime]);
+
+    // Load vehicle information when editing an appointment
+    useEffect(() => {
+        if (isEditing && appointment && appointment.vehicleId) {
+            loadVehicleDetails(appointment.vehicleId);
+        }
+        if (isEditing && appointment && appointment.customerId) {
+            loadCustomerDetails(appointment.customerId);
+        }
+    }, [isEditing, appointment]);
 
     // Load available vehicles and customers
     useEffect(() => {
@@ -263,6 +279,71 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         } catch (error) {
             console.warn('Failed to load customer vehicles:', error);
             setSelectedCustomerVehicles([]);
+        }
+    };
+
+    const loadVehicleDetails = async (vehicleId: string) => {
+        try {
+            // First, try to get the vehicle from the vehicles list
+            const response = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles?limit=1000`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data.vehicles) {
+                    const vehicle = data.data.vehicles.find((v: any) => v.id === vehicleId);
+                    if (vehicle) {
+                        setForm(prev => ({
+                            ...prev,
+                            vin: vehicle.vin || "",
+                            licensePlate: vehicle.licensePlate || ""
+                        }));
+                        return;
+                    }
+                }
+            }
+            
+            // If not found in the list, try to get it directly by ID
+            const directResponse = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles?search=${vehicleId}`, {
+                headers: getAuthHeaders()
+            });
+            if (directResponse.ok) {
+                const directData = await directResponse.json();
+                if (directData.success && directData.data.vehicles) {
+                    const vehicle = directData.data.vehicles.find((v: any) => v.id === vehicleId);
+                    if (vehicle) {
+                        setForm(prev => ({
+                            ...prev,
+                            vin: vehicle.vin || "",
+                            licensePlate: vehicle.licensePlate || ""
+                        }));
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load vehicle details:', error);
+        }
+    };
+
+    const loadCustomerDetails = async (customerId: string) => {
+        try {
+            const response = await fetch(`${API_ENDPOINTS.CUSTOMERS}/${customerId}`, {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data.customer) {
+                    const customer = data.data.customer;
+                    setForm(prev => ({
+                        ...prev,
+                        email: customer.email || "",
+                        phone: customer.phone || "",
+                        businessName: customer.businessName || ""
+                    }));
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load customer details:', error);
         }
     };
 
@@ -435,20 +516,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             newErrors.vin = 'VIN must be between 8 and 17 characters long';
         }
 
-        // Address validation (optional but if any field is provided, validate format)
-        let addressErrorMsg = '';
-        if (form.address.street.trim() || form.address.city.trim() || form.address.state.trim() || form.address.zipCode.trim()) {
-            if (form.address.state.trim() && form.address.state.trim().length !== 2) {
-                addressErrorMsg = 'State must be 2 characters (e.g., CA, NY)';
-            }
-            if (form.address.zipCode.trim() && !/^\d{5}(-\d{4})?$/.test(form.address.zipCode.trim())) {
-                addressErrorMsg = 'ZIP code must be 5 digits or 5+4 format (e.g., 12345 or 12345-6789)';
-            }
-        }
-        setAddressError(addressErrorMsg);
-
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0 && !addressErrorMsg;
+        return Object.keys(newErrors).length === 0;
     };
 
     const saveAppointmentToDatabase = async (appointmentData: AppointmentData) => {
@@ -724,8 +793,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 vehicle: vehicleId,
                 serviceType: mappedServiceType,
                 serviceDescription: appointmentData.serviceType,
-                scheduledDate: appointmentData.date.split('T')[0],
-                scheduledTime: appointmentData.date.split('T')[1]?.substring(0, 5) || appointmentData.time || '09:00',
+                scheduledDate: appointmentData.date?.split('T')[0] || appointmentData.scheduledDate,
+                scheduledTime: appointmentData.date?.split('T')[1]?.substring(0, 5) || appointmentData.time || appointmentData.scheduledTime || '09:00',
                 estimatedDuration: appointmentData.estimatedDuration,
                 assignedTo: assignedTo,
                 priority: appointmentData.priority,
@@ -1325,87 +1394,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                         />
                     </div>
 
-                    {/* Address Section */}
-                    <div className="space-y-3">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Address (Optional)
-                        </label>
-                        
-                        {/* Street Address */}
-                        <div>
-                            <input
-                                name="address.street"
-                                placeholder="Street Address"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                onChange={(e) => {
-                                    setForm(prev => ({
-                                        ...prev,
-                                        address: { ...prev.address, street: e.target.value }
-                                    }));
-                                    if (addressError) setAddressError('');
-                                }}
-                                value={form.address.street}
-                                disabled={isLoading || isSavingToDatabase}
-                            />
-                        </div>
-                        
-                        {/* City, State, ZIP */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <div>
-                                <input
-                                    name="address.city"
-                                    placeholder="City"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onChange={(e) => {
-                                        setForm(prev => ({
-                                            ...prev,
-                                            address: { ...prev.address, city: e.target.value }
-                                        }));
-                                        if (addressError) setAddressError('');
-                                    }}
-                                    value={form.address.city}
-                                    disabled={isLoading || isSavingToDatabase}
-                                />
-                            </div>
-                            <div>
-                                <input
-                                    name="address.state"
-                                    placeholder="State"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onChange={(e) => {
-                                        setForm(prev => ({
-                                            ...prev,
-                                            address: { ...prev.address, state: e.target.value }
-                                        }));
-                                        if (addressError) setAddressError('');
-                                    }}
-                                    value={form.address.state}
-                                    disabled={isLoading || isSavingToDatabase}
-                                    maxLength={2}
-                                />
-                            </div>
-                            <div>
-                                <input
-                                    name="address.zipCode"
-                                    placeholder="ZIP Code"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onChange={(e) => {
-                                        setForm(prev => ({
-                                            ...prev,
-                                            address: { ...prev.address, zipCode: e.target.value }
-                                        }));
-                                        if (addressError) setAddressError('');
-                                    }}
-                                    value={form.address.zipCode}
-                                    disabled={isLoading || isSavingToDatabase}
-                                    maxLength={10}
-                                />
-                            </div>
-                        </div>
-                        {addressError && (
-                            <p className="text-red-500 text-sm mt-1">{addressError}</p>
-                        )}
-                    </div>
+
                     
                     {/* Date & Time */}
                     <div>
