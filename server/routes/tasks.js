@@ -91,7 +91,7 @@ router.get('/', requireAnyAdmin, async (req, res) => {
     const tasks = await Task.find(query)
       .populate('assignedTo', 'name email')
       .populate('assignedBy', 'name')
-      .populate('customer', 'businessName contactPerson.name')
+      .populate('customer', 'businessName name')
       .sort(sort)
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -131,7 +131,7 @@ router.get('/:id', requireAnyAdmin, async (req, res) => {
     const task = await Task.findById(req.params.id)
       .populate('assignedTo', 'name email')
       .populate('assignedBy', 'name')
-      .populate('customer', 'businessName contactPerson.name')
+      .populate('customer', 'businessName name')
       .populate('notes.createdBy', 'name');
 
     if (!task) {
@@ -200,7 +200,7 @@ router.post('/', requireAnyAdmin, async (req, res) => {
     await task.populate('assignedTo', 'name email');
     await task.populate('assignedBy', 'name');
     if (task.customer) {
-      await task.populate('customer', 'businessName contactPerson.name');
+      await task.populate('customer', 'businessName name');
     }
 
     res.status(201).json({
@@ -265,7 +265,7 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
     await task.populate('assignedTo', 'name email');
     await task.populate('assignedBy', 'name');
     if (task.customer) {
-      await task.populate('customer', 'businessName contactPerson.name');
+      await task.populate('customer', 'businessName name');
     }
 
     res.json({
@@ -407,7 +407,7 @@ router.put('/:id/progress', requireAnyAdmin, async (req, res) => {
     await task.populate('assignedTo', 'name email');
     await task.populate('assignedBy', 'name');
     if (task.customer) {
-      await task.populate('customer', 'businessName contactPerson.name');
+      await task.populate('customer', 'businessName name');
     }
 
     res.json({

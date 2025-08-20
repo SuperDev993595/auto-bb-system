@@ -9,7 +9,7 @@ export interface Task {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   assignedTo: string | { _id: string; name: string; email: string };
   assignedBy: string | { _id: string; name: string; email: string };
-  customer?: string | { _id: string; businessName?: string; contactPerson?: { name: string } };
+  customer?: string | { _id: string; businessName?: string; name?: string };
   dueDate: string;
   completedDate?: string;
   progress: number; // 0-100

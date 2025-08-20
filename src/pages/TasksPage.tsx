@@ -71,6 +71,18 @@ export default function TasksPage() {
   }, [statusFilter, priorityFilter, searchTerm, dispatch])
 
   const filteredTasks = tasks || []
+  
+  // Debug: Log task data to see customer information
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      console.log('Tasks with customer data:', tasks.map(task => ({
+        id: task._id,
+        title: task.title,
+        customer: task.customer,
+        customerType: typeof task.customer
+      })))
+    }
+  }, [tasks])
 
   // Handle task creation/editing
   const handleSaveTask = async (taskData: CreateTaskData | UpdateTaskData) => {
@@ -353,16 +365,20 @@ export default function TasksPage() {
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800">{task.title}</h3>
                         <p className="text-gray-600 text-sm mt-1">{task.description}</p>
-                        <div className="flex items-center gap-1 mt-2">
-                          <HiUser className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-500 text-sm">
-                            {task.customer ? (
-                              `Customer: ${typeof task.customer === 'string' ? task.customer : task.customer.businessName || task.customer.contactPerson?.name}`
-                            ) : (
-                              'No customer assigned'
-                            )}
-                          </span>
-                        </div>
+                                                 <div className="flex items-center gap-1 mt-2">
+                           <HiUser className="w-4 h-4 text-gray-400" />
+                           <span className="text-gray-500 text-sm">
+                                                           {task.customer ? (
+                                typeof task.customer === 'string' ? (
+                                  `Customer ID: ${task.customer}`
+                                ) : (
+                                  `Customer: ${task.customer.businessName || task.customer.name || 'Unknown'}`
+                                )
+                              ) : (
+                                'No customer assigned'
+                              )}
+                           </span>
+                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
