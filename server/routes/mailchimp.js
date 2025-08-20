@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const MailChimpCampaign = require('../models/MailChimpCampaign');
 const Customer = require('../models/Customer');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -108,7 +108,7 @@ const campaignUpdateSchema = Joi.object({
 // @route   GET /api/mailchimp/campaigns
 // @desc    Get all MailChimp campaigns with filtering and pagination
 // @access  Private
-router.get('/campaigns', requireAdmin, async (req, res) => {
+router.get('/campaigns', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -180,7 +180,7 @@ router.get('/campaigns', requireAdmin, async (req, res) => {
 // @route   GET /api/mailchimp/campaigns/:id
 // @desc    Get single MailChimp campaign
 // @access  Private
-router.get('/campaigns/:id', requireAdmin, async (req, res) => {
+router.get('/campaigns/:id', requireAnyAdmin, async (req, res) => {
   try {
     const campaign = await MailChimpCampaign.findById(req.params.id)
       .populate('createdBy', 'name email');
@@ -217,7 +217,7 @@ router.get('/campaigns/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/mailchimp/campaigns
 // @desc    Create new MailChimp campaign
 // @access  Private
-router.post('/campaigns', requireAdmin, async (req, res) => {
+router.post('/campaigns', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = campaignSchema.validate(req.body);
@@ -261,7 +261,7 @@ router.post('/campaigns', requireAdmin, async (req, res) => {
 // @route   PUT /api/mailchimp/campaigns/:id
 // @desc    Update MailChimp campaign
 // @access  Private
-router.put('/campaigns/:id', requireAdmin, async (req, res) => {
+router.put('/campaigns/:id', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = campaignUpdateSchema.validate(req.body);
@@ -313,7 +313,7 @@ router.put('/campaigns/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/mailchimp/campaigns/:id
 // @desc    Delete MailChimp campaign
 // @access  Private
-router.delete('/campaigns/:id', requireAdmin, async (req, res) => {
+router.delete('/campaigns/:id', requireAnyAdmin, async (req, res) => {
   try {
     const campaign = await MailChimpCampaign.findById(req.params.id);
     if (!campaign) {
@@ -350,7 +350,7 @@ router.delete('/campaigns/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/mailchimp/campaigns/:id/send
 // @desc    Send MailChimp campaign
 // @access  Private
-router.post('/campaigns/:id/send', requireAdmin, async (req, res) => {
+router.post('/campaigns/:id/send', requireAnyAdmin, async (req, res) => {
   try {
     const campaign = await MailChimpCampaign.findById(req.params.id);
     if (!campaign) {
@@ -391,7 +391,7 @@ router.post('/campaigns/:id/send', requireAdmin, async (req, res) => {
 // @route   GET /api/mailchimp/customers
 // @desc    Get customers for email list
 // @access  Private
-router.get('/customers', requireAdmin, async (req, res) => {
+router.get('/customers', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -450,7 +450,7 @@ router.get('/customers', requireAdmin, async (req, res) => {
 // @route   GET /api/mailchimp/stats/overview
 // @desc    Get MailChimp statistics
 // @access  Private
-router.get('/stats/overview', requireAdmin, async (req, res) => {
+router.get('/stats/overview', requireAnyAdmin, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
