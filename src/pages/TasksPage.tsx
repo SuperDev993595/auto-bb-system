@@ -1,6 +1,9 @@
-import { useState } from 'react'
-import { useAppSelector } from '../redux'
+import { useState, useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '../redux'
 import PageTitle from '../components/Shared/PageTitle'
+import TaskModal from '../components/Tasks/TaskModal'
+import DeleteTaskModal from '../components/Tasks/DeleteTaskModal'
+import TaskStatusUpdate from '../components/Tasks/TaskStatusUpdate'
 import {
   HiPlus,
   HiCheck,
@@ -9,94 +12,167 @@ import {
   HiUser,
   HiCalendar,
   HiFilter,
-  HiSearch
+  HiSearch,
+  HiPencil,
+  HiTrash
 } from 'react-icons/hi'
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'pending' | 'in-progress' | 'completed'
-  assignedTo: string
-  dueDate: string
-  category: 'maintenance' | 'repair' | 'inspection' | 'follow-up' | 'admin'
-  relatedCustomer?: string
-  relatedVehicle?: string
-}
+import { fetchTasks, fetchTaskStats, createTask, updateTask, deleteTask } from '../redux/actions/tasks'
+import { toast } from 'react-hot-toast'
+import { Task, CreateTaskData, UpdateTaskData } from '../services/tasks'
 
 export default function TasksPage() {
+  const dispatch = useAppDispatch()
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Sample tasks for auto repair shop
-  const tasks: Task[] = [
-    {
-      id: '1',
-      title: 'Oil Change Reminder - John Smith',
-      description: '2020 Toyota Camry due for oil change (45,000 miles)',
-      priority: 'medium',
-      status: 'pending',
-      assignedTo: 'Mike Johnson',
-      dueDate: '2025-08-10',
-      category: 'maintenance',
-      relatedCustomer: 'John Smith',
-      relatedVehicle: '2020 Toyota Camry'
-    },
-    {
-      id: '2',
-      title: 'Follow-up: Brake Service',
-      description: 'Check customer satisfaction for brake service completed last week',
-      priority: 'low',
-      status: 'pending',
-      assignedTo: 'Sarah Davis',
-      dueDate: '2025-08-08',
-      category: 'follow-up',
-      relatedCustomer: 'Lisa Brown'
-    },
-    {
-      id: '3',
-      title: 'Inventory Restock',
-      description: 'Order brake pads - stock running low (5 units remaining)',
-      priority: 'high',
-      status: 'in-progress',
-      assignedTo: 'Tom Wilson',
-      dueDate: '2025-08-06',
-      category: 'admin'
-    },
-    {
-      id: '4',
-      title: 'Annual Inspection Due',
-      description: 'Schedule annual inspection for fleet vehicles',
-      priority: 'urgent',
-      status: 'pending',
-      assignedTo: 'Mike Johnson',
-      dueDate: '2025-08-05',
-      category: 'inspection'
-    },
-    {
-      id: '5',
-      title: 'Engine Diagnostic Complete',
-      description: 'Completed diagnostic on 2018 Ford Focus - customer notified',
-      priority: 'medium',
-      status: 'completed',
-      assignedTo: 'Tom Wilson',
-      dueDate: '2025-08-03',
-      category: 'repair',
-      relatedCustomer: 'Mike Rodriguez'
+  // Modal states
+  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { list: tasks, loading, stats } = useAppSelector(state => state.tasks)
+
+  // Fetch tasks and stats on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        await Promise.all([
+          dispatch(fetchTasks({
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+            search: searchTerm || undefined
+          })),
+          dispatch(fetchTaskStats())
+        ])
+      } catch (error) {
+        console.error('Error loading tasks:', error)
+        toast.error('Failed to load tasks')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesStatus = statusFilter === 'all' || task.status === statusFilter
-    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesStatus && matchesPriority && matchesSearch
-  })
+    loadData()
+  }, [dispatch])
 
-  const getPriorityColor = (priority: Task['priority']) => {
+  // Refetch tasks when filters change
+  useEffect(() => {
+    if (!isLoading) {
+      dispatch(fetchTasks({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        search: searchTerm || undefined
+      }))
+    }
+  }, [statusFilter, priorityFilter, searchTerm, dispatch])
+
+  const filteredTasks = tasks || []
+
+  // Handle task creation/editing
+  const handleSaveTask = async (taskData: CreateTaskData | UpdateTaskData) => {
+    try {
+      setIsSubmitting(true)
+      
+      if (selectedTask) {
+        // Update existing task
+        await dispatch(updateTask({ id: selectedTask._id, taskData: taskData as UpdateTaskData }))
+        toast.success('Task updated successfully!')
+      } else {
+        // Create new task
+        await dispatch(createTask(taskData as CreateTaskData))
+        toast.success('Task created successfully!')
+      }
+      
+      setShowTaskModal(false)
+      setSelectedTask(null)
+      
+      // Refresh tasks
+      dispatch(fetchTasks({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchTaskStats())
+      
+    } catch (error) {
+      console.error('Error saving task:', error)
+      toast.error('Failed to save task')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle task deletion
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return
+    
+    try {
+      setIsSubmitting(true)
+      await dispatch(deleteTask(selectedTask._id))
+      toast.success('Task deleted successfully!')
+      
+      setShowDeleteModal(false)
+      setSelectedTask(null)
+      
+      // Refresh tasks
+      dispatch(fetchTasks({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchTaskStats())
+      
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      toast.error('Failed to delete task')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle status update
+  const handleStatusUpdate = async (taskId: string, status: Task['status']) => {
+    try {
+      await dispatch(updateTask({ id: taskId, taskData: { status } }))
+      toast.success('Task status updated successfully!')
+      
+      // Refresh tasks
+      dispatch(fetchTasks({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchTaskStats())
+      
+    } catch (error) {
+      console.error('Error updating task status:', error)
+      toast.error('Failed to update task status')
+    }
+  }
+
+  // Open edit modal
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task)
+    setShowTaskModal(true)
+  }
+
+  // Open delete modal
+  const handleDeleteClick = (task: Task) => {
+    setSelectedTask(task)
+    setShowDeleteModal(true)
+  }
+
+  // Open create modal
+  const handleAddTask = () => {
+    setSelectedTask(null)
+    setShowTaskModal(true)
+  }
+
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200'
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200'
@@ -106,31 +182,55 @@ export default function TasksPage() {
     }
   }
 
-  const getStatusColor = (status: Task['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800'
-      case 'in-progress': return 'bg-blue-100 text-blue-800'
+      case 'in_progress': return 'bg-blue-100 text-blue-800'
       case 'pending': return 'bg-gray-100 text-gray-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getCategoryIcon = (category: Task['category']) => {
-    switch (category) {
+  const getCategoryIcon = (type: string) => {
+    switch (type) {
       case 'maintenance': return <HiClock className="w-4 h-4" />
       case 'repair': return <HiExclamation className="w-4 h-4" />
       case 'inspection': return <HiCheck className="w-4 h-4" />
-      case 'follow-up': return <HiUser className="w-4 h-4" />
-      case 'admin': return <HiCalendar className="w-4 h-4" />
+      case 'follow_up': return <HiUser className="w-4 h-4" />
+      case 'marketing': return <HiCalendar className="w-4 h-4" />
+      case 'sales': return <HiCalendar className="w-4 h-4" />
+      case 'collections': return <HiCalendar className="w-4 h-4" />
+      case 'appointments': return <HiCalendar className="w-4 h-4" />
+      case 'research': return <HiExclamation className="w-4 h-4" />
+      case 'other': return <HiClock className="w-4 h-4" />
       default: return <HiCalendar className="w-4 h-4" />
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+          <p className="text-gray-600">Loading tasks...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <PageTitle title="Task Management" />
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddTask}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Add Task
         </button>
@@ -142,7 +242,7 @@ export default function TasksPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Tasks</p>
-              <p className="text-2xl font-bold text-gray-900">{tasks.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.overview?.totalTasks || tasks?.length || 0}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <HiCalendar className="w-6 h-6 text-blue-600" />
@@ -155,7 +255,7 @@ export default function TasksPage() {
             <div>
               <p className="text-sm text-gray-600">Pending</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {tasks.filter(t => t.status === 'pending').length}
+                {stats?.overview?.pendingTasks || filteredTasks.filter(t => t.status === 'pending').length}
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
@@ -169,7 +269,7 @@ export default function TasksPage() {
             <div>
               <p className="text-sm text-gray-600">In Progress</p>
               <p className="text-2xl font-bold text-blue-600">
-                {tasks.filter(t => t.status === 'in-progress').length}
+                {stats?.overview?.inProgressTasks || filteredTasks.filter(t => t.status === 'in_progress').length}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -183,7 +283,7 @@ export default function TasksPage() {
             <div>
               <p className="text-sm text-gray-600">Completed</p>
               <p className="text-2xl font-bold text-green-600">
-                {tasks.filter(t => t.status === 'completed').length}
+                {stats?.overview?.completedTasks || filteredTasks.filter(t => t.status === 'completed').length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -214,8 +314,9 @@ export default function TasksPage() {
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
+            <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
           </select>
           
           <select
@@ -235,50 +336,79 @@ export default function TasksPage() {
       {/* Tasks List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-6">
-          <div className="space-y-4">
-            {filteredTasks.map(task => (
-              <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">
-                      {getCategoryIcon(task.category)}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 animate-spin text-blue-600 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <span className="ml-2 text-gray-600">Loading tasks...</span>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredTasks.map(task => (
+                <div key={task._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">
+                        {getCategoryIcon(task.type)}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">{task.title}</h3>
+                        <p className="text-gray-600 text-sm mt-1">{task.description}</p>
+                        {task.customer && (
+                          <p className="text-blue-600 text-sm mt-1">
+                            Customer: {typeof task.customer === 'string' ? task.customer : task.customer.businessName || task.customer.contactPerson?.name}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">{task.title}</h3>
-                      <p className="text-gray-600 text-sm mt-1">{task.description}</p>
-                      {task.relatedCustomer && (
-                        <p className="text-blue-600 text-sm mt-1">
-                          Customer: {task.relatedCustomer}
-                          {task.relatedVehicle && ` | Vehicle: ${task.relatedVehicle}`}
-                        </p>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority)}`}>
+                        {task.priority}
+                      </span>
+                      <TaskStatusUpdate
+                        task={task}
+                        onStatusUpdate={handleStatusUpdate}
+                        isLoading={isSubmitting}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <div className="flex items-center gap-4">
+                      <span>Assigned to: <strong>{typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo.name}</strong></span>
+                      <span className="capitalize">Type: <strong>{task.type.replace('-', ' ')}</strong></span>
+                      {task.progress !== undefined && (
+                        <span>Progress: <strong>{task.progress}%</strong></span>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                      {task.status.replace('-', ' ')}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <HiCalendar className="w-4 h-4" />
+                        <span>Due: {formatDate(task.dueDate)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditTask(task)}
+                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Edit task"
+                        >
+                          <HiPencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(task)}
+                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          title="Delete task"
+                        >
+                          <HiTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <div className="flex items-center gap-4">
-                    <span>Assigned to: <strong>{task.assignedTo}</strong></span>
-                    <span className="capitalize">Category: <strong>{task.category}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <HiCalendar className="w-4 h-4" />
-                    <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           
-          {filteredTasks.length === 0 && (
+          {!loading && filteredTasks.length === 0 && (
             <div className="text-center py-12">
               <HiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-500 mb-2">No tasks found</h3>
@@ -287,6 +417,30 @@ export default function TasksPage() {
           )}
         </div>
       </div>
+
+      {/* Task Modal */}
+      <TaskModal
+        isOpen={showTaskModal}
+        onClose={() => {
+          setShowTaskModal(false)
+          setSelectedTask(null)
+        }}
+        onSave={handleSaveTask}
+        task={selectedTask}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteTaskModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedTask(null)
+        }}
+        onConfirm={handleDeleteTask}
+        taskTitle={selectedTask?.title || ''}
+        isLoading={isSubmitting}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const Task = require('../models/Task');
 const User = require('../models/User');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAnyAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -40,7 +40,7 @@ const taskUpdateSchema = Joi.object({
 // @route   GET /api/tasks
 // @desc    Get all tasks with filtering and pagination
 // @access  Private
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -61,6 +61,11 @@ router.get('/', requireAdmin, async (req, res) => {
     // Filter by assigned user (Sub Admins can only see their own tasks)
     if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
+    } else if (req.user.role === 'super_admin') {
+      // Super admins can see all tasks, but can filter by assignedTo
+      if (assignedTo) {
+        query.assignedTo = assignedTo;
+      }
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
     }
@@ -120,7 +125,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // @route   GET /api/tasks/:id
 // @desc    Get single task by ID
 // @access  Private
-router.get('/:id', requireAdmin, async (req, res) => {
+router.get('/:id', requireAnyAdmin, async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
       .populate('assignedTo', 'name email')
@@ -142,6 +147,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
         message: 'Access denied'
       });
     }
+    // Super admins have access to all tasks
 
     res.json({
       success: true,
@@ -160,7 +166,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/tasks
 // @desc    Create new task (Super Admin only)
 // @access  Private (Super Admin)
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = taskSchema.validate(req.body);
@@ -214,7 +220,7 @@ router.post('/', requireAdmin, async (req, res) => {
 // @route   PUT /api/tasks/:id
 // @desc    Update task
 // @access  Private
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireAnyAdmin, async (req, res) => {
   try {
     // Validate input
     const { error, value } = taskUpdateSchema.validate(req.body);
@@ -240,6 +246,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
         message: 'Access denied'
       });
     }
+    // Super admins have access to all tasks
 
     // Update task
     Object.assign(task, value);
@@ -278,7 +285,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/tasks/:id
 // @desc    Delete task (Super Admin only)
 // @access  Private (Super Admin)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requireAnyAdmin, async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) {
@@ -307,7 +314,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/tasks/:id/notes
 // @desc    Add note to task
 // @access  Private
-router.post('/:id/notes', requireAdmin, async (req, res) => {
+router.post('/:id/notes', requireAnyAdmin, async (req, res) => {
   try {
     const { content } = req.body;
 
@@ -333,6 +340,7 @@ router.post('/:id/notes', requireAdmin, async (req, res) => {
         message: 'Access denied'
       });
     }
+    // Super admins have access to all tasks
 
     // Add note
     await task.addNote(content, req.user.id);
@@ -363,7 +371,7 @@ router.post('/:id/notes', requireAdmin, async (req, res) => {
 // @route   PUT /api/tasks/:id/progress
 // @desc    Update task progress
 // @access  Private
-router.put('/:id/progress', requireAdmin, async (req, res) => {
+router.put('/:id/progress', requireAnyAdmin, async (req, res) => {
   try {
     const { progress } = req.body;
 
@@ -389,6 +397,7 @@ router.put('/:id/progress', requireAdmin, async (req, res) => {
         message: 'Access denied'
       });
     }
+    // Super admins have access to all tasks
 
     // Update progress
     await task.updateProgress(progress);
@@ -418,7 +427,7 @@ router.put('/:id/progress', requireAdmin, async (req, res) => {
 // @route   GET /api/tasks/stats/overview
 // @desc    Get task statistics
 // @access  Private
-router.get('/stats/overview', requireAdmin, async (req, res) => {
+router.get('/stats/overview', requireAnyAdmin, async (req, res) => {
   try {
     const { assignedTo } = req.query;
     
@@ -426,6 +435,11 @@ router.get('/stats/overview', requireAdmin, async (req, res) => {
     const query = {};
     if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
+    } else if (req.user.role === 'super_admin') {
+      // Super admins can see all stats, but can filter by assignedTo
+      if (assignedTo) {
+        query.assignedTo = assignedTo;
+      }
     } else if (assignedTo) {
       query.assignedTo = assignedTo;
     }
@@ -510,7 +524,7 @@ router.get('/stats/overview', requireAdmin, async (req, res) => {
 // @route   GET /api/tasks/overdue
 // @desc    Get overdue tasks
 // @access  Private
-router.get('/overdue', requireAdmin, async (req, res) => {
+router.get('/overdue', requireAnyAdmin, async (req, res) => {
   try {
     const query = {
       dueDate: { $lt: new Date() },
@@ -520,6 +534,8 @@ router.get('/overdue', requireAdmin, async (req, res) => {
     // Filter by assigned user
     if (req.user.role === 'admin') {
       query.assignedTo = req.user.id;
+    } else if (req.user.role === 'super_admin') {
+      // Super admins can see all overdue tasks
     }
 
     const overdueTasks = await Task.find(query)

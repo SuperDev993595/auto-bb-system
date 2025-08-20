@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import appointmentsReducer from "./reducer/appointmentsReducer";
-import tasksReducer from "./reducer/tasksReducer";
+import tasksReducer from "./actions/tasks";
 import customersReducer from "./reducer/customersReducer";
 import servicesReducer from "./actions/services";
 import remindersReducer from "./reducer/remindersReducer";

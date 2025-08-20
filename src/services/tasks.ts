@@ -4,12 +4,12 @@ export interface Task {
   _id: string;
   title: string;
   description: string;
-  type: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow-up' | 'maintenance';
+  type: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow_up' | 'research' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  assignedTo: string;
-  assignedBy: string;
-  customer?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  assignedTo: string | { _id: string; name: string; email: string };
+  assignedBy: string | { _id: string; name: string; email: string };
+  customer?: string | { _id: string; businessName?: string; contactPerson?: { name: string } };
   dueDate: string;
   completedDate?: string;
   progress: number; // 0-100
@@ -33,20 +33,19 @@ export interface Task {
 export interface CreateTaskData {
   title: string;
   description: string;
-  type: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow-up' | 'maintenance';
+  type: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow_up' | 'research' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assignedTo: string;
   customer?: string;
   dueDate: string;
-  notes?: string;
 }
 
 export interface UpdateTaskData {
   title?: string;
   description?: string;
-  type?: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow-up' | 'maintenance';
+  type?: 'marketing' | 'sales' | 'collections' | 'appointments' | 'follow_up' | 'research' | 'other';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   assignedTo?: string;
   customer?: string;
   dueDate?: string;
@@ -69,25 +68,21 @@ export interface TaskFilters {
 }
 
 export interface TaskStats {
-  totalTasks: number;
-  pendingTasks: number;
-  inProgressTasks: number;
-  completedTasks: number;
-  overdueTasks: number;
-  tasksByType: {
-    marketing: number;
-    sales: number;
-    collections: number;
-    appointments: number;
-    followUp: number;
-    maintenance: number;
+  overview: {
+    totalTasks: number;
+    pendingTasks: number;
+    inProgressTasks: number;
+    completedTasks: number;
+    overdueTasks: number;
   };
-  tasksByPriority: {
-    low: number;
-    medium: number;
-    high: number;
-    urgent: number;
-  };
+  typeStats: Array<{
+    _id: string;
+    count: number;
+  }>;
+  priorityStats: Array<{
+    _id: string;
+    count: number;
+  }>;
 }
 
 export interface DailyProgress {
@@ -185,7 +180,7 @@ export const taskService = {
     message: string;
     data: { task: Task };
   }> {
-    const response = await apiResponse(api.patch(`/tasks/${id}/status`, { status }));
+    const response = await apiResponse(api.put(`/tasks/${id}`, { status }));
     return response;
   },
 
@@ -195,7 +190,7 @@ export const taskService = {
     message: string;
     data: { task: Task };
   }> {
-    const response = await apiResponse(api.patch(`/tasks/${id}/progress`, { progress }));
+    const response = await apiResponse(api.put(`/tasks/${id}`, { progress }));
     return response;
   },
 
@@ -214,7 +209,7 @@ export const taskService = {
     success: boolean;
     data: TaskStats;
   }> {
-    const response = await apiResponse(api.get('/tasks/stats'));
+    const response = await apiResponse(api.get('/tasks/stats/overview'));
     return response;
   },
 
