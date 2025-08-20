@@ -18,6 +18,7 @@ type AppointmentData = {
     scheduledDate: string;
     scheduledTime: string;
     serviceType: string;
+    serviceTypeId?: string; // Add service type ObjectId
     notes: string;
     priority: 'low' | 'medium' | 'high' | 'urgent';
     estimatedDuration: number;
@@ -50,11 +51,10 @@ type Props = {
     selectedTime?: string;
 };
 
-// Service types and vehicle makes will be loaded from database
-const [serviceTypes, setServiceTypes] = useState<Array<{name: string, category: string, estimatedDuration: number}>>([]);
-const [vehicleMakes, setVehicleMakes] = useState<string[]>([]);
-
 export default function AppointmentModal({ onClose, onSave, isLoading = false, appointment, isEditing = false, selectedDate, selectedTime }: Props) {
+    // Service types and vehicle makes will be loaded from database
+    const [serviceTypes, setServiceTypes] = useState<Array<{_id?: string, id?: string, name: string, category: string, estimatedDuration: number}>>([]);
+    const [vehicleMakes, setVehicleMakes] = useState<string[]>([]);
     const [form, setForm] = useState<AppointmentData>({
         customer: "",
         email: "",
@@ -67,6 +67,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         scheduledDate: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
         scheduledTime: selectedTime || "09:00",
         serviceType: "",
+        serviceTypeId: "",
         notes: "",
         priority: 'medium',
         estimatedDuration: 60,
@@ -96,28 +97,91 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     
     const vehicleInputRef = useRef<HTMLInputElement>(null);
 
+
+
     // Set default date to tomorrow at 9 AM or populate form for editing
     useEffect(() => {
         if (isEditing && appointment) {
             // Populate form with existing appointment data
+            console.log('Editing appointment data:', appointment);
+            console.log('Appointment scheduledDate:', appointment.scheduledDate);
+            console.log('Appointment scheduledTime:', appointment.scheduledTime);
+            console.log('Appointment date field:', (appointment as any).date);
+            console.log('Appointment time field:', (appointment as any).time);
             let appointmentDate: Date;
+            let dateString = '';
+            let timeString = '';
             
             // Validate and create date safely
-            if (appointment.scheduledDate && appointment.scheduledTime) {
-                appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
+            // Check for different possible date/time field names
+            const appointmentDateField = appointment.scheduledDate || (appointment as any).date;
+            const appointmentTimeField = appointment.scheduledTime || (appointment as any).time;
+            
+            if (appointmentDateField && appointmentTimeField) {
+                // Ensure time is in HH:MM format
+                timeString = appointmentTimeField;
+                if (timeString.includes(':')) {
+                    const timeParts = timeString.split(':');
+                    if (timeParts.length >= 2) {
+                        timeString = `${timeParts[0].padStart(2, '0')}:${timeParts[1].padStart(2, '0')}`;
+                    }
+                }
+                
+                // Handle different date formats
+                dateString = appointmentDateField;
+                // If date is in ISO format with time, extract just the date part
+                if (dateString.includes('T')) {
+                    dateString = dateString.split('T')[0];
+                }
+                
+                // Try to create date from appointment data
+                appointmentDate = new Date(`${dateString}T${timeString}`);
+                
                 // Check if the date is valid
                 if (isNaN(appointmentDate.getTime())) {
+                    console.warn('Invalid appointment date, using fallback:', {
+                        scheduledDate: appointment.scheduledDate,
+                        scheduledTime: appointment.scheduledTime,
+                        processedDate: dateString,
+                        processedTime: timeString,
+                        combined: `${dateString}T${timeString}`
+                    });
                     // Fallback to current date if invalid
                     appointmentDate = new Date();
                     appointmentDate.setDate(appointmentDate.getDate() + 1);
                     appointmentDate.setHours(9, 0, 0, 0);
                 }
             } else {
+                console.warn('Missing appointment date/time, using fallback');
                 // Fallback to tomorrow at 9 AM if date/time is missing
                 appointmentDate = new Date();
                 appointmentDate.setDate(appointmentDate.getDate() + 1);
                 appointmentDate.setHours(9, 0, 0, 0);
             }
+            
+            // Ensure time is in HH:MM format for the form
+            timeString = appointment.scheduledTime || '09:00';
+            if (timeString.includes(':')) {
+                const timeParts = timeString.split(':');
+                if (timeParts.length >= 2) {
+                    timeString = `${timeParts[0].padStart(2, '0')}:${timeParts[1].padStart(2, '0')}`;
+                }
+            }
+            
+            console.log('Setting form with appointment data:', {
+                originalDate: appointment.scheduledDate,
+                originalTime: appointment.scheduledTime,
+                alternativeDate: (appointment as any).date,
+                alternativeTime: (appointment as any).time,
+                processedDate: dateString || appointmentDate.toISOString().split('T')[0],
+                processedTime: timeString,
+                technicianId: appointment.technicianId,
+                technicianObject: appointment.technician,
+                technicianIdFromObject: appointment.technician?._id,
+                technicianName: appointment.technicianName,
+                technicianNameFromObject: appointment.technician?.name,
+                appointment: appointment
+            });
             
             setForm({
                 customer: appointment.customerName,
@@ -128,20 +192,24 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 vehicleId: appointment.vehicleId || "",
                 vin: appointment.vehicle?.vin || "", // Use vehicle data if available
                 licensePlate: appointment.vehicle?.licensePlate || "", // Use vehicle data if available
-                scheduledDate: appointmentDate.toISOString().split('T')[0],
-                scheduledTime: appointmentDate.toTimeString().slice(0, 5),
-                serviceType: appointment.serviceType,
+                scheduledDate: dateString || appointmentDate.toISOString().split('T')[0],
+                scheduledTime: timeString,
+                serviceType: typeof appointment.serviceType === 'object' ? appointment.serviceType.name : appointment.serviceType,
+                serviceTypeId: typeof appointment.serviceType === 'object' ? appointment.serviceType._id : '',
                 notes: appointment.notes || "",
                 priority: appointment.priority,
                 estimatedDuration: appointment.estimatedDuration,
                 status: appointment.status,
-                technicianId: appointment.technicianId || "",
-                technicianName: appointment.technicianName || "",
+                technicianId: appointment.technicianId || appointment.technician?._id || (appointment as any).technician || "",
+                technicianName: appointment.technicianName || appointment.technician?.name || (appointment as any).technicianName || "",
                 customerType: 'existing',
                 existingCustomerId: appointment.customerId,
-                date: appointmentDate.toISOString().split('T')[0],
-                time: appointmentDate.toTimeString().slice(0, 5)
+                date: dateString || appointmentDate.toISOString().split('T')[0],
+                time: timeString
             });
+            
+            // Set useExistingVehicle to true when editing an existing appointment
+            setUseExistingVehicle(true);
         } else {
             // Set date based on selected date from calendar or default to tomorrow
             let targetDate: Date;
@@ -166,6 +234,17 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         }
     }, [isEditing, appointment, selectedDate, selectedTime]);
 
+    // Debug: Log form state changes
+    useEffect(() => {
+        if (isEditing) {
+            console.log('Form state updated:', {
+                technicianId: form.technicianId,
+                technicianName: form.technicianName,
+                techniciansCount: technicians.length
+            });
+        }
+    }, [form.technicianId, form.technicianName, technicians.length, isEditing]);
+
     // Load vehicle information when editing an appointment
     useEffect(() => {
         if (isEditing && appointment && appointment.vehicleId) {
@@ -173,6 +252,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         }
         if (isEditing && appointment && appointment.customerId) {
             loadCustomerDetails(appointment.customerId);
+            loadCustomerVehicles(appointment.customerId);
         }
     }, [isEditing, appointment]);
 
@@ -188,25 +268,57 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     useEffect(() => {
         const loadTechnicians = async () => {
             try {
-                const response = await fetch(`${API_ENDPOINTS.CUSTOMERS}/technicians`, {
-                    headers: getAuthHeaders()
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        setTechnicians(data.data.technicians || []);
+                let allTechnicians = [];
+                
+                if (isEditing) {
+                    // When editing, load both active and inactive technicians to show the current assignment
+                    const [activeResponse, inactiveResponse] = await Promise.all([
+                        fetch(`${API_ENDPOINTS.CUSTOMERS}/technicians?isActive=true`, {
+                            headers: getAuthHeaders()
+                        }),
+                        fetch(`${API_ENDPOINTS.CUSTOMERS}/technicians?isActive=false`, {
+                            headers: getAuthHeaders()
+                        })
+                    ]);
+                    
+                    if (activeResponse.ok) {
+                        const activeData = await activeResponse.json();
+                        if (activeData.success) {
+                            allTechnicians.push(...(activeData.data.technicians || []));
+                        }
+                    }
+                    
+                    if (inactiveResponse.ok) {
+                        const inactiveData = await inactiveResponse.json();
+                        if (inactiveData.success) {
+                            allTechnicians.push(...(inactiveData.data.technicians || []));
+                        }
+                    }
+                } else {
+                    // For new appointments, only load active technicians
+                    const response = await fetch(`${API_ENDPOINTS.CUSTOMERS}/technicians`, {
+                        headers: getAuthHeaders()
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            allTechnicians = data.data.technicians || [];
+                        }
                     }
                 }
+                
+                console.log('Loaded technicians:', allTechnicians);
+                setTechnicians(allTechnicians);
+                
             } catch (error) {
                 console.error('Error loading technicians:', error);
                 setTechnicians([]);
             }
         };
 
-        if (technicians.length === 0) {
-            loadTechnicians();
-        }
-    }, [technicians.length]);
+        // Always load technicians when modal opens, especially for editing
+        loadTechnicians();
+    }, [isEditing, appointment]);
 
     const loadAvailableVehicles = async () => {
         try {
@@ -248,8 +360,11 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
+                    console.log('Loaded service types:', data.data);
                     setServiceTypes(data.data || []);
                 }
+            } else {
+                console.error('Failed to load service types:', response.status, response.statusText);
             }
         } catch (error) {
             console.warn('Failed to load service types:', error);
@@ -411,7 +526,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         } else {
             setShowVehicleSuggestions(false);
         }
-    }, [form.vehicle, useExistingVehicle]);
+    }, [form.vehicle, useExistingVehicle, vehicleMakes]);
 
 
 
@@ -423,8 +538,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             const [datePart, timePart] = value.split('T');
             setForm(prev => ({ 
                 ...prev, 
-                date: datePart,
-                time: timePart || '09:00'
+                scheduledDate: datePart,
+                scheduledTime: timePart || '09:00'
             }));
         }
         // Handle number fields
@@ -499,10 +614,10 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             }
         }
 
-        if (!form.date) {
+        if (!form.scheduledDate) {
             newErrors.date = 'Appointment date and time is required';
         } else {
-            const selectedDate = new Date(form.date);
+            const selectedDate = new Date(`${form.scheduledDate}T${form.scheduledTime}`);
             const now = new Date();
             if (selectedDate < now) {
                 newErrors.date = 'Please select a future date and time';
@@ -773,31 +888,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 }
             }
 
-            // Map service type to backend enum
-            const serviceTypeMap: { [key: string]: string } = {
-                'Oil Change': 'oil_change',
-                'Brake Inspection': 'brake_service',
-                'Tire Rotation': 'tire_rotation',
-                'Transmission Service': 'transmission_service',
-                'Battery Replacement': 'maintenance',
-                'Air Filter Replacement': 'maintenance',
-                'Spark Plug Replacement': 'maintenance',
-                'Wheel Alignment': 'maintenance',
-                'AC Service': 'maintenance',
-                'Engine Tune-up': 'engine_repair',
-                'Fuel Filter Replacement': 'maintenance',
-                'Timing Belt Replacement': 'engine_repair',
-                'Water Pump Replacement': 'engine_repair',
-                'Radiator Flush': 'maintenance',
-                'Power Steering Fluid': 'maintenance',
-                'Brake Fluid Change': 'brake_service',
-                'Coolant Flush': 'maintenance',
-                'Exhaust System Repair': 'engine_repair',
-                'Suspension Repair': 'engine_repair',
-                'Electrical Diagnostics': 'electrical_repair'
-            };
-
-            const mappedServiceType = serviceTypeMap[appointmentData.serviceType] || 'other';
+            // Use the service type ObjectId from the form
+            const serviceTypeId = appointmentData.serviceTypeId;
+            
+            if (!serviceTypeId) {
+                throw new Error('Please select a valid service type');
+            }
 
             // Get current user ID from auth service
             const currentUser = authService.getCurrentUserFromStorage();
@@ -818,17 +914,21 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
             // Prepare appointment data
             const appointmentPayload: any = {
-                customer: customerId,
                 vehicle: vehicleId,
-                serviceType: mappedServiceType,
+                serviceType: serviceTypeId,
                 serviceDescription: appointmentData.serviceType,
-                scheduledDate: appointmentData.date?.split('T')[0] || appointmentData.scheduledDate,
-                scheduledTime: appointmentData.date?.split('T')[1]?.substring(0, 5) || appointmentData.time || appointmentData.scheduledTime || '09:00',
+                scheduledDate: appointmentData.scheduledDate,
+                scheduledTime: appointmentData.scheduledTime,
                 estimatedDuration: appointmentData.estimatedDuration,
                 assignedTo: assignedTo,
                 priority: appointmentData.priority,
                 status: appointmentData.status
             };
+
+            // Only include customer field when creating new appointments
+            if (!isEditing || !appointment?.id) {
+                appointmentPayload.customer = customerId;
+            }
 
             // Add technician if selected
             if (appointmentData.technicianId && appointmentData.technicianId.trim()) {
@@ -843,8 +943,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
             console.log('Sending appointment data:', appointmentPayload);
 
-            const response = await fetch(API_ENDPOINTS.APPOINTMENTS, {
-                method: 'POST',
+            const url = isEditing && appointment?.id 
+                ? `${API_ENDPOINTS.APPOINTMENTS}/${appointment.id}`
+                : API_ENDPOINTS.APPOINTMENTS;
+                
+            const response = await fetch(url, {
+                method: isEditing && appointment?.id ? 'PUT' : 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(appointmentPayload)
             });
@@ -862,7 +966,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             console.log('Appointment saved successfully:', savedAppointment);
             
             // Show appropriate success message
-            if (shouldCreateNewVehicle) {
+            if (isEditing && appointment?.id) {
+                toast.success('Appointment updated successfully!');
+            } else if (shouldCreateNewVehicle) {
                 toast.success('Appointment saved and new vehicle created successfully!');
             } else {
                 toast.success('Appointment saved to database successfully!');
@@ -925,7 +1031,10 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             // Try to save to database first
             try {
                 const savedAppointment = await saveAppointmentToDatabase(form);
-                toast.success('Appointment created and saved to database!');
+                const message = isEditing && appointment?.id 
+                    ? 'Appointment updated and saved to database!' 
+                    : 'Appointment created and saved to database!';
+                toast.success(message);
                 
                 // Pass the saved appointment data (with real database ID) to the calendar
                 onSave(savedAppointment.data.appointment);
@@ -1258,10 +1367,10 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
                                 )}
                             </div>
-                        )}
-                    </div>
+                                                 )}
+                     </div>
 
-                    {/* Vehicle Information */}
+
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">Vehicle Information</h3>
                         
@@ -1391,46 +1500,50 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 )}
                             </div>
                         )}
-                    </div>
 
-                    {/* VIN Number */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            VIN Number (Optional)
-                        </label>
-                        <input
-                            name="vin"
-                            placeholder="8-17 character VIN (e.g., 1HGBH41JXMN109186)"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={handleChange}
-                            value={form.vin}
-                            disabled={isLoading || isSavingToDatabase}
-                            maxLength={17}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                            Vehicle Identification Number - found on dashboard, door jamb, or registration. Must be 8-17 characters. Leave blank to generate automatically if you don't have the VIN.
-                        </p>
-                        {errors.vin && (
-                            <p className="text-red-500 text-sm mt-1">{errors.vin}</p>
+                        {/* VIN and License Plate - Only show for New Vehicle */}
+                        {!useExistingVehicle && (
+                            <>
+                                {/* VIN Number */}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        VIN Number (Optional)
+                                    </label>
+                                    <input
+                                        name="vin"
+                                        placeholder="8-17 character VIN (e.g., 1HGBH41JXMN109186)"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onChange={handleChange}
+                                        value={form.vin}
+                                        disabled={isLoading || isSavingToDatabase}
+                                        maxLength={17}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Vehicle Identification Number - found on dashboard, door jamb, or registration. Must be 8-17 characters. Leave blank to generate automatically if you don't have the VIN.
+                                    </p>
+                                    {errors.vin && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.vin}</p>
+                                    )}
+                                </div>
+
+                                {/* License Plate */}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        License Plate (Optional)
+                                    </label>
+                                    <input
+                                        name="licensePlate"
+                                        placeholder="e.g., ABC123, XYZ-789"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onChange={handleChange}
+                                        value={form.licensePlate}
+                                        disabled={isLoading || isSavingToDatabase}
+                                        maxLength={10}
+                                    />
+                                </div>
+                            </>
                         )}
                     </div>
-
-                    {/* License Plate */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            License Plate (Optional)
-                        </label>
-                        <input
-                            name="licensePlate"
-                            placeholder="e.g., ABC123, XYZ-789"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={handleChange}
-                            value={form.licensePlate}
-                            disabled={isLoading || isSavingToDatabase}
-                            maxLength={10}
-                        />
-                    </div>
-
 
                     
                     {/* Date & Time */}
@@ -1445,10 +1558,16 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 errors.date ? 'border-red-500' : 'border-gray-300'
                             }`}
                             onChange={handleChange}
-                            value={`${form.date}T${form.time}`}
+                            value={`${form.scheduledDate}T${form.scheduledTime}`}
                             min={new Date().toISOString().slice(0, 16)}
                             disabled={isLoading || isSavingToDatabase}
                         />
+                        {/* Debug info - remove after fixing */}
+                        {isEditing && (
+                            <div className="text-xs text-gray-500 mt-1">
+                                Debug: Date={form.scheduledDate}, Time={form.scheduledTime}, Combined={`${form.scheduledDate}T${form.scheduledTime}`}
+                            </div>
+                        )}
                         {errors.date && (
                             <p className="text-red-500 text-sm mt-1">{errors.date}</p>
                         )}
@@ -1464,15 +1583,26 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 errors.serviceType ? 'border-red-500' : 'border-gray-300'
                             }`}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                                const selectedService = serviceTypes.find(service => service.name === e.target.value);
+                                setForm(prev => ({
+                                    ...prev,
+                                    serviceType: e.target.value,
+                                    serviceTypeId: selectedService?._id || selectedService?.id || '',
+                                    estimatedDuration: selectedService?.estimatedDuration || 60
+                                }));
+                                if (errors.serviceType) {
+                                    setErrors(prev => ({ ...prev, serviceType: undefined }));
+                                }
+                            }}
                             value={form.serviceType}
                             disabled={isLoading || isSavingToDatabase}
                         >
                             <option value="">Select a service type</option>
                             {serviceTypes.length > 0 ? (
-                                serviceTypes.map((service: {name: string, category: string, estimatedDuration: number}) => (
-                                    <option key={service.name} value={service.name}>
-                                        {service.name}
+                                serviceTypes.map((service: {_id?: string, id?: string, name: string, category: string, estimatedDuration: number}) => (
+                                    <option key={service._id || service.id} value={service.name}>
+                                        {service.name} - {service.category}
                                     </option>
                                 ))
                             ) : (
@@ -1503,15 +1633,26 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             value={form.technicianId}
                             disabled={isLoading || isSavingToDatabase}
                         >
-                            <option value="">Select a technician (optional)</option>
-                            {technicians.filter(tech => tech.isActive).map((technician) => {
-                                const specializations = technician.specializations || [];
-                                return (
-                                    <option key={technician._id} value={technician._id}>
-                                        {technician.name} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
-                                    </option>
-                                );
-                            })}
+                            {/* Debug info */}
+                            {isEditing && (
+                                <div className="text-xs text-gray-500 mb-1">
+                                    Debug: form.technicianId = "{form.technicianId}", technicians count = {technicians.length}
+                                    <br />
+                                    Available technician IDs: {technicians.map(t => t._id).join(', ')}
+                                    <br />
+                                    Match found: {technicians.find(t => t._id === form.technicianId) ? 'YES' : 'NO'}
+                                </div>
+                            )}
+                                                         <option value="">Select a technician (optional)</option>
+                                                         {technicians.map((technician) => {
+                                 const specializations = technician.specializations || [];
+                                 const status = technician.isActive ? '' : ' (Inactive)';
+                                 return (
+                                     <option key={technician._id} value={technician._id}>
+                                         {technician.name}{status} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
+                                     </option>
+                                 );
+                             })}
                         </select>
                         <p className="text-xs text-gray-500 mt-1">Choose a technician to assign to this appointment</p>
                     </div>
@@ -1596,6 +1737,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             disabled={isLoading || isSavingToDatabase}
                         />
                     </div>
+
+
                 </div>
 
                 <div className="p-6 border-t border-gray-200">

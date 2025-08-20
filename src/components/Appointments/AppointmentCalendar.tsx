@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { Appointment } from '../../utils/CustomerTypes'
 import AppointmentModal from './AppointmentModal'
-import { addAppointment, updateAppointment } from '../../redux/reducer/appointmentsReducer'
+import { addAppointment, updateAppointment, setAppointments } from '../../redux/reducer/appointmentsReducer'
 import { deleteAppointment } from '../../redux/actions/appointments'
 import { toast } from 'react-hot-toast'
+import AppointmentService from '../../services/appointments'
+import { getAuthHeaders } from '../../services/api'
 import {
   HiChevronLeft,
   HiChevronRight,
@@ -23,6 +25,8 @@ export default function AppointmentCalendar() {
   const dispatch = useAppDispatch()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<CalendarView>('month')
+  
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string>('09:00')
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
@@ -30,7 +34,95 @@ export default function AppointmentCalendar() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
   
+  // Drag and drop state
+  const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOverDate, setDragOverDate] = useState<Date | null>(null)
+  const dragRef = useRef<HTMLDivElement>(null)
+  
   const appointments = useAppSelector(state => state.appointments.data)
+
+
+
+  // Load appointments from backend when component mounts
+  const loadAppointments = async () => {
+    try {
+      const response = await AppointmentService.getAppointments();
+      
+      if (response.success) {
+        // Check if appointments array exists and has data
+        if (!response.data.appointments || response.data.appointments.length === 0) {
+          return;
+        }
+        
+        // Transform backend data to match our Appointment interface
+        const transformedAppointments = response.data.appointments.map((apt: any) => {
+          // Handle potential null/undefined values with proper type checking
+          const customer = apt.customer || { _id: '', name: 'Unknown Customer' };
+          const vehicle = apt.vehicle || { make: '', model: '', year: '', vin: '', licensePlate: '', mileage: 0 };
+          const technician = apt.technician || { _id: '', name: '' };
+          
+          // Convert scheduledDate from ISO string to YYYY-MM-DD format
+          const scheduledDate = apt.scheduledDate 
+            ? new Date(apt.scheduledDate).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+          
+          const transformed = {
+            id: apt._id || `apt-${Date.now()}`,
+            customerId: customer._id || '',
+            customerName: customer.name || 'Unknown Customer',
+            vehicleId: vehicle._id || vehicle.vin || '',
+            vehicleInfo: vehicle.fullName || (vehicle.year && vehicle.make && vehicle.model 
+              ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+              : 'Vehicle info unavailable'),
+            scheduledDate: scheduledDate,
+            scheduledTime: apt.scheduledTime || '09:00',
+            estimatedDuration: apt.estimatedDuration || 60,
+            serviceType: apt.serviceType || 'General Service',
+            description: apt.serviceDescription || apt.serviceType || 'General Service',
+            status: apt.status || 'scheduled',
+            technicianId: technician._id || undefined,
+            technicianName: technician.name || undefined,
+            priority: apt.priority || 'medium' as const,
+            createdDate: apt.createdAt ? new Date(apt.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            notes: apt.notes || '',
+            vehicle: {
+              id: vehicle._id || vehicle.vin || '',
+              year: vehicle.year ? parseInt(vehicle.year.toString()) : 0,
+              make: vehicle.make || '',
+              model: vehicle.model || '',
+              vin: vehicle.vin || '',
+              licensePlate: vehicle.licensePlate || '',
+              mileage: vehicle.mileage || 0
+            }
+          };
+          
+          return transformed;
+        });
+        
+        dispatch(setAppointments(transformedAppointments));
+      } else {
+        toast.error('Failed to load appointments');
+      }
+    } catch (error: any) {
+      console.error('Error loading appointments:', error);
+      
+      // Handle specific error types
+      if (error.response?.status === 401) {
+        toast.error('Please log in to view appointments. Using local data.');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to view appointments. Using local data.');
+      } else if (error.code === 'NETWORK_ERROR' || error.message?.includes('fetch')) {
+        toast.error('Cannot connect to server. Using local data.');
+      } else {
+        toast.error('Error loading appointments. Using local data.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadAppointments();
+  }, [dispatch]);
 
   // Calendar navigation
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -48,7 +140,10 @@ export default function AppointmentCalendar() {
   // Get appointments for a specific date
   const getAppointmentsForDate = (date: Date): Appointment[] => {
     const dateStr = date.toISOString().split('T')[0]
-    return appointments.filter(apt => apt.date === dateStr)
+    const filtered = appointments.filter(apt => {
+      return apt.scheduledDate && apt.scheduledDate === dateStr;
+    });
+    return filtered;
   }
 
   // Generate calendar days for month view
@@ -122,12 +217,23 @@ export default function AppointmentCalendar() {
     }
   }
 
-  const formatTime = (time: string) => {
+  const formatTime = (time: string | undefined | null) => {
+    if (!time) return '--:-- --'
     const [hours, minutes] = time.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
     const displayHour = hour % 12 || 12
     return `${displayHour}:${minutes} ${ampm}`
+  }
+
+  const getServiceTypeName = (serviceType: any): string => {
+    if (typeof serviceType === 'string') {
+      return serviceType
+    }
+    if (serviceType && typeof serviceType === 'object' && serviceType.name) {
+      return serviceType.name
+    }
+    return 'Unknown Service'
   }
 
   // Handle appointment click
@@ -143,6 +249,8 @@ export default function AppointmentCalendar() {
     if (window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
       try {
         await dispatch(deleteAppointment(appointment.id)).unwrap()
+        // Refresh appointments from backend to ensure we have the latest data
+        await loadAppointments()
       } catch (error) {
         console.error('Failed to delete appointment:', error)
       }
@@ -168,14 +276,14 @@ export default function AppointmentCalendar() {
       // Check if this is saved appointment data from database or form data
       if (appointmentData._id) {
         // This is saved appointment data from database - use it directly
-        const savedAppointment = {
+        const savedAppointment: Appointment = {
           id: appointmentData._id, // Use the real MongoDB ObjectId
           customerId: appointmentData.customer?._id || appointmentData.customer,
           customerName: appointmentData.customer?.name || appointmentData.customerName,
           vehicleId: appointmentData.vehicle?._id || appointmentData.vehicle,
           vehicleInfo: appointmentData.vehicle?.fullName || appointmentData.vehicleInfo,
-          date: new Date(appointmentData.scheduledDate).toISOString().split('T')[0],
-          time: appointmentData.scheduledTime,
+          scheduledDate: new Date(appointmentData.scheduledDate).toISOString().split('T')[0],
+          scheduledTime: appointmentData.scheduledTime,
           estimatedDuration: appointmentData.estimatedDuration,
           serviceType: appointmentData.serviceType,
           description: appointmentData.serviceDescription,
@@ -187,9 +295,11 @@ export default function AppointmentCalendar() {
           technicianName: appointmentData.technician?.name || appointmentData.technicianName,
         }
         
-        dispatch(addAppointment(savedAppointment))
-        setShowNewAppointmentModal(false)
-        return
+              dispatch(addAppointment(savedAppointment))
+      setShowNewAppointmentModal(false)
+      // Refresh appointments from backend to ensure we have the latest data
+      await loadAppointments()
+      return
       }
       
       // Fallback for form data (when database save fails)
@@ -204,26 +314,26 @@ export default function AppointmentCalendar() {
       let appointmentTime: string;
       
       // The modal passes form data with separate date and time fields
-      appointmentDate = appointmentData.date;
-      appointmentTime = appointmentData.time || selectedTime || '09:00';
+      appointmentDate = appointmentData.scheduledDate || appointmentData.date;
+      appointmentTime = appointmentData.scheduledTime || appointmentData.time || selectedTime || '09:00';
 
-      const newAppointment = {
+      const newAppointment: Appointment = {
         id: `apt${Date.now()}`, // Generate unique ID for local storage
         customerId: `customer${Date.now()}`,
         customerName: appointmentData.customer,
         vehicleId: `vehicle${Date.now()}`,
         vehicleInfo: appointmentData.vehicle,
-        date: appointmentDate,
-        time: appointmentTime,
+        scheduledDate: appointmentDate,
+        scheduledTime: appointmentTime,
         estimatedDuration: appointmentData.estimatedDuration || 60,
         serviceType: appointmentData.serviceType,
         description: appointmentData.serviceType,
-        status: appointmentData.status || 'scheduled' as const,
-        priority: appointmentData.priority || 'medium' as const,
+        status: appointmentData.status || 'scheduled',
+        priority: appointmentData.priority || 'medium',
         createdDate: new Date().toISOString().split('T')[0],
         notes: appointmentData.notes || '',
-                  technicianId: appointmentData.technicianId || undefined,
-          technicianName: appointmentData.technicianName || undefined,
+        technicianId: appointmentData.technicianId || undefined,
+        technicianName: appointmentData.technicianName || undefined,
       }
 
       // Simulate API call delay
@@ -231,6 +341,8 @@ export default function AppointmentCalendar() {
       
       dispatch(addAppointment(newAppointment))
       setShowNewAppointmentModal(false)
+      // Refresh appointments from backend to ensure we have the latest data
+      await loadAppointments()
     } catch (error) {
       console.error('Error creating appointment:', error)
       toast.error('Failed to create appointment. Please try again.')
@@ -256,10 +368,145 @@ export default function AppointmentCalendar() {
       toast.success('Appointment updated successfully!')
       setShowEditAppointmentModal(false)
       setSelectedAppointment(null)
+      // Refresh appointments from backend to ensure we have the latest data
+      await loadAppointments()
     } catch (error) {
       console.error('Error updating appointment:', error)
       toast.error('Failed to update appointment. Please try again.')
     }
+  }
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, appointment: Appointment) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', appointment.id)
+    setDraggedAppointment(appointment)
+    setIsDragging(true)
+    
+    // Add drag effect styles
+    const target = e.target as HTMLElement
+    target.style.opacity = '0.5'
+    target.style.transform = 'rotate(5deg) scale(1.05)'
+    target.style.transition = 'all 0.2s ease'
+    
+    // Create a custom drag image
+    if (dragRef.current) {
+      e.dataTransfer.setDragImage(dragRef.current, 0, 0)
+    }
+  }
+
+  const handleDragEnd = () => {
+    setIsDragging(false)
+    setDraggedAppointment(null)
+    setDragOverDate(null)
+    
+    // Reset all drag effect styles
+    const draggedElements = document.querySelectorAll('[draggable="true"]')
+    draggedElements.forEach((element) => {
+      const el = element as HTMLElement
+      el.style.opacity = ''
+      el.style.transform = ''
+      el.style.transition = ''
+    })
+  }
+
+  const handleDragOver = (e: React.DragEvent, date: Date) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverDate(date)
+    
+    // Add visual feedback for valid drop zones
+    const target = e.currentTarget as HTMLElement
+    if (!target.classList.contains('drag-over')) {
+      target.classList.add('drag-over')
+      target.style.backgroundColor = '#dbeafe'
+      target.style.borderColor = '#3b82f6'
+      target.style.transform = 'scale(1.02)'
+      target.style.transition = 'all 0.2s ease'
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Remove drag-over effects when leaving the drop zone
+    const target = e.currentTarget as HTMLElement
+    target.classList.remove('drag-over')
+    target.style.backgroundColor = ''
+    target.style.borderColor = ''
+    target.style.transform = ''
+    target.style.transition = ''
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetDate: Date) => {
+    e.preventDefault()
+    
+    // Remove drag-over effects
+    const target = e.currentTarget as HTMLElement
+    target.classList.remove('drag-over')
+    target.style.backgroundColor = ''
+    target.style.borderColor = ''
+    target.style.transform = ''
+    target.style.transition = ''
+    
+    if (!draggedAppointment) return
+
+    const newDate = targetDate.toISOString().split('T')[0]
+    
+    // Don't update if the date is the same
+    if (draggedAppointment.scheduledDate === newDate) {
+      setDragOverDate(null)
+      return
+    }
+
+    try {
+      // Update the appointment with the new date
+      const updatedAppointment = {
+        ...draggedAppointment,
+        scheduledDate: newDate
+      }
+
+      // Use the existing API service to ensure proper authentication and URL handling
+      // Only send the scheduledDate field to avoid validation errors with other fields
+      const updateData = {
+        scheduledDate: new Date(newDate).toISOString()
+      };
+      
+      console.log('Sending update data:', updateData);
+      
+      const response = await fetch(`/api/appointments/${draggedAppointment.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updateData)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Update in Redux store
+        dispatch(updateAppointment(updatedAppointment))
+        toast.success('Appointment moved successfully!')
+        
+        // Refresh appointments from backend
+        await loadAppointments()
+      } else {
+        toast.error(result.message || 'Failed to move appointment')
+      }
+    } catch (error) {
+      console.error('Error moving appointment:', error)
+      toast.error('Failed to move appointment. Please try again.')
+    }
+
+    setDragOverDate(null)
+    
+    // Remove all drag-over effects
+    const dragOverElements = document.querySelectorAll('.drag-over')
+    dragOverElements.forEach((element) => {
+      const el = element as HTMLElement
+      el.classList.remove('drag-over')
+      el.style.backgroundColor = ''
+      el.style.borderColor = ''
+      el.style.transform = ''
+      el.style.transition = ''
+    })
   }
 
   const handleCloseModal = () => {
@@ -283,18 +530,28 @@ export default function AppointmentCalendar() {
           key={index}
           className={`min-h-24 p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 ${
             !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
-          } ${day.isToday ? 'bg-blue-50 border-blue-200' : ''}`}
+          } ${day.isToday ? 'bg-blue-50 border-blue-200' : ''} ${
+            dragOverDate && dragOverDate.toDateString() === day.date.toDateString() ? 'bg-blue-100 border-blue-300' : ''
+          }`}
           onClick={() => handleCalendarSlotClick(day.date)}
+          onDragOver={(e) => handleDragOver(e, day.date)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, day.date)}
         >
           <div className={`text-sm font-medium mb-1 ${day.isToday ? 'text-blue-600' : ''}`}>
             {day.date.getDate()}
           </div>
           <div className="space-y-1">
-            {day.appointments.slice(0, 2).map(apt => (
+            {day.appointments.filter(apt => apt.customerName && apt.serviceType).slice(0, 2).map(apt => (
               <div
                 key={apt.id}
-                className={`text-xs p-1 rounded border-l-2 ${getPriorityColor(apt.priority)} bg-gray-100 truncate cursor-pointer hover:bg-gray-200`}
-                title={`${apt.customerName} - ${apt.serviceType}`}
+                className={`text-xs p-1 rounded border-l-2 ${getPriorityColor(apt.priority)} bg-gray-100 truncate cursor-pointer hover:bg-gray-200 ${
+                  isDragging && draggedAppointment?.id === apt.id ? 'opacity-50' : ''
+                }`}
+                title={`${apt.customerName} - ${getServiceTypeName(apt.serviceType)}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, apt)}
+                onDragEnd={handleDragEnd}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleAppointmentClick(apt)
@@ -302,18 +559,21 @@ export default function AppointmentCalendar() {
               >
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${getStatusColor(apt.status)}`}></div>
-                  <span className="font-medium">{formatTime(apt.time)}</span>
+                  <span className="font-medium">{formatTime(apt.scheduledTime)}</span>
                 </div>
                 <div className="truncate">{apt.customerName}</div>
               </div>
             ))}
-            {day.appointments.length > 2 && (
-              <div className="text-xs text-gray-500 font-medium">
-                +{day.appointments.length - 2} more
-              </div>
-            )}
+            {(() => {
+              const validAppointments = day.appointments.filter(apt => apt.customerName && apt.serviceType);
+              return validAppointments.length > 2 && (
+                <div className="text-xs text-gray-500 font-medium">
+                  +{validAppointments.length - 2} more
+                </div>
+              );
+            })()}
             {/* Show "Click to add appointment" hint for empty days */}
-            {day.appointments.length === 0 && day.isCurrentMonth && (
+            {day.appointments.filter(apt => apt.customerName && apt.serviceType).length === 0 && day.isCurrentMonth && (
               <div className="text-xs text-gray-400 text-center mt-2 opacity-0 hover:opacity-100 transition-opacity">
                 Click to add appointment
               </div>
@@ -359,29 +619,39 @@ export default function AppointmentCalendar() {
           <div key={dayIndex} className="space-y-2">
             {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => {
               const timeStr = `${hour.toString().padStart(2, '0')}:00`
-              const hourAppointments = day.appointments.filter(apt => 
-                apt.time.startsWith(hour.toString().padStart(2, '0'))
-              )
+                          const hourAppointments = day.appointments.filter(apt => 
+              apt.scheduledTime && apt.scheduledTime.startsWith(hour.toString().padStart(2, '0'))
+            )
               
               return (
                 <div 
                   key={hour} 
-                  className="h-16 border border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={`h-16 border border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors ${
+                    dragOverDate && dragOverDate.toDateString() === day.date.toDateString() ? 'bg-blue-100 border-blue-300' : ''
+                  }`}
                   onClick={() => handleCalendarSlotClick(day.date, timeStr)}
                   title={`Click to add appointment at ${formatTime(timeStr)}`}
+                  onDragOver={(e) => handleDragOver(e, day.date)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, day.date)}
                 >
-                  {hourAppointments.map((apt, aptIndex) => (
+                  {hourAppointments.filter(apt => apt.customerName && apt.serviceType).map((apt, aptIndex) => (
                     <div
                       key={apt.id}
-                      className={`absolute inset-1 p-1 rounded text-xs cursor-pointer hover:bg-opacity-90 ${getPriorityColor(apt.priority)} bg-blue-100`}
+                      className={`absolute inset-1 p-1 rounded text-xs cursor-pointer hover:bg-opacity-90 ${getPriorityColor(apt.priority)} bg-blue-100 ${
+                        isDragging && draggedAppointment?.id === apt.id ? 'opacity-50' : ''
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation()
                         handleAppointmentClick(apt)
                       }}
-                      title={`${apt.customerName} - ${apt.serviceType}`}
+                      title={`${apt.customerName} - ${getServiceTypeName(apt.serviceType)}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, apt)}
+                      onDragEnd={handleDragEnd}
                     >
                       <div className="font-medium truncate">{apt.customerName}</div>
-                      <div className="text-gray-600 truncate">{apt.serviceType}</div>
+                      <div className="text-gray-600 truncate">{getServiceTypeName(apt.serviceType)}</div>
                     </div>
                   ))}
                   {/* Show hint for empty slots */}
@@ -389,10 +659,34 @@ export default function AppointmentCalendar() {
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                       <div className="text-xs text-gray-400">+</div>
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                        )}
+
+      {/* Enhanced drag preview element */}
+      <div
+        ref={dragRef}
+        className="fixed -top-1000 left-0 w-56 p-3 bg-white border-2 border-blue-400 rounded-lg shadow-xl pointer-events-none opacity-0"
+        style={{ zIndex: -1 }}
+      >
+        {draggedAppointment && (
+          <div className="text-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="font-semibold text-blue-700">{draggedAppointment.customerName}</div>
+            </div>
+            <div className="text-gray-700 font-medium">{getServiceTypeName(draggedAppointment.serviceType)}</div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-xs text-gray-500">⏰ {formatTime(draggedAppointment.scheduledTime)}</span>
+              <span className="text-xs text-gray-500">📅 {draggedAppointment.scheduledDate}</span>
+            </div>
+            <div className="mt-2 text-xs text-blue-600 font-medium">
+              Drop to reschedule appointment
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})}
           </div>
         ))}
       </div>
@@ -418,7 +712,7 @@ export default function AppointmentCalendar() {
           {hours.map(hour => {
             const timeStr = `${hour.toString().padStart(2, '0')}:00`
             const hourAppointments = dayAppointments.filter(apt => 
-              apt.time.startsWith(hour.toString().padStart(2, '0'))
+              apt.scheduledTime && apt.scheduledTime.startsWith(hour.toString().padStart(2, '0'))
             )
             
             return (
@@ -427,23 +721,33 @@ export default function AppointmentCalendar() {
                   {formatTime(timeStr)}
                 </div>
                 <div 
-                  className="flex-1 p-2 min-h-12 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={`flex-1 p-2 min-h-12 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    dragOverDate && dragOverDate.toDateString() === currentDate.toDateString() ? 'bg-blue-100' : ''
+                  }`}
                   onClick={() => handleCalendarSlotClick(currentDate, timeStr)}
                   title={`Click to add appointment at ${formatTime(timeStr)}`}
+                  onDragOver={(e) => handleDragOver(e, currentDate)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentDate)}
                 >
-                  {hourAppointments.map(apt => (
+                  {hourAppointments.filter(apt => apt.customerName && apt.serviceType).map(apt => (
                     <div
                       key={apt.id}
-                      className={`p-3 mb-2 rounded-lg border-l-4 ${getPriorityColor(apt.priority)} bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
+                      className={`p-3 mb-2 rounded-lg border-l-4 ${getPriorityColor(apt.priority)} bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow ${
+                        isDragging && draggedAppointment?.id === apt.id ? 'opacity-50' : ''
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation()
                         handleAppointmentClick(apt)
                       }}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, apt)}
+                      onDragEnd={handleDragEnd}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium text-gray-800">{apt.customerName}</h4>
-                          <p className="text-sm text-gray-600">{apt.serviceType}</p>
+                          <p className="text-sm text-gray-600">{getServiceTypeName(apt.serviceType)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -467,7 +771,7 @@ export default function AppointmentCalendar() {
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
                           <HiClock className="w-4 h-4" />
-                          <span>{formatTime(apt.time)} ({apt.estimatedDuration}min)</span>
+                          <span>{formatTime(apt.scheduledTime)} ({apt.estimatedDuration}min)</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <HiTruck className="w-4 h-4" />
@@ -556,6 +860,10 @@ export default function AppointmentCalendar() {
             </button>
           </div>
           
+
+          
+
+          
           {/* Add Appointment Button */}
           <button 
             onClick={() => {
@@ -599,7 +907,7 @@ export default function AppointmentCalendar() {
           onClose={handleCloseModal}
           onSave={handleCreateAppointment}
           isLoading={isCreatingAppointment}
-          selectedDate={selectedDate}
+          selectedDate={selectedDate || undefined}
           selectedTime={selectedTime}
         />
       )}
@@ -614,6 +922,21 @@ export default function AppointmentCalendar() {
           isEditing={true}
         />
       )}
+
+      {/* Hidden drag preview element */}
+      <div
+        ref={dragRef}
+        className="fixed -top-1000 left-0 w-48 p-2 bg-white border border-gray-300 rounded shadow-lg pointer-events-none opacity-0"
+        style={{ zIndex: -1 }}
+      >
+        {draggedAppointment && (
+          <div className="text-sm">
+            <div className="font-medium">{draggedAppointment.customerName}</div>
+            <div className="text-gray-600">{getServiceTypeName(draggedAppointment.serviceType)}</div>
+            <div className="text-xs text-gray-500">{formatTime(draggedAppointment.scheduledTime)}</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

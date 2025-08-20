@@ -100,11 +100,22 @@ export interface Appointment {
     scheduledDate: string
     scheduledTime: string
     estimatedDuration: number // in minutes
-    serviceType: string
+    serviceType: string | {
+        _id: string
+        name: string
+        category: string
+        estimatedDuration: number
+    }
     description: string
     status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show'
     technicianId?: string
     technicianName?: string
+    technician?: {
+        _id: string
+        name: string
+        email?: string
+        specializations?: string[]
+    }
     priority: 'low' | 'medium' | 'high' | 'urgent'
     createdDate: string
     notes?: string
