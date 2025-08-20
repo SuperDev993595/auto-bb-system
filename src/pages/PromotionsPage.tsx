@@ -236,7 +236,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Active Promotions</p>
               <p className="text-2xl font-bold text-green-600">
-                {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active').length}
+                {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -250,7 +250,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Total Usage</p>
               <p className="text-2xl font-bold text-blue-600">
-                {stats?.overview?.totalUsage || filteredPromotions.reduce((sum, p) => sum + p.usageCount, 0)}
+                {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -264,7 +264,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Scheduled</p>
               <p className="text-2xl font-bold text-purple-600">
-                {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled').length}
+                {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">

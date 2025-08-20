@@ -133,6 +133,9 @@ promotionSchema.statics.getActivePromotions = function() {
 promotionSchema.statics.getStats = function() {
   return this.aggregate([
     {
+      $match: { isActive: true }
+    },
+    {
       $group: {
         _id: null,
         totalPromotions: { $sum: 1 },
