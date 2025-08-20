@@ -353,11 +353,16 @@ export default function TasksPage() {
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800">{task.title}</h3>
                         <p className="text-gray-600 text-sm mt-1">{task.description}</p>
-                        {task.customer && (
-                          <p className="text-blue-600 text-sm mt-1">
-                            Customer: {typeof task.customer === 'string' ? task.customer : task.customer.businessName || task.customer.contactPerson?.name}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-1 mt-2">
+                          <HiUser className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-500 text-sm">
+                            {task.customer ? (
+                              `Customer: ${typeof task.customer === 'string' ? task.customer : task.customer.businessName || task.customer.contactPerson?.name}`
+                            ) : (
+                              'No customer assigned'
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
