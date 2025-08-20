@@ -18,154 +18,124 @@ import {
   HiExclamation
 } from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
-import api from '../services/api';
-
-interface MarketingCampaign {
-  id: string;
-  name: string;
-  type: 'email' | 'sms' | 'mailchimp';
-  status: 'draft' | 'scheduled' | 'sent' | 'failed';
-  recipients: number;
-  sent: number;
-  opened?: number;
-  clicked?: number;
-  delivered?: number;
-  failed?: number;
-  scheduledAt?: string;
-  sentAt?: string;
-  createdAt: string;
-}
-
-interface MarketingStats {
-  totalCampaigns: number;
-  activeCampaigns: number;
-  totalRecipients: number;
-  totalSent: number;
-  totalOpened: number;
-  totalClicked: number;
-  deliveryRate: number;
-  openRate: number;
-  clickRate: number;
-}
+import { useAppSelector, useAppDispatch } from '../redux';
+import { 
+  fetchCampaigns, 
+  fetchCampaignStats, 
+  createCampaign, 
+  deleteCampaign, 
+  updateCampaignStatus 
+} from '../redux/actions/marketing';
+import { MarketingCampaign, CreateCampaignData } from '../services/marketing';
+import CreateCampaignModal from '../components/Marketing/CreateCampaignModal';
+import DeleteCampaignModal from '../components/Marketing/DeleteCampaignModal';
 
 export default function MarketingDashboard() {
-  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
-  const [stats, setStats] = useState<MarketingStats>({
-    totalCampaigns: 0,
-    activeCampaigns: 0,
-    totalRecipients: 0,
-    totalSent: 0,
-    totalOpened: 0,
-    totalClicked: 0,
-    deliveryRate: 0,
-    openRate: 0,
-    clickRate: 0
-  });
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'templates' | 'analytics'>('overview');
+  const dispatch = useAppDispatch();
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<MarketingCampaign | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { campaigns, stats, loading } = useAppSelector(state => state.marketing);
+
+  // Fetch campaigns and stats on component mount
   useEffect(() => {
-    loadMarketingData();
-  }, []);
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          dispatch(fetchCampaigns({
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            type: typeFilter !== 'all' ? typeFilter : undefined,
+            search: searchTerm || undefined
+          })),
+          dispatch(fetchCampaignStats())
+        ]);
+      } catch (error) {
+        console.error('Error loading marketing data:', error);
+        toast.error('Failed to load marketing data');
+      }
+    };
 
-  const loadMarketingData = async () => {
+    loadData();
+  }, [dispatch]);
+
+  // Refetch campaigns when filters change
+  useEffect(() => {
+    if (!loading) {
+      dispatch(fetchCampaigns({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }));
+    }
+  }, [statusFilter, typeFilter, searchTerm, dispatch]);
+
+  const handleCreateCampaign = async (campaignData: CreateCampaignData) => {
     try {
-      setLoading(true);
+      setIsSubmitting(true);
+      await dispatch(createCampaign(campaignData));
+      toast.success('Campaign created successfully!');
+      setShowCreateModal(false);
       
-      // Load campaigns from different sources
-      const [emailCampaigns, smsAnalytics, mailchimpCampaigns] = await Promise.all([
-        api.get('/email/campaigns').catch(() => ({ data: { data: [] } })),
-        api.get('/sms/analytics').catch(() => ({ data: { data: { overview: {} } } })),
-        api.get('/mailchimp/campaigns').catch(() => ({ data: { data: { campaigns: [] } } }))
-      ]);
-
-      // Combine and format campaigns
-      const allCampaigns: MarketingCampaign[] = [
-        ...(emailCampaigns.data.data || []).map((campaign: any) => ({
-          ...campaign,
-          type: 'email' as const
-        })),
-        ...(mailchimpCampaigns.data.data.campaigns || []).map((campaign: any) => ({
-          ...campaign,
-          type: 'mailchimp' as const
-        }))
-      ];
-
-      setCampaigns(allCampaigns);
-
-      // Calculate stats
-      const totalCampaigns = allCampaigns.length;
-      const activeCampaigns = allCampaigns.filter(c => c.status === 'scheduled').length;
-      const totalRecipients = allCampaigns.reduce((sum, c) => sum + c.recipients, 0);
-      const totalSent = allCampaigns.reduce((sum, c) => sum + c.sent, 0);
-      const totalOpened = allCampaigns.reduce((sum, c) => sum + (c.opened || 0), 0);
-      const totalClicked = allCampaigns.reduce((sum, c) => sum + (c.clicked || 0), 0);
-
-      setStats({
-        totalCampaigns,
-        activeCampaigns,
-        totalRecipients,
-        totalSent,
-        totalOpened,
-        totalClicked,
-        deliveryRate: totalRecipients > 0 ? (totalSent / totalRecipients) * 100 : 0,
-        openRate: totalSent > 0 ? (totalOpened / totalSent) * 100 : 0,
-        clickRate: totalOpened > 0 ? (totalClicked / totalOpened) * 100 : 0
-      });
-
+      // Refresh data
+      dispatch(fetchCampaigns({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }));
+      dispatch(fetchCampaignStats());
     } catch (error) {
-      console.error('Error loading marketing data:', error);
-      toast.error('Failed to load marketing data');
+      console.error('Error creating campaign:', error);
+      toast.error('Failed to create campaign');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleSendCampaign = async (campaignId: string, type: string) => {
-    try {
-      let endpoint = '';
-      switch (type) {
-        case 'email':
-          endpoint = `/email/campaigns/${campaignId}/send`;
-          break;
-        case 'mailchimp':
-          endpoint = `/mailchimp/campaigns/${campaignId}/send`;
-          break;
-        default:
-          toast.error('Unsupported campaign type');
-          return;
-      }
-
-      await api.post(endpoint);
-      toast.success('Campaign sent successfully');
-      loadMarketingData();
-    } catch (error) {
-      toast.error('Failed to send campaign');
-    }
+  const handleDeleteClick = (campaign: MarketingCampaign) => {
+    setSelectedCampaign(campaign);
+    setShowDeleteModal(true);
   };
 
-  const handleDeleteCampaign = async (campaignId: string, type: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
+  const handleDeleteCampaign = async () => {
+    if (!selectedCampaign) return;
 
     try {
-      let endpoint = '';
-      switch (type) {
-        case 'email':
-          endpoint = `/email/campaigns/${campaignId}`;
-          break;
-        case 'mailchimp':
-          endpoint = `/mailchimp/campaigns/${campaignId}`;
-          break;
-        default:
-          toast.error('Unsupported campaign type');
-          return;
-      }
-
-      await api.delete(endpoint);
-      toast.success('Campaign deleted successfully');
-      loadMarketingData();
+      setIsSubmitting(true);
+      await dispatch(deleteCampaign(selectedCampaign._id));
+      toast.success('Campaign deleted successfully!');
+      setShowDeleteModal(false);
+      setSelectedCampaign(null);
+      
+      // Refresh data
+      dispatch(fetchCampaigns({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }));
+      dispatch(fetchCampaignStats());
     } catch (error) {
+      console.error('Error deleting campaign:', error);
       toast.error('Failed to delete campaign');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusUpdate = async (campaignId: string, status: MarketingCampaign['status']) => {
+    try {
+      await dispatch(updateCampaignStatus({ id: campaignId, status }));
+      toast.success('Campaign status updated successfully!');
+      
+      // Refresh data
+      dispatch(fetchCampaignStats());
+    } catch (error) {
+      console.error('Error updating campaign status:', error);
+      toast.error('Failed to update campaign status');
     }
   };
 
@@ -235,7 +205,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalCampaigns || 0}</p>
             </div>
           </div>
         </div>
@@ -247,7 +217,7 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Recipients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalRecipients.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{(stats?.totalRecipients || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -259,7 +229,11 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Delivery Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.deliveryRate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.totalRecipients && stats.totalRecipients > 0 
+                  ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) 
+                  : '0.0'}%
+              </p>
             </div>
           </div>
         </div>
@@ -271,15 +245,80 @@ export default function MarketingDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Open Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.openRate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.totalSent && stats.totalSent > 0 
+                  ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) 
+                  : '0.0'}%
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Types</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="mailchimp">MailChimp</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search campaigns..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setStatusFilter('all');
+                setTypeFilter('all');
+                setSearchTerm('');
+              }}
+              className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+        >
           <HiMail className="w-6 h-6 text-blue-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Create Email Campaign</p>
@@ -287,7 +326,10 @@ export default function MarketingDashboard() {
           </div>
         </button>
 
-        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
+        >
           <HiPhone className="w-6 h-6 text-green-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Send SMS</p>
@@ -295,7 +337,10 @@ export default function MarketingDashboard() {
           </div>
         </button>
 
-        <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+        >
           <HiTemplate className="w-6 h-6 text-purple-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Create Template</p>
@@ -309,7 +354,10 @@ export default function MarketingDashboard() {
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">Recent Campaigns</h2>
-            <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               <HiPlus className="h-5 w-5 mr-2" />
               Create Campaign
             </button>
@@ -338,7 +386,7 @@ export default function MarketingDashboard() {
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign.id}>
+                  <tr key={campaign._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
@@ -360,13 +408,13 @@ export default function MarketingDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {campaign.recipients.toLocaleString()}
+                      {campaign.recipientCount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {campaign.sent} sent
-                        {campaign.opened && ` • ${campaign.opened} opened`}
-                        {campaign.clicked && ` • ${campaign.clicked} clicked`}
+                        {campaign.sentCount} sent
+                        {campaign.openedCount > 0 && ` • ${campaign.openedCount} opened`}
+                        {campaign.clickedCount > 0 && ` • ${campaign.clickedCount} clicked`}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -375,20 +423,34 @@ export default function MarketingDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => handleSendCampaign(campaign.id, campaign.type)}
+                          onClick={() => handleStatusUpdate(campaign._id, 'sent')}
                           disabled={campaign.status === 'sent'}
                           className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
                         >
                           <HiPaperAirplane className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => {
+                            // TODO: Implement view campaign details
+                            toast.success('View campaign details - Coming soon!');
+                          }}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="View Details"
+                        >
                           <HiEye className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => {
+                            // TODO: Implement edit campaign
+                            toast.success('Edit campaign - Coming soon!');
+                          }}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="Edit Campaign"
+                        >
                           <HiPencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteCampaign(campaign.id, campaign.type)}
+                          onClick={() => handleDeleteClick(campaign)}
                           className="text-red-600 hover:text-red-900"
                         >
                           <HiTrash className="w-4 h-4" />
@@ -402,6 +464,26 @@ export default function MarketingDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Create Campaign Modal */}
+      <CreateCampaignModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={handleCreateCampaign}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Campaign Modal */}
+      <DeleteCampaignModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedCampaign(null);
+        }}
+        onConfirm={handleDeleteCampaign}
+        campaignName={selectedCampaign?.name}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

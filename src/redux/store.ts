@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import appointmentsReducer from "./reducer/appointmentsReducer";
 import tasksReducer from "./actions/tasks";
 import promotionsReducer from "./actions/promotions";
+import marketingReducer from "./actions/marketing";
 import customersReducer from "./reducer/customersReducer";
 import servicesReducer from "./actions/services";
 import remindersReducer from "./reducer/remindersReducer";
@@ -18,6 +19,7 @@ const store = configureStore({
     appointments: appointmentsReducer,
     tasks: tasksReducer,
     promotions: promotionsReducer,
+    marketing: marketingReducer,
     customers: customersReducer,
     services: servicesReducer,
     reminders: remindersReducer,
