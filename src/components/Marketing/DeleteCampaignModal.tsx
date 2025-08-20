@@ -1,5 +1,5 @@
 import React from 'react';
-import { HiX, HiExclamationTriangle } from 'react-icons/hi';
+import { HiX, HiExclamation } from 'react-icons/hi';
 
 interface DeleteCampaignModalProps {
   isOpen: boolean;
@@ -36,7 +36,7 @@ export default function DeleteCampaignModal({
 
         <div className="flex items-center mb-4">
           <div className="flex-shrink-0">
-            <HiExclamationTriangle className="w-8 h-8 text-red-500" />
+            <HiExclamation className="w-8 h-8 text-red-500" />
           </div>
           <div className="ml-3">
             <h3 className="text-lg font-medium text-gray-900">
