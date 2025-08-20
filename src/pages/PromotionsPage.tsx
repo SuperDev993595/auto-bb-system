@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '../redux'
 import PageTitle from '../components/Shared/PageTitle'
+import AddPromotionModal from '../components/Promotions/AddPromotionModal'
+import DeletePromotionModal from '../components/Promotions/DeletePromotionModal'
 import {
   HiPlus,
   HiEye,
@@ -14,107 +17,164 @@ import {
   HiUsers,
   HiTrendingUp,
   HiPlay,
-  HiPause
+  HiPause,
+  HiSearch
 } from 'react-icons/hi'
-
-interface Promotion {
-  id: string
-  title: string
-  description: string
-  type: 'discount' | 'service' | 'referral' | 'seasonal'
-  discountValue: number
-  discountType: 'percentage' | 'fixed'
-  startDate: string
-  endDate: string
-  status: 'active' | 'scheduled' | 'ended' | 'paused'
-  targetAudience: string
-  usageCount: number
-  maxUsage?: number
-  conditions?: string
-}
+import { fetchPromotions, fetchPromotionStats, createPromotion, updatePromotion, deletePromotion, updatePromotionStatus } from '../redux/actions/promotions'
+import { toast } from 'react-hot-toast'
+import { Promotion, CreatePromotionData, UpdatePromotionData } from '../services/promotions'
 
 export default function PromotionsPage() {
+  const dispatch = useAppDispatch()
   const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
-  const promotions: Promotion[] = [
-    {
-      id: '1',
-      title: 'Summer Oil Change Special',
-      description: 'Get 20% off your oil change service during the hot summer months. Includes filter replacement and fluid top-off.',
-      type: 'service',
-      discountValue: 20,
-      discountType: 'percentage',
-      startDate: '2025-06-01',
-      endDate: '2025-08-31',
-      status: 'active',
-      targetAudience: 'All Customers',
-      usageCount: 45,
-      maxUsage: 100,
-      conditions: 'Valid for synthetic oil only'
-    },
-    {
-      id: '2',
-      title: 'Brake Safety Check',
-      description: 'Free brake inspection with any service. Ensure your family\'s safety on the road.',
-      type: 'service',
-      discountValue: 0,
-      discountType: 'fixed',
-      startDate: '2025-07-01',
-      endDate: '2025-09-30',
-      status: 'active',
-      targetAudience: 'All Customers',
-      usageCount: 28,
-      conditions: 'Must be combined with another service'
-    },
-    {
-      id: '3',
-      title: 'Customer Referral Program',
-      description: 'Refer a friend and both of you get $25 off your next service. The more you refer, the more you save!',
-      type: 'referral',
-      discountValue: 25,
-      discountType: 'fixed',
-      startDate: '2025-01-01',
-      endDate: '2025-12-31',
-      status: 'active',
-      targetAudience: 'Existing Customers',
-      usageCount: 15,
-      conditions: 'Referred customer must complete service'
-    },
-    {
-      id: '4',
-      title: 'Back to School Special',
-      description: '15% off any service for students and teachers. Valid with student/teacher ID.',
-      type: 'discount',
-      discountValue: 15,
-      discountType: 'percentage',
-      startDate: '2025-08-15',
-      endDate: '2025-09-15',
-      status: 'scheduled',
-      targetAudience: 'Students & Teachers',
-      usageCount: 0,
-      maxUsage: 50,
-      conditions: 'Must present valid student or teacher ID'
-    },
-    {
-      id: '5',
-      title: 'Winter Tire Installation',
-      description: 'Free tire installation with purchase of 4 winter tires. Get ready for the cold season!',
-      type: 'seasonal',
-      discountValue: 80,
-      discountType: 'fixed',
-      startDate: '2024-11-01',
-      endDate: '2025-01-31',
-      status: 'ended',
-      targetAudience: 'All Customers',
-      usageCount: 32,
-      maxUsage: 40,
-      conditions: 'Must purchase 4 tires of same brand'
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { list: promotions, loading, stats } = useAppSelector(state => state.promotions)
+
+  // Fetch promotions and stats on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        await Promise.all([
+          dispatch(fetchPromotions({
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            type: typeFilter !== 'all' ? typeFilter : undefined,
+            search: searchTerm || undefined
+          })),
+          dispatch(fetchPromotionStats())
+        ])
+      } catch (error) {
+        console.error('Error loading promotions:', error)
+        toast.error('Failed to load promotions')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
 
-  const filteredPromotions = promotions.filter(promo => 
-    statusFilter === 'all' || promo.status === statusFilter
-  )
+    loadData()
+  }, [dispatch])
+
+  // Refetch promotions when filters change
+  useEffect(() => {
+    if (!isLoading) {
+      dispatch(fetchPromotions({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }))
+    }
+  }, [statusFilter, typeFilter, searchTerm, dispatch])
+
+  const filteredPromotions = promotions || []
+
+  // Handle promotion creation/editing
+  const handleSavePromotion = async (promotionData: CreatePromotionData | UpdatePromotionData) => {
+    try {
+      setIsSubmitting(true)
+      
+      if (selectedPromotion) {
+        // Update existing promotion
+        await dispatch(updatePromotion({ id: selectedPromotion._id, promotionData: promotionData as UpdatePromotionData }))
+        toast.success('Promotion updated successfully!')
+      } else {
+        // Create new promotion
+        await dispatch(createPromotion(promotionData as CreatePromotionData))
+        toast.success('Promotion created successfully!')
+      }
+      
+      setShowAddModal(false)
+      setSelectedPromotion(null)
+      
+      // Refresh promotions
+      dispatch(fetchPromotions({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchPromotionStats())
+      
+    } catch (error) {
+      console.error('Error saving promotion:', error)
+      toast.error('Failed to save promotion')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle promotion deletion
+  const handleDeletePromotion = async () => {
+    if (!selectedPromotion) return
+    
+    try {
+      setIsSubmitting(true)
+      await dispatch(deletePromotion(selectedPromotion._id))
+      toast.success('Promotion deleted successfully!')
+      
+      setShowDeleteModal(false)
+      setSelectedPromotion(null)
+      
+      // Refresh promotions
+      dispatch(fetchPromotions({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchPromotionStats())
+      
+    } catch (error) {
+      console.error('Error deleting promotion:', error)
+      toast.error('Failed to delete promotion')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle status update
+  const handleStatusUpdate = async (promotionId: string, status: Promotion['status']) => {
+    try {
+      await dispatch(updatePromotionStatus({ id: promotionId, status }))
+      toast.success('Promotion status updated successfully!')
+      
+      // Refresh promotions
+      dispatch(fetchPromotions({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined
+      }))
+      dispatch(fetchPromotionStats())
+      
+    } catch (error) {
+      console.error('Error updating promotion status:', error)
+      toast.error('Failed to update promotion status')
+    }
+  }
+
+  // Open edit modal
+  const handleEditPromotion = (promotion: Promotion) => {
+    setSelectedPromotion(promotion)
+    setShowAddModal(true)
+  }
+
+  // Open delete modal
+  const handleDeleteClick = (promotion: Promotion) => {
+    setSelectedPromotion(promotion)
+    setShowDeleteModal(true)
+  }
+
+  // Open create modal
+  const handleAddPromotion = () => {
+    setSelectedPromotion(null)
+    setShowAddModal(true)
+  }
 
   const getStatusColor = (status: Promotion['status']) => {
     switch (status) {
@@ -141,11 +201,29 @@ export default function PromotionsPage() {
     return (used / max) * 100
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+          <p className="text-gray-600">Loading promotions...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <PageTitle title="Marketing & Promotions" />
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+        <button 
+          onClick={handleAddPromotion}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
           <HiPlus className="w-4 h-4" />
           Create Promotion
         </button>
@@ -158,7 +236,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Active Promotions</p>
               <p className="text-2xl font-bold text-green-600">
-                {promotions.filter(p => p.status === 'active').length}
+                {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active').length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -172,7 +250,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Total Usage</p>
               <p className="text-2xl font-bold text-blue-600">
-                {promotions.reduce((sum, p) => sum + p.usageCount, 0)}
+                {stats?.overview?.totalUsage || filteredPromotions.reduce((sum, p) => sum + p.usageCount, 0)}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -186,7 +264,7 @@ export default function PromotionsPage() {
             <div>
               <p className="text-sm text-gray-600">Scheduled</p>
               <p className="text-2xl font-bold text-purple-600">
-                {promotions.filter(p => p.status === 'scheduled').length}
+                {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled').length}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
@@ -199,7 +277,9 @@ export default function PromotionsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Avg Savings</p>
-              <p className="text-2xl font-bold text-yellow-600">$32</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                ${Math.round(stats?.overview?.avgDiscountValue || 0)}
+              </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
               <HiCurrencyDollar className="w-6 h-6 text-yellow-600" />
@@ -211,6 +291,17 @@ export default function PromotionsPage() {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex gap-4 items-center">
+          <div className="flex-1 relative">
+            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search promotions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+          
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -222,13 +313,25 @@ export default function PromotionsPage() {
             <option value="ended">Ended</option>
             <option value="paused">Paused</option>
           </select>
+          
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2"
+          >
+            <option value="all">All Types</option>
+            <option value="discount">Discount</option>
+            <option value="service">Service</option>
+            <option value="referral">Referral</option>
+            <option value="seasonal">Seasonal</option>
+          </select>
         </div>
       </div>
 
       {/* Promotions Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredPromotions.map(promotion => (
-          <div key={promotion.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={promotion._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">{promotion.title}</h3>
@@ -242,18 +345,34 @@ export default function PromotionsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-400 hover:text-blue-600">
-                  <HiEye className="w-4 h-4" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-green-600">
+                <button 
+                  onClick={() => handleEditPromotion(promotion)}
+                  className="p-2 text-gray-400 hover:text-blue-600"
+                  title="Edit promotion"
+                >
                   <HiPencil className="w-4 h-4" />
                 </button>
+                <button 
+                  onClick={() => handleDeleteClick(promotion)}
+                  className="p-2 text-gray-400 hover:text-red-600"
+                  title="Delete promotion"
+                >
+                  <HiTrash className="w-4 h-4" />
+                </button>
                 {promotion.status === 'active' ? (
-                  <button className="p-2 text-gray-400 hover:text-yellow-600">
+                  <button 
+                    onClick={() => handleStatusUpdate(promotion._id, 'paused')}
+                    className="p-2 text-gray-400 hover:text-yellow-600"
+                    title="Pause promotion"
+                  >
                     <HiPause className="w-4 h-4" />
                   </button>
                 ) : promotion.status === 'paused' ? (
-                  <button className="p-2 text-gray-400 hover:text-green-600">
+                  <button 
+                    onClick={() => handleStatusUpdate(promotion._id, 'active')}
+                    className="p-2 text-gray-400 hover:text-green-600"
+                    title="Activate promotion"
+                  >
                     <HiPlay className="w-4 h-4" />
                   </button>
                 ) : null}
@@ -278,7 +397,7 @@ export default function PromotionsPage() {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Valid Period</span>
                 <span className="font-medium">
-                  {new Date(promotion.startDate).toLocaleDateString()} - {new Date(promotion.endDate).toLocaleDateString()}
+                  {formatDate(promotion.startDate)} - {formatDate(promotion.endDate)}
                 </span>
               </div>
               
@@ -312,13 +431,37 @@ export default function PromotionsPage() {
         ))}
       </div>
 
-      {filteredPromotions.length === 0 && (
+      {!loading && filteredPromotions.length === 0 && (
         <div className="text-center py-12">
           <HiSpeakerphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-500 mb-2">No promotions found</h3>
           <p className="text-gray-400">Try adjusting your filters or create a new promotion.</p>
         </div>
       )}
+
+      {/* Add/Edit Promotion Modal */}
+      <AddPromotionModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false)
+          setSelectedPromotion(null)
+        }}
+        onSave={handleSavePromotion}
+        promotion={selectedPromotion}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeletePromotionModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedPromotion(null)
+        }}
+        onConfirm={handleDeletePromotion}
+        promotionTitle={selectedPromotion?.title || ''}
+        isLoading={isSubmitting}
+      />
     </div>
   )
 }

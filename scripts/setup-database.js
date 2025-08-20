@@ -10,6 +10,7 @@ const Customer = require('../server/models/Customer');
 const Vehicle = require('../server/models/Vehicle');
 const Appointment = require('../server/models/Appointment');
 const Task = require('../server/models/Task');
+const Promotion = require('../server/models/Promotion');
 const Invoice = require('../server/models/Invoice');
 const Reminder = require('../server/models/Reminder');
 const { ServiceCatalog, WorkOrder, Technician } = require('../server/models/Service');
@@ -608,6 +609,86 @@ async function setupDatabase() {
     const tasks = await Task.insertMany(sampleTasks);
     console.log(`✅ Created ${tasks.length} sample tasks`);
 
+    // Create sample promotions
+    console.log('🎯 Creating sample promotions...');
+    const samplePromotions = [
+      {
+        title: 'Summer Oil Change Special',
+        description: 'Get 20% off your oil change service during the hot summer months. Includes filter replacement and fluid top-off.',
+        type: 'service',
+        discountValue: 20,
+        discountType: 'percentage',
+        startDate: new Date('2025-06-01'),
+        endDate: new Date('2025-08-31'),
+        status: 'active',
+        targetAudience: 'All Customers',
+        usageCount: 45,
+        maxUsage: 100,
+        conditions: 'Valid for synthetic oil only',
+        createdBy: superAdmin._id
+      },
+      {
+        title: 'Brake Safety Check',
+        description: 'Free brake inspection with any service. Ensure your family\'s safety on the road.',
+        type: 'service',
+        discountValue: 0,
+        discountType: 'fixed',
+        startDate: new Date('2025-07-01'),
+        endDate: new Date('2025-09-30'),
+        status: 'active',
+        targetAudience: 'All Customers',
+        usageCount: 28,
+        conditions: 'Must be combined with another service',
+        createdBy: superAdmin._id
+      },
+      {
+        title: 'Customer Referral Program',
+        description: 'Refer a friend and both of you get $25 off your next service. The more you refer, the more you save!',
+        type: 'referral',
+        discountValue: 25,
+        discountType: 'fixed',
+        startDate: new Date('2025-01-01'),
+        endDate: new Date('2025-12-31'),
+        status: 'active',
+        targetAudience: 'Existing Customers',
+        usageCount: 15,
+        conditions: 'Referred customer must complete service',
+        createdBy: superAdmin._id
+      },
+      {
+        title: 'Back to School Special',
+        description: '15% off any service for students and teachers. Valid with student/teacher ID.',
+        type: 'discount',
+        discountValue: 15,
+        discountType: 'percentage',
+        startDate: new Date('2025-08-15'),
+        endDate: new Date('2025-09-15'),
+        status: 'scheduled',
+        targetAudience: 'Students & Teachers',
+        usageCount: 0,
+        maxUsage: 50,
+        conditions: 'Must present valid student or teacher ID',
+        createdBy: superAdmin._id
+      },
+      {
+        title: 'Winter Tire Installation',
+        description: 'Free tire installation with purchase of 4 winter tires. Get ready for the cold season!',
+        type: 'seasonal',
+        discountValue: 80,
+        discountType: 'fixed',
+        startDate: new Date('2024-11-01'),
+        endDate: new Date('2025-01-31'),
+        status: 'ended',
+        targetAudience: 'All Customers',
+        usageCount: 32,
+        maxUsage: 40,
+        conditions: 'Must purchase 4 tires of same brand',
+        createdBy: superAdmin._id
+      }
+    ];
+    const promotions = await Promotion.insertMany(samplePromotions);
+    console.log(`✅ Created ${promotions.length} sample promotions`);
+
     console.log('\n🎉 Database setup completed successfully!');
     console.log('\n📋 Summary:');
     console.log(`- Database: ${mongoose.connection.name}`);
@@ -619,6 +700,7 @@ async function setupDatabase() {
     console.log(`- Customers created: ${customers.length}`);
     console.log(`- Vehicles created: ${vehicles.length}`);
     console.log(`- Tasks created: ${tasks.length}`);
+    console.log(`- Promotions created: ${promotions.length}`);
     
     console.log('\n🔑 Default Login Credentials:');
     console.log('Super Admin: admin@autocrm.com / admin123');
