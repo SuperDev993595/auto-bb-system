@@ -17,22 +17,22 @@ import EditVehicleModal from '../../components/customers/modal/EditVehicleModal'
 import DeleteVehicleModal from '../../components/customers/modal/DeleteVehicleModal'
 
 import {
-  HiOutlineUserCircle,
-  HiOutlineCash,
-  HiOutlineDocumentText,
-  HiOutlineCalendar,
-  HiOutlineTruck,
-  HiOutlinePhone
-} from 'react-icons/hi'
-import { FaEdit, FaTrash, FaCar } from 'react-icons/fa'
+  User,
+  DollarSign,
+  FileText,
+  Calendar,
+  Truck,
+  Phone
+} from '../../utils/icons'
+import { Edit, Trash2, Car } from '../../utils/icons'
 
 const tabs = [
-  { key: 'Overview', label: 'Overview', icon: HiOutlineUserCircle },
-  { key: 'Payments', label: 'Payments', icon: HiOutlineCash },
-  { key: 'Arrangements', label: 'Arrangements', icon: HiOutlineDocumentText },
-  { key: 'Appointments', label: 'Appointments', icon: HiOutlineCalendar },
-  { key: 'Towing', label: 'Towing', icon: HiOutlineTruck },
-  { key: 'Call Logs', label: 'Call Logs', icon: HiOutlinePhone }
+  { key: 'Overview', label: 'Overview', icon: User },
+  { key: 'Payments', label: 'Payments', icon: DollarSign },
+  { key: 'Arrangements', label: 'Arrangements', icon: FileText },
+  { key: 'Appointments', label: 'Appointments', icon: Calendar },
+  { key: 'Towing', label: 'Towing', icon: Truck },
+  { key: 'Call Logs', label: 'Call Logs', icon: Phone }
 ]
 
 export default function CustomerDetail() {
@@ -89,46 +89,46 @@ export default function CustomerDetail() {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* Top Profile Header */}
-      <div className="bg-white shadow rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="bg-white shadow-xl rounded-2xl p-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
           <p className="text-sm text-gray-500">Customer ID: {customer._id}</p>
         </div>
-        <div className="flex gap-2 mt-4 md:mt-0">
+        <div className="flex gap-3 mt-4 md:mt-0">
           <button 
             onClick={() => setShowEditModal(true)}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
           >
-            <FaEdit className="w-4 h-4" />
+            <Edit className="w-4 h-4" />
             Edit
           </button>
           <button 
             onClick={() => setShowAddVehicleModal(true)}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
           >
-            <FaCar className="w-4 h-4" />
+            <Car className="w-4 h-4" />
             Add Vehicle
           </button>
           <button 
             onClick={() => setShowDeleteModal(true)}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
           >
-            <FaTrash className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
             Delete
           </button>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white shadow-sm rounded-lg px-4 py-2 mb-6 overflow-x-auto">
-        <nav className="flex gap-4 whitespace-nowrap">
+      <div className="bg-white shadow-lg rounded-2xl px-6 py-4 mb-8 overflow-x-auto border border-gray-100">
+        <nav className="flex gap-6 whitespace-nowrap">
           {tabs.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 border-b-2 transition ${activeTab === key
+              className={`flex items-center gap-3 text-sm font-medium px-4 py-3 border-b-2 transition-all duration-200 ${activeTab === key
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-blue-500'
+                  : 'border-transparent text-gray-500 hover:text-blue-500 hover:border-blue-200'
                 }`}
             >
               <Icon className="w-5 h-5" />
@@ -139,7 +139,7 @@ export default function CustomerDetail() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white border rounded-xl shadow p-6">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-xl p-8">
         {activeTab === 'Overview' && (
           <OverviewSection 
             customer={customer} 

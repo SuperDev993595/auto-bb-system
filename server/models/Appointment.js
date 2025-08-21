@@ -12,21 +12,9 @@ const appointmentSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   serviceType: {
-    type: String,
-    required: [true, 'Service type is required'],
-    enum: [
-      'oil_change',
-      'tire_rotation',
-      'brake_service',
-      'engine_repair',
-      'transmission_service',
-      'electrical_repair',
-      'diagnostic',
-      'inspection',
-      'maintenance',
-      'emergency_repair',
-      'other'
-    ]
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ServiceCatalog',
+    required: [true, 'Service type is required']
   },
   serviceDescription: {
     type: String,
@@ -59,7 +47,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   technician: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Technician'
   },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
@@ -204,40 +192,7 @@ appointmentSchema.virtual('scheduledDateTime').get(function() {
   return null;
 });
 
-// Method to check if appointment conflicts with existing ones
-appointmentSchema.methods.checkConflicts = async function() {
-  // Get all appointments for the same date and assigned user
-  const existingAppointments = await this.constructor.find({
-    _id: { $ne: this._id },
-    assignedTo: this.assignedTo,
-    status: { $in: ['scheduled', 'confirmed', 'in_progress'] },
-    scheduledDate: this.scheduledDate
-  });
 
-  const conflicts = [];
-  
-  // Convert current appointment time to minutes
-  const [currentHours, currentMinutes] = this.scheduledTime.split(':').map(Number);
-  const currentStartMinutes = currentHours * 60 + currentMinutes;
-  const currentEndMinutes = currentStartMinutes + this.estimatedDuration;
-
-  for (const appointment of existingAppointments) {
-    // Convert existing appointment time to minutes
-    const [existingHours, existingMinutes] = appointment.scheduledTime.split(':').map(Number);
-    const existingStartMinutes = existingHours * 60 + existingMinutes;
-    const existingEndMinutes = existingStartMinutes + appointment.estimatedDuration;
-
-    // Check for overlap
-    if (
-      (currentStartMinutes < existingEndMinutes && currentEndMinutes > existingStartMinutes) ||
-      (existingStartMinutes < currentEndMinutes && existingEndMinutes > currentStartMinutes)
-    ) {
-      conflicts.push(appointment);
-    }
-  }
-  
-  return conflicts;
-};
 
 // Method to calculate actual cost
 appointmentSchema.methods.calculateActualCost = function() {

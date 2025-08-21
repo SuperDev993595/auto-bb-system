@@ -582,7 +582,7 @@ export default function InvoicesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID</label>
                 <input
                   type="text"
-                  value={settings.companyInfo.taxId || ''}
+                  value={(settings.companyInfo as any).taxId || ''}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 />
               </div>
@@ -590,7 +590,7 @@ export default function InvoicesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">License #</label>
                 <input
                   type="text"
-                  value={settings.companyInfo.license || ''}
+                  value={(settings.companyInfo as any).license || ''}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 />
               </div>
@@ -643,15 +643,15 @@ export default function InvoicesPage() {
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee Penalty (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={settings.invoiceDefaults.lateFeePenalty}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              />
-            </div>
+                          <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee Penalty (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={(settings.invoiceDefaults as any).lateFeePenalty || 0}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+              </div>
           </div>
         </div>
 
@@ -660,7 +660,13 @@ export default function InvoicesPage() {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Accepted Payment Methods</h3>
           
           <div className="space-y-3">
-            {Object.entries(settings.paymentMethods).map(([method, enabled]) => (
+            {Object.entries(settings.paymentMethods || {
+              cash: true,
+              check: true,
+              creditCard: true,
+              bankTransfer: true,
+              online: true
+            }).map(([method, enabled]) => (
               <div key={method} className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700 capitalize">
                   {method.replace(/([A-Z])/g, ' $1').trim()}
@@ -687,12 +693,12 @@ export default function InvoicesPage() {
               <div className="flex items-center gap-3">
                 <input
                   type="color"
-                  value={settings.template.primaryColor}
+                  value={(settings.template as any).primaryColor || settings.template.headerColor}
                   className="w-12 h-10 border border-gray-300 rounded"
                 />
                 <input
                   type="text"
-                  value={settings.template.primaryColor}
+                  value={(settings.template as any).primaryColor || settings.template.headerColor}
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
                 />
               </div>
@@ -702,10 +708,10 @@ export default function InvoicesPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Show Company Logo</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  settings.template.showCompanyLogo ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showCompanyLogo || settings.template.includeLogo ? 'bg-blue-600' : 'bg-gray-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    settings.template.showCompanyLogo ? 'translate-x-6' : 'translate-x-1'
+                    (settings.template as any).showCompanyLogo || settings.template.includeLogo ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
               </div>
@@ -713,10 +719,10 @@ export default function InvoicesPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Show Tax Breakdown</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  settings.template.showTaxBreakdown ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showTaxBreakdown ? 'bg-blue-600' : 'bg-gray-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    settings.template.showTaxBreakdown ? 'translate-x-6' : 'translate-x-1'
+                    (settings.template as any).showTaxBreakdown ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
               </div>
@@ -724,10 +730,10 @@ export default function InvoicesPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Show Labor Details</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  settings.template.showLaborDetails ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showLaborDetails ? 'bg-blue-600' : 'bg-gray-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    settings.template.showLaborDetails ? 'translate-x-6' : 'translate-x-1'
+                    (settings.template as any).showLaborDetails ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
               </div>

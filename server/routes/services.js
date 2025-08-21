@@ -1036,6 +1036,49 @@ router.get('/specializations', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/services/types
+// @desc    Get all service types for appointments
+// @access  Private
+router.get('/types', requireAnyAdmin, async (req, res) => {
+  try {
+    const services = await ServiceCatalog.find({ isActive: true })
+      .select('name category estimatedDuration')
+      .sort({ name: 1 });
+    
+    res.json({
+      success: true,
+      data: services
+    });
+  } catch (error) {
+    console.error('Get service types error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/vehicle-makes
+// @desc    Get all vehicle makes from existing vehicles
+// @access  Private
+router.get('/vehicle-makes', requireAnyAdmin, async (req, res) => {
+  try {
+    const Vehicle = require('../models/Vehicle');
+    const makes = await Vehicle.distinct('make').sort();
+    
+    res.json({
+      success: true,
+      data: makes
+    });
+  } catch (error) {
+    console.error('Get vehicle makes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/services/technicians/available
 // @desc    Get available technicians for a date/time
 // @access  Private

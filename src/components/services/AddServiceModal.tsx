@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
-import { HiCog } from 'react-icons/hi'
+import { Settings } from '../../utils/icons'
 import { createServiceCatalogItem } from '../../redux/actions/services'
 import { useAppDispatch } from '../../redux'
 import { CreateServiceCatalogData } from '../../services/services'
@@ -52,35 +52,35 @@ export default function AddServiceModal({ onClose, onSuccess }: Props) {
   return (
     <ModalWrapper
       title="Add New Service"
-      icon={<HiCog className="w-5 h-5" />}
+      icon={<Settings className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
       submitLabel={loading ? 'Creating...' : 'Create Service'}
-      submitColor="bg-blue-600"
+      submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Service Name *
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             placeholder="e.g., Oil Change, Brake Inspection"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Description *
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             rows={3}
             placeholder="Describe the service in detail"
             required
@@ -88,13 +88,13 @@ export default function AddServiceModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Category *
           </label>
           <select
             value={formData.category}
             onChange={(e) => handleInputChange('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             required
           >
             <option value="maintenance">Maintenance</option>
@@ -107,30 +107,30 @@ export default function AddServiceModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Estimated Duration (minutes) *
             </label>
             <input
               type="number"
               value={formData.estimatedDuration}
               onChange={(e) => handleInputChange('estimatedDuration', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               min="15"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Labor Rate ($/hour) *
             </label>
             <input
               type="number"
               value={formData.laborRate}
               onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               min="0"
               step="0.01"
               required
@@ -144,7 +144,7 @@ export default function AddServiceModal({ onClose, onSuccess }: Props) {
             id="isActive"
             checked={formData.isActive}
             onChange={(e) => handleInputChange('isActive', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md"
           />
           <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
             Service is active and available

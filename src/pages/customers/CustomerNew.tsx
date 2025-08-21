@@ -4,7 +4,7 @@ import { useAppDispatch } from '../../redux'
 import { createCustomer } from '../../redux/actions/customers'
 import { toast } from 'react-hot-toast'
 import PageTitle from '../../components/Shared/PageTitle'
-import { FaUser, FaBuilding, FaPhone, FaEnvelope, FaMapMarkerAlt, FaSave, FaArrowLeft } from 'react-icons/fa'
+import { User, Building2, Phone, Mail, MapPin, Save, ArrowLeft } from '../../utils/icons'
 
 interface CustomerFormData {
   name: string
@@ -111,19 +111,21 @@ export default function CustomerNew() {
           onClick={() => navigate('/admin/dashboard/customers')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
-          <FaArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Customers
         </button>
         <PageTitle title="Add New Customer" />
       </div>
 
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaUser className="w-5 h-5 text-blue-600" />
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
                 Basic Information
               </h3>
               
@@ -138,7 +140,7 @@ export default function CustomerNew() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                     placeholder="Enter customer's full name"
                   />
                 </div>
@@ -160,9 +162,11 @@ export default function CustomerNew() {
             </div>
 
             {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaEnvelope className="w-5 h-5 text-green-600" />
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-1.5 bg-green-100 rounded-lg">
+                  <Mail className="w-5 h-5 text-green-600" />
+                </div>
                 Contact Information
               </h3>
               
@@ -200,9 +204,11 @@ export default function CustomerNew() {
             </div>
 
             {/* Address Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaMapMarkerAlt className="w-5 h-5 text-red-600" />
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-1.5 bg-red-100 rounded-lg">
+                  <MapPin className="w-5 h-5 text-red-600" />
+                </div>
                 Address Information
               </h3>
               
@@ -266,9 +272,11 @@ export default function CustomerNew() {
             </div>
 
             {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FaBuilding className="w-5 h-5 text-purple-600" />
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+                <div className="p-1.5 bg-purple-100 rounded-lg">
+                  <Building2 className="w-5 h-5 text-purple-600" />
+                </div>
                 Additional Information
               </h3>
               
@@ -306,18 +314,18 @@ export default function CustomerNew() {
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-4 pt-8 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => navigate('/admin/dashboard/customers')}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl flex items-center gap-2 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -326,7 +334,7 @@ export default function CustomerNew() {
                   </>
                 ) : (
                   <>
-                    <FaSave className="w-4 h-4" />
+                    <Save className="w-4 h-4" />
                     Create Customer
                   </>
                 )}

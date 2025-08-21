@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../../utils/ModalWrapper'
-import { HiCreditCard } from 'react-icons/hi'
+import { CreditCard } from '../../../utils/icons'
 import { customerService } from '../../../services/customers'
 
 interface Props {
@@ -47,40 +47,42 @@ export default function PostPaymentModal({ customerId, onClose, onSuccess }: Pro
     return (
         <ModalWrapper
             title="Post New Payment"
-            icon={<HiCreditCard className="text-blue-600 w-5 h-5" />}
+            icon={<CreditCard className="text-blue-600 w-5 h-5" />}
             submitLabel={loading ? "Saving..." : "Save Payment"}
-            submitColor="bg-blue-600"
+            submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
             onClose={onClose}
             onSubmit={handleSubmit}
             disabled={loading}
         >
-            <div className="grid gap-4">
+            <div className="grid gap-6">
                 <label className="block">
-                    <span className="text-sm font-medium">Amount ($)</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Amount ($) *</span>
                     <input
                         type="number"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
+                        required
                     />
                 </label>
 
                 <label className="block">
-                    <span className="text-sm font-medium">Date</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Date</span>
                     <input
                         type="date"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                     />
                 </label>
 
                 <label className="block">
-                    <span className="text-sm font-medium">Payment Method</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Payment Method *</span>
                     <select
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
                         value={method}
                         onChange={(e) => setMethod(e.target.value)}
+                        required
                     >
                         <option value="">Select Method</option>
                         <option value="cash">Cash</option>
@@ -93,9 +95,9 @@ export default function PostPaymentModal({ customerId, onClose, onSuccess }: Pro
                 </label>
 
                 <label className="block">
-                    <span className="text-sm font-medium">Notes</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Notes</span>
                     <textarea
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white resize-none"
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}

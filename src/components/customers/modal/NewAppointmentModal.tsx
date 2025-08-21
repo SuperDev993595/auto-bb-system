@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ModalWrapper from '../../../utils/ModalWrapper'
-import { HiCalendar, HiClock, HiUser, HiTruck } from 'react-icons/hi'
+import { Calendar, Clock, User, Truck } from '../../../utils/icons'
 import { API_ENDPOINTS, getAuthHeaders } from '../../../services/api'
 
 export default function NewAppointmentModal({ onClose }: { onClose: () => void }) {
@@ -59,48 +59,51 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
     return (
         <ModalWrapper
             title="Schedule New Appointment"
-            icon={<HiCalendar className="text-indigo-500 w-5 h-5" />}
+            icon={<Calendar className="text-indigo-500 w-5 h-5" />}
             submitLabel="Schedule"
-            submitColor="bg-indigo-600"
+            submitColor="bg-gradient-to-r from-indigo-600 to-purple-600"
             onClose={onClose}
             onSubmit={handleSubmit}
         >
-            <div className="grid gap-4">
+            <div className="grid gap-6">
                 {/* Date and Time */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                     <label className="block">
-                        <span className="text-sm font-medium flex items-center gap-1">
-                            <HiCalendar className="w-4 h-4" />
+                        <span className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-indigo-600" />
                             Date *
                         </span>
                         <input 
                             type="date" 
                             value={date} 
                             onChange={e => setDate(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
+                            required
                         />
                     </label>
                     <label className="block">
-                        <span className="text-sm font-medium flex items-center gap-1">
-                            <HiClock className="w-4 h-4" />
+                        <span className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-indigo-600" />
                             Time *
                         </span>
                         <input 
                             type="time" 
                             value={time} 
                             onChange={e => setTime(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
+                            required
                         />
                     </label>
                 </div>
 
                 {/* Service Type */}
                 <label className="block">
-                    <span className="text-sm font-medium">Service Type *</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Service Type *</span>
                     <select 
                         value={serviceType} 
                         onChange={e => setServiceType(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
+                        required
                     >
                         <option value="">Select Service</option>
                         <option value="oil_change">Oil Change</option>
@@ -119,14 +122,14 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
 
                 {/* Technician */}
                 <label className="block">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                        <HiUser className="w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                        <User className="w-4 h-4 text-indigo-600" />
                         Assign Technician
                     </span>
                     <select 
                         value={technicianId} 
                         onChange={e => setTechnicianId(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
                     >
                         <option value="">Select a technician (optional)</option>
                         {technicians.filter(tech => tech.isActive).map((technician) => (
@@ -139,8 +142,8 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
 
                 {/* Vehicle */}
                 <label className="block">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                        <HiTruck className="w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-700 mb-2 block flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-indigo-600" />
                         Vehicle *
                     </span>
                     <input 
@@ -148,29 +151,30 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
                         placeholder="e.g., 2020 Toyota Camry"
                         value={vehicle} 
                         onChange={e => setVehicle(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
+                        required
                     />
                 </label>
 
                 {/* Duration and Priority */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                     <label className="block">
-                        <span className="text-sm font-medium">Duration (minutes)</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Duration (minutes)</span>
                         <input 
                             type="number" 
                             min="15" 
                             max="480"
                             value={estimatedDuration} 
                             onChange={e => setEstimatedDuration(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
                         />
                     </label>
                     <label className="block">
-                        <span className="text-sm font-medium">Priority</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Priority</span>
                         <select 
                             value={priority} 
                             onChange={e => setPriority(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
                         >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -182,11 +186,11 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
 
                 {/* Status */}
                 <label className="block">
-                    <span className="text-sm font-medium">Status</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Status</span>
                     <select 
                         value={status} 
                         onChange={e => setStatus(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white"
                     >
                         <option value="scheduled">Scheduled</option>
                         <option value="confirmed">Confirmed</option>
@@ -198,13 +202,13 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
 
                 {/* Notes */}
                 <label className="block">
-                    <span className="text-sm font-medium">Notes</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Notes</span>
                     <textarea 
                         rows={3} 
                         value={notes} 
                         onChange={e => setNotes(e.target.value)}
                         placeholder="Any special instructions or notes..."
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:bg-white resize-none"
                     />
                 </label>
             </div>

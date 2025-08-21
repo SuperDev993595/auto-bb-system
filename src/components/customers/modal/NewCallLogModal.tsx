@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../../utils/ModalWrapper'
-import { HiPhone } from 'react-icons/hi'
+import { Phone } from '../../../utils/icons'
 import { customerService } from '../../../services/customers'
 
 interface Props {
@@ -66,31 +66,32 @@ export default function NewCallLogModal({ customerId, onClose, onSuccess }: Prop
     return (
         <ModalWrapper
             title="Log a Call"
-            icon={<HiPhone className="text-teal-600 w-5 h-5" />}
+            icon={<Phone className="text-teal-600 w-5 h-5" />}
             submitLabel={loading ? "Saving..." : "Save Log"}
-            submitColor="bg-teal-600"
+            submitColor="bg-gradient-to-r from-teal-600 to-cyan-600"
             onClose={onClose}
             onSubmit={handleSubmit}
             disabled={loading}
         >
-            <div className="grid gap-4">
+            <div className="grid gap-6">
                 <label className="block">
-                    <span className="text-sm font-medium">Date</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Date</span>
                     <input
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
                     />
                 </label>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                     <label className="block">
-                        <span className="text-sm font-medium">Call Type</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Call Type *</span>
                         <select
                             value={type}
                             onChange={(e) => setType(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                            required
                         >
                             <option value="inbound">Inbound</option>
                             <option value="outbound">Outbound</option>
@@ -99,67 +100,67 @@ export default function NewCallLogModal({ customerId, onClose, onSuccess }: Prop
                         </select>
                     </label>
                     <label className="block">
-                        <span className="text-sm font-medium">Duration (MM:SS)</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Duration (MM:SS)</span>
                         <input
                             type="text"
                             value={duration}
                             onChange={(e) => setDuration(e.target.value)}
                             placeholder="e.g. 05:30"
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
                         />
                     </label>
                 </div>
                 <label className="block">
-                    <span className="text-sm font-medium">Phone Number</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Phone Number</span>
                     <input
                         type="text"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="e.g. (555) 123-4567"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
                     />
                 </label>
                 <label className="block">
-                    <span className="text-sm font-medium">Summary</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Summary</span>
                     <input
                         type="text"
                         value={summary}
                         onChange={(e) => setSummary(e.target.value)}
                         placeholder="Brief summary of the call"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
                     />
                 </label>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                     <label className="block">
-                        <span className="text-sm font-medium">Follow-up Required</span>
-                        <div className="flex items-center mt-1">
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Follow-up Required</span>
+                        <div className="flex items-center mt-2">
                             <input
                                 type="checkbox"
                                 checked={followUpRequired}
                                 onChange={(e) => setFollowUpRequired(e.target.checked)}
-                                className="mr-2"
+                                className="mr-3 w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2"
                             />
                             <span className="text-sm text-gray-600">Mark for follow-up</span>
                         </div>
                     </label>
                     <label className="block">
-                        <span className="text-sm font-medium">Follow-up Date</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Follow-up Date</span>
                         <input
                             type="date"
                             value={followUpDate}
                             onChange={(e) => setFollowUpDate(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={!followUpRequired}
                         />
                     </label>
                 </div>
                 <label className="block">
-                    <span className="text-sm font-medium">Notes</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Notes</span>
                     <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white resize-none"
                         rows={3}
                         placeholder="Detailed notes about the call..."
                     />

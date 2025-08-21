@@ -1,4 +1,4 @@
-import api, { apiResponse } from './api';
+import api, { ApiResponse } from './api';
 
 // Reminder Interfaces
 export interface Reminder {
@@ -249,7 +249,7 @@ export interface ReminderStats {
 
 class ReminderService {
   // Reminder Methods
-  async getReminders(filters: ReminderFilters = {}): Promise<apiResponse<{ data: Reminder[]; pagination: any }>> {
+  async getReminders(filters: ReminderFilters = {}): Promise<ApiResponse<{ data: Reminder[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -259,63 +259,63 @@ class ReminderService {
     return api.get(`/reminders?${params.toString()}`);
   }
 
-  async getReminder(id: string): Promise<apiResponse<Reminder>> {
+  async getReminder(id: string): Promise<ApiResponse<Reminder>> {
     return api.get(`/reminders/${id}`);
   }
 
-  async createReminder(data: CreateReminderData): Promise<apiResponse<Reminder>> {
+  async createReminder(data: CreateReminderData): Promise<ApiResponse<Reminder>> {
     return api.post('/reminders', data);
   }
 
-  async updateReminder(id: string, data: UpdateReminderData): Promise<apiResponse<Reminder>> {
+  async updateReminder(id: string, data: UpdateReminderData): Promise<ApiResponse<Reminder>> {
     return api.put(`/reminders/${id}`, data);
   }
 
-  async deleteReminder(id: string): Promise<apiResponse<{ message: string }>> {
+  async deleteReminder(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.delete(`/reminders/${id}`);
   }
 
-  async markAsSent(id: string): Promise<apiResponse<Reminder>> {
+  async markAsSent(id: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/mark-sent`);
   }
 
-  async acknowledgeReminder(id: string, notes?: string): Promise<apiResponse<Reminder>> {
+  async acknowledgeReminder(id: string, notes?: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/acknowledge`, { notes });
   }
 
-  async completeReminder(id: string, notes?: string): Promise<apiResponse<Reminder>> {
+  async completeReminder(id: string, notes?: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/complete`, { notes });
   }
 
-  async cancelReminder(id: string, reason?: string): Promise<apiResponse<Reminder>> {
+  async cancelReminder(id: string, reason?: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/cancel`, { reason });
   }
 
-  async getUpcomingReminders(days: number = 7, assignedTo?: string): Promise<apiResponse<Reminder[]>> {
+  async getUpcomingReminders(days: number = 7, assignedTo?: string): Promise<ApiResponse<Reminder[]>> {
     const params = new URLSearchParams({ days: days.toString() });
     if (assignedTo) params.append('assignedTo', assignedTo);
     return api.get(`/reminders/upcoming/list?${params.toString()}`);
   }
 
-  async getOverdueReminders(assignedTo?: string): Promise<apiResponse<Reminder[]>> {
+  async getOverdueReminders(assignedTo?: string): Promise<ApiResponse<Reminder[]>> {
     const params = new URLSearchParams();
     if (assignedTo) params.append('assignedTo', assignedTo);
     return api.get(`/reminders/overdue/list?${params.toString()}`);
   }
 
-  async getReminderStats(startDate?: string, endDate?: string): Promise<apiResponse<ReminderStats>> {
+  async getReminderStats(startDate?: string, endDate?: string): Promise<ApiResponse<ReminderStats>> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     return api.get(`/reminders/stats/overview?${params.toString()}`);
   }
 
-  async createBulkReminders(reminders: CreateReminderData[]): Promise<apiResponse<{ data: Reminder[]; errors: any[] }>> {
+  async createBulkReminders(reminders: CreateReminderData[]): Promise<ApiResponse<{ data: Reminder[]; errors: any[] }>> {
     return api.post('/reminders/bulk', { reminders });
   }
 
   // Reminder Template Methods
-  async getTemplates(filters: TemplateFilters = {}): Promise<apiResponse<{ data: ReminderTemplate[]; pagination: any }>> {
+  async getTemplates(filters: TemplateFilters = {}): Promise<ApiResponse<{ data: ReminderTemplate[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -325,32 +325,32 @@ class ReminderService {
     return api.get(`/reminders/templates?${params.toString()}`);
   }
 
-  async getTemplate(id: string): Promise<apiResponse<ReminderTemplate>> {
+  async getTemplate(id: string): Promise<ApiResponse<ReminderTemplate>> {
     return api.get(`/reminders/templates/${id}`);
   }
 
-  async createTemplate(data: CreateTemplateData): Promise<apiResponse<ReminderTemplate>> {
+  async createTemplate(data: CreateTemplateData): Promise<ApiResponse<ReminderTemplate>> {
     return api.post('/reminders/templates', data);
   }
 
-  async updateTemplate(id: string, data: UpdateTemplateData): Promise<apiResponse<ReminderTemplate>> {
+  async updateTemplate(id: string, data: UpdateTemplateData): Promise<ApiResponse<ReminderTemplate>> {
     return api.put(`/reminders/templates/${id}`, data);
   }
 
-  async deleteTemplate(id: string): Promise<apiResponse<{ message: string }>> {
+  async deleteTemplate(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.delete(`/reminders/templates/${id}`);
   }
 
-  async toggleTemplate(id: string): Promise<apiResponse<ReminderTemplate>> {
+  async toggleTemplate(id: string): Promise<ApiResponse<ReminderTemplate>> {
     return api.patch(`/reminders/templates/${id}/toggle`);
   }
 
   // Notification Settings Methods
-  async getNotificationSettings(): Promise<apiResponse<NotificationSettings>> {
+  async getNotificationSettings(): Promise<ApiResponse<NotificationSettings>> {
     return api.get('/reminders/notification-settings');
   }
 
-  async updateNotificationSettings(data: UpdateNotificationSettingsData): Promise<apiResponse<NotificationSettings>> {
+  async updateNotificationSettings(data: UpdateNotificationSettingsData): Promise<ApiResponse<NotificationSettings>> {
     return api.put('/reminders/notification-settings', data);
   }
 
@@ -361,54 +361,54 @@ class ReminderService {
     assignedTo?: string;
     dueDate: string;
     customData?: Record<string, any>;
-  }): Promise<apiResponse<Reminder>> {
+  }): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/generate-from-template/${templateId}`, data);
   }
 
-  async generateServiceDueReminders(customerId: string, serviceType: string, dueDate: string): Promise<apiResponse<Reminder[]>> {
+  async generateServiceDueReminders(customerId: string, serviceType: string, dueDate: string): Promise<ApiResponse<Reminder[]>> {
     return api.post('/reminders/generate-service-due', { customerId, serviceType, dueDate });
   }
 
-  async generateFollowUpReminders(customerId: string, appointmentId: string, followUpDate: string): Promise<apiResponse<Reminder[]>> {
+  async generateFollowUpReminders(customerId: string, appointmentId: string, followUpDate: string): Promise<ApiResponse<Reminder[]>> {
     return api.post('/reminders/generate-follow-up', { customerId, appointmentId, followUpDate });
   }
 
-  async generatePaymentReminders(invoiceId: string, dueDate: string): Promise<apiResponse<Reminder[]>> {
+  async generatePaymentReminders(invoiceId: string, dueDate: string): Promise<ApiResponse<Reminder[]>> {
     return api.post('/reminders/generate-payment', { invoiceId, dueDate });
   }
 
   // Reminder Scheduling Methods
-  async scheduleReminder(id: string, scheduleDate: string): Promise<apiResponse<Reminder>> {
+  async scheduleReminder(id: string, scheduleDate: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/schedule`, { scheduleDate });
   }
 
-  async rescheduleReminder(id: string, newDate: string): Promise<apiResponse<Reminder>> {
+  async rescheduleReminder(id: string, newDate: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/reschedule`, { newDate });
   }
 
   // Reminder Notification Methods
-  async sendReminderNotification(id: string, method: 'email' | 'sms' | 'push'): Promise<apiResponse<{ message: string }>> {
+  async sendReminderNotification(id: string, method: 'email' | 'sms' | 'push'): Promise<ApiResponse<{ message: string }>> {
     return api.post(`/reminders/${id}/send-notification`, { method });
   }
 
-  async sendBulkNotifications(reminderIds: string[], method: 'email' | 'sms' | 'push'): Promise<apiResponse<{ sent: number; failed: number; errors: any[] }>> {
+  async sendBulkNotifications(reminderIds: string[], method: 'email' | 'sms' | 'push'): Promise<ApiResponse<{ sent: number; failed: number; errors: any[] }>> {
     return api.post('/reminders/bulk/send-notifications', { reminderIds, method });
   }
 
   // Reminder Analytics
-  async getReminderAnalytics(startDate?: string, endDate?: string): Promise<apiResponse<any>> {
+  async getReminderAnalytics(startDate?: string, endDate?: string): Promise<ApiResponse<any>> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     return api.get(`/reminders/analytics?${params.toString()}`);
   }
 
-  async getCustomerReminderHistory(customerId: string): Promise<apiResponse<Reminder[]>> {
+  async getCustomerReminderHistory(customerId: string): Promise<ApiResponse<Reminder[]>> {
     return api.get(`/reminders/customer/${customerId}/history`);
   }
 
   // Reminder Search
-  async searchReminders(query: string, filters?: ReminderFilters): Promise<apiResponse<Reminder[]>> {
+  async searchReminders(query: string, filters?: ReminderFilters): Promise<ApiResponse<Reminder[]>> {
     const params = new URLSearchParams({ query });
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -421,20 +421,20 @@ class ReminderService {
   }
 
   // Reminder Duplication
-  async duplicateReminder(id: string): Promise<apiResponse<Reminder>> {
+  async duplicateReminder(id: string): Promise<ApiResponse<Reminder>> {
     return api.post(`/reminders/${id}/duplicate`);
   }
 
   // Reminder Archiving
-  async archiveReminder(id: string): Promise<apiResponse<{ message: string }>> {
+  async archiveReminder(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.post(`/reminders/${id}/archive`);
   }
 
-  async unarchiveReminder(id: string): Promise<apiResponse<{ message: string }>> {
+  async unarchiveReminder(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.post(`/reminders/${id}/unarchive`);
   }
 
-  async getArchivedReminders(filters?: ReminderFilters): Promise<apiResponse<{ data: Reminder[]; pagination: any }>> {
+  async getArchivedReminders(filters?: ReminderFilters): Promise<ApiResponse<{ data: Reminder[]; pagination: any }>> {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {

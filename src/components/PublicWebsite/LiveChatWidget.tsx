@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  FaComments, 
-  FaTimes, 
-  FaPaperPlane, 
-  FaUser, 
-  FaRobot,
-  FaWindowMinimize
-} from 'react-icons/fa';
+  MessageCircle, 
+  X, 
+  Send, 
+  User, 
+  Cog,
+  ChevronDown
+} from '../../utils/icons';
 
 interface Message {
   id: string;
@@ -109,9 +109,9 @@ const LiveChatWidget: React.FC = () => {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition duration-300"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
         >
-          <FaComments className="text-xl" />
+          <MessageCircle className="w-6 h-6" />
         </button>
       </div>
     );
@@ -122,31 +122,31 @@ const LiveChatWidget: React.FC = () => {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition duration-300 flex items-center space-x-2"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center space-x-2 hover:scale-105"
         >
-          <FaComments className="text-xl" />
+          <MessageCircle className="w-6 h-6" />
           <span className="text-sm font-medium">Chat with us</span>
         </button>
       ) : (
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-80 h-96 flex flex-col">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-80 h-96 flex flex-col">
           {/* Header */}
-          <div className="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-t-xl flex justify-between items-center">
             <div className="flex items-center space-x-2">
-              <FaComments />
+              <MessageCircle className="w-5 h-5" />
               <span className="font-semibold">Live Chat</span>
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={() => setIsMinimized(true)}
-                className="hover:bg-blue-700 p-1 rounded"
+                className="hover:bg-blue-700 p-1 rounded-lg transition-all duration-300"
               >
-                <FaWindowMinimize className="text-sm" />
+                <ChevronDown className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="hover:bg-blue-700 p-1 rounded"
+                className="hover:bg-blue-700 p-1 rounded-lg transition-all duration-300"
               >
-                <FaTimes className="text-sm" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -159,24 +159,24 @@ const LiveChatWidget: React.FC = () => {
                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs px-3 py-2 rounded-lg ${
+                  className={`max-w-xs px-4 py-3 rounded-xl shadow-sm ${
                     message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
+                      : 'bg-gray-50 text-gray-800 border border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center space-x-2 mb-1">
+                  <div className="flex items-center space-x-2 mb-2">
                     {message.sender === 'user' ? (
-                      <FaUser className="text-xs" />
+                      <User className="w-3 h-3" />
                     ) : (
-                      <FaRobot className="text-xs" />
+                      <Cog className="w-3 h-3" />
                     )}
                     <span className="text-xs opacity-75">
                       {message.sender === 'user' ? 'You' : 'Auto Repair Pro'}
                     </span>
                   </div>
                   <p className="text-sm">{message.text}</p>
-                  <p className="text-xs opacity-75 mt-1">
+                  <p className="text-xs opacity-75 mt-2">
                     {message.timestamp.toLocaleTimeString([], { 
                       hour: '2-digit', 
                       minute: '2-digit' 
@@ -188,12 +188,12 @@ const LiveChatWidget: React.FC = () => {
             
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg">
+                <div className="bg-gray-50 text-gray-800 px-4 py-3 rounded-xl border border-gray-200">
                   <div className="flex items-center space-x-2">
-                    <FaRobot className="text-xs" />
+                    <Cog className="w-3 h-3" />
                     <span className="text-xs">Agent is typing...</span>
                   </div>
-                  <div className="flex space-x-1 mt-1">
+                  <div className="flex space-x-1 mt-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -215,14 +215,14 @@ const LiveChatWidget: React.FC = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-2 rounded-lg transition duration-300"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white p-2 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none"
               >
-                <FaPaperPlane className="text-sm" />
+                <Send className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">

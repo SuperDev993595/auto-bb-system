@@ -1,4 +1,4 @@
-import api, { apiResponse } from './api';
+import api, { ApiResponse } from './api';
 
 // Inventory Item Interfaces
 export interface InventoryItem {
@@ -302,7 +302,7 @@ export interface PurchaseOrderStats {
 
 class InventoryService {
   // Inventory Item Methods
-  async getInventoryItems(filters: InventoryItemFilters = {}): Promise<apiResponse<{ data: InventoryItem[]; pagination: any }>> {
+  async getInventoryItems(filters: InventoryItemFilters = {}): Promise<ApiResponse<{ data: InventoryItem[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -312,40 +312,40 @@ class InventoryService {
     return api.get(`/inventory/items?${params.toString()}`);
   }
 
-  async getInventoryItem(id: string): Promise<apiResponse<InventoryItem>> {
+  async getInventoryItem(id: string): Promise<ApiResponse<InventoryItem>> {
     return api.get(`/inventory/items/${id}`);
   }
 
-  async createInventoryItem(data: CreateInventoryItemData): Promise<apiResponse<InventoryItem>> {
+  async createInventoryItem(data: CreateInventoryItemData): Promise<ApiResponse<InventoryItem>> {
     return api.post('/inventory/items', data);
   }
 
-  async updateInventoryItem(id: string, data: UpdateInventoryItemData): Promise<apiResponse<InventoryItem>> {
+  async updateInventoryItem(id: string, data: UpdateInventoryItemData): Promise<ApiResponse<InventoryItem>> {
     return api.put(`/inventory/items/${id}`, data);
   }
 
-  async deleteInventoryItem(id: string): Promise<apiResponse<{ message: string }>> {
+  async deleteInventoryItem(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.delete(`/inventory/items/${id}`);
   }
 
-  async adjustStock(id: string, quantity: number, reason: string, notes?: string): Promise<apiResponse<InventoryItem>> {
+  async adjustStock(id: string, quantity: number, reason: string, notes?: string): Promise<ApiResponse<InventoryItem>> {
     return api.post(`/inventory/items/${id}/adjust-stock`, { quantity, reason, notes });
   }
 
-  async getLowStockItems(): Promise<apiResponse<InventoryItem[]>> {
+  async getLowStockItems(): Promise<ApiResponse<InventoryItem[]>> {
     return api.get('/inventory/items/low-stock');
   }
 
-  async getOutOfStockItems(): Promise<apiResponse<InventoryItem[]>> {
+  async getOutOfStockItems(): Promise<ApiResponse<InventoryItem[]>> {
     return api.get('/inventory/items/out-of-stock');
   }
 
-  async getInventoryStats(): Promise<apiResponse<InventoryStats>> {
+  async getInventoryStats(): Promise<ApiResponse<InventoryStats>> {
     return api.get('/inventory/items/stats/overview');
   }
 
   // Transaction Methods
-  async getTransactions(filters: TransactionFilters = {}): Promise<apiResponse<{ data: InventoryTransaction[]; pagination: any }>> {
+  async getTransactions(filters: TransactionFilters = {}): Promise<ApiResponse<{ data: InventoryTransaction[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -355,15 +355,15 @@ class InventoryService {
     return api.get(`/inventory/transactions?${params.toString()}`);
   }
 
-  async getTransaction(id: string): Promise<apiResponse<InventoryTransaction>> {
+  async getTransaction(id: string): Promise<ApiResponse<InventoryTransaction>> {
     return api.get(`/inventory/transactions/${id}`);
   }
 
-  async createTransaction(data: CreateTransactionData): Promise<apiResponse<InventoryTransaction>> {
+  async createTransaction(data: CreateTransactionData): Promise<ApiResponse<InventoryTransaction>> {
     return api.post('/inventory/transactions', data);
   }
 
-  async getTransactionStats(startDate?: string, endDate?: string): Promise<apiResponse<TransactionStats>> {
+  async getTransactionStats(startDate?: string, endDate?: string): Promise<ApiResponse<TransactionStats>> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
@@ -371,7 +371,7 @@ class InventoryService {
   }
 
   // Purchase Order Methods
-  async getPurchaseOrders(filters: PurchaseOrderFilters = {}): Promise<apiResponse<{ data: PurchaseOrder[]; pagination: any }>> {
+  async getPurchaseOrders(filters: PurchaseOrderFilters = {}): Promise<ApiResponse<{ data: PurchaseOrder[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -381,31 +381,31 @@ class InventoryService {
     return api.get(`/inventory/purchase-orders?${params.toString()}`);
   }
 
-  async getPurchaseOrder(id: string): Promise<apiResponse<PurchaseOrder>> {
+  async getPurchaseOrder(id: string): Promise<ApiResponse<PurchaseOrder>> {
     return api.get(`/inventory/purchase-orders/${id}`);
   }
 
-  async createPurchaseOrder(data: CreatePurchaseOrderData): Promise<apiResponse<PurchaseOrder>> {
+  async createPurchaseOrder(data: CreatePurchaseOrderData): Promise<ApiResponse<PurchaseOrder>> {
     return api.post('/inventory/purchase-orders', data);
   }
 
-  async updatePurchaseOrder(id: string, data: UpdatePurchaseOrderData): Promise<apiResponse<PurchaseOrder>> {
+  async updatePurchaseOrder(id: string, data: UpdatePurchaseOrderData): Promise<ApiResponse<PurchaseOrder>> {
     return api.put(`/inventory/purchase-orders/${id}`, data);
   }
 
-  async deletePurchaseOrder(id: string): Promise<apiResponse<{ message: string }>> {
+  async deletePurchaseOrder(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.delete(`/inventory/purchase-orders/${id}`);
   }
 
-  async updatePurchaseOrderStatus(id: string, status: PurchaseOrder['status']): Promise<apiResponse<PurchaseOrder>> {
+  async updatePurchaseOrderStatus(id: string, status: PurchaseOrder['status']): Promise<ApiResponse<PurchaseOrder>> {
     return api.patch(`/inventory/purchase-orders/${id}/status`, { status });
   }
 
-  async receivePurchaseOrder(id: string, receivedItems: { itemId: string; receivedQuantity: number }[]): Promise<apiResponse<PurchaseOrder>> {
+  async receivePurchaseOrder(id: string, receivedItems: { itemId: string; receivedQuantity: number }[]): Promise<ApiResponse<PurchaseOrder>> {
     return api.post(`/inventory/purchase-orders/${id}/receive`, { receivedItems });
   }
 
-  async getPurchaseOrderStats(startDate?: string, endDate?: string): Promise<apiResponse<PurchaseOrderStats>> {
+  async getPurchaseOrderStats(startDate?: string, endDate?: string): Promise<ApiResponse<PurchaseOrderStats>> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
@@ -413,7 +413,7 @@ class InventoryService {
   }
 
   // Supplier Methods
-  async getSuppliers(filters: SupplierFilters = {}): Promise<apiResponse<{ data: Supplier[]; pagination: any }>> {
+  async getSuppliers(filters: SupplierFilters = {}): Promise<ApiResponse<{ data: Supplier[]; pagination: any }>> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -423,36 +423,36 @@ class InventoryService {
     return api.get(`/inventory/suppliers?${params.toString()}`);
   }
 
-  async getSupplier(id: string): Promise<apiResponse<Supplier>> {
+  async getSupplier(id: string): Promise<ApiResponse<Supplier>> {
     return api.get(`/inventory/suppliers/${id}`);
   }
 
-  async createSupplier(data: CreateSupplierData): Promise<apiResponse<Supplier>> {
+  async createSupplier(data: CreateSupplierData): Promise<ApiResponse<Supplier>> {
     return api.post('/inventory/suppliers', data);
   }
 
-  async updateSupplier(id: string, data: UpdateSupplierData): Promise<apiResponse<Supplier>> {
+  async updateSupplier(id: string, data: UpdateSupplierData): Promise<ApiResponse<Supplier>> {
     return api.put(`/inventory/suppliers/${id}`, data);
   }
 
-  async deleteSupplier(id: string): Promise<apiResponse<{ message: string }>> {
+  async deleteSupplier(id: string): Promise<ApiResponse<{ message: string }>> {
     return api.delete(`/inventory/suppliers/${id}`);
   }
 
   // General Inventory Methods
-  async getCategories(): Promise<apiResponse<string[]>> {
+  async getCategories(): Promise<ApiResponse<string[]>> {
     return api.get('/inventory/categories');
   }
 
-  async getLocations(): Promise<apiResponse<string[]>> {
+  async getLocations(): Promise<ApiResponse<string[]>> {
     return api.get('/inventory/locations');
   }
 
-  async exportInventory(format: 'csv' | 'excel' = 'csv'): Promise<apiResponse<{ downloadUrl: string }>> {
+  async exportInventory(format: 'csv' | 'excel' = 'csv'): Promise<ApiResponse<{ downloadUrl: string }>> {
     return api.get(`/inventory/export?format=${format}`);
   }
 
-  async importInventory(file: File): Promise<apiResponse<{ message: string; imported: number; errors: any[] }>> {
+  async importInventory(file: File): Promise<ApiResponse<{ message: string; imported: number; errors: any[] }>> {
     const formData = new FormData();
     formData.append('file', file);
     return api.post('/inventory/import', formData, {

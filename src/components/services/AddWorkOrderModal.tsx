@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
-import { HiClipboardList } from 'react-icons/hi'
+import { ClipboardList } from '../../utils/icons'
 import { createWorkOrder } from '../../redux/actions/services'
 import { fetchCustomers } from '../../redux/actions/customers'
 import { useAppDispatch, useAppSelector } from '../../redux'
@@ -99,16 +99,14 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
         },
         services: [{
           service: formData.serviceId,
-          description: selectedService.description,
           laborHours: formData.laborHours,
           laborRate: formData.laborRate,
-          parts: [],
-          totalCost: (formData.laborHours * formData.laborRate) + (formData.partsCost || 0)
+          partsCost: formData.partsCost
         }],
-        technician: formData.technicianId || undefined,
+        technician: formData.technicianId,
         priority: formData.priority,
         estimatedStartDate: formData.estimatedStartDate,
-        estimatedCompletionDate: formData.estimatedEndDate,
+        estimatedEndDate: formData.estimatedEndDate,
         notes: formData.notes
       }
 
@@ -126,54 +124,65 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
 
   return (
     <ModalWrapper
-      title="Create New Work Order"
-      icon={<HiClipboardList className="w-5 h-5" />}
+      title="Create Work Order"
+      icon={<ClipboardList className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
       submitLabel={loading ? 'Creating...' : 'Create Work Order'}
-      submitColor="bg-blue-600"
+      submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Customer *
           </label>
           <select
             value={formData.customerId}
             onChange={(e) => handleInputChange('customerId', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             required
-            disabled={customersLoading}
           >
-            <option value="">
-              {customersLoading ? 'Loading customers...' : 'Select Customer'}
-            </option>
+            <option value="">Select a customer</option>
             {customers?.map(customer => (
               <option key={customer._id} value={customer._id}>
-                {customer.name} - {customer.email}
+                {customer.firstName} {customer.lastName} - {customer.phone}
               </option>
             ))}
           </select>
-          {customersLoading && (
-            <p className="text-sm text-gray-500 mt-1">Loading customers...</p>
-          )}
-          {!customersLoading && customers.length === 0 && (
-            <p className="text-sm text-gray-500 mt-1">No customers found. Please add customers first.</p>
-          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Vehicle *
+          </label>
+          <select
+            value={formData.vehicleId}
+            onChange={(e) => handleInputChange('vehicleId', e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            required
+            disabled={!formData.customerId}
+          >
+            <option value="">Select a vehicle</option>
+            {customerVehicles?.map(vehicle => (
+              <option key={vehicle._id} value={vehicle._id}>
+                {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Service *
           </label>
           <select
             value={formData.serviceId}
             onChange={(e) => handleInputChange('serviceId', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             required
           >
-            <option value="">Select Service</option>
-            {catalog?.filter(service => service.isActive).map(service => (
+            <option value="">Select a service</option>
+            {catalog?.map(service => (
               <option key={service._id} value={service._id}>
                 {service.name} - ${service.laborRate}/hr
               </option>
@@ -182,58 +191,31 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Vehicle *
-          </label>
-          <select
-            value={formData.vehicleId}
-            onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            disabled={!formData.customerId}
-          >
-            <option value="">
-              {!formData.customerId ? 'Select Customer First' : 'Select Vehicle'}
-            </option>
-            {customerVehicles.map(vehicle => (
-              <option key={vehicle._id} value={vehicle._id}>
-                {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-              </option>
-            ))}
-          </select>
-          {formData.customerId && customerVehicles.length === 0 && (
-            <p className="text-sm text-gray-500 mt-1">
-              No vehicles found for this customer. Please add vehicles to the customer profile first.
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Technician
           </label>
           <select
             value={formData.technicianId}
             onChange={(e) => handleInputChange('technicianId', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
           >
-            <option value="">Select Technician (Optional)</option>
-            {technicians?.filter(tech => tech.isActive).map(technician => (
+            <option value="">Select a technician</option>
+            {technicians?.map(technician => (
               <option key={technician._id} value={technician._id}>
-                {technician.name} - ${technician.hourlyRate}/hr
+                {technician.firstName} {technician.lastName}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Priority
           </label>
           <select
             value={formData.priority}
             onChange={(e) => handleInputChange('priority', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -242,72 +224,72 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Estimated Start Date *
             </label>
             <input
               type="datetime-local"
               value={formData.estimatedStartDate}
               onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Estimated End Date *
             </label>
             <input
               type="datetime-local"
               value={formData.estimatedEndDate}
               onChange={(e) => handleInputChange('estimatedEndDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Labor Hours
             </label>
             <input
               type="number"
               value={formData.laborHours}
               onChange={(e) => handleInputChange('laborHours', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               min="0.5"
               step="0.5"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Labor Rate ($/hr)
             </label>
             <input
               type="number"
               value={formData.laborRate}
               onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               min="0"
               step="0.01"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Parts Cost ($)
             </label>
             <input
               type="number"
               value={formData.partsCost}
               onChange={(e) => handleInputChange('partsCost', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               min="0"
               step="0.01"
             />
@@ -315,13 +297,13 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Notes
           </label>
           <textarea
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             rows={3}
             placeholder="Additional notes about the work order"
           />

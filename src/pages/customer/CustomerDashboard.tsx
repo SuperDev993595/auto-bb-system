@@ -2,6 +2,28 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
+import { 
+  Car, 
+  Calendar, 
+  DollarSign, 
+  MessageCircle, 
+  AlertCircle, 
+  TrendingUp, 
+  Cog, 
+  CreditCard, 
+  FileText, 
+  Gift,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Star,
+  Settings,
+  User,
+  Phone,
+  Mail,
+  MapPin
+} from '../../utils/icons';
 
 interface DashboardStats {
   totalVehicles: number;
@@ -98,18 +120,18 @@ export default function CustomerDashboard() {
           {
             id: '3',
             type: 'payment',
-            title: 'Payment Received',
-            description: 'Invoice #1234 - $85.00',
+            title: 'Invoice Payment Received',
+            description: 'Payment of $150.00 for brake service',
             date: '2024-01-08',
             status: 'completed',
             priority: 'low'
           },
           {
             id: '4',
-            type: 'reminder',
-            title: 'Service Due Soon',
-            description: 'Honda Civic due for 30,000 mile service',
-            date: '2024-02-15',
+            type: 'message',
+            title: 'Service Reminder',
+            description: 'Your Toyota Camry is due for maintenance',
+            date: '2024-01-05',
             status: 'pending',
             priority: 'high',
             actionRequired: true
@@ -119,51 +141,42 @@ export default function CustomerDashboard() {
         setRecommendations([
           {
             id: '1',
-            type: 'maintenance',
-            title: 'Schedule 30,000 Mile Service',
-            description: 'Your Honda Civic is approaching the 30,000 mile mark. Book your service now to maintain warranty coverage.',
-            priority: 'high',
-            estimatedCost: 150,
-            urgency: 'soon',
-            action: 'Book Service',
-            actionUrl: '/customer/dashboard/appointments'
-          },
-          {
-            id: '2',
             type: 'service',
-            title: 'Tire Rotation & Balance',
-            description: 'Based on your driving patterns, your tires should be rotated every 6,000 miles.',
+            title: 'Schedule Oil Change',
+            description: 'Your Toyota Camry is due for an oil change. Recommended interval: 5,000 miles.',
             priority: 'medium',
-            estimatedCost: 45,
-            urgency: 'routine',
+            estimatedCost: 45.00,
+            urgency: 'soon',
             action: 'Schedule Now',
             actionUrl: '/customer/dashboard/appointments'
           },
           {
+            id: '2',
+            type: 'maintenance',
+            title: 'Tire Rotation',
+            description: 'Consider rotating your tires to ensure even wear and extend tire life.',
+            priority: 'low',
+            estimatedCost: 25.00,
+            urgency: 'routine',
+            action: 'Learn More',
+            actionUrl: '/customer/dashboard/services'
+          },
+          {
             id: '3',
             type: 'promotion',
-            title: '20% Off Brake Service',
-            description: 'Special offer for loyal customers. Valid until end of month.',
-            priority: 'low',
-            urgency: 'routine',
-            action: 'View Details',
-            actionUrl: '/customer/dashboard/services'
+            title: 'Winter Service Special',
+            description: 'Get 20% off winter maintenance packages. Valid until January 31st.',
+            priority: 'medium',
+            urgency: 'soon',
+            action: 'View Offer',
+            actionUrl: '/customer/dashboard/promotions'
           }
         ]);
 
-        // Check for urgent notifications
-        const urgentNotifications = [];
-        if (stats.pendingInvoices > 0) {
-          urgentNotifications.push('You have pending invoices that require attention');
-        }
-        if (stats.unreadMessages > 0) {
-          urgentNotifications.push(`You have ${stats.unreadMessages} unread messages from the shop`);
-        }
-        if (stats.upcomingAppointments > 0) {
-          urgentNotifications.push('You have upcoming appointments - please confirm details');
-        }
-        
-        setNotifications(urgentNotifications);
+        setNotifications([
+          'Your Toyota Camry is due for service in 2 weeks',
+          'You have 2 unread messages from the service team'
+        ]);
 
       } catch (error) {
         toast.error('Failed to load dashboard data');
@@ -178,13 +191,13 @@ export default function CustomerDashboard() {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'appointment': return '📅';
-      case 'service': return '🔧';
-      case 'payment': return '💰';
-      case 'message': return '💬';
-      case 'reminder': return '⏰';
-      case 'promotion': return '🎉';
-      default: return '📋';
+      case 'appointment': return <Calendar className="w-6 h-6 text-blue-600" />;
+      case 'service': return <Cog className="w-6 h-6 text-green-600" />;
+      case 'payment': return <CreditCard className="w-6 h-6 text-purple-600" />;
+      case 'message': return <MessageCircle className="w-6 h-6 text-indigo-600" />;
+      case 'reminder': return <AlertCircle className="w-6 h-6 text-orange-600" />;
+      case 'promotion': return <Gift className="w-6 h-6 text-pink-600" />;
+      default: return <FileText className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -193,7 +206,7 @@ export default function CustomerDashboard() {
       case 'completed': return 'text-green-600 bg-green-100';
       case 'pending': return 'text-yellow-600 bg-yellow-100';
       case 'cancelled': return 'text-red-600 bg-red-100';
-      case 'overdue': return 'text-red-600 bg-red-100';
+      case 'overdue': return 'text-orange-600 bg-orange-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -225,20 +238,21 @@ export default function CustomerDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       {/* Smart Welcome Section with Notifications */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-6 border-l-4 border-blue-500">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome back, {user?.name || 'Customer'}! 👋
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <User className="w-6 h-6 text-blue-600" />
+              Welcome back, {user?.name || 'Customer'}!
             </h1>
             <p className="text-gray-600 mb-3">
               Here's what's happening with your vehicles and appointments.
@@ -249,7 +263,7 @@ export default function CustomerDashboard() {
               <div className="space-y-2">
                 {notifications.map((notification, index) => (
                   <div key={index} className="flex items-center text-sm text-amber-700 bg-amber-100 px-3 py-2 rounded-lg">
-                    <span className="mr-2">⚠️</span>
+                    <AlertTriangle className="w-4 h-4 mr-2" />
                     {notification}
                   </div>
                 ))}
@@ -259,8 +273,11 @@ export default function CustomerDashboard() {
           
           {/* Loyalty Points Display */}
           <div className="text-right">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-purple-600">{stats.loyaltyPoints}</div>
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-purple-600" />
+                <div className="text-2xl font-bold text-purple-600">{stats.loyaltyPoints}</div>
+              </div>
               <div className="text-sm text-gray-600">Loyalty Points</div>
             </div>
           </div>
@@ -269,10 +286,10 @@ export default function CustomerDashboard() {
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-2xl">🚗</span>
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Car className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">My Vehicles</p>
@@ -284,10 +301,10 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-2xl">📅</span>
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Calendar className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
@@ -297,10 +314,10 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <span className="text-2xl">💰</span>
+            <div className="p-3 bg-yellow-100 rounded-xl">
+              <DollarSign className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
@@ -310,10 +327,10 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <span className="text-2xl">💬</span>
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <MessageCircle className="w-6 h-6 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Unread Messages</p>
@@ -325,17 +342,20 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Smart Recommendations */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Smart Recommendations</h2>
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            Smart Recommendations
+          </h2>
           <span className="text-sm text-gray-500">AI-powered suggestions</span>
         </div>
         
         <div className="space-y-4">
           {recommendations.map((rec) => (
-            <div key={rec.id} className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors">
+            <div key={rec.id} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
               <div className="flex-shrink-0">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getUrgencyColor(rec.urgency)}`}>
+                <span className={`px-3 py-1 text-xs font-medium rounded-full ${getUrgencyColor(rec.urgency)}`}>
                   {rec.urgency}
                 </span>
               </div>
@@ -346,11 +366,12 @@ export default function CustomerDashboard() {
                     {rec.priority}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
+                <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-4">
                     {rec.estimatedCost && (
-                      <span className="text-sm font-medium text-green-600">
+                      <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+                        <DollarSign className="w-4 h-4" />
                         Est. {formatCurrency(rec.estimatedCost)}
                       </span>
                     )}
@@ -360,7 +381,7 @@ export default function CustomerDashboard() {
                   </div>
                   <Link
                     to={rec.actionUrl}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm rounded-lg transition-all duration-200 hover:shadow-md"
                   >
                     {rec.action}
                   </Link>
@@ -372,14 +393,19 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Enhanced Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <Settings className="w-5 h-5 text-gray-600" />
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             to="/customer/dashboard/appointments"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
           >
-            <span className="text-2xl mr-3 group-hover:scale-110 transition-transform">📅</span>
+            <div className="p-2 bg-blue-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
             <div>
               <p className="font-medium text-gray-900">Schedule Appointment</p>
               <p className="text-sm text-gray-600">Book a service</p>
@@ -388,9 +414,11 @@ export default function CustomerDashboard() {
 
           <Link
             to="/customer/dashboard/vehicles"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
           >
-            <span className="text-2xl mr-3 group-hover:scale-110 transition-transform">🚗</span>
+            <div className="p-2 bg-green-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+              <Car className="w-5 h-5 text-green-600" />
+            </div>
             <div>
               <p className="font-medium text-gray-900">View Vehicles</p>
               <p className="text-sm text-gray-600">Manage your cars</p>
@@ -399,9 +427,11 @@ export default function CustomerDashboard() {
 
           <Link
             to="/customer/dashboard/invoices"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
           >
-            <span className="text-2xl mr-3 group-hover:scale-110 transition-transform">💰</span>
+            <div className="p-2 bg-yellow-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-5 h-5 text-yellow-600" />
+            </div>
             <div>
               <p className="font-medium text-gray-900">Pay Invoice</p>
               <p className="text-sm text-gray-600">View & pay bills</p>
@@ -410,9 +440,11 @@ export default function CustomerDashboard() {
 
           <Link
             to="/customer/dashboard/messages"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
           >
-            <span className="text-2xl mr-3 group-hover:scale-110 transition-transform">💬</span>
+            <div className="p-2 bg-purple-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+              <MessageCircle className="w-5 h-5 text-purple-600" />
+            </div>
             <div>
               <p className="font-medium text-gray-900">Send Message</p>
               <p className="text-sm text-gray-600">Contact the shop</p>
@@ -421,9 +453,11 @@ export default function CustomerDashboard() {
 
           <Link
             to="/customer/dashboard/notifications"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group relative"
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group relative"
           >
-            <span className="text-2xl mr-3 group-hover:scale-110 transition-transform">🔔</span>
+            <div className="p-2 bg-orange-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+            </div>
             <div>
               <p className="font-medium text-gray-900">Notifications</p>
               <p className="text-sm text-gray-600">{stats.unreadNotifications} unread</p>
@@ -438,12 +472,15 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Enhanced Recent Activity */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-gray-600" />
+            Recent Activity
+          </h2>
           <Link
             to="/customer/dashboard/activity"
-            className="text-sm text-blue-600 hover:text-blue-500"
+            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
           >
             View all
           </Link>
@@ -451,18 +488,18 @@ export default function CustomerDashboard() {
         
         <div className="space-y-4">
           {recentActivities.map((activity) => (
-            <div key={activity.id} className={`flex items-start space-x-4 p-4 border rounded-lg transition-colors ${
+            <div key={activity.id} className={`flex items-start gap-4 p-4 border rounded-xl transition-all duration-200 ${
               activity.actionRequired 
                 ? 'border-orange-200 bg-orange-50' 
-                : 'border-gray-100 hover:border-gray-200'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
             }`}>
               <div className="flex-shrink-0">
-                <span className="text-2xl">{getActivityIcon(activity.type)}</span>
+                {getActivityIcon(activity.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(activity.status)}`}>
                       {activity.status}
                     </span>
@@ -471,13 +508,16 @@ export default function CustomerDashboard() {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
+                <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-gray-500">
                     {new Date(activity.date).toLocaleDateString()}
                   </p>
                   {activity.actionRequired && (
-                    <span className="text-xs text-orange-600 font-medium">Action Required</span>
+                    <span className="text-xs text-orange-600 font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Action Required
+                    </span>
                   )}
                 </div>
               </div>
@@ -487,19 +527,31 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Financial Summary */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm p-6 border-l-4 border-green-500">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-sm p-6 border border-green-200">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-green-600" />
+          Financial Summary
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalSpent)}</div>
+            <div className="text-2xl font-bold text-green-600 flex items-center justify-center gap-2">
+              <DollarSign className="w-6 h-6" />
+              {formatCurrency(stats.totalSpent)}
+            </div>
             <div className="text-sm text-gray-600">Total Spent This Year</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.loyaltyPoints}</div>
+            <div className="text-2xl font-bold text-blue-600 flex items-center justify-center gap-2">
+              <Star className="w-6 h-6" />
+              {stats.loyaltyPoints}
+            </div>
             <div className="text-sm text-gray-600">Loyalty Points Earned</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(stats.pendingInvoices)}</div>
+            <div className="text-2xl font-bold text-purple-600 flex items-center justify-center gap-2">
+              <CreditCard className="w-6 h-6" />
+              {formatCurrency(stats.pendingInvoices)}
+            </div>
             <div className="text-sm text-gray-600">Outstanding Balance</div>
           </div>
         </div>

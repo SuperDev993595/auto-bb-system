@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '../../redux';
 import { deletePurchaseOrder } from '../../redux/actions/inventory';
 import type { PurchaseOrder } from '../../redux/reducer/inventoryReducer';
-import { HiX, HiTrash, HiExclamation } from 'react-icons/hi';
+import { X, Trash2, AlertTriangle } from '../../utils/icons';
 
 interface DeletePurchaseOrderModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
 
     setIsDeleting(true);
     try {
-      await dispatch(deletePurchaseOrder(purchaseOrder._id || purchaseOrder.id)).unwrap();
+      await dispatch(deletePurchaseOrder(purchaseOrder._id)).unwrap();
       onClose();
     } catch (error) {
       console.error('Error deleting purchase order:', error);
@@ -31,22 +31,24 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
   if (!isOpen || !purchaseOrder) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-red-50 to-pink-50">
           <h2 className="text-xl font-semibold text-gray-900">Delete Purchase Order</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
           >
-            <HiX className="w-6 h-6" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         <div className="p-6">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-6">
             <div className="flex-shrink-0">
-              <HiExclamation className="h-6 w-6 text-red-600" />
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-medium text-gray-900">Are you sure?</h3>
@@ -62,9 +64,9 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
             </p>
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Purchase Order Details:</h4>
-            <div className="text-sm text-gray-600 space-y-1">
+          <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Purchase Order Details:</h4>
+            <div className="text-sm text-gray-600 space-y-2">
               <p><strong>PO Number:</strong> #{purchaseOrder.id}</p>
               <p><strong>Supplier:</strong> {purchaseOrder.supplierName}</p>
               <p><strong>Order Date:</strong> {new Date(purchaseOrder.orderDate).toLocaleDateString()}</p>
@@ -74,12 +76,12 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isDeleting}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium disabled:opacity-50"
             >
               Cancel
             </button>
@@ -87,7 +89,7 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {isDeleting ? (
                 <>
@@ -96,7 +98,7 @@ export default function DeletePurchaseOrderModal({ isOpen, onClose, purchaseOrde
                 </>
               ) : (
                 <>
-                  <HiTrash className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                   <span>Delete PO</span>
                 </>
               )}

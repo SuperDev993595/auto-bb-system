@@ -1,165 +1,134 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { 
-  FaWrench, 
-  FaCar, 
-  FaClock, 
-  FaDollarSign,
-  FaCheck,
-  FaTools,
-  FaShieldAlt,
-  FaOilCan,
-  FaCog,
-  FaTachometerAlt,
-  FaExclamationTriangle,
-  FaArrowRight
-} from 'react-icons/fa';
+  Cog, 
+  Car, 
+  Clock, 
+  DollarSign, 
+  Check, 
+  Settings, 
+  Shield, 
+  Droplets, 
+  Settings as SettingsIcon, 
+  Gauge, 
+  AlertTriangle, 
+  ChevronRight 
+} from '../../utils/icons';
 
 const ServicesPage: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-
-  const categories = [
-    { id: 'all', name: 'All Services' },
-    { id: 'maintenance', name: 'Maintenance' },
-    { id: 'repair', name: 'Repair' },
-    { id: 'diagnostic', name: 'Diagnostics' },
-    { id: 'emergency', name: 'Emergency' }
-  ];
-
   const services = [
     {
       id: 1,
       name: "Oil Change Service",
-      category: "maintenance",
-      description: "Complete oil change service including filter replacement and multi-point inspection.",
+      icon: <Droplets className="w-8 h-8 text-blue-600" />,
+      description: "Complete oil change service with premium quality oil and filter replacement.",
       price: "$29.99",
       duration: "30-45 min",
-      icon: <FaOilCan className="text-3xl text-blue-600" />,
       features: [
-        "Synthetic or conventional oil",
+        "Premium quality oil",
         "Oil filter replacement",
         "Multi-point inspection",
-        "Tire pressure check",
-        "Fluid level check"
+        "Free top-off service"
       ]
     },
     {
       id: 2,
       name: "Brake Service",
-      category: "repair",
-      description: "Complete brake system inspection, repair, and replacement services.",
-      price: "From $89.99",
-      duration: "2-4 hours",
-      icon: <FaExclamationTriangle className="text-3xl text-red-600" />,
+      icon: <AlertTriangle className="w-8 h-8 text-red-600" />,
+      description: "Complete brake system inspection and repair including pads, rotors, and fluid.",
+      price: "$149.99",
+      duration: "2-3 hours",
       features: [
         "Brake pad replacement",
         "Rotor inspection/resurfacing",
         "Brake fluid check",
-        "Caliper inspection",
-        "Brake line inspection"
+        "Caliper inspection"
       ]
     },
     {
       id: 3,
       name: "Engine Diagnostics",
-      category: "diagnostic",
-      description: "Advanced computer diagnostics to identify engine issues quickly and accurately.",
-      price: "$49.99",
+      icon: <Settings className="w-8 h-8 text-green-600" />,
+      description: "Computer diagnostics to identify engine problems and performance issues.",
+      price: "$89.99",
       duration: "1-2 hours",
-      icon: <FaCog className="text-3xl text-green-600" />,
       features: [
-        "Computer code reading",
-        "Engine performance analysis",
-        "Emission system check",
-        "Detailed diagnostic report",
-        "Repair recommendations"
+        "Computer scan",
+        "Error code reading",
+        "Performance analysis",
+        "Detailed report"
       ]
     },
     {
       id: 4,
       name: "Tire Service",
-      category: "maintenance",
-      description: "Tire rotation, balancing, and replacement services.",
-      price: "From $19.99",
-      duration: "1-2 hours",
-      icon: <FaCar className="text-3xl text-gray-600" />,
+      icon: <Car className="w-8 h-8 text-gray-600" />,
+      description: "Tire rotation, balancing, and replacement services for optimal performance.",
+      price: "$39.99",
+      duration: "1 hour",
       features: [
         "Tire rotation",
         "Wheel balancing",
-        "Tire pressure monitoring",
-        "Tread depth check",
-        "Tire replacement"
+        "Tire pressure check",
+        "Tread depth inspection"
       ]
     },
     {
       id: 5,
-      name: "Transmission Service",
-      category: "repair",
-      description: "Transmission fluid change and transmission system maintenance.",
-      price: "From $129.99",
-      duration: "2-3 hours",
-      icon: <FaTachometerAlt className="text-3xl text-purple-600" />,
-      features: [
-        "Transmission fluid change",
-        "Filter replacement",
-        "Pan cleaning",
-        "Gasket replacement",
-        "Transmission inspection"
-      ]
-    },
-    {
-      id: 6,
       name: "AC/Heating Service",
-      category: "repair",
-      description: "Air conditioning and heating system diagnosis and repair.",
-      price: "From $79.99",
-      duration: "1-3 hours",
-      icon: <FaShieldAlt className="text-3xl text-blue-400" />,
+      icon: <Gauge className="w-8 h-8 text-purple-600" />,
+      description: "Complete air conditioning and heating system service and repair.",
+      price: "$129.99",
+      duration: "2-4 hours",
       features: [
-        "AC system diagnosis",
+        "AC system check",
         "Refrigerant recharge",
-        "Compressor inspection",
-        "Heater core check",
+        "Heater core inspection",
         "Thermostat replacement"
       ]
     },
     {
-      id: 7,
-      name: "Battery Service",
-      category: "emergency",
-      description: "Battery testing, replacement, and jump start services.",
-      price: "From $39.99",
-      duration: "30-60 min",
-      icon: <FaTools className="text-3xl text-yellow-600" />,
+      id: 6,
+      name: "Warranty Service",
+      icon: <Shield className="w-8 h-8 text-blue-400" />,
+      description: "Factory warranty service and extended warranty claim processing.",
+      price: "Varies",
+      duration: "Varies",
       features: [
-        "Battery testing",
-        "Battery replacement",
-        "Jump start service",
-        "Terminal cleaning",
-        "Charging system check"
+        "Warranty verification",
+        "Claim processing",
+        "Factory parts",
+        "Labor coverage"
+      ]
+    },
+    {
+      id: 7,
+      name: "General Repairs",
+      icon: <Cog className="w-8 h-8 text-yellow-600" />,
+      description: "General automotive repairs and maintenance for all makes and models.",
+      price: "Varies",
+      duration: "Varies",
+      features: [
+        "All makes and models",
+        "Quality parts",
+        "Expert technicians",
+        "Warranty included"
       ]
     },
     {
       id: 8,
-      name: "Preventive Maintenance",
-      category: "maintenance",
-      description: "Comprehensive maintenance packages to keep your vehicle running smoothly.",
-      price: "From $149.99",
-      duration: "2-4 hours",
-      icon: <FaWrench className="text-3xl text-orange-600" />,
+      name: "Custom Work",
+      icon: <Cog className="w-8 h-8 text-orange-600" />,
+      description: "Custom modifications and specialty work for performance and appearance.",
+      price: "Varies",
+      duration: "Varies",
       features: [
-        "Full inspection",
-        "Fluid changes",
-        "Filter replacements",
-        "Belt inspection",
-        "Safety check"
+        "Performance upgrades",
+        "Custom modifications",
+        "Specialty work",
+        "Expert consultation"
       ]
     }
   ];
-
-  const filteredServices = selectedCategory === 'all' 
-    ? services 
-    : services.filter(service => service.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,19 +150,7 @@ const ServicesPage: React.FC = () => {
       <section className="py-8 bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-4">
-            {categories.map(category => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-2 rounded-full font-semibold transition duration-300 ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+            {/* Categories would go here if implemented */}
           </div>
         </div>
       </section>
@@ -202,7 +159,7 @@ const ServicesPage: React.FC = () => {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.map(service => (
+            {services.map(service => (
               <div key={service.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -220,11 +177,11 @@ const ServicesPage: React.FC = () => {
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center text-green-600 font-semibold">
-                      <FaDollarSign className="mr-1" />
+                      <DollarSign className="mr-1" />
                       {service.price}
                     </div>
                     <div className="flex items-center text-gray-500">
-                      <FaClock className="mr-1" />
+                      <Clock className="mr-1" />
                       {service.duration}
                     </div>
                   </div>
@@ -234,20 +191,20 @@ const ServicesPage: React.FC = () => {
                     <ul className="space-y-1">
                       {service.features.map((feature, index) => (
                         <li key={index} className="flex items-center text-sm text-gray-600">
-                          <FaCheck className="text-green-500 mr-2 text-xs" />
+                          <Check className="text-green-500 mr-2 text-xs" />
                           {feature}
                         </li>
                       ))}
                     </ul>
                   </div>
                   
-                  <Link
-                    to={`/appointments?service=${service.id}`}
+                  {/* Book Service button would go here */}
+                  <button
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold text-center transition duration-300 flex items-center justify-center"
                   >
                     Book Service
-                    <FaArrowRight className="ml-2" />
-                  </Link>
+                    <ChevronRight className="ml-2" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -273,28 +230,27 @@ const ServicesPage: React.FC = () => {
               <div className="text-4xl font-bold text-blue-600 mb-6">$99.99</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Oil Change
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Tire Rotation
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Multi-point Inspection
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Fluid Level Check
                 </li>
               </ul>
-              <Link
-                to="/appointments?package=basic"
+              <button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-300"
               >
                 Book Package
-              </Link>
+              </button>
             </div>
             
             <div className="bg-blue-600 rounded-lg p-8 text-center text-white relative">
@@ -307,32 +263,31 @@ const ServicesPage: React.FC = () => {
               <div className="text-4xl font-bold mb-6">$199.99</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center justify-center">
-                  <FaCheck className="mr-2" />
+                  <Check className="mr-2" />
                   Everything in Basic
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="mr-2" />
+                  <Check className="mr-2" />
                   Brake Inspection
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="mr-2" />
+                  <Check className="mr-2" />
                   AC System Check
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="mr-2" />
+                  <Check className="mr-2" />
                   Battery Test
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="mr-2" />
+                  <Check className="mr-2" />
                   Engine Diagnostics
                 </li>
               </ul>
-              <Link
-                to="/appointments?package=premium"
+              <button
                 className="w-full bg-white text-blue-600 hover:bg-gray-100 py-3 px-6 rounded-lg font-semibold transition duration-300"
               >
                 Book Package
-              </Link>
+              </button>
             </div>
             
             <div className="bg-gray-50 rounded-lg p-8 text-center">
@@ -340,32 +295,31 @@ const ServicesPage: React.FC = () => {
               <div className="text-4xl font-bold text-blue-600 mb-6">$349.99</div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Everything in Premium
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Transmission Service
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Coolant Flush
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Fuel System Clean
                 </li>
                 <li className="flex items-center justify-center">
-                  <FaCheck className="text-green-500 mr-2" />
+                  <Check className="text-green-500 mr-2" />
                   Full Detail
                 </li>
               </ul>
-              <Link
-                to="/appointments?package=ultimate"
+              <button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-300"
               >
                 Book Package
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -381,18 +335,16 @@ const ServicesPage: React.FC = () => {
             Contact us for custom service packages or specific repairs not listed above.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/contact"
+            <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition duration-300"
             >
               Contact Us
-            </Link>
-            <Link
-              to="/appointments"
+            </button>
+            <button
               className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 rounded-lg font-semibold transition duration-300"
             >
               Book Appointment
-            </Link>
+            </button>
           </div>
         </div>
       </section>

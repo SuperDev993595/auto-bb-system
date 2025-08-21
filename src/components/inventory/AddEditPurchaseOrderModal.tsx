@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../redux';
 import { createPurchaseOrder, updatePurchaseOrder, fetchPurchaseOrders } from '../../redux/actions/inventory';
-import { InventoryItem } from '../../utils/CustomerTypes'
+import { InventoryItem } from '../../services/inventory'
 import type { PurchaseOrder, Supplier } from '../../redux/reducer/inventoryReducer';
-import { HiX, HiSave, HiPlus, HiTrash } from 'react-icons/hi';
+import { X, Save, Plus, Trash2 } from '../../utils/icons';
 
 interface AddEditPurchaseOrderModalProps {
   isOpen: boolean;
@@ -127,7 +127,8 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.supplierId.trim()) newErrors.supplierName = 'Supplier is required';
+    if (!formData.supplierId.trim()) newErrors.supplierId = 'Supplier is required';
+    if (!formData.expectedDeliveryDate) newErrors.expectedDeliveryDate = 'Expected delivery date is required';
     if (formData.items.length === 0) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
@@ -224,46 +225,34 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                   <div className="flex items-center justify-between p-6 border-b">
-             <h2 className="text-xl font-semibold text-gray-900">
-               {mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
-             </h2>
-             <div className="flex items-center gap-2">
-               {mode === 'edit' && (
-                 <button
-                   type="button"
-                   onClick={logFormState}
-                   className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
-                 >
-                   Debug
-                 </button>
-               )}
-               <button
-                 onClick={onClose}
-                 className="text-gray-400 hover:text-gray-600 transition-colors"
-               >
-                 <HiX className="w-6 h-6" />
-               </button>
-             </div>
-           </div>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 PO Number
               </label>
-                             <input
-                 type="text"
-                 value={formData.poNumber}
-                 onChange={(e) => handleInputChange('poNumber', e.target.value)}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                 placeholder={mode === 'add' ? "Leave empty to auto-generate" : "PO Number"}
-                 disabled={mode === 'edit'}
-               />
+              <input
+                type="text"
+                value={formData.poNumber}
+                onChange={(e) => handleInputChange('poNumber', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                placeholder="Auto-generated if empty"
+              />
             </div>
 
             <div>
@@ -272,115 +261,115 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
               </label>
               <select
                 value={formData.supplierId}
-                onChange={(e) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    supplierId: e.target.value
-                  }));
-                  if (errors.supplierName) {
-                    setErrors(prev => ({ ...prev, supplierName: '' }));
-                  }
-                }}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.supplierName ? 'border-red-500' : 'border-gray-300'
+                onChange={(e) => handleInputChange('supplierId', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.supplierId ? 'border-red-500' : 'border-gray-200'
                 }`}
               >
-                                 <option value="">Select supplier</option>
-                 {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => {
-                   const supplierId = supplier._id || supplier.id;
-                   return (
-                     <option key={supplierId} value={supplierId}>
-                       {supplier.name}
-                     </option>
-                   );
-                 })}
+                <option value="">Select supplier</option>
+                {(suppliers && Array.isArray(suppliers) ? suppliers : []).map(supplier => {
+                  const supplierId = supplier._id || supplier.id;
+                  return (
+                    <option key={supplierId} value={supplierId}>
+                      {supplier.name}
+                    </option>
+                  );
+                })}
               </select>
-              {errors.supplierName && <p className="mt-1 text-sm text-red-600">{errors.supplierName}</p>}
+              {errors.supplierId && <p className="mt-1 text-sm text-red-600">{errors.supplierId}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Delivery Date
+                Expected Delivery Date *
               </label>
               <input
                 type="date"
                 value={formData.expectedDeliveryDate}
                 onChange={(e) => handleInputChange('expectedDeliveryDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.expectedDeliveryDate ? 'border-red-500' : 'border-gray-200'
+                }`}
               />
+              {errors.expectedDeliveryDate && <p className="mt-1 text-sm text-red-600">{errors.expectedDeliveryDate}</p>}
             </div>
           </div>
 
-          {/* Additional Information */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Additional Costs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tax Amount
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.tax}
-                onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-              />
+              <div className="relative">
+                <span className="absolute left-4 top-3 text-gray-500">$</span>
+                <input
+                  type="number"
+                  value={formData.tax}
+                  onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Shipping Cost
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.shipping}
-                onChange={(e) => handleInputChange('shipping', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Notes
-              </label>
-              <input
-                type="text"
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Additional notes"
-              />
+              <div className="relative">
+                <span className="absolute left-4 top-3 text-gray-500">$</span>
+                <input
+                  type="number"
+                  value={formData.shipping}
+                  onChange={(e) => handleInputChange('shipping', parseFloat(e.target.value) || 0)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
             </div>
           </div>
 
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              placeholder="Additional notes for this purchase order..."
+            />
+          </div>
+
           {/* Items */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Items</h3>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Items</h3>
               <button
                 type="button"
                 onClick={addItem}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
               >
-                <HiPlus className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
                 Add Item
               </button>
             </div>
 
-            {errors.items && <p className="text-sm text-red-600">{errors.items}</p>}
-
             {formData.items.map((item, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-gray-900">Item {index + 1}</h4>
+              <div key={index} className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   >
-                    <HiTrash className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -389,21 +378,21 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Item *
                     </label>
-                                         <select
-                       value={item.itemId}
-                       onChange={(e) => handleItemSelect(index, e.target.value)}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                     >
-                       <option value="">Select item</option>
-                       {(items && Array.isArray(items) ? items : []).map(inventoryItem => {
-                         const itemId = inventoryItem._id || inventoryItem.id;
-                         return (
-                           <option key={itemId} value={itemId}>
-                             {inventoryItem.name} - {inventoryItem.partNumber}
-                           </option>
-                         );
-                       })}
-                     </select>
+                    <select
+                      value={item.itemId}
+                      onChange={(e) => updateItem(index, 'itemId', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
+                    >
+                      <option value="">Select item</option>
+                      {(items && Array.isArray(items) ? items : []).map(inventoryItem => {
+                        const itemId = inventoryItem._id || inventoryItem.id;
+                        return (
+                          <option key={itemId} value={itemId}>
+                            {inventoryItem.name} - {inventoryItem.partNumber}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </div>
 
                   <div>
@@ -414,7 +403,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                       type="number"
                       value={item.quantity}
                       onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
                       min="1"
                     />
                   </div>
@@ -427,7 +416,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                       type="number"
                       value={item.unitPrice}
                       onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
                       min="0"
                       step="0.01"
                     />
@@ -437,12 +426,12 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Total Price
                     </label>
-                                         <input
-                       type="number"
-                       value={item.quantity * item.unitPrice}
-                       readOnly
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                     />
+                    <input
+                      type="number"
+                      value={item.quantity * item.unitPrice}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100"
+                    />
                   </div>
                 </div>
               </div>
@@ -450,29 +439,29 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
           </div>
 
           {/* Total */}
-          <div className="border-t pt-4">
+          <div className="border-t border-gray-200 pt-6">
             <div className="flex justify-end">
               <div className="text-right">
-                                 <p className="text-lg font-semibold text-gray-900">
-                   Total: ${(formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) + (formData.tax || 0) + (formData.shipping || 0)).toFixed(2)}
-                 </p>
+                <p className="text-xl font-bold text-gray-900">
+                  Total: ${(formData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) + (formData.tax || 0) + (formData.shipping || 0)).toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -481,7 +470,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
                 </>
               ) : (
                 <>
-                  <HiSave className="w-4 h-4" />
+                  <Save className="w-4 h-4" />
                   <span>{mode === 'add' ? 'Create PO' : 'Save Changes'}</span>
                 </>
               )}

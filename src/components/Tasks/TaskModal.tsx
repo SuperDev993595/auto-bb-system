@@ -137,6 +137,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter task title"
+              required
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -167,6 +168,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                  value={formData.type}
                  onChange={(e) => handleInputChange('type', e.target.value)}
                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 required
                >
                  <option value="follow_up">Follow Up</option>
                  <option value="marketing">Marketing</option>
@@ -207,6 +209,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors.assignedTo ? 'border-red-500' : 'border-gray-300'
                   }`}
+                  required
                 >
                                                        <option value="">Select a technician</option>
                   {technicians?.map(technician => (
@@ -231,6 +234,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, isLoading = f
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.dueDate ? 'border-red-500' : 'border-gray-300'
                 }`}
+                required
               />
               {errors.dueDate && (
                 <p className="mt-1 text-sm text-red-600">{errors.dueDate}</p>

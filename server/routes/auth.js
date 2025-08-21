@@ -3,6 +3,7 @@ const Joi = require('joi');
 const User = require('../models/User');
 const Customer = require('../models/Customer');
 const { generateToken, hashPassword, comparePassword, authenticateToken } = require('../middleware/auth');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -20,6 +21,27 @@ const registerSchema = Joi.object({
   phone: Joi.string().allow('').optional(),
   businessName: Joi.string().allow('').optional(),
   permissions: Joi.array().items(Joi.string()).optional()
+});
+
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required(),
+  password: Joi.string().min(6).required()
+});
+
+const profileUpdateSchema = Joi.object({
+  name: Joi.string().min(2).max(50).optional(),
+  email: Joi.string().email().optional(),
+  phone: Joi.string().optional(),
+  businessName: Joi.string().optional()
+});
+
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required(),
+  newPassword: Joi.string().min(6).required()
 });
 
 // @route   POST /api/auth/login
@@ -57,7 +79,6 @@ router.post('/login', async (req, res) => {
 
     // Check password
     const isPasswordValid = await comparePassword(password, user.password);
-    console.log(isPasswordValid);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -102,7 +123,6 @@ router.post('/login', async (req, res) => {
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-
     // Validate input
     const { error, value } = registerSchema.validate(req.body);
     if (error) {
@@ -203,31 +223,53 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/check-email
-// @desc    Check if email already exists
+// @route   POST /api/auth/forgot-password
+// @desc    Send password reset email
 // @access  Public
-router.post('/check-email', async (req, res) => {
+router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
-    
-    if (!email) {
+    // Validate input
+    const { error, value } = forgotPasswordSchema.validate(req.body);
+    if (error) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required'
+        message: error.details[0].message
       });
     }
 
+    const { email } = value;
+
     // Check if user exists
-    const existingUser = await User.findOne({ email });
-    
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({
+        success: true,
+        message: 'If the email exists, a password reset email has been sent'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Save reset token to user
+    user.resetPasswordToken = resetPasswordToken;
+    user.resetPasswordExpires = resetPasswordExpires;
+    await user.save();
+
+    // In a real application, you would send an email here
+    // For now, we'll just return success
+    console.log('Password reset token:', resetToken);
+
     res.json({
       success: true,
-      exists: !!existingUser,
-      message: existingUser ? 'Email already exists' : 'Email is available'
+      message: 'If the email exists, a password reset email has been sent'
     });
 
   } catch (error) {
-    console.error('Check email error:', error);
+    console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -235,12 +277,63 @@ router.post('/check-email', async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
-router.get('/me', authenticateToken, async (req, res) => {
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with token
+// @access  Public
+router.post('/reset-password', async (req, res) => {
   try {
-    console.log(req.user);
+    // Validate input
+    const { error, value } = resetPasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const { token, password } = value;
+
+    // Hash the token to compare with stored hash
+    const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired token'
+      });
+    }
+
+    // Update password
+    user.password = await hashPassword(password);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/auth/profile
+// @desc    Get user profile
+// @access  Private
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({
@@ -260,13 +353,14 @@ router.get('/me', authenticateToken, async (req, res) => {
           permissions: user.permissions || [],
           avatar: user.avatar,
           phone: user.phone,
+          businessName: user.businessName,
           lastLogin: user.lastLogin
         }
       }
     });
 
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error('Get profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -274,26 +368,138 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
-// @route   PUT /api/auth/change-password
+// @route   PUT /api/auth/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = profileUpdateSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update fields
+    if (value.name) user.name = value.name;
+    if (value.email) {
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({ email: value.email, _id: { $ne: user._id } });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already taken'
+        });
+      }
+      user.email = value.email;
+    }
+    if (value.phone !== undefined) user.phone = value.phone;
+    if (value.businessName !== undefined) user.businessName = value.businessName;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          permissions: user.permissions || [],
+          avatar: user.avatar,
+          phone: user.phone,
+          businessName: user.businessName
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/auth/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', authenticateToken, async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const { currentPassword, newPassword } = value;
+
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await comparePassword(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash new password
+    user.password = await hashPassword(newPassword);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/auth/change-password (alternative method)
 // @desc    Change user password
 // @access  Private
 router.put('/change-password', authenticateToken, async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
+    // Validate input
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
       return res.status(400).json({
         success: false,
-        message: 'Current password and new password are required'
+        message: error.details[0].message
       });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters'
-      });
-    }
+    const { currentPassword, newPassword } = value;
 
     const user = await User.findById(req.user.id).select('+password');
     if (!user) {
@@ -336,8 +542,78 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 router.post('/logout', authenticateToken, (req, res) => {
   res.json({
     success: true,
-    message: 'Logout successful'
+    message: 'Logged out successfully'
   });
+});
+
+// @route   POST /api/auth/check-email
+// @desc    Check if email already exists
+// @access  Public
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    
+    res.json({
+      success: true,
+      exists: !!existingUser,
+      message: existingUser ? 'Email already exists' : 'Email is available'
+    });
+
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/auth/me
+// @desc    Get current user
+// @access  Private
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          permissions: user.permissions || [],
+          avatar: user.avatar,
+          phone: user.phone,
+          lastLogin: user.lastLogin
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
 });
 
 module.exports = router;

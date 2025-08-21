@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../redux';
 import { createInventoryItem, updateInventoryItem } from '../../redux/actions/inventory';
-import { InventoryItem, CreateInventoryItemData, UpdateInventoryItemData } from '../../utils/CustomerTypes';
-import { HiX, HiSave, HiPlus } from 'react-icons/hi';
+import { InventoryItem, CreateInventoryItemData, UpdateInventoryItemData } from '../../services/inventory';
+import { X, Save, Plus } from '../../utils/icons';
 
 interface AddEditInventoryModalProps {
   isOpen: boolean;
@@ -25,9 +25,9 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     model: '',
     year: '',
     location: '',
-            currentStock: 0,
-        minimumStock: 0,
-        maximumStock: 0,
+    quantityOnHand: 0,
+    minStockLevel: 0,
+    maxStockLevel: 0,
     reorderPoint: 0,
     costPrice: 0,
     sellingPrice: 0,
@@ -49,12 +49,10 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         brand: item.brand || '',
         model: item.model || '',
         year: item.year || '',
-        location: typeof item.location === 'object' && item.location 
-          ? `${(item.location as any).warehouse || ''} ${(item.location as any).shelf || ''} ${(item.location as any).bin || ''}`.trim()
-          : item.location,
-        currentStock: item.currentStock,
-        minimumStock: item.minimumStock,
-        maximumStock: item.maximumStock,
+        location: item.location,
+        quantityOnHand: item.quantityOnHand,
+        minStockLevel: item.minStockLevel,
+        maxStockLevel: item.maxStockLevel,
         reorderPoint: item.reorderPoint || 0,
         costPrice: item.costPrice,
         sellingPrice: item.sellingPrice,
@@ -74,9 +72,9 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         model: '',
         year: '',
         location: '',
-        currentStock: 0,
-        minimumStock: 0,
-        maximumStock: 0,
+        quantityOnHand: 0,
+        minStockLevel: 0,
+        maxStockLevel: 0,
         reorderPoint: 0,
         costPrice: 0,
         sellingPrice: 0,
@@ -97,10 +95,10 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     if (!formData.supplierId) newErrors.supplierId = 'Supplier is required';
     if (formData.costPrice < 0) newErrors.costPrice = 'Cost price must be positive';
     if (formData.sellingPrice < 0) newErrors.sellingPrice = 'Selling price must be positive';
-    if (formData.currentStock < 0) newErrors.currentStock = 'Quantity must be positive';
-    if (formData.minimumStock < 0) newErrors.minimumStock = 'Minimum stock level must be positive';
-    if (formData.maximumStock < formData.minimumStock) {
-      newErrors.maximumStock = 'Maximum stock level must be greater than minimum';
+    if (formData.quantityOnHand < 0) newErrors.quantityOnHand = 'Quantity must be positive';
+    if (formData.minStockLevel < 0) newErrors.minStockLevel = 'Minimum stock level must be positive';
+    if (formData.maxStockLevel < formData.minStockLevel) {
+      newErrors.maxStockLevel = 'Maximum stock level must be greater than minimum';
     }
 
     setErrors(newErrors);
@@ -118,7 +116,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         await dispatch(createInventoryItem(formData)).unwrap();
       } else if (item) {
         const updateData: UpdateInventoryItemData = { ...formData };
-        await dispatch(updateInventoryItem({ id: item._id || item.id, itemData: updateData })).unwrap();
+        await dispatch(updateInventoryItem({ id: item._id, itemData: updateData })).unwrap();
       }
       onClose();
     } catch (error) {
@@ -138,21 +136,21 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 className="text-2xl font-bold text-gray-900">
             {mode === 'add' ? 'Add New Inventory Item' : 'Edit Inventory Item'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
           >
-            <HiX className="w-6 h-6" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -163,8 +161,8 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.name ? 'border-red-500' : 'border-gray-200'
                 }`}
                 placeholder="Enter item name"
               />
@@ -179,8 +177,8 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.partNumber}
                 onChange={(e) => handleInputChange('partNumber', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.partNumber ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.partNumber ? 'border-red-500' : 'border-gray-200'
                 }`}
                 placeholder="Enter part number"
               />
@@ -195,7 +193,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 placeholder="Enter item description"
               />
             </div>
@@ -210,8 +208,8 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
               <select
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.category ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.category ? 'border-red-500' : 'border-gray-200'
                 }`}
               >
                 <option value="">Select category</option>
@@ -230,7 +228,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.subcategory}
                 onChange={(e) => handleInputChange('subcategory', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 placeholder="Enter subcategory"
               />
             </div>
@@ -243,7 +241,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.brand}
                 onChange={(e) => handleInputChange('brand', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 placeholder="Enter brand"
               />
             </div>
@@ -259,7 +257,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.model}
                 onChange={(e) => handleInputChange('model', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 placeholder="Enter model"
               />
             </div>
@@ -272,7 +270,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="text"
                 value={formData.year}
                 onChange={(e) => handleInputChange('year', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 placeholder="Enter year"
               />
             </div>
@@ -287,8 +285,8 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
               <select
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.location ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.location ? 'border-red-500' : 'border-gray-200'
                 }`}
               >
                 <option value="">Select location</option>
@@ -306,8 +304,8 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
               <select
                 value={formData.supplierId}
                 onChange={(e) => handleInputChange('supplierId', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.supplierId ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.supplierId ? 'border-red-500' : 'border-gray-200'
                 }`}
               >
                 <option value="">Select supplier</option>
@@ -323,30 +321,30 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantity On Hand *
+                Current Stock *
               </label>
               <input
                 type="number"
-                value={formData.currentStock}
-                onChange={(e) => handleInputChange('currentStock', parseInt(e.target.value) || 0)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.currentStock ? 'border-red-500' : 'border-gray-300'
+                value={formData.quantityOnHand}
+                onChange={(e) => handleInputChange('quantityOnHand', parseInt(e.target.value) || 0)}
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.quantityOnHand ? 'border-red-500' : 'border-gray-200'
                 }`}
                 min="0"
               />
-              {errors.currentStock && <p className="mt-1 text-sm text-red-600">{errors.currentStock}</p>}
+              {errors.quantityOnHand && <p className="mt-1 text-sm text-red-600">{errors.quantityOnHand}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Min Stock Level *
+                Minimum Stock Level
               </label>
               <input
                 type="number"
                 value={formData.minStockLevel}
                 onChange={(e) => handleInputChange('minStockLevel', parseInt(e.target.value) || 0)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.minStockLevel ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.minStockLevel ? 'border-red-500' : 'border-gray-200'
                 }`}
                 min="0"
               />
@@ -355,14 +353,14 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Stock Level *
+                Maximum Stock Level
               </label>
               <input
                 type="number"
                 value={formData.maxStockLevel}
                 onChange={(e) => handleInputChange('maxStockLevel', parseInt(e.target.value) || 0)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.maxStockLevel ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                  errors.maxStockLevel ? 'border-red-500' : 'border-gray-200'
                 }`}
                 min="0"
               />
@@ -377,7 +375,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="number"
                 value={formData.reorderPoint}
                 onChange={(e) => handleInputChange('reorderPoint', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
                 min="0"
               />
             </div>
@@ -390,13 +388,13 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 Cost Price *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <span className="absolute left-4 top-3 text-gray-500">$</span>
                 <input
                   type="number"
                   value={formData.costPrice}
                   onChange={(e) => handleInputChange('costPrice', parseFloat(e.target.value) || 0)}
-                  className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.costPrice ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                    errors.costPrice ? 'border-red-500' : 'border-gray-200'
                   }`}
                   min="0"
                   step="0.01"
@@ -410,13 +408,13 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 Selling Price *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <span className="absolute left-4 top-3 text-gray-500">$</span>
                 <input
                   type="number"
                   value={formData.sellingPrice}
                   onChange={(e) => handleInputChange('sellingPrice', parseFloat(e.target.value) || 0)}
-                  className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.sellingPrice ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white ${
+                    errors.sellingPrice ? 'border-red-500' : 'border-gray-200'
                   }`}
                   min="0"
                   step="0.01"
@@ -433,25 +431,25 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 type="checkbox"
                 checked={formData.isActive}
                 onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md"
               />
               <span className="ml-2 text-sm text-gray-700">Active</span>
             </label>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -460,7 +458,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
                 </>
               ) : (
                 <>
-                  <HiSave className="w-4 h-4" />
+                  <Save className="w-4 h-4" />
                   <span>{mode === 'add' ? 'Add Item' : 'Save Changes'}</span>
                 </>
               )}

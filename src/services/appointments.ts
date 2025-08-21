@@ -191,11 +191,7 @@ class AppointmentService {
     return response.data;
   }
 
-  // Check for scheduling conflicts
-  async checkConflicts(data: CreateAppointmentData): Promise<ApiResponse<{ hasConflicts: boolean; conflicts: any[] }>> {
-    const response = await api.post('/appointments/check-conflicts', data);
-    return response.data;
-  }
+
 }
 
 export const appointmentService = new AppointmentService();

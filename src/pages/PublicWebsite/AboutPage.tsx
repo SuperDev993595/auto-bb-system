@@ -1,16 +1,16 @@
 import React from 'react';
 import { 
-  FaWrench, 
-  FaCar, 
-  FaUsers, 
-  FaAward, 
-  FaHeart,
-  FaShieldAlt,
-  FaLightbulb,
-  FaHandshake,
-  FaStar,
-  FaCheckCircle
-} from 'react-icons/fa';
+  Cog, 
+  Car, 
+  Users, 
+  Star, 
+  Heart,
+  Shield,
+  Zap,
+  Handshake,
+  Star as StarIcon,
+  CheckCircle
+} from '../../utils/icons';
 
 const AboutPage: React.FC = () => {
   const teamMembers = [
@@ -46,22 +46,22 @@ const AboutPage: React.FC = () => {
 
   const values = [
     {
-      icon: <FaHeart className="text-3xl text-red-500" />,
+      icon: <Heart className="w-8 h-8 text-red-500" />,
       title: "Passion for Excellence",
       description: "We're passionate about cars and committed to delivering the highest quality service to every customer."
     },
     {
-      icon: <FaShieldAlt className="text-3xl text-blue-500" />,
+      icon: <Shield className="w-8 h-8 text-blue-500" />,
       title: "Integrity & Trust",
       description: "We believe in honest, transparent communication and building lasting relationships with our customers."
     },
     {
-      icon: <FaLightbulb className="text-3xl text-yellow-500" />,
+      icon: <Zap className="w-8 h-8 text-yellow-500" />,
       title: "Innovation",
       description: "We stay current with the latest automotive technology and continuously improve our processes."
     },
     {
-      icon: <FaHandshake className="text-3xl text-green-500" />,
+      icon: <Handshake className="w-8 h-8 text-green-500" />,
       title: "Customer Focus",
       description: "Your satisfaction is our priority. We treat every vehicle as if it were our own."
     }
@@ -139,7 +139,7 @@ const AboutPage: React.FC = () => {
             </div>
             <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
               <div className="text-center text-gray-600">
-                <FaCar className="text-6xl mx-auto mb-4" />
+                <Car className="text-6xl mx-auto mb-4" />
                 <p className="text-lg font-semibold">Company Image</p>
                 <p className="text-sm">(Shop photo would go here)</p>
               </div>
@@ -219,7 +219,7 @@ const AboutPage: React.FC = () => {
               <div key={index} className="bg-gray-50 rounded-lg overflow-hidden shadow-md">
                 <div className="bg-gray-200 h-48 flex items-center justify-center">
                   <div className="text-center text-gray-600">
-                    <FaUsers className="text-4xl mx-auto mb-2" />
+                    <Users className="text-4xl mx-auto mb-2" />
                     <p className="text-sm">Photo</p>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ const AboutPage: React.FC = () => {
                     <ul className="space-y-1">
                       {member.specialties.map((specialty, specIndex) => (
                         <li key={specIndex} className="flex items-center text-sm text-gray-600">
-                          <FaCheckCircle className="text-green-500 mr-2 text-xs" />
+                          <CheckCircle className="text-green-500 mr-2 text-xs" />
                           {specialty}
                         </li>
                       ))}
@@ -264,12 +264,12 @@ const AboutPage: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {certifications.map((certification, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center">
-                <FaAward className="text-3xl text-blue-600 mx-auto mb-3" />
-                <p className="text-gray-900 font-medium">{certification}</p>
-              </div>
-            ))}
+                          {certifications.map((certification, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center">
+                  <Star className="text-3xl text-blue-600 mx-auto mb-3" />
+                  <p className="text-gray-900 font-medium">{certification}</p>
+                </div>
+              ))}
           </div>
         </div>
       </section>
@@ -288,7 +288,7 @@ const AboutPage: React.FC = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Technicians</h3>
                 <p className="text-gray-600">Our ASE-certified technicians have years of experience and ongoing training to stay current with the latest automotive technology.</p>
@@ -296,7 +296,7 @@ const AboutPage: React.FC = () => {
             </div>
             
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Quality Parts</h3>
                 <p className="text-gray-600">We use only high-quality OEM and aftermarket parts backed by manufacturer warranties.</p>
@@ -304,7 +304,7 @@ const AboutPage: React.FC = () => {
             </div>
             
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Honest Pricing</h3>
                 <p className="text-gray-600">No hidden fees or surprises. We provide clear, upfront pricing and detailed estimates before any work begins.</p>
@@ -312,7 +312,7 @@ const AboutPage: React.FC = () => {
             </div>
             
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Warranty Protection</h3>
                 <p className="text-gray-600">All our work comes with a comprehensive warranty for your peace of mind.</p>
@@ -320,7 +320,7 @@ const AboutPage: React.FC = () => {
             </div>
             
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Convenient Service</h3>
                 <p className="text-gray-600">Online appointment booking, shuttle service, and loaner vehicles available for your convenience.</p>
@@ -328,7 +328,7 @@ const AboutPage: React.FC = () => {
             </div>
             
             <div className="flex items-start">
-              <FaStar className="text-yellow-500 text-2xl mr-4 mt-1" />
+              <Star className="text-yellow-500 text-2xl mr-4 mt-1" />
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Focus</h3>
                 <p className="text-gray-600">We treat every customer like family and every vehicle as if it were our own.</p>
