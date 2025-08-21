@@ -21,7 +21,11 @@ import {
 
 type CalendarView = 'month' | 'week' | 'day'
 
-export default function AppointmentCalendar() {
+interface AppointmentCalendarProps {
+  appointments?: Appointment[]
+}
+
+export default function AppointmentCalendar({ appointments: propAppointments }: AppointmentCalendarProps) {
   const dispatch = useAppDispatch()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<CalendarView>('month')
@@ -40,7 +44,8 @@ export default function AppointmentCalendar() {
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null)
   const dragRef = useRef<HTMLDivElement>(null)
   
-  const appointments = useAppSelector(state => state.appointments.data)
+  const reduxAppointments = useAppSelector(state => state.appointments.data)
+  const appointments = propAppointments || reduxAppointments
 
 
 
@@ -878,9 +883,36 @@ export default function AppointmentCalendar() {
 
       {/* Calendar Content */}
       <div className="p-6">
-        {view === 'month' && renderMonthView()}
-        {view === 'week' && renderWeekView()}
-        {view === 'day' && renderDayView()}
+        {/* Search Results Indicator */}
+        {propAppointments && propAppointments.length !== reduxAppointments?.length && (
+          <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-sm text-blue-800">
+              <HiCalendar className="w-4 h-4" />
+              <span>
+                Showing <strong>{propAppointments.length}</strong> filtered appointments 
+                (of {reduxAppointments?.length || 0} total)
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* No Results Message */}
+        {propAppointments && propAppointments.length === 0 && (
+          <div className="text-center py-12">
+            <HiCalendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-500 mb-2">No appointments found</h3>
+            <p className="text-gray-400">Try adjusting your search terms or filters.</p>
+          </div>
+        )}
+        
+        {/* Calendar Views */}
+        {(!propAppointments || propAppointments.length > 0) && (
+          <>
+            {view === 'month' && renderMonthView()}
+            {view === 'week' && renderWeekView()}
+            {view === 'day' && renderDayView()}
+          </>
+        )}
       </div>
 
       {/* Legend */}

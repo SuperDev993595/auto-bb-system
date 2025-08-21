@@ -183,6 +183,26 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 appointment: appointment
             });
             
+            // Ensure serviceType is properly extracted for editing
+            let serviceTypeName = '';
+            let serviceTypeId = '';
+            
+            if (typeof appointment.serviceType === 'object' && appointment.serviceType !== null) {
+                serviceTypeName = appointment.serviceType.name || '';
+                serviceTypeId = appointment.serviceType._id || '';
+            } else if (typeof appointment.serviceType === 'string') {
+                serviceTypeName = appointment.serviceType;
+                // For string serviceType, we need to find the corresponding serviceTypeId
+                // This will be handled when the service types are loaded
+            }
+            
+            console.log('Service type processing:', {
+                original: appointment.serviceType,
+                extractedName: serviceTypeName,
+                extractedId: serviceTypeId,
+                isObject: typeof appointment.serviceType === 'object'
+            });
+            
             setForm({
                 customer: appointment.customerName,
                 email: "", // Will be populated from customer data
@@ -194,8 +214,8 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 licensePlate: appointment.vehicle?.licensePlate || "", // Use vehicle data if available
                 scheduledDate: dateString || appointmentDate.toISOString().split('T')[0],
                 scheduledTime: timeString,
-                serviceType: typeof appointment.serviceType === 'object' ? appointment.serviceType.name : appointment.serviceType,
-                serviceTypeId: typeof appointment.serviceType === 'object' ? appointment.serviceType._id : '',
+                serviceType: serviceTypeName,
+                serviceTypeId: serviceTypeId,
                 notes: appointment.notes || "",
                 priority: appointment.priority,
                 estimatedDuration: appointment.estimatedDuration,
@@ -240,10 +260,28 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             console.log('Form state updated:', {
                 technicianId: form.technicianId,
                 technicianName: form.technicianName,
-                techniciansCount: technicians.length
+                techniciansCount: technicians.length,
+                serviceType: form.serviceType,
+                serviceTypeId: form.serviceTypeId
             });
         }
-    }, [form.technicianId, form.technicianName, technicians.length, isEditing]);
+    }, [form.technicianId, form.technicianName, technicians.length, form.serviceType, form.serviceTypeId, isEditing]);
+
+    // Auto-set serviceTypeId when serviceType changes and we have service types loaded
+    useEffect(() => {
+        if (isEditing && form.serviceType && !form.serviceTypeId && serviceTypes.length > 0) {
+            const matchingService = serviceTypes.find((service: any) => 
+                service.name === form.serviceType
+            );
+            if (matchingService) {
+                console.log('Auto-setting serviceTypeId:', matchingService._id || matchingService.id);
+                setForm(prev => ({
+                    ...prev,
+                    serviceTypeId: matchingService._id || matchingService.id || ''
+                }));
+            }
+        }
+    }, [form.serviceType, serviceTypes, isEditing]);
 
     // Load vehicle information when editing an appointment
     useEffect(() => {
@@ -362,6 +400,20 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 if (data.success) {
                     console.log('Loaded service types:', data.data);
                     setServiceTypes(data.data || []);
+                    
+                    // If we're editing and have a serviceType name but no ID, try to find the matching service
+                    if (isEditing && form.serviceType && !form.serviceTypeId) {
+                        const matchingService = data.data.find((service: any) => 
+                            service.name === form.serviceType
+                        );
+                        if (matchingService) {
+                            console.log('Found matching service for ID:', matchingService);
+                            setForm(prev => ({
+                                ...prev,
+                                serviceTypeId: matchingService._id || matchingService.id || ''
+                            }));
+                        }
+                    }
                 }
             } else {
                 console.error('Failed to load service types:', response.status, response.statusText);
@@ -942,6 +994,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             }
 
             console.log('Sending appointment data:', appointmentPayload);
+            console.log('Service type details:', {
+                serviceType: appointmentPayload.serviceType,
+                serviceDescription: appointmentPayload.serviceDescription,
+                originalServiceType: appointmentData.serviceType,
+                originalServiceTypeId: appointmentData.serviceTypeId
+            });
 
             const url = isEditing && appointment?.id 
                 ? `${API_ENDPOINTS.APPOINTMENTS}/${appointment.id}`
@@ -1019,6 +1077,13 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     };
 
     const handleSubmit = async () => {
+        console.log('Form submission - current form state:', {
+            serviceType: form.serviceType,
+            serviceTypeId: form.serviceTypeId,
+            isEditing,
+            appointmentId: appointment?.id
+        });
+        
         if (!validateForm()) {
             return;
         }
@@ -1037,6 +1102,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 toast.success(message);
                 
                 // Pass the saved appointment data (with real database ID) to the calendar
+                console.log('Saving appointment data to parent:', savedAppointment.data.appointment);
                 onSave(savedAppointment.data.appointment);
                 
             } catch (dbError) {
@@ -1585,6 +1651,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             }`}
                             onChange={(e) => {
                                 const selectedService = serviceTypes.find(service => service.name === e.target.value);
+                                console.log('Service type selected:', {
+                                    value: e.target.value,
+                                    selectedService,
+                                    serviceTypeId: selectedService?._id || selectedService?.id || '',
+                                    estimatedDuration: selectedService?.estimatedDuration || 60
+                                });
                                 setForm(prev => ({
                                     ...prev,
                                     serviceType: e.target.value,
