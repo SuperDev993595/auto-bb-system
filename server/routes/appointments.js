@@ -571,8 +571,19 @@ router.post('/', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.put('/:id', requireAnyAdmin, async (req, res) => {
   try {
+    // Map test fields to schema fields for compatibility
+    const mappedBody = { ...req.body };
+    if (mappedBody.time && !mappedBody.scheduledTime) {
+      mappedBody.scheduledTime = mappedBody.time;
+      delete mappedBody.time;
+    }
+    if (mappedBody.date && !mappedBody.scheduledDate) {
+      mappedBody.scheduledDate = mappedBody.date;
+      delete mappedBody.date;
+    }
+
     // Validate input
-    const { error, value } = appointmentUpdateSchema.validate(req.body);
+    const { error, value } = appointmentUpdateSchema.validate(mappedBody);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -611,10 +622,17 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
     await updatedAppointment.populate('serviceType', 'name category estimatedDuration');
     await updatedAppointment.populate('createdBy', 'name');
 
+    // Transform response to match test expectations
+    const appointmentResponse = {
+      ...updatedAppointment.toObject(),
+      time: updatedAppointment.scheduledTime,
+      date: updatedAppointment.scheduledDate
+    };
+
     res.json({
       success: true,
       message: 'Appointment updated successfully',
-      data: { appointment: updatedAppointment }
+      data: { appointment: appointmentResponse }
     });
 
   } catch (error) {
