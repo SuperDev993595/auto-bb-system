@@ -6,6 +6,7 @@ interface ModalWrapperProps {
   onClose: () => void
   children: ReactNode
   title?: string
+  icon?: ReactNode
   submitText?: string
   onSubmit?: () => void
   submitColor?: string
@@ -18,6 +19,7 @@ export default function ModalWrapper({
   onClose,
   children,
   title,
+  icon,
   submitText,
   onSubmit,
   submitColor = 'bg-blue-600',
@@ -48,7 +50,10 @@ export default function ModalWrapper({
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <div className="flex items-center gap-3">
+              {icon && <div className="text-blue-600">{icon}</div>}
+              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            </div>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
