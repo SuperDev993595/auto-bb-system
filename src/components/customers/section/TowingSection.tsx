@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { HiTruck } from 'react-icons/hi'
-import { FaEdit, FaTrash } from 'react-icons/fa'
 import { Customer } from '../../../services/customers'
 import { customerService } from '../../../services/customers'
 import Pagination from '../../../utils/Pagination'
 import NewTowingModal from '../modal/NewTowingModal'
+import { Truck, Edit, Trash2 } from '../../../utils/icons'
 import { toast } from 'react-hot-toast'
 
 interface TowingRecord {
@@ -105,9 +104,11 @@ export default function TowingSection({ customer }: { customer: Customer }) {
                 />
             )}
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <HiTruck className="text-orange-600" /> 
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                        <Truck className="text-orange-600 w-5 h-5" />
+                    </div>
                     Towing Records
                     {pagination.totalTowingRecords > 0 && (
                         <span className="text-sm text-gray-500">
@@ -117,7 +118,7 @@ export default function TowingSection({ customer }: { customer: Customer }) {
                 </h3>
                 <button 
                     onClick={() => setOpen(true)} 
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                     + Add Tow
                 </button>
@@ -129,18 +130,18 @@ export default function TowingSection({ customer }: { customer: Customer }) {
                 </div>
             ) : towingRecords.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {towingRecords.map((record) => (
-                            <div key={record._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                                <div className="flex justify-between items-start mb-2">
+                            <div key={record._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                                <div className="flex justify-between items-start mb-3">
                                     <div className="flex-1">
-                                        <h4 className="font-medium text-gray-800 mb-1">{record.location}</h4>
+                                        <h4 className="font-medium text-gray-800 mb-2">{record.location}</h4>
                                         <div className="flex gap-2">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(record.status)}`}>
+                                            <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${getStatusColor(record.status)}`}>
                                                 {record.status}
                                             </span>
                                             {record.cost > 0 && (
-                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                                <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-lg">
                                                     ${record.cost.toFixed(2)}
                                                 </span>
                                             )}
@@ -148,22 +149,22 @@ export default function TowingSection({ customer }: { customer: Customer }) {
                                     </div>
                                     <button
                                         onClick={() => handleDeleteTowing(record._id)}
-                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                                         title="Delete Towing Record"
                                     >
-                                        <FaTrash className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-1">
+                                <p className="text-sm text-gray-600 mb-2">
                                     📅 {new Date(record.date).toLocaleDateString()}
                                 </p>
                                 {record.destination && (
-                                    <p className="text-sm text-gray-600 mb-1">
+                                    <p className="text-sm text-gray-600 mb-2">
                                         To: {record.destination}
                                     </p>
                                 )}
                                 {record.vehicle && (
-                                    <p className="text-sm text-gray-600 mb-1">
+                                    <p className="text-sm text-gray-600 mb-2">
                                         Vehicle: {record.vehicle}
                                     </p>
                                 )}
@@ -185,15 +186,15 @@ export default function TowingSection({ customer }: { customer: Customer }) {
                     )}
                 </>
             ) : (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">🚛</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No towing records found</h3>
-                    <p className="text-gray-600 mb-6">This customer hasn't had any towing services yet.</p>
+                <div className="text-center py-16">
+                    <div className="text-gray-400 text-6xl mb-6">🚛</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">No towing records found</h3>
+                    <p className="text-gray-600 mb-8">This customer hasn't had any towing services yet.</p>
                     <button 
                         onClick={() => setOpen(true)} 
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                        className="px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl inline-flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
                     >
-                        <HiTruck className="w-4 h-4" />
+                        <Truck className="w-5 h-5" />
                         Add First Towing Record
                     </button>
                 </div>

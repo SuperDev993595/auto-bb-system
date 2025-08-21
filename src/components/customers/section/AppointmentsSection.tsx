@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { HiCalendar } from 'react-icons/hi'
-import { FaEdit, FaTrash } from 'react-icons/fa'
 import { Customer } from '../../../services/customers'
 import Pagination from '../../../utils/Pagination'
 import NewAppointmentModal from '../modal/NewAppointmentModal'
+import { Calendar, Edit, Trash2 } from '../../../utils/icons'
 import { toast } from 'react-hot-toast'
 import api, { apiResponse } from '../../../services/api'
 
@@ -141,9 +140,11 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                 />
             )}
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <HiCalendar className="text-indigo-600" /> 
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 rounded-lg">
+                        <Calendar className="text-indigo-600 w-5 h-5" />
+                    </div>
                     Appointments
                     {pagination.totalAppointments > 0 && (
                         <span className="text-sm text-gray-500">
@@ -153,7 +154,7 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                 </h3>
                 <button 
                     onClick={() => setOpen(true)} 
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                     + Add Appointment
                 </button>
@@ -165,20 +166,20 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                 </div>
             ) : appointments.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {appointments.map((appointment) => {
                             try {
                                 const { date, time } = formatDateTime(appointment.scheduledDate, appointment.scheduledTime)
                                 return (
-                                    <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                                        <div className="flex justify-between items-start mb-2">
+                                    <div key={appointment._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                                        <div className="flex justify-between items-start mb-3">
                                             <div className="flex-1">
-                                                <div className="flex gap-2 mb-1">
-                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(appointment.status || 'scheduled')}`}>
+                                                <div className="flex gap-2 mb-2">
+                                                    <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${getStatusColor(appointment.status || 'scheduled')}`}>
                                                         {appointment.status || 'scheduled'}
                                                     </span>
                                                     {appointment.serviceType && (
-                                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                                        <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg">
                                                             {typeof appointment.serviceType === 'string' 
                                                                 ? appointment.serviceType 
                                                                 : appointment.serviceType?.name || 'Unknown Service'
@@ -189,22 +190,22 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                                             </div>
                                             <button
                                                 onClick={() => handleDeleteAppointment(appointment._id)}
-                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                                                 title="Delete Appointment"
                                             >
-                                                <FaTrash className="w-4 h-4" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <p className="text-sm text-gray-600 mb-1">
+                                        <p className="text-sm text-gray-600 mb-2">
                                             📅 {date} • {time}
                                         </p>
                                         {appointment.vehicle && (
-                                            <p className="text-sm text-gray-600 mb-1">
+                                            <p className="text-sm text-gray-600 mb-2">
                                                 🚗 {appointment.vehicle.year || 'N/A'} {appointment.vehicle.make || 'Unknown'} {appointment.vehicle.model || 'Unknown'}
                                             </p>
                                         )}
                                         {appointment.technician && appointment.technician.name && (
-                                            <p className="text-sm text-gray-600 mb-1">
+                                            <p className="text-sm text-gray-600 mb-2">
                                                 👨‍🔧 {appointment.technician.name}
                                             </p>
                                         )}
@@ -218,7 +219,7 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                             } catch (error) {
                                 console.error('Error rendering appointment:', error, appointment)
                                 return (
-                                    <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm">
+                                    <div key={appointment._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-lg">
                                         <p className="text-sm text-red-600">Error displaying appointment</p>
                                         <p className="text-xs text-gray-500">ID: {appointment._id}</p>
                                     </div>
@@ -236,15 +237,15 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                     )}
                 </>
             ) : (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">📅</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
-                    <p className="text-gray-600 mb-6">This customer hasn't scheduled any appointments yet.</p>
+                <div className="text-center py-16">
+                    <div className="text-gray-400 text-6xl mb-6">📅</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">No appointments found</h3>
+                    <p className="text-gray-600 mb-8">This customer hasn't scheduled any appointments yet.</p>
                     <button 
                         onClick={() => setOpen(true)} 
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                        className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl inline-flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
                     >
-                        <HiCalendar className="w-4 h-4" />
+                        <Calendar className="w-5 h-5" />
                         Schedule First Appointment
                     </button>
                 </div>

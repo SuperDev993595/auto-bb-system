@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaTachometerAlt, FaMemory, FaNetworkWired, FaClock } from 'react-icons/fa';
+import { Gauge, HardDrive, Network, Clock } from '../../utils/icons';
 
 interface PerformanceMetrics {
   loadTime: number;
@@ -98,93 +98,115 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   }, []);
 
   const getPerformanceColor = (value: number, thresholds: { good: number; warning: number }) => {
-    if (value <= thresholds.good) return 'text-green-500';
-    if (value <= thresholds.warning) return 'text-yellow-500';
-    return 'text-red-500';
+    if (value <= thresholds.good) return 'text-green-600';
+    if (value <= thresholds.warning) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
-  const formatTime = (ms: number) => `${ms.toFixed(2)}ms`;
-  const formatMemory = (percentage: number) => `${percentage.toFixed(1)}%`;
-  const formatPercentage = (percentage: number) => `${percentage.toFixed(1)}%`;
+  const formatTime = (ms: number) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`;
+    return `${(ms / 1000).toFixed(2)}s`;
+  };
+
+  const formatMemory = (percentage: number) => {
+    return `${percentage.toFixed(1)}%`;
+  };
+
+  const formatPercentage = (percentage: number) => {
+    return `${percentage.toFixed(1)}%`;
+  };
 
   if (!enabled) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-6 left-6 z-50">
       {/* Toggle Button */}
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 border-2 border-white"
         title="Performance Monitor"
       >
-        <FaTachometerAlt className="w-5 h-5" />
+        <Gauge className="w-5 h-5" />
       </button>
 
       {/* Performance Panel */}
       {isVisible && (
-        <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl border p-4 w-80">
+        <div className="absolute bottom-16 left-0 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Performance Monitor</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Gauge className="w-5 h-5 text-blue-600" />
+              Performance Monitor
+            </h3>
             <button
               onClick={() => setIsVisible(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-lg transition-colors"
             >
               ×
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Load Time */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaClock className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Load Time</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Load Time</span>
               </div>
-              <span className={`text-sm font-medium ${getPerformanceColor(metrics.loadTime, { good: 1000, warning: 3000 })}`}>
+              <span className={`text-sm font-semibold ${getPerformanceColor(metrics.loadTime, { good: 1000, warning: 3000 })}`}>
                 {formatTime(metrics.loadTime)}
               </span>
             </div>
 
             {/* Memory Usage */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaMemory className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Memory Usage</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <HardDrive className="w-4 h-4 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Memory Usage</span>
               </div>
-              <span className={`text-sm font-medium ${getPerformanceColor(metrics.memoryUsage, { good: 50, warning: 80 })}`}>
+              <span className={`text-sm font-semibold ${getPerformanceColor(metrics.memoryUsage, { good: 50, warning: 80 })}`}>
                 {formatMemory(metrics.memoryUsage)}
               </span>
             </div>
 
             {/* Network Requests */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaNetworkWired className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Network Requests</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Network className="w-4 h-4 text-purple-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Network Requests</span>
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-semibold text-gray-900">
                 {metrics.networkRequests}
               </span>
             </div>
 
             {/* Render Time */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaTachometerAlt className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Render Time</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Gauge className="w-4 h-4 text-orange-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Render Time</span>
               </div>
-              <span className={`text-sm font-medium ${getPerformanceColor(metrics.renderTime, { good: 16, warning: 33 })}`}>
+              <span className={`text-sm font-semibold ${getPerformanceColor(metrics.renderTime, { good: 16, warning: 33 })}`}>
                 {formatTime(metrics.renderTime)}
               </span>
             </div>
 
             {/* Cache Hit Rate */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaMemory className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Cache Hit Rate</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <HardDrive className="w-4 h-4 text-teal-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Cache Hit Rate</span>
               </div>
-              <span className={`text-sm font-medium ${getPerformanceColor(metrics.cacheHitRate, { good: 80, warning: 60 })}`}>
+              <span className={`text-sm font-semibold ${getPerformanceColor(metrics.cacheHitRate, { good: 80, warning: 60 })}`}>
                 {formatPercentage(metrics.cacheHitRate)}
               </span>
             </div>
@@ -192,31 +214,55 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
           {showDetails && (
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Detailed Metrics</h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                <div>Cache Hits: {cacheHits}</div>
-                <div>Cache Misses: {cacheMisses}</div>
-                <div>Total Requests: {cacheHits + cacheMisses}</div>
-                <div>FPS: {Math.round(1000 / Math.max(metrics.renderTime, 1))}</div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Detailed Metrics</h4>
+              <div className="text-xs text-gray-600 space-y-2">
+                <div className="flex justify-between">
+                  <span>Cache Hits:</span>
+                  <span className="font-medium">{cacheHits}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Cache Misses:</span>
+                  <span className="font-medium">{cacheMisses}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total Requests:</span>
+                  <span className="font-medium">{cacheHits + cacheMisses}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>FPS:</span>
+                  <span className="font-medium">{Math.round(1000 / Math.max(metrics.renderTime, 1))}</span>
+                </div>
               </div>
             </div>
           )}
 
           {/* Performance Tips */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Performance Tips</h4>
-            <div className="text-xs text-gray-600 space-y-1">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Performance Tips</h4>
+            <div className="text-xs text-gray-600 space-y-2">
               {metrics.loadTime > 3000 && (
-                <div>⚠️ Consider code splitting and lazy loading</div>
+                <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
+                  <span className="text-yellow-600">⚠️</span>
+                  <span>Consider code splitting and lazy loading</span>
+                </div>
               )}
               {metrics.memoryUsage > 80 && (
-                <div>⚠️ High memory usage detected</div>
+                <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
+                  <span className="text-red-600">⚠️</span>
+                  <span>High memory usage detected</span>
+                </div>
               )}
               {metrics.cacheHitRate < 60 && (
-                <div>💡 Enable more aggressive caching</div>
+                <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+                  <span className="text-blue-600">💡</span>
+                  <span>Enable more aggressive caching</span>
+                </div>
               )}
               {metrics.networkRequests > 20 && (
-                <div>💡 Consider batching API requests</div>
+                <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+                  <span className="text-green-600">💡</span>
+                  <span>Consider batching API requests</span>
+                </div>
               )}
             </div>
           </div>

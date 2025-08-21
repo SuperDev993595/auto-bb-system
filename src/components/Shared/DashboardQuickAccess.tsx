@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaTachometerAlt } from 'react-icons/fa';
+import { Gauge } from '../../utils/icons';
 
 const DashboardQuickAccess: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -37,10 +37,10 @@ const DashboardQuickAccess: React.FC = () => {
     <div className="fixed bottom-24 right-6 z-50">
       <Link
         to={getDashboardLink()}
-        className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center"
+        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center border-2 border-white"
         title={getDashboardTitle()}
       >
-        <FaTachometerAlt className="w-6 h-6" />
+        <Gauge className="w-6 h-6" />
       </Link>
     </div>
   );

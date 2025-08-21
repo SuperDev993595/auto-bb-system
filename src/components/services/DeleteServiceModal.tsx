@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
-import { HiTrash } from 'react-icons/hi'
+import { Trash2 } from '../../utils/icons'
 import { deleteServiceCatalogItem } from '../../redux/actions/services'
 import { useAppDispatch } from '../../redux'
 import { ServiceCatalogItem } from '../../services/services'
@@ -48,16 +48,18 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
   return (
     <ModalWrapper
       title="Delete Service"
-      icon={<HiTrash className="w-5 h-5" />}
+      icon={<Trash2 className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
       submitLabel={loading ? 'Deleting...' : 'Delete Service'}
-      submitColor="bg-red-600"
+      submitColor="bg-gradient-to-r from-red-600 to-pink-600"
     >
-      <div className="space-y-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex">
-            <HiTrash className="w-5 h-5 text-red-400 mt-0.5" />
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
                 Are you sure you want to delete this service?
@@ -71,10 +73,10 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Service Details
           </label>
-          <div className="bg-gray-50 rounded-lg p-3 text-sm">
+          <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-200">
             <p><span className="font-medium">Name:</span> {service.name}</p>
             <p><span className="font-medium">Category:</span> {service.category}</p>
             <p><span className="font-medium">Duration:</span> {service.estimatedDuration} minutes</p>
@@ -83,14 +85,14 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Type the service name to confirm deletion
           </label>
           <input
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             placeholder={`Type "${service.name}" to confirm`}
             required
           />
@@ -98,7 +100,7 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
 
         <div className="text-sm text-gray-600">
           <p>⚠️ This action will:</p>
-          <ul className="list-disc list-inside mt-1 space-y-1">
+          <ul className="list-disc list-inside mt-2 space-y-1">
             <li>Permanently delete the service from the catalog</li>
             <li>Remove it from all future work orders</li>
             <li>Cannot be undone</li>

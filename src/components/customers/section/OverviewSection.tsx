@@ -1,5 +1,5 @@
 import { Customer } from '../../../services/customers'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { Edit, Trash2 } from '../../../utils/icons'
 
 type Props = {
     customer: Customer
@@ -13,7 +13,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
             {/* Contact & Basic Info */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-sm text-gray-700">
                 {/* Contact Info */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
                     <h3 className="text-sm font-semibold text-gray-500 mb-3">Contact Information</h3>
                     <div className="space-y-2">
                         <div>
@@ -41,7 +41,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                 </div>
 
                 {/* Account Info */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
                     <h3 className="text-sm font-semibold text-gray-500 mb-3">Account Details</h3>
                     <div className="space-y-2">
                         <div>
@@ -64,7 +64,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                 </div>
 
                 {/* Status */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
                     <h3 className="text-sm font-semibold text-gray-500 mb-3">Status</h3>
                     <div className="space-y-2">
                         <div>
@@ -90,10 +90,10 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
             </div>
 
             {/* Vehicles Section */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-700">Vehicles</h3>
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    <h3 className="text-xl font-bold text-gray-900">Vehicles</h3>
+                    <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200">
                         + Add Vehicle
                     </button>
                 </div>
@@ -117,7 +117,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                                                 className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                                                 title="Edit Vehicle"
                                             >
-                                                <FaEdit className="w-4 h-4" />
+                                                <Edit className="w-4 h-4" />
                                             </button>
                                         )}
                                         {onDeleteVehicle && (
@@ -126,7 +126,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                                                 className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                                                 title="Delete Vehicle"
                                             >
-                                                <FaTrash className="w-4 h-4" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         )}
                                     </div>
@@ -160,10 +160,10 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
             </div>
 
             {/* Recent Service History */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-700">Recent Service History</h3>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    <h3 className="text-xl font-bold text-gray-900">Recent Service History</h3>
+                    <button className="px-4 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium hover:bg-blue-50 rounded-lg transition-all duration-200">
                         View All
                     </button>
                 </div>
@@ -197,8 +197,8 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
 
             {/* Notes Section */}
             {customer.notes && (
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Notes</h3>
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">Notes</h3>
                     <p className="text-gray-600">{customer.notes}</p>
                 </div>
             )}

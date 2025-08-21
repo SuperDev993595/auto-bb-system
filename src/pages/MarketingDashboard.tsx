@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
-  HiMail, 
-  HiPhone, 
-  HiUsers, 
-  HiChartBar, 
-  HiPlus, 
-  HiEye, 
-  HiPencil, 
-  HiTrash, 
-  HiPaperAirplane,
-  HiTemplate,
-  HiCalendar,
-  HiClock,
-  HiCheckCircle,
-  HiXCircle,
-  HiExclamation
-} from 'react-icons/hi';
+  Mail, 
+  Phone, 
+  Users, 
+  BarChart3, 
+  Plus, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Send,
+  FileText,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle
+} from '../utils/icons';
 import PageTitle from '../components/Shared/PageTitle';
 import { useAppSelector, useAppDispatch } from '../redux';
 import { 
@@ -142,11 +142,11 @@ export default function MarketingDashboard() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <HiCheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'scheduled':
-        return <HiClock className="w-5 h-5 text-blue-500" />;
+        return <Clock className="w-5 h-5 text-blue-500" />;
       case 'draft':
-        return <HiPencil className="w-5 h-5 text-gray-500" />;
+        return <Edit className="w-5 h-5 text-gray-500" />;
       case 'failed':
         return <HiXCircle className="w-5 h-5 text-red-500" />;
       default:
@@ -198,10 +198,10 @@ export default function MarketingDashboard() {
       
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <HiMail className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Mail className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
@@ -210,10 +210,10 @@ export default function MarketingDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <HiUsers className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Users className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Recipients</p>
@@ -222,10 +222,10 @@ export default function MarketingDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <HiChartBar className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <BarChart3 className="w-6 h-6 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Delivery Rate</p>
@@ -238,10 +238,10 @@ export default function MarketingDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <HiEye className="w-6 h-6 text-yellow-600" />
+            <div className="p-3 bg-yellow-100 rounded-xl">
+              <Eye className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Open Rate</p>
@@ -256,14 +256,14 @@ export default function MarketingDashboard() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -278,7 +278,7 @@ export default function MarketingDashboard() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             >
               <option value="all">All Types</option>
               <option value="email">Email</option>
@@ -294,7 +294,7 @@ export default function MarketingDashboard() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search campaigns..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             />
           </div>
           
@@ -305,7 +305,7 @@ export default function MarketingDashboard() {
                 setTypeFilter('all');
                 setSearchTerm('');
               }}
-              className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="w-full px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200"
             >
               Clear Filters
             </button>
@@ -319,7 +319,7 @@ export default function MarketingDashboard() {
           onClick={() => setShowCreateModal(true)}
           className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
         >
-          <HiMail className="w-6 h-6 text-blue-600 mr-3" />
+          <Mail className="w-6 h-6 text-blue-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Create Email Campaign</p>
             <p className="text-sm text-gray-600">Send to your customer list</p>
@@ -330,7 +330,7 @@ export default function MarketingDashboard() {
           onClick={() => setShowCreateModal(true)}
           className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
         >
-          <HiPhone className="w-6 h-6 text-green-600 mr-3" />
+          <Phone className="w-6 h-6 text-green-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Send SMS</p>
             <p className="text-sm text-gray-600">Quick text message</p>
@@ -341,7 +341,7 @@ export default function MarketingDashboard() {
           onClick={() => setShowCreateModal(true)}
           className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
         >
-          <HiTemplate className="w-6 h-6 text-purple-600 mr-3" />
+          <FileText className="w-6 h-6 text-purple-600 mr-3" />
           <div className="text-left">
             <p className="font-medium text-gray-900">Create Template</p>
             <p className="text-sm text-gray-600">Design reusable templates</p>
@@ -358,7 +358,7 @@ export default function MarketingDashboard() {
               onClick={() => setShowCreateModal(true)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              <HiPlus className="h-5 w-5 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               Create Campaign
             </button>
           </div>
@@ -427,7 +427,7 @@ export default function MarketingDashboard() {
                           disabled={campaign.status === 'sent'}
                           className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
                         >
-                          <HiPaperAirplane className="w-4 h-4" />
+                          <Send className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => {
@@ -437,7 +437,7 @@ export default function MarketingDashboard() {
                           className="text-gray-600 hover:text-gray-900"
                           title="View Details"
                         >
-                          <HiEye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => {
@@ -447,13 +447,13 @@ export default function MarketingDashboard() {
                           className="text-gray-600 hover:text-gray-900"
                           title="Edit Campaign"
                         >
-                          <HiPencil className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(campaign)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          <HiTrash className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

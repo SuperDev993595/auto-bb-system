@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { fetchCustomers, fetchCustomerStats, deleteCustomer } from '../../redux/actions/customers'
-import { FaTh, FaList, FaPlus, FaSearch, FaCar, FaCalendarAlt, FaEdit, FaTrash, FaCarSide } from 'react-icons/fa'
+import { Grid, List, Plus, Search, Car, Calendar, Edit, Trash2, Car as CarSide } from '../../utils/icons'
 import PageTitle from '../../components/Shared/PageTitle'
 import { toast } from 'react-hot-toast'
 
@@ -98,310 +98,322 @@ function CustomerList() {
         <div className="flex items-center gap-4 flex-1">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search className="w-5 h-5" />
+            </div>
             <input
               type="text"
               placeholder="Search customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
             />
           </div>
 
-          {/* Filters */}
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-
-          <select
-            value={filters.sortBy}
-            onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="createdAt">Date Created</option>
-            <option value="businessName">Business Name</option>
-            <option value="name">Contact Name</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-3">
           {/* View Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gray-100 rounded-xl p-1">
             <button
               onClick={() => setView('grid')}
-              className={`p-2 rounded ${view === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`p-2 rounded-lg transition-all duration-200 ${
+                view === 'grid' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-                              <FaTh className="w-4 h-4" />
+              <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setView('list')}
-              className={`p-2 rounded ${view === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`p-2 rounded-lg transition-all duration-200 ${
+                view === 'list' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <FaList className="w-4 h-4" />
+              <List className="w-5 h-5" />
             </button>
           </div>
-
-          {/* Add Customer Button */}
-          <Link
-            to="/admin/dashboard/customers/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            <FaPlus className="w-4 h-4" />
-            Add Customer
-          </Link>
         </div>
+
+        {/* Add Customer Button */}
+        <Link
+          to="/admin/dashboard/customers/new"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+        >
+          <Plus className="w-5 h-5" />
+          Add Customer
+        </Link>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaTh className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Search className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Vehicles</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalVehicles || 0}</p>
+              <p className="text-sm font-medium text-gray-600">Active Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.active || 0}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaCar className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Car className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.activeCustomers || 0}</p>
+              <p className="text-sm font-medium text-gray-600">This Month</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.thisMonth || 0}</p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FaCalendarAlt className="w-6 h-6 text-yellow-600" />
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <Calendar className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Growth Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.growthRate || 0}%</p>
+              <p className="text-sm font-medium text-gray-600">Vehicles</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.vehicles || 0}</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <FaSearch className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-orange-100 rounded-xl">
+              <CarSide className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="prospect">Prospect</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <input
+              type="text"
+              placeholder="Filter by city"
+              value={filters.city}
+              onChange={(e) => handleFilterChange('city', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+            <input
+              type="text"
+              placeholder="Filter by state"
+              value={filters.state}
+              onChange={(e) => handleFilterChange('state', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            >
+              <option value="createdAt">Date Created</option>
+              <option value="name">Name</option>
+              <option value="businessName">Business Name</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Customer Grid/List */}
-      {!loading && (
-        <>
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="space-y-6">
           {view === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCustomers.map((customer) => (
-                <div key={customer._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <Link
-                      to={`/admin/dashboard/customers/${customer._id}`}
-                      className="flex-1"
-                    >
-                      <h3 className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
-                        {customer.businessName || customer.name}
-                      </h3>
-                    </Link>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        customer.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {customer.status}
-                      </span>
-                      <div className="flex gap-1">
-                        <Link
-                          to={`/admin/dashboard/customers/${customer._id}`}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="View Details"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteCustomer(customer._id, customer.name)}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Delete Customer"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
-                      </div>
+                <div key={customer._id} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{customer.name}</h3>
+                      {customer.businessName && (
+                        <p className="text-sm text-gray-600 mb-2">{customer.businessName}</p>
+                      )}
+                      <p className="text-sm text-gray-500">{customer.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/admin/dashboard/customers/${customer._id}`}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteCustomer(customer._id, customer.name)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                   
                   <div className="space-y-2 text-sm text-gray-600">
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Contact:</span>
-                      {customer.name || 'N/A'}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Phone:</span>
-                      {customer.phone || 'N/A'}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Vehicles:</span>
-                      {customer.vehicles?.length || 0}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="font-medium">Address:</span>
-                      {formatAddress(customer.address)}
-                    </p>
+                    <p>{customer.phone || 'No phone'}</p>
+                    <p>{formatAddress(customer.address)}</p>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                      customer.status === 'active' ? 'bg-green-100 text-green-800' :
+                      customer.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {customer.status}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Business
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Vehicles
-                    </th>
-                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                       Address
-                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredCustomers.map((customer) => (
-                    <tr key={customer._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Link
-                          to={`/admin/dashboard/customers/${customer._id}`}
-                          className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                        >
-                          {customer.businessName || customer.name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.name || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.vehicles?.length || 0}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatAddress(customer.address)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          customer.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex gap-2">
-                          <Link
-                            to={`/admin/dashboard/customers/${customer._id}`}
-                            className="text-blue-600 hover:text-blue-800"
-                            title="View Details"
-                          >
-                            <FaEdit className="w-4 h-4" />
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteCustomer(customer._id, customer.name)}
-                            className="text-red-600 hover:text-red-800"
-                            title="Delete Customer"
-                          >
-                            <FaTrash className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer._id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                            {customer.businessName && (
+                              <div className="text-sm text-gray-500">{customer.businessName}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{customer.email}</div>
+                          <div className="text-sm text-gray-500">{customer.phone || 'No phone'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatAddress(customer.address)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                            customer.status === 'active' ? 'bg-green-100 text-green-800' :
+                            customer.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {customer.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex gap-2">
+                            <Link
+                              to={`/admin/dashboard/customers/${customer._id}`}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteCustomer(customer._id, customer.name)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={!pagination.hasPrevPage}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              
-              <span className="px-3 py-2 text-sm text-gray-700">
-                Page {currentPage} of {pagination.totalPages}
-              </span>
-              
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!pagination.hasNextPage}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
+            <div className="flex justify-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                      page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === pagination.totalPages}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
-        </>
-      )}
-
-      {/* Empty State */}
-      {!loading && filteredCustomers.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No customers found</h3>
-          <p className="text-gray-600 mb-6">Get started by adding your first customer.</p>
-          <Link
-            to="/admin/dashboard/customers/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
-          >
-            <FaPlus className="w-4 h-4" />
-            Add Customer
-          </Link>
         </div>
       )}
+
+      {/* Add Customer Button (Mobile) */}
+      <div className="md:hidden fixed bottom-6 right-6">
+        <Link
+          to="/admin/dashboard/customers/new"
+          className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      </div>
     </div>
   )
 }

@@ -15,22 +15,22 @@ import {
 } from 'chart.js'
 import { Doughnut, Bar, Line, Pie } from 'react-chartjs-2'
 import {
-  HiTrendingUp,
-  HiTrendingDown,
-  HiUsers,
-  HiCurrencyDollar,
-  HiClock,
-  HiCog,
-  HiCalendar,
-  HiDownload,
-  HiPrinter,
-  HiFilter,
-  HiRefresh,
-  HiChartBar,
-  HiDocumentReport,
-  HiUserGroup,
-  HiTruck
-} from 'react-icons/hi'
+  TrendingUp,
+  TrendingDown,
+  Users,
+  DollarSign,
+  Clock,
+  Settings,
+  Calendar,
+  Download,
+  Printer,
+  Filter,
+  RefreshCw,
+  BarChart3,
+  FileText,
+  UserGroup,
+  Truck
+} from '../utils/icons'
 
 ChartJS.register(
   ArcElement,
@@ -419,14 +419,14 @@ export default function ReportsPage() {
   )
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       <div className="flex justify-between items-center">
         <PageTitle title="Reports & Analytics" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRange)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -441,40 +441,40 @@ export default function ReportsPage() {
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
             </>
           )}
           
-          <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <HiDownload className="w-4 h-4" />
+          <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 hover:shadow-md">
+            <Download className="w-4 h-4" />
             Export
           </button>
         </div>
       </div>
 
       {/* Report Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
-              { key: 'overview', label: 'Overview', icon: HiChartBar },
-              { key: 'revenue', label: 'Revenue', icon: HiCurrencyDollar },
-              { key: 'customers', label: 'Customers', icon: HiUsers },
-              { key: 'services', label: 'Services', icon: HiCog },
-              { key: 'technicians', label: 'Technicians', icon: HiUserGroup },
-              { key: 'inventory', label: 'Inventory', icon: HiTruck }
+              { key: 'overview', label: 'Overview', icon: BarChart3 },
+              { key: 'revenue', label: 'Revenue', icon: DollarSign },
+              { key: 'customers', label: 'Customers', icon: Users },
+              { key: 'services', label: 'Services', icon: Settings },
+              { key: 'technicians', label: 'Technicians', icon: UserGroup },
+              { key: 'inventory', label: 'Inventory', icon: Truck }
             ].map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveReport(tab.key as ReportType)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
                   activeReport === tab.key
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -494,14 +494,14 @@ export default function ReportsPage() {
           {activeReport === 'technicians' && renderTechniciansReport()}
           {activeReport === 'services' && (
             <div className="text-center py-12">
-              <HiDocumentReport className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-500 mb-2">Services Report</h3>
               <p className="text-gray-400">Detailed service analytics coming soon...</p>
             </div>
           )}
           {activeReport === 'inventory' && (
             <div className="text-center py-12">
-              <HiTruck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <Truck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-500 mb-2">Inventory Report</h3>
               <p className="text-gray-400">Inventory analytics and trends coming soon...</p>
             </div>

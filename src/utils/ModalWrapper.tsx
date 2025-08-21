@@ -1,85 +1,86 @@
-import { ReactNode, useEffect } from 'react'
-import { HiX } from 'react-icons/hi'
+import { X } from '../utils/icons'
+import { ReactNode } from 'react'
 
-type ModalWrapperProps = {
-    title: string
-    icon?: ReactNode
-    children: ReactNode
-    onClose: () => void
-    onSubmit: () => void
-    submitLabel?: string
-    submitColor?: string
-    disableOutsideClose?: boolean
+interface ModalWrapperProps {
+  isOpen: boolean
+  onClose: () => void
+  children: ReactNode
+  title?: string
+  submitText?: string
+  onSubmit?: () => void
+  submitColor?: string
+  disableOutsideClose?: boolean
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export default function ModalWrapper({
-    title,
-    icon,
-    children,
-    onClose,
-    onSubmit,
-    submitLabel = 'Submit',
-    submitColor = 'bg-blue-600',
-    disableOutsideClose = false,
+  isOpen,
+  onClose,
+  children,
+  title,
+  submitText,
+  onSubmit,
+  submitColor = 'bg-blue-600',
+  disableOutsideClose = false,
+  size = 'md'
 }: ModalWrapperProps) {
-    // Close modal on ESC key
-    useEffect(() => {
-        const handleKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose()
-        }
-        window.addEventListener('keydown', handleKey)
-        return () => window.removeEventListener('keydown', handleKey)
-    }, [onClose])
+  if (!isOpen) return null
 
-    // Close modal on click outside
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!disableOutsideClose && e.target === e.currentTarget) {
-            onClose()
-        }
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-xl',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl'
+  }
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && !disableOutsideClose) {
+      onClose()
     }
+  }
 
-    return (
-        <div
-            onClick={handleBackdropClick}
-            className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
-        >
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
-                    <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                        {icon && <span className="text-xl">{icon}</span>}
-                        <span>{title}</span>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-red-500 transition"
-                        aria-label="Close modal"
-                    >
-                        <HiX className="w-5 h-5" />
-                    </button>
-                </div>
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+    >
+      <div className={`bg-white rounded-2xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn`}>
+        {/* Header */}
+        {title && (
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-                {/* Body */}
-                <div className="px-6 py-5 overflow-y-auto text-sm text-gray-700 space-y-4 flex-1">
-                    {children}
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-end gap-2 px-6 py-4 bg-gray-50 border-t">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={onSubmit}
-                        className={`${submitColor} text-white text-sm px-4 py-2 rounded shadow-sm hover:brightness-110`}
-                    >
-                        {submitLabel}
-                    </button>
-                </div>
-            </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {children}
         </div>
-    )
+
+        {/* Footer */}
+        {submitText && onSubmit && (
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-100">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmit}
+              className={`${submitColor} text-white text-sm px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium`}
+            >
+              {submitText}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

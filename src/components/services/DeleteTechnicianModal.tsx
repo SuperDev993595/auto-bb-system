@@ -3,10 +3,10 @@ import { useAppDispatch } from '../../redux'
 import { deleteTechnician } from '../../redux/actions/services'
 import { Technician } from '../../services/services'
 import {
-  HiX,
-  HiExclamation,
-  HiTrash
-} from 'react-icons/hi'
+  X,
+  AlertTriangle,
+  Trash2
+} from '../../utils/icons'
 
 interface DeleteTechnicianModalProps {
   technician: Technician | null
@@ -42,30 +42,33 @@ export default function DeleteTechnicianModal({ technician, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <HiExclamation className="w-5 h-5 text-red-500" />
-            Delete Technician
-          </h2>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-red-50 to-pink-50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">Delete Technician</h2>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <HiX className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 mb-4">
+              {error}
             </div>
           )}
 
           <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-              <HiTrash className="h-6 w-6 text-red-600" />
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+              <Trash2 className="h-8 w-8 text-red-600" />
             </div>
             
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -77,7 +80,7 @@ export default function DeleteTechnicianModal({ technician, onClose, onSuccess }
               This action cannot be undone and will remove all associated data.
             </p>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
               <h4 className="font-medium text-gray-900 mb-2">Technician Details:</h4>
               <div className="text-sm text-gray-600 space-y-1">
                 <p><strong>Name:</strong> {technician.name}</p>
@@ -93,7 +96,7 @@ export default function DeleteTechnicianModal({ technician, onClose, onSuccess }
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
@@ -101,7 +104,7 @@ export default function DeleteTechnicianModal({ technician, onClose, onSuccess }
               type="button"
               onClick={handleDelete}
               disabled={loading}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>
@@ -110,7 +113,7 @@ export default function DeleteTechnicianModal({ technician, onClose, onSuccess }
                 </>
               ) : (
                 <>
-                  <HiTrash className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                   Delete Technician
                 </>
               )}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../../utils/ModalWrapper'
-import { HiDocumentText } from 'react-icons/hi'
+import { FileText } from '../../../utils/icons'
 import { customerService } from '../../../services/customers'
 
 interface Props {
@@ -49,33 +49,33 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
     return (
         <ModalWrapper
             title="Create New Payment Arrangement"
-            icon={<HiDocumentText className="text-purple-600 w-5 h-5" />}
+            icon={<FileText className="text-purple-600 w-5 h-5" />}
             submitLabel={loading ? "Saving..." : "Save Arrangement"}
-            submitColor="bg-purple-600"
+            submitColor="bg-gradient-to-r from-purple-600 to-violet-600"
             onClose={onClose}
             onSubmit={handleSubmit}
             disabled={loading}
         >
-            <div className="grid gap-4">
+            <div className="grid gap-6">
                 <label className="block">
-                    <span className="text-sm font-medium">Amount ($) *</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Amount ($) *</span>
                     <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:bg-white"
                         required
                     />
                 </label>
                 <label className="block">
-                    <span className="text-sm font-medium">Due Date *</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Due Date *</span>
                     <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:bg-white"
                         required
                     />
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                     <label className="block">
-                        <span className="text-sm font-medium">Type</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Type</span>
                         <select value={type} onChange={e => setType(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:bg-white"
                         >
                             <option value="installment">Installment</option>
                             <option value="payment_plan">Payment Plan</option>
@@ -84,9 +84,9 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
                         </select>
                     </label>
                     <label className="block">
-                        <span className="text-sm font-medium">Status</span>
+                        <span className="text-sm font-medium text-gray-700 mb-2 block">Status</span>
                         <select value={status} onChange={e => setStatus(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:bg-white"
                         >
                             <option value="pending">Pending</option>
                             <option value="active">Active</option>
@@ -96,9 +96,9 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
                     </label>
                 </div>
                 <label className="block">
-                    <span className="text-sm font-medium">Notes</span>
+                    <span className="text-sm font-medium text-gray-700 mb-2 block">Notes</span>
                     <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:bg-white resize-none"
                     />
                 </label>
             </div>

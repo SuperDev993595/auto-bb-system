@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { HiCurrencyDollar } from 'react-icons/hi'
-import { FaEdit, FaTrash } from 'react-icons/fa'
 import { Customer } from '../../../services/customers'
 import { customerService } from '../../../services/customers'
 import Pagination from '../../../utils/Pagination'
 import PostPaymentModal from '../modal/PostPaymentModal'
+import { DollarSign, Trash2 } from '../../../utils/icons'
 import { toast } from 'react-hot-toast'
 
 interface Payment {
@@ -116,9 +115,11 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
                 />
             )}
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <HiCurrencyDollar className="text-blue-600" /> 
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                        <DollarSign className="text-green-600 w-5 h-5" />
+                    </div>
                     Payment History
                     {pagination.totalPayments > 0 && (
                         <span className="text-sm text-gray-500">
@@ -128,7 +129,7 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
                 </h3>
                 <button 
                     onClick={() => setOpen(true)} 
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                     + Add Payment
                 </button>
@@ -140,36 +141,36 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
                 </div>
             ) : payments.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {payments.map((payment) => (
-                            <div key={payment._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                                <div className="flex justify-between items-start mb-2">
+                            <div key={payment._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                                <div className="flex justify-between items-start mb-3">
                                     <div className="flex-1">
-                                        <span className="font-bold text-green-700 text-lg">
+                                        <span className="font-bold text-green-700 text-xl">
                                             ${payment.amount.toFixed(2)}
                                         </span>
-                                        <div className="flex gap-2 mt-1">
-                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                        <div className="flex gap-2 mt-2">
+                                            <span className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg">
                                                 {formatMethod(payment.method)}
                                             </span>
-                                            <span className={`text-xs px-2 py-1 rounded ${getStatusColor(payment.status)}`}>
+                                            <span className={`text-xs px-3 py-1.5 rounded-lg ${getStatusColor(payment.status)}`}>
                                                 {payment.status}
                                             </span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => handleDeletePayment(payment._id)}
-                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                                         title="Delete Payment"
                                     >
-                                        <FaTrash className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-1">
+                                <p className="text-sm text-gray-600 mb-2">
                                     📅 {new Date(payment.date).toLocaleDateString()}
                                 </p>
                                 {payment.reference && (
-                                    <p className="text-sm text-gray-600 mb-1">
+                                    <p className="text-sm text-gray-600 mb-2">
                                         Ref: {payment.reference}
                                     </p>
                                 )}
@@ -191,15 +192,15 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
                     )}
                 </>
             ) : (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">💰</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
-                    <p className="text-gray-600 mb-6">This customer hasn't made any payments yet.</p>
+                <div className="text-center py-16">
+                    <div className="text-gray-400 text-6xl mb-6">💰</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">No payments found</h3>
+                    <p className="text-gray-600 mb-8">This customer hasn't made any payments yet.</p>
                     <button 
                         onClick={() => setOpen(true)} 
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                        className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl inline-flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
                     >
-                        <HiCurrencyDollar className="w-4 h-4" />
+                        <DollarSign className="w-5 h-5" />
                         Add First Payment
                     </button>
                 </div>

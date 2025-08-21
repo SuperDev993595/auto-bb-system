@@ -2,20 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../redux/hooks';
 import { fetchDashboardStats } from '../../redux/actions/dashboard';
 import { 
-  FaUsers, 
-  FaCalendarAlt, 
-  FaDollarSign, 
-  FaWrench,
-  FaChartLine,
-  FaChartBar,
-  FaChartPie,
-  FaDownload,
-  FaFilter,
-  FaCog,
-  FaSync,
-  FaEye,
-  FaEyeSlash
-} from 'react-icons/fa';
+  Users, 
+  Calendar, 
+  DollarSign, 
+  Wrench,
+  TrendingUp,
+  BarChart3,
+  PieChart,
+  Download,
+  Filter,
+  Settings,
+  RefreshCw,
+  Eye,
+  EyeOff
+} from '../../utils/icons';
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -98,24 +98,21 @@ const Dashboard: React.FC = () => {
     const wsInterval = setInterval(() => {
       // Simulate real-time updates
       if (stats) {
-        // Update stats with small random changes to simulate real-time data
+        // Update some stats randomly to simulate real-time data
         const updatedStats = {
           ...stats,
-          totalCustomers: stats.totalCustomers + Math.floor(Math.random() * 3) - 1,
-          totalAppointments: stats.totalAppointments + Math.floor(Math.random() * 2),
-          totalRevenue: stats.totalRevenue + Math.floor(Math.random() * 100),
-          pendingTasks: stats.pendingTasks + Math.floor(Math.random() * 2) - 1
+          totalRevenue: stats.totalRevenue + Math.random() * 100,
+          totalAppointments: stats.totalAppointments + Math.floor(Math.random() * 5),
+          pendingTasks: Math.max(0, stats.pendingTasks - Math.floor(Math.random() * 2))
         };
-        
         // In a real app, this would come from WebSocket or Server-Sent Events
-        console.log('Real-time update:', updatedStats);
       }
-    }, 5000);
+    }, 10000); // Update every 10 seconds
 
     return () => clearInterval(wsInterval);
   }, [autoRefresh, stats]);
 
-  // Chart data for revenue trends
+  // Chart data
   const revenueData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
@@ -130,378 +127,214 @@ const Dashboard: React.FC = () => {
     ],
   };
 
-  // Chart data for service distribution
   const serviceData = {
-    labels: ['Oil Change', 'Brake Service', 'Engine Repair', 'AC Service', 'Tire Service'],
+    labels: ['Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Repair', 'Other'],
     datasets: [
       {
         data: [30, 25, 20, 15, 10],
         backgroundColor: [
-          '#3B82F6',
-          '#EF4444',
-          '#10B981',
-          '#F59E0B',
-          '#8B5CF6',
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(16, 185, 129, 0.8)',
+          'rgba(245, 158, 11, 0.8)',
+          'rgba(239, 68, 68, 0.8)',
+          'rgba(139, 92, 246, 0.8)',
         ],
+        borderWidth: 2,
+        borderColor: '#ffffff',
       },
     ],
   };
 
-  // Chart data for appointment trends
   const appointmentData = {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
         label: 'Appointments',
-        data: [12, 19, 15, 25, 22, 18, 8],
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
+        data: [12, 19, 15, 25, 22, 18, 14],
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderColor: 'rgb(16, 185, 129)',
         borderWidth: 1,
       },
     ],
   };
 
-  // Custom report builder
-  const generateCustomReport = () => {
-    const reportData = {
-      metrics: selectedMetrics,
-      dateRange,
-      chartType,
-      data: revenueData, // This would be filtered based on selections
-      generatedAt: new Date().toISOString()
-    };
-    
-    // Export report
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], {
-      type: 'application/json'
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Advanced filtering
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  if (loading) {
+  if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-        Error loading dashboard: {error}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchData}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with controls */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">
-            Last updated: {lastUpdate.toLocaleTimeString()}
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          {/* Real-time controls */}
-          <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border">
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">Real-time overview of your auto repair business</p>
+          </div>
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`p-2 rounded ${autoRefresh ? 'text-green-600' : 'text-gray-400'}`}
-              title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-3 rounded-xl transition-colors ${
+                showFilters 
+                  ? 'bg-blue-100 text-blue-600' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              } border border-gray-200`}
             >
-              {autoRefresh ? <FaEye /> : <FaEyeSlash />}
+              <Filter className="w-5 h-5" />
             </button>
-            <select
-              value={refreshInterval}
-              onChange={(e) => setRefreshInterval(Number(e.target.value))}
-              className="text-sm border rounded px-2 py-1"
-            >
-              <option value={10000}>10s</option>
-              <option value={30000}>30s</option>
-              <option value={60000}>1m</option>
-              <option value={300000}>5m</option>
-            </select>
             <button
               onClick={fetchData}
-              className="p-2 text-blue-600 hover:text-blue-700"
-              title="Refresh now"
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
             >
-                                      <FaSync />
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowReportBuilder(!showReportBuilder)}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+            >
+              <Settings className="w-5 h-5" />
             </button>
           </div>
+        </div>
 
-          {/* Advanced filters */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border hover:bg-gray-50"
-          >
-            <FaFilter />
-            <span>Filters</span>
-          </button>
-
-          {/* Custom report builder */}
-          <button
-            onClick={() => setShowReportBuilder(!showReportBuilder)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            <FaCog />
-            <span>Custom Report</span>
-          </button>
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${autoRefresh ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm text-gray-600">
+                {autoRefresh ? 'Auto-refresh enabled' : 'Auto-refresh disabled'}
+              </span>
+            </div>
+            <span className="text-sm text-gray-500">
+              Last updated: {lastUpdate.toLocaleTimeString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`p-2 rounded-lg transition-colors ${
+                autoRefresh 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {autoRefresh ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+            <select
+              value={refreshInterval / 1000}
+              onChange={(e) => setRefreshInterval(parseInt(e.target.value) * 1000)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={30}>30s</option>
+              <option value={60}>1m</option>
+              <option value={300}>5m</option>
+              <option value={600}>10m</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Advanced Filters Panel */}
-      {showFilters && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Advanced Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Range
-              </label>
-              <select
-                value={filters.dateRange}
-                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="1d">Last 24 hours</option>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-                <option value="1y">Last year</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Service Type
-              </label>
-              <select
-                value={filters.serviceType}
-                onChange={(e) => handleFilterChange('serviceType', e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="all">All Services</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="repair">Repair</option>
-                <option value="diagnostic">Diagnostic</option>
-                <option value="emergency">Emergency</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Technician
-              </label>
-              <select
-                value={filters.technician}
-                onChange={(e) => handleFilterChange('technician', e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="all">All Technicians</option>
-                <option value="john">John Smith</option>
-                <option value="sarah">Sarah Johnson</option>
-                <option value="mike">Mike Davis</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="all">All Status</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Custom Report Builder */}
-      {showReportBuilder && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Custom Report Builder</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Metrics
-              </label>
-              <div className="space-y-2">
-                {['Revenue', 'Appointments', 'Customers', 'Services'].map(metric => (
-                  <label key={metric} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedMetrics.includes(metric)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedMetrics([...selectedMetrics, metric]);
-                        } else {
-                          setSelectedMetrics(selectedMetrics.filter(m => m !== metric));
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    {metric}
-                  </label>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Chart Type
-              </label>
-              <select
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value as any)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="line">Line Chart</option>
-                <option value="bar">Bar Chart</option>
-                <option value="pie">Pie Chart</option>
-                <option value="doughnut">Doughnut Chart</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <button
-              onClick={generateCustomReport}
-              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-            >
-              <FaDownload />
-              Generate Report
-            </button>
-            <button
-              onClick={() => setShowReportBuilder(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FaUsers className="text-blue-600 text-xl" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-600">+12% from last month</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Appointments</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalAppointments || 0}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <FaCalendarAlt className="text-green-600 text-xl" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-600">+8% from last month</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${stats?.totalRevenue?.toLocaleString() || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">${stats?.totalRevenue?.toLocaleString() || '0'}</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <FaDollarSign className="text-yellow-600 text-xl" />
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <DollarSign className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-sm text-green-600">+15% from last month</span>
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <TrendingUp className="w-4 h-4 mr-1" />
+            +12.5% from last month
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || '0'}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-xl">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <TrendingUp className="w-4 h-4 mr-1" />
+            +8.2% from last month
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Appointments</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalAppointments || '0'}</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <Calendar className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <TrendingUp className="w-4 h-4 mr-1" />
+            +15.3% from last month
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.pendingTasks || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.pendingTasks || '0'}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-full">
-              <FaWrench className="text-red-600 text-xl" />
+            <div className="p-3 bg-orange-100 rounded-xl">
+              <Wrench className="w-6 h-6 text-orange-600" />
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-sm text-red-600">-5% from last month</span>
+          <div className="mt-4 flex items-center text-sm text-red-600">
+            <TrendingUp className="w-4 h-4 mr-1" />
+            +5.7% from last month
           </div>
         </div>
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Revenue Trends */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Revenue Trends</h3>
             <div className="flex items-center gap-2">
-              <FaChartLine className="text-blue-600" />
+              <TrendingUp className="text-blue-600" />
               <span className="text-sm text-gray-600">Last 6 months</span>
             </div>
           </div>
@@ -532,11 +365,11 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Service Distribution */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Service Distribution</h3>
             <div className="flex items-center gap-2">
-              <FaChartPie className="text-blue-600" />
+              <PieChart className="text-blue-600" />
               <span className="text-sm text-gray-600">This month</span>
             </div>
           </div>
@@ -557,11 +390,11 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Appointment Trends */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Weekly Appointments</h3>
             <div className="flex items-center gap-2">
-              <FaChartBar className="text-blue-600" />
+              <BarChart3 className="text-blue-600" />
               <span className="text-sm text-gray-600">This week</span>
             </div>
           </div>
@@ -587,31 +420,31 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="font-medium">View Today's Appointments</span>
-                <FaCalendarAlt className="text-blue-600" />
+                <Calendar className="text-blue-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Generate Monthly Report</span>
-                <FaDownload className="text-green-600" />
+                <Download className="text-green-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="font-medium">View Pending Tasks</span>
-                <FaWrench className="text-red-600" />
+                <Wrench className="text-red-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Customer Analytics</span>
-                <FaUsers className="text-purple-600" />
+                <Users className="text-purple-600" />
               </div>
             </button>
           </div>

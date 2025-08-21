@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { HiPhone } from 'react-icons/hi'
-import { FaEdit, FaTrash } from 'react-icons/fa'
 import { Customer } from '../../../services/customers'
 import { customerService } from '../../../services/customers'
 import Pagination from '../../../utils/Pagination'
 import NewCallLogModal from '../modal/NewCallLogModal'
+import { Phone, Edit, Trash2 } from '../../../utils/icons'
 import { toast } from 'react-hot-toast'
 
 interface CallLog {
@@ -122,9 +121,11 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
                 />
             )}
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <HiPhone className="text-teal-600" /> 
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                    <div className="p-2 bg-teal-100 rounded-lg">
+                        <Phone className="text-teal-600 w-5 h-5" />
+                    </div>
                     Call Logs
                     {pagination.totalCallLogs > 0 && (
                         <span className="text-sm text-gray-500">
@@ -134,7 +135,7 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
                 </h3>
                 <button 
                     onClick={() => setOpen(true)} 
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded text-sm font-medium"
+                    className="px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                     + Add Call
                 </button>
@@ -146,43 +147,43 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
                 </div>
             ) : callLogs.length > 0 ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         {callLogs.map((log) => (
-                            <div key={log._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                                <div className="flex justify-between items-start mb-2">
+                            <div key={log._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                                <div className="flex justify-between items-start mb-3">
                                     <div className="flex-1">
-                                        <div className="flex gap-2 mb-1">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getTypeColor(log.type)}`}>
+                                        <div className="flex gap-2 mb-2">
+                                            <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${getTypeColor(log.type)}`}>
                                                 {formatType(log.type)}
                                             </span>
-                                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg">
                                                 {formatDuration(log.duration)}
                                             </span>
                                         </div>
                                         {log.followUpRequired && (
-                                            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                                            <span className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-lg">
                                                 Follow-up Required
                                             </span>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => handleDeleteCallLog(log._id)}
-                                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                                         title="Delete Call Log"
                                     >
-                                        <FaTrash className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-1">
+                                <p className="text-sm text-gray-600 mb-2">
                                     📅 {new Date(log.date).toLocaleDateString()}
                                 </p>
                                 {log.phoneNumber && (
-                                    <p className="text-sm text-gray-600 mb-1">
+                                    <p className="text-sm text-gray-600 mb-2">
                                         📞 {log.phoneNumber}
                                     </p>
                                 )}
                                 {log.summary && (
-                                    <p className="text-sm text-gray-700 mb-1">
+                                    <p className="text-sm text-gray-700 mb-2">
                                         {log.summary}
                                     </p>
                                 )}
@@ -192,7 +193,7 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
                                     </p>
                                 )}
                                 {log.followUpDate && (
-                                    <p className="text-sm text-blue-600 mt-1">
+                                    <p className="text-sm text-blue-600 mt-2">
                                         🔄 Follow-up: {new Date(log.followUpDate).toLocaleDateString()}
                                     </p>
                                 )}
@@ -209,15 +210,15 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
                     )}
                 </>
             ) : (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">📞</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No call logs found</h3>
-                    <p className="text-gray-600 mb-6">This customer hasn't had any calls logged yet.</p>
+                <div className="text-center py-16">
+                    <div className="text-gray-400 text-6xl mb-6">📞</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">No call logs found</h3>
+                    <p className="text-gray-600 mb-8">This customer hasn't had any calls logged yet.</p>
                     <button 
                         onClick={() => setOpen(true)} 
-                        className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                        className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl inline-flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
                     >
-                        <HiPhone className="w-4 h-4" />
+                        <Phone className="w-5 h-5" />
                         Add First Call Log
                     </button>
                 </div>

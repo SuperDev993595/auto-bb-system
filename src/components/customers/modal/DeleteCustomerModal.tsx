@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../../redux'
 import { deleteCustomer } from '../../../redux/actions/customers'
 import { Customer } from '../../../services/customers'
 import { toast } from 'react-hot-toast'
-import { FaTimes, FaTrash, FaExclamationTriangle, FaUser } from 'react-icons/fa'
+import { X, Trash2, AlertTriangle, User } from '../../../utils/icons'
 import { useNavigate } from 'react-router-dom'
 
 interface DeleteCustomerModalProps {
@@ -42,19 +42,21 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <FaTrash className="text-red-600" />
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-red-50 to-pink-50">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
             Delete Customer
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
           >
-            <FaTimes className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -62,7 +64,7 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
         <div className="p-6">
           <div className="flex items-start gap-4 mb-6">
             <div className="bg-red-100 p-3 rounded-full">
-              <FaExclamationTriangle className="w-6 h-6 text-red-600" />
+              <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -81,9 +83,11 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
             </div>
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
             <div className="flex items-center gap-3">
-              <FaUser className="text-gray-400 w-5 h-5" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="text-blue-600 w-5 h-5" />
+              </div>
               <div>
                 <p className="font-medium text-gray-900">{customer.name}</p>
                 <p className="text-sm text-gray-600">{customer.email}</p>
@@ -102,7 +106,7 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               placeholder="Enter customer name to confirm"
             />
           </div>
@@ -112,17 +116,16 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleDelete}
               disabled={loading || confirmText !== customer.name}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
             >
-              <FaTrash className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
               {loading ? 'Deleting...' : 'Delete Customer'}
             </button>
           </div>
