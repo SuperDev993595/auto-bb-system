@@ -47,8 +47,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    console.log('ProtectedRoute: User not authenticated, redirecting to login');
-    console.log('ProtectedRoute: Current location:', location.pathname);
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
@@ -74,9 +72,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check Any Admin requirement
   if (requireAnyAdmin && !isAnyAdmin()) {
-    console.log('ProtectedRoute: User does not have admin privileges');
-    console.log('ProtectedRoute: User role:', user?.role);
-    console.log('ProtectedRoute: isAnyAdmin result:', isAnyAdmin());
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

@@ -76,18 +76,12 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
-    console.log('API Request Interceptor - Token:', token ? 'Found' : 'Not found');
-    console.log('API Request Interceptor - URL:', config.url);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('API Request Interceptor - Authorization header added');
-    } else {
-      console.log('API Request Interceptor - No token or headers, skipping Authorization');
     }
     return config;
   },
   (error) => {
-    console.error('API Request Interceptor - Error:', error);
     return Promise.reject(error);
   }
 );

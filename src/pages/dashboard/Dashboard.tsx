@@ -14,9 +14,11 @@ import {
   Settings,
   RefreshCw,
   Eye,
-  EyeOff
+  EyeOff,
+  X,
+  ChevronDown
 } from '../../utils/icons';
-import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -56,9 +58,9 @@ const Dashboard: React.FC = () => {
   
   // Custom report builder state
   const [showReportBuilder, setShowReportBuilder] = useState(false);
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['revenue', 'appointments', 'customers']);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie' | 'doughnut'>('line');
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'doughnut'>('line');
   
   // Advanced filtering state
   const [showFilters, setShowFilters] = useState(false);
@@ -91,34 +93,59 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchData]);
 
-  // Real-time data simulation
-  useEffect(() => {
-    if (!autoRefresh) return;
+  // Handle filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
 
-    const wsInterval = setInterval(() => {
-      // Simulate real-time updates
-      if (stats) {
-        // Update some stats randomly to simulate real-time data
-        const updatedStats = {
-          ...stats,
-          totalRevenue: stats.totalRevenue + Math.random() * 100,
-          totalAppointments: stats.totalAppointments + Math.floor(Math.random() * 5),
-          pendingTasks: Math.max(0, stats.pendingTasks - Math.floor(Math.random() * 2))
+  // Handle metric selection
+  const handleMetricToggle = (metric: string) => {
+    setSelectedMetrics(prev => 
+      prev.includes(metric) 
+        ? prev.filter(m => m !== metric)
+        : [...prev, metric]
+    );
+  };
+
+  // Handle quick actions
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'appointments':
+        window.location.href = '/admin/dashboard/appointments';
+        break;
+      case 'report':
+        // Generate and download report
+        const reportData = {
+          stats,
+          dateRange: filters.dateRange,
+          generatedAt: new Date().toISOString()
         };
-        // In a real app, this would come from WebSocket or Server-Sent Events
-      }
-    }, 10000); // Update every 10 seconds
+        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        break;
+      case 'tasks':
+        window.location.href = '/admin/dashboard/tasks';
+        break;
+      case 'analytics':
+        window.location.href = '/admin/dashboard/customers';
+        break;
+      default:
+        break;
+    }
+  };
 
-    return () => clearInterval(wsInterval);
-  }, [autoRefresh, stats]);
-
-  // Chart data
+  // Chart data based on real stats
   const revenueData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Revenue',
-        data: [12000, 19000, 15000, 25000, 22000, 30000],
+        data: stats?.revenueHistory || [12000, 19000, 15000, 25000, 22000, 30000],
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         fill: true,
@@ -131,7 +158,7 @@ const Dashboard: React.FC = () => {
     labels: ['Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Repair', 'Other'],
     datasets: [
       {
-        data: [30, 25, 20, 15, 10],
+        data: stats?.serviceDistribution || [30, 25, 20, 15, 10],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
@@ -150,7 +177,7 @@ const Dashboard: React.FC = () => {
     datasets: [
       {
         label: 'Appointments',
-        data: [12, 19, 15, 25, 22, 18, 14],
+        data: stats?.weeklyAppointments || [12, 19, 15, 25, 22, 18, 14],
         backgroundColor: 'rgba(16, 185, 129, 0.8)',
         borderColor: 'rgb(16, 185, 129)',
         borderWidth: 1,
@@ -204,18 +231,25 @@ const Dashboard: React.FC = () => {
                   ? 'bg-blue-100 text-blue-600' 
                   : 'bg-white text-gray-600 hover:bg-gray-50'
               } border border-gray-200`}
+              title="Toggle Filters"
             >
               <Filter className="w-5 h-5" />
             </button>
             <button
               onClick={fetchData}
               className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Refresh Data"
             >
               <RefreshCw className="w-5 h-5" />
             </button>
             <button
               onClick={() => setShowReportBuilder(!showReportBuilder)}
-              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              className={`p-3 rounded-xl transition-colors ${
+                showReportBuilder 
+                  ? 'bg-blue-100 text-blue-600' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              } border border-gray-200`}
+              title="Report Builder"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -243,6 +277,7 @@ const Dashboard: React.FC = () => {
                   ? 'bg-green-100 text-green-600' 
                   : 'bg-gray-100 text-gray-600'
               }`}
+              title={autoRefresh ? 'Disable Auto-refresh' : 'Enable Auto-refresh'}
             >
               {autoRefresh ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
@@ -259,6 +294,139 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="mb-6 bg-white p-6 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+            <button
+              onClick={() => setShowFilters(false)}
+              className="p-2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="1d">Last 24 hours</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+              <select
+                value={filters.serviceType}
+                onChange={(e) => handleFilterChange('serviceType', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Services</option>
+                <option value="oil_change">Oil Change</option>
+                <option value="brake_service">Brake Service</option>
+                <option value="tire_rotation">Tire Rotation</option>
+                <option value="engine_repair">Engine Repair</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
+              <select
+                value={filters.technician}
+                onChange={(e) => handleFilterChange('technician', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Technicians</option>
+                <option value="tech1">John Smith</option>
+                <option value="tech2">Sarah Johnson</option>
+                <option value="tech3">Mike Wilson</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Builder Panel */}
+      {showReportBuilder && (
+        <div className="mb-6 bg-white p-6 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Custom Report Builder</h3>
+            <button
+              onClick={() => setShowReportBuilder(false)}
+              className="p-2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Metrics</label>
+              <div className="space-y-2">
+                {['revenue', 'appointments', 'customers', 'tasks'].map((metric) => (
+                  <label key={metric} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedMetrics.includes(metric)}
+                      onChange={() => handleMetricToggle(metric)}
+                      className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700 capitalize">{metric}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+              <div className="space-y-2">
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Chart Type</label>
+              <select
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value as 'line' | 'bar' | 'doughnut')}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+                <option value="doughnut">Doughnut Chart</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -317,7 +485,7 @@ const Dashboard: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{stats?.pendingTasks || '0'}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-xl">
-                              <Cog className="w-6 h-6 text-orange-600" />
+              <Cog className="w-6 h-6 text-orange-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-red-600">
@@ -423,25 +591,37 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => handleQuickAction('appointments')}
+              className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <span className="font-medium">View Today's Appointments</span>
                 <Calendar className="text-blue-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => handleQuickAction('report')}
+              className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <span className="font-medium">Generate Monthly Report</span>
                 <Download className="text-green-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => handleQuickAction('tasks')}
+              className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <span className="font-medium">View Pending Tasks</span>
                 <Cog className="text-red-600" />
               </div>
             </button>
-            <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => handleQuickAction('analytics')}
+              className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <span className="font-medium">Customer Analytics</span>
                 <Users className="text-purple-600" />
