@@ -11,16 +11,16 @@ const authenticateToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ 
       success: false, 
-      message: 'Access token required' 
+      message: 'No token provided' 
     });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       console.error('JWT verification error:', err);
-      return res.status(403).json({ 
+      return res.status(401).json({ 
         success: false, 
-        message: 'Invalid or expired token' 
+        message: 'Invalid token' 
       });
     }
     

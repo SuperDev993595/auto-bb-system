@@ -12,18 +12,23 @@ const router = express.Router();
 
 // Validation schemas
 const appointmentSchema = Joi.object({
-  customer: Joi.string().required(),
-  vehicle: Joi.string().required(), // Vehicle ID reference
-  serviceType: Joi.string().required(), // ObjectId reference to ServiceCatalog
-  serviceDescription: Joi.string().required(),
-  scheduledDate: Joi.date().required(),
-  scheduledTime: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
-  estimatedDuration: Joi.number().min(15).max(480).required(), // 15 minutes to 8 hours
-  assignedTo: Joi.string().required(),
+  customerId: Joi.string().required(),
+  vehicleId: Joi.string().optional(),
+  serviceType: Joi.string().required(),
+  date: Joi.date().required(),
+  time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+  notes: Joi.string().optional(),
+  status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
+  // Legacy fields for backward compatibility
+  customer: Joi.string().optional(),
+  vehicle: Joi.string().optional(),
+  serviceDescription: Joi.string().optional(),
+  scheduledDate: Joi.date().optional(),
+  scheduledTime: Joi.string().optional(),
+  estimatedDuration: Joi.number().min(15).max(480).optional(),
+  assignedTo: Joi.string().optional(),
   technician: Joi.string().optional(),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
-  status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
-  notes: Joi.string().optional(),
   customerNotes: Joi.string().optional(),
   partsRequired: Joi.array().items(Joi.object({
     name: Joi.string().required(),
@@ -463,7 +468,7 @@ router.post('/', requireAnyAdmin, async (req, res) => {
     }
 
     // Check if customer exists
-    const customer = await Customer.findById(value.customer);
+    const customer = await Customer.findById(value.customerId || value.customer);
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -471,23 +476,30 @@ router.post('/', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    // Check if vehicle exists and belongs to customer
-    const Vehicle = require('../models/Vehicle');
-    const vehicle = await Vehicle.findOne({ _id: value.vehicle, customer: value.customer });
-    if (!vehicle) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vehicle not found or does not belong to customer'
+    // Check if vehicle exists and belongs to customer (if provided)
+    if (value.vehicleId || value.vehicle) {
+      const Vehicle = require('../models/Vehicle');
+      const vehicle = await Vehicle.findOne({ 
+        _id: value.vehicleId || value.vehicle, 
+        customer: value.customerId || value.customer 
       });
+      if (!vehicle) {
+        return res.status(404).json({
+          success: false,
+          message: 'Vehicle not found or does not belong to customer'
+        });
+      }
     }
 
-    // Check if assigned user exists
-    const assignedUser = await User.findById(value.assignedTo);
-    if (!assignedUser) {
-      return res.status(404).json({
-        success: false,
-        message: 'Assigned user not found'
-      });
+    // Check if assigned user exists (if provided)
+    if (value.assignedTo) {
+      const assignedUser = await User.findById(value.assignedTo);
+      if (!assignedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Assigned user not found'
+        });
+      }
     }
 
     // Check if technician exists (if provided)
@@ -501,11 +513,27 @@ router.post('/', requireAnyAdmin, async (req, res) => {
       }
     }
 
-    // Create appointment
-    const appointment = new Appointment({
-      ...value,
+    // Create appointment with field mapping
+    const appointmentData = {
+      customer: value.customerId || value.customer,
+      vehicle: value.vehicleId || value.vehicle,
+      serviceType: value.serviceType,
+      serviceDescription: value.serviceDescription || value.serviceType,
+      scheduledDate: value.date || value.scheduledDate,
+      scheduledTime: value.time || value.scheduledTime,
+      estimatedDuration: value.estimatedDuration || 60, // Default 1 hour
+      assignedTo: value.assignedTo || req.user.id,
+      technician: value.technician,
+      priority: value.priority,
+      status: value.status,
+      notes: value.notes,
+      customerNotes: value.customerNotes,
+      partsRequired: value.partsRequired,
+      tags: value.tags,
       createdBy: req.user.id
-    });
+    };
+
+    const appointment = new Appointment(appointmentData);
 
 
 

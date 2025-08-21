@@ -1,6 +1,6 @@
 const express = require('express');
 const Joi = require('joi');
-const { ServiceCatalog, WorkOrder, Technician } = require('../models/Service');
+const { ServiceCatalog, WorkOrder, Technician, Service } = require('../models/Service');
 const Customer = require('../models/Customer');
 const { requireAnyAdmin } = require('../middleware/auth');
 
@@ -99,6 +99,43 @@ const technicianSchema = Joi.object({
     expiryDate: Joi.date().optional()
   })).optional(),
   isActive: Joi.boolean().default(true)
+});
+
+// Basic service validation schema (for the main Service model)
+const basicServiceSchema = Joi.object({
+  // Service catalog fields (for /api/services routes)
+  name: Joi.string().optional(),
+  description: Joi.string().optional(),
+  category: Joi.string().valid('maintenance', 'repair', 'diagnostic', 'inspection', 'emergency', 'preventive', 'other').optional(),
+  basePrice: Joi.number().min(0).optional(),
+  estimatedDuration: Joi.number().min(15).optional(),
+  isActive: Joi.boolean().optional(),
+  
+  // Service record fields (for actual service instances)
+  customerId: Joi.string().optional(),
+  vehicleId: Joi.string().optional(),
+  appointmentId: Joi.string().optional(),
+  date: Joi.date().optional(),
+  serviceType: Joi.string().optional().max(100),
+  technician: Joi.string().optional().max(100),
+  mileage: Joi.number().min(0).optional(),
+  cost: Joi.number().min(0).optional(),
+  parts: Joi.array().items(Joi.object({
+    name: Joi.string().required().max(100),
+    partNumber: Joi.string().max(50).optional(),
+    quantity: Joi.number().min(1).required(),
+    unitPrice: Joi.number().min(0).required(),
+    totalPrice: Joi.number().min(0).required()
+  })).optional(),
+  laborHours: Joi.number().min(0).optional(),
+  laborRate: Joi.number().min(0).optional(),
+  subtotal: Joi.number().min(0).optional(),
+  tax: Joi.number().min(0).optional(),
+  discount: Joi.number().min(0).optional(),
+  total: Joi.number().min(0).optional(),
+  status: Joi.string().valid('completed', 'in-progress', 'scheduled', 'cancelled').default('completed'),
+  notes: Joi.string().max(1000).optional(),
+  customerNotes: Joi.string().max(1000).optional()
 });
 
 // Service Catalog Routes
@@ -998,18 +1035,482 @@ router.get('/technicians/stats/overview', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// Basic Service Routes (for the main Service model)
+// @route   GET /api/services
+// @desc    Get all services
+// @access  Private
+router.get('/', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      search,
+      status,
+      sortBy = 'date',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    if (status) query.status = status;
+    if (category) query.serviceType = { $regex: category, $options: 'i' };
+
+    if (search) {
+      query.$or = [
+        { serviceType: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { technician: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const services = await Service.find(query)
+      .populate('customerId', 'name email phone')
+      .populate('vehicleId', 'make model year')
+      .populate('appointmentId', 'date time')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Get total count
+    const total = await Service.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        services,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalServices: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get services error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/services
+// @desc    Create new service (service catalog item)
+// @access  Private
+router.post('/', requireAnyAdmin, async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = basicServiceSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    // Check if this is a service catalog item (has name, category, etc.)
+    if (value.name && value.category) {
+      // Create service catalog item
+      const serviceCatalog = new ServiceCatalog({
+        name: value.name,
+        description: value.description,
+        category: value.category,
+        estimatedDuration: value.estimatedDuration || 60,
+        laborRate: value.basePrice || 0,
+        isActive: value.isActive !== false,
+        createdBy: req.user.id
+      });
+
+      await serviceCatalog.save();
+      await serviceCatalog.populate('createdBy', 'name email');
+
+      res.status(201).json({
+        success: true,
+        message: 'Service created successfully',
+        data: { service: serviceCatalog }
+      });
+    } else {
+      // Create actual service record
+      if (!value.customerId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Customer ID is required for service records'
+        });
+      }
+
+      // Check if customer exists
+      const customer = await Customer.findById(value.customerId);
+      if (!customer) {
+        return res.status(400).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      // Create service record
+      const service = new Service({
+        ...value,
+        createdBy: req.user.id
+      });
+
+      await service.save();
+
+      // Populate references
+      await service.populate('customerId', 'name email phone');
+      await service.populate('vehicleId', 'make model year');
+      if (service.appointmentId) {
+        await service.populate('appointmentId', 'date time');
+      }
+
+      res.status(201).json({
+        success: true,
+        message: 'Service created successfully',
+        data: { service }
+      });
+    }
+
+  } catch (error) {
+    console.error('Create service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/:id
+// @desc    Get single service
+// @access  Private
+router.get('/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id)
+      .populate('customerId', 'name email phone')
+      .populate('vehicleId', 'make model year')
+      .populate('appointmentId', 'date time');
+    
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { service }
+    });
+
+  } catch (error) {
+    console.error('Get service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/:id
+// @desc    Update service
+// @access  Private
+router.put('/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = basicServiceSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    // Update service
+    Object.assign(service, value);
+    await service.save();
+
+    // Populate references
+    await service.populate('customerId', 'name email phone');
+    await service.populate('vehicleId', 'make model year');
+    if (service.appointmentId) {
+      await service.populate('appointmentId', 'date time');
+    }
+
+    res.json({
+      success: true,
+      message: 'Service updated successfully',
+      data: { service }
+    });
+
+  } catch (error) {
+    console.error('Update service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   DELETE /api/services/:id
+// @desc    Delete service
+// @access  Private
+router.delete('/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    await Service.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Service deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/services/categories
 // @desc    Get all service categories
 // @access  Private
 router.get('/categories', requireAnyAdmin, async (req, res) => {
   try {
+    // Get categories from ServiceCatalog
     const categories = await ServiceCatalog.distinct('category');
     res.json({
       success: true,
-      data: categories
+      data: { categories }
     });
   } catch (error) {
     console.error('Get categories error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/services/:id/pricing
+// @desc    Update service pricing
+// @access  Private
+router.post('/:id/pricing', requireAnyAdmin, async (req, res) => {
+  try {
+    const { basePrice, laborRate, discount } = req.body;
+
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    // Update pricing
+    if (basePrice !== undefined) service.cost = basePrice;
+    if (laborRate !== undefined) service.laborRate = laborRate;
+    if (discount !== undefined) service.discount = discount;
+
+    await service.save();
+
+    res.json({
+      success: true,
+      message: 'Service pricing updated successfully',
+      data: { service }
+    });
+
+  } catch (error) {
+    console.error('Update service pricing error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/:id/technicians
+// @desc    Get technicians for service
+// @access  Private
+router.get('/:id/technicians', requireAnyAdmin, async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    // For now, return all technicians
+    const technicians = await Technician.find({ isActive: true });
+
+    res.json({
+      success: true,
+      data: { technicians }
+    });
+
+  } catch (error) {
+    console.error('Get service technicians error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/services/:id/technicians
+// @desc    Assign technicians to service
+// @access  Private
+router.post('/:id/technicians', requireAnyAdmin, async (req, res) => {
+  try {
+    const { technicianIds } = req.body;
+
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    // For now, just update the technician field
+    if (technicianIds && technicianIds.length > 0) {
+      service.technician = technicianIds[0]; // Use first technician
+      await service.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Technicians assigned successfully',
+      data: { service }
+    });
+
+  } catch (error) {
+    console.error('Assign technicians error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/stats/overview
+// @desc    Get service statistics
+// @access  Private
+router.get('/stats/overview', requireAnyAdmin, async (req, res) => {
+  try {
+    // Get stats from ServiceCatalog
+    const totalServices = await ServiceCatalog.countDocuments();
+    const activeServices = await ServiceCatalog.countDocuments({ isActive: true });
+    const inactiveServices = await ServiceCatalog.countDocuments({ isActive: false });
+    
+    const byCategory = await ServiceCatalog.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const avgLaborRate = await ServiceCatalog.aggregate([
+      { $group: { _id: null, avgRate: { $avg: '$laborRate' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalServices,
+        activeServices,
+        inactiveServices,
+        servicesByCategory: byCategory.map(item => ({ category: item._id, count: item.count })),
+        avgLaborRate: avgLaborRate[0]?.avgRate || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get service stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/services/import
+// @desc    Import services from CSV
+// @access  Private
+router.post('/import', requireAnyAdmin, async (req, res) => {
+  try {
+    // Check if file is provided
+    if (!req.files || !req.files.csv) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file provided'
+      });
+    }
+
+    // For now, return a placeholder response
+    res.json({
+      success: true,
+      message: 'Import functionality not yet implemented',
+      data: { importedCount: 0 }
+    });
+
+  } catch (error) {
+    console.error('Import services error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/export
+// @desc    Export services to CSV
+// @access  Private
+router.get('/export', requireAnyAdmin, async (req, res) => {
+  try {
+    const services = await ServiceCatalog.find({ isActive: true });
+
+    // Create CSV content
+    const csvHeader = 'Name,Description,Category,Estimated Duration,Labor Rate\n';
+    const csvRows = services.map(service => 
+      `"${service.name}","${service.description || ''}","${service.category}","${service.estimatedDuration}","${service.laborRate}"`
+    ).join('\n');
+    
+    const csvContent = csvHeader + csvRows;
+
+    // Set headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="services.csv"');
+    
+    res.send(csvContent);
+
+  } catch (error) {
+    console.error('Export services error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

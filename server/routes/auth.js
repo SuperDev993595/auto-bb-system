@@ -102,6 +102,7 @@ router.post('/login', async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          businessName: user.businessName,
           permissions: user.permissions || [],
           avatar: user.avatar
         },
@@ -208,6 +209,7 @@ router.post('/register', async (req, res) => {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
+          businessName: newUser.businessName,
           permissions: newUser.permissions || []
         },
         token
@@ -538,8 +540,8 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 
 // @route   POST /api/auth/logout
 // @desc    Logout user
-// @access  Private
-router.post('/logout', authenticateToken, (req, res) => {
+// @access  Public (no authentication required)
+router.post('/logout', (req, res) => {
   res.json({
     success: true,
     message: 'Logged out successfully'
