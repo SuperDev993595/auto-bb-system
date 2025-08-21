@@ -76,12 +76,18 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
+    console.log('API Request Interceptor - Token:', token ? 'Found' : 'Not found');
+    console.log('API Request Interceptor - URL:', config.url);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Request Interceptor - Authorization header added');
+    } else {
+      console.log('API Request Interceptor - No token or headers, skipping Authorization');
     }
     return config;
   },
   (error) => {
+    console.error('API Request Interceptor - Error:', error);
     return Promise.reject(error);
   }
 );
@@ -94,14 +100,28 @@ api.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.message || error.message || 'An error occurred';
     
-    // Handle authentication errors
+    console.log('API Response Interceptor - Error Status:', error.response?.status);
+    console.log('API Response Interceptor - Error URL:', error.config?.url);
+    console.log('API Response Interceptor - Error Message:', message);
+    
+    // Handle authentication errors - only clear token for specific auth endpoints
     if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('role');
-      localStorage.removeItem('email');
-      window.location.href = '/admin/login';
-      toast.error('Session expired. Please login again.');
+      const url = error.config?.url || '';
+      console.log('API Response Interceptor - 401 Error on URL:', url);
+      
+      // Only clear token for auth-related endpoints, not for data endpoints
+      if (url.includes('/auth/me') || url.includes('/auth/verify')) {
+        console.log('API Response Interceptor - Clearing auth for auth endpoint');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('email');
+        window.location.href = '/auth/login';
+        toast.error('Session expired. Please login again.');
+      } else {
+        console.log('API Response Interceptor - 401 on data endpoint, not clearing token');
+        toast.error('Authentication required. Please login again.');
+      }
     } else if (error.response?.status === 403) {
       toast.error('Access denied. You don\'t have permission for this action.');
     } else if (error.response?.status >= 500) {

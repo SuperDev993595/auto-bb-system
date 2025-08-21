@@ -36,16 +36,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       try {
         if (authService.isAuthenticated()) {
-          const response = await authService.getCurrentUser();
-          if (response.success) {
-            setUser(response.data.user);
-          } else {
-            // Token is invalid, clear storage
-            authService.logout();
+          // First try to get user from storage
+          const storedUser = authService.getCurrentUserFromStorage();
+          if (storedUser) {
+            setUser(storedUser);
+            console.log('AuthContext: User loaded from storage:', storedUser);
           }
+          
+          // Then verify with server
+          try {
+            const response = await authService.getCurrentUser();
+            if (response.success) {
+              setUser(response.data.user);
+              console.log('AuthContext: User verified with server:', response.data.user);
+            } else {
+              console.log('AuthContext: Server verification failed, clearing auth');
+              authService.logout();
+            }
+          } catch (serverError) {
+            console.error('AuthContext: Server verification error:', serverError);
+            // Don't logout immediately, keep user logged in from storage
+            // Only logout if we can't reach the server at all
+          }
+        } else {
+          console.log('AuthContext: No authentication token found');
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('AuthContext: Auth initialization error:', error);
         authService.logout();
       } finally {
         setIsLoading(false);

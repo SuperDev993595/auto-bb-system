@@ -160,8 +160,8 @@ app.set('io', io);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/business-clients', businessClientRoutes);
+app.use('/api/customers', authenticateToken, customerRoutes);
+app.use('/api/business-clients', authenticateToken, businessClientRoutes);
 app.use('/api/appointments', authenticateToken, appointmentRoutes);
 app.use('/api/marketing', authenticateToken, marketingRoutes);
 app.use('/api/sales', authenticateToken, salesRoutes);
