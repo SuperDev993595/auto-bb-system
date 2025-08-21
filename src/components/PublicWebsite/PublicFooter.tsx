@@ -1,16 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  FaPhone, 
-  FaEnvelope, 
-  FaMapMarkerAlt, 
-  FaClock,
-  FaFacebook,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedin,
-  FaArrowRight
-} from 'react-icons/fa';
+  Phone, 
+  Mail, 
+  MapPin, 
+  Clock,
+  Share2,
+  MessageCircle,
+  Heart,
+  Link,
+  ChevronRight
+} from '../../utils/icons';
 
 const PublicFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -32,10 +32,10 @@ const PublicFooter: React.FC = () => {
   ];
 
   const socialLinks = [
-    { icon: <FaFacebook />, href: '#', label: 'Facebook' },
-    { icon: <FaTwitter />, href: '#', label: 'Twitter' },
-    { icon: <FaInstagram />, href: '#', label: 'Instagram' },
-    { icon: <FaLinkedin />, href: '#', label: 'LinkedIn' }
+    { icon: <Share2 className="w-4 h-4" />, href: '#', label: 'Share' },
+    { icon: <MessageCircle className="w-4 h-4" />, href: '#', label: 'Message' },
+    { icon: <Heart className="w-4 h-4" />, href: '#', label: 'Like' },
+    { icon: <Link className="w-4 h-4" />, href: '#', label: 'Link' }
   ];
 
   return (
@@ -46,7 +46,7 @@ const PublicFooter: React.FC = () => {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center mb-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                 <span className="text-white font-bold text-xl">A</span>
               </div>
               <div>
@@ -62,7 +62,7 @@ const PublicFooter: React.FC = () => {
                 <a
                   key={index}
                   href={social.href}
-                  className="w-10 h-10 bg-gray-800 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition duration-300"
+                  className="w-10 h-10 bg-gray-800 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -79,9 +79,9 @@ const PublicFooter: React.FC = () => {
                 <li key={index}>
                   <Link
                     to={link.href}
-                    className="text-gray-400 hover:text-white transition duration-300 flex items-center"
+                    className="text-gray-400 hover:text-white transition-all duration-300 flex items-center group"
                   >
-                    <FaArrowRight className="mr-2 text-xs" />
+                    <ChevronRight className="w-3 h-3 mr-2 group-hover:translate-x-1 transition-transform duration-300" />
                     {link.name}
                   </Link>
                 </li>
@@ -97,9 +97,9 @@ const PublicFooter: React.FC = () => {
                 <li key={index}>
                   <Link
                     to={service.href}
-                    className="text-gray-400 hover:text-white transition duration-300 flex items-center"
+                    className="text-gray-400 hover:text-white transition-all duration-300 flex items-center group"
                   >
-                    <FaArrowRight className="mr-2 text-xs" />
+                    <ChevronRight className="w-3 h-3 mr-2 group-hover:translate-x-1 transition-transform duration-300" />
                     {service.name}
                   </Link>
                 </li>
@@ -112,7 +112,7 @@ const PublicFooter: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
             <div className="space-y-3">
               <div className="flex items-start">
-                <FaPhone className="text-blue-500 mr-3 mt-1" />
+                <Phone className="text-blue-500 mr-3 mt-1 w-4 h-4" />
                 <div>
                   <p className="text-gray-400">Phone</p>
                   <p className="text-white">(555) 123-4567</p>
@@ -120,7 +120,7 @@ const PublicFooter: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start">
-                <FaEnvelope className="text-blue-500 mr-3 mt-1" />
+                <Mail className="text-blue-500 mr-3 mt-1 w-4 h-4" />
                 <div>
                   <p className="text-gray-400">Email</p>
                   <p className="text-white">info@autorepair.com</p>
@@ -128,7 +128,7 @@ const PublicFooter: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-500 mr-3 mt-1" />
+                <MapPin className="text-blue-500 mr-3 mt-1 w-4 h-4" />
                 <div>
                   <p className="text-gray-400">Address</p>
                   <p className="text-white">123 Auto Repair Street</p>
@@ -136,7 +136,7 @@ const PublicFooter: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start">
-                <FaClock className="text-blue-500 mr-3 mt-1" />
+                <Clock className="text-blue-500 mr-3 mt-1 w-4 h-4" />
                 <div>
                   <p className="text-gray-400">Hours</p>
                   <p className="text-white">Mon-Fri: 8AM-6PM</p>
@@ -160,9 +160,9 @@ const PublicFooter: React.FC = () => {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-2 rounded-l-lg border-0 focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="flex-1 px-4 py-2 rounded-l-xl border-0 focus:ring-2 focus:ring-blue-500 text-gray-900 transition-all duration-200"
               />
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-r-lg transition duration-300">
+              <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-r-xl transition-all duration-300 shadow-lg hover:shadow-xl">
                 Subscribe
               </button>
             </div>
@@ -178,13 +178,13 @@ const PublicFooter: React.FC = () => {
               © {currentYear} Auto Repair Pro. All rights reserved.
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition duration-300">
+              <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-all duration-300 hover:scale-105">
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition duration-300">
+              <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-all duration-300 hover:scale-105">
                 Terms of Service
               </Link>
-              <Link to="/sitemap" className="text-gray-400 hover:text-white text-sm transition duration-300">
+              <Link to="/sitemap" className="text-gray-400 hover:text-white text-sm transition-all duration-300 hover:scale-105">
                 Sitemap
               </Link>
             </div>

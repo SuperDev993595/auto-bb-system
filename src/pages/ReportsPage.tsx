@@ -28,7 +28,7 @@ import {
   RefreshCw,
   BarChart3,
   FileText,
-  UserGroup,
+  Users,
   Truck
 } from '../utils/icons'
 
@@ -468,7 +468,7 @@ export default function ReportsPage() {
               { key: 'revenue', label: 'Revenue', icon: DollarSign },
               { key: 'customers', label: 'Customers', icon: Users },
               { key: 'services', label: 'Services', icon: Settings },
-              { key: 'technicians', label: 'Technicians', icon: UserGroup },
+              { key: 'technicians', label: 'Technicians', icon: Users },
               { key: 'inventory', label: 'Inventory', icon: Truck }
             ].map(tab => (
               <button

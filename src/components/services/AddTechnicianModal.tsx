@@ -8,7 +8,7 @@ import {
   Mail,
   Phone,
   DollarSign,
-  GraduationCap,
+  Star,
   Check,
   Plus,
   Trash2
@@ -202,7 +202,7 @@ export default function AddTechnicianModal({ onClose, onSuccess }: AddTechnician
           {/* Specializations */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-blue-600" />
+              <Star className="w-5 h-5 text-blue-600" />
               Specializations
             </h3>
             
@@ -249,7 +249,7 @@ export default function AddTechnicianModal({ onClose, onSuccess }: AddTechnician
           {/* Certifications */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-blue-600" />
+              <Star className="w-5 h-5 text-blue-600" />
               Certifications
             </h3>
             

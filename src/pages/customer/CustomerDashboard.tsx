@@ -7,31 +7,9 @@ import {
   Calendar, 
   DollarSign, 
   MessageCircle, 
-  Bell, 
+  AlertCircle, 
   TrendingUp, 
-  Wrench, 
-  CreditCard, 
-  FileText, 
-  Gift,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Star,
-  Settings,
-  User,
-  Phone,
-  Mail,
-  MapPin
-} from '../../utils/icons';
-import { 
-  Car, 
-  Calendar, 
-  DollarSign, 
-  MessageCircle, 
-  Bell, 
-  TrendingUp, 
-  Wrench, 
+  Cog, 
   CreditCard, 
   FileText, 
   Gift,
@@ -214,10 +192,10 @@ export default function CustomerDashboard() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'appointment': return <Calendar className="w-6 h-6 text-blue-600" />;
-      case 'service': return <Wrench className="w-6 h-6 text-green-600" />;
+      case 'service': return <Cog className="w-6 h-6 text-green-600" />;
       case 'payment': return <CreditCard className="w-6 h-6 text-purple-600" />;
       case 'message': return <MessageCircle className="w-6 h-6 text-indigo-600" />;
-      case 'reminder': return <Bell className="w-6 h-6 text-orange-600" />;
+      case 'reminder': return <AlertCircle className="w-6 h-6 text-orange-600" />;
       case 'promotion': return <Gift className="w-6 h-6 text-pink-600" />;
       default: return <FileText className="w-6 h-6 text-gray-600" />;
     }
@@ -478,7 +456,7 @@ export default function CustomerDashboard() {
             className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group relative"
           >
             <div className="p-2 bg-orange-100 rounded-lg mr-3 group-hover:scale-110 transition-transform">
-              <Bell className="w-5 h-5 text-orange-600" />
+              <AlertCircle className="w-5 h-5 text-orange-600" />
             </div>
             <div>
               <p className="font-medium text-gray-900">Notifications</p>

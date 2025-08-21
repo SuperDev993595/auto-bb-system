@@ -148,9 +148,9 @@ export default function MarketingDashboard() {
       case 'draft':
         return <Edit className="w-5 h-5 text-gray-500" />;
       case 'failed':
-        return <HiXCircle className="w-5 h-5 text-red-500" />;
+        return <XCircle className="w-5 h-5 text-red-500" />;
       default:
-        return <HiExclamation className="w-5 h-5 text-yellow-500" />;
+        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
     }
   };
 
@@ -172,13 +172,13 @@ export default function MarketingDashboard() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'email':
-        return <HiMail className="w-5 h-5 text-blue-500" />;
+        return <Mail className="w-5 h-5 text-blue-500" />;
       case 'sms':
-        return <HiPhone className="w-5 h-5 text-green-500" />;
+        return <Phone className="w-5 h-5 text-green-500" />;
       case 'mailchimp':
-        return <HiUsers className="w-5 h-5 text-purple-500" />;
+        return <Users className="w-5 h-5 text-purple-500" />;
       default:
-        return <HiMail className="w-5 h-5 text-gray-500" />;
+        return <Mail className="w-5 h-5 text-gray-500" />;
     }
   };
 

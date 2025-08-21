@@ -5,7 +5,7 @@ import {
   Users, 
   Calendar, 
   DollarSign, 
-  Wrench,
+  Cog,
   TrendingUp,
   BarChart3,
   PieChart,
@@ -317,7 +317,7 @@ const Dashboard: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{stats?.pendingTasks || '0'}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-xl">
-              <Wrench className="w-6 h-6 text-orange-600" />
+                              <Cog className="w-6 h-6 text-orange-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-red-600">
@@ -438,7 +438,7 @@ const Dashboard: React.FC = () => {
             <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="font-medium">View Pending Tasks</span>
-                <Wrench className="text-red-600" />
+                <Cog className="text-red-600" />
               </div>
             </button>
             <button className="w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">

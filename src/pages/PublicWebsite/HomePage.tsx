@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  FaWrench, 
-  FaCar, 
-  FaClock, 
-  FaPhone, 
-  FaMapMarkerAlt,
-  FaStar,
-  FaCheckCircle,
-  FaUsers,
-  FaShieldAlt,
-  FaTools
-} from 'react-icons/fa';
+  Cog, 
+  Car, 
+  Clock, 
+  Phone, 
+  MapPin,
+  Star,
+  CheckCircle,
+  Users,
+  Shield,
+  Settings
+} from '../../utils/icons';
 import { useAuth } from '../../context/AuthContext';
 
 
@@ -20,22 +20,22 @@ const HomePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const services = [
     {
-      icon: <FaCar className="text-4xl text-blue-600" />,
+      icon: <Car className="text-4xl text-blue-600" />,
       title: "Engine Diagnostics",
       description: "Advanced computer diagnostics to identify engine issues quickly and accurately."
     },
     {
-      icon: <FaWrench className="text-4xl text-blue-600" />,
+      icon: <Cog className="text-4xl text-blue-600" />,
       title: "Brake Service",
       description: "Complete brake system inspection, repair, and replacement services."
     },
     {
-      icon: <FaTools className="text-4xl text-blue-600" />,
+      icon: <Settings className="text-4xl text-blue-600" />,
       title: "Oil Change",
       description: "Professional oil change service with quality filters and lubricants."
     },
     {
-      icon: <FaShieldAlt className="text-4xl text-blue-600" />,
+      icon: <Shield className="text-4xl text-blue-600" />,
       title: "Preventive Maintenance",
       description: "Regular maintenance to keep your vehicle running smoothly and safely."
     }
@@ -128,15 +128,15 @@ const HomePage: React.FC = () => {
                 <h3 className="text-2xl font-semibold mb-4">Quick Contact</h3>
                 <div className="space-y-4">
                   <div className="flex items-center">
-                    <FaPhone className="text-blue-300 mr-3" />
+                    <Phone className="text-blue-300 mr-3" />
                     <span>(555) 123-4567</span>
                   </div>
                   <div className="flex items-center">
-                    <FaMapMarkerAlt className="text-blue-300 mr-3" />
+                    <MapPin className="text-blue-300 mr-3" />
                     <span>123 Auto Repair St, City, State 12345</span>
                   </div>
                   <div className="flex items-center">
-                    <FaClock className="text-blue-300 mr-3" />
+                    <Clock className="text-blue-300 mr-3" />
                     <span>Mon-Fri: 8AM-6PM, Sat: 9AM-4PM</span>
                   </div>
                 </div>
@@ -159,9 +159,11 @@ const HomePage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {services.map((service, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition duration-300">
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center hover:shadow-lg hover:border-blue-300 transition-all duration-300 group">
                 <div className="flex justify-center mb-4">
-                  {service.icon}
+                  <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors duration-300">
+                    {service.icon}
+                  </div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   {service.title}
@@ -210,14 +212,14 @@ const HomePage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-6">
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
                 <div className="flex mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <FaStar key={i} className="text-yellow-400" />
+                    <Star key={i} className="text-yellow-400 w-5 h-5" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
-                <div className="border-t pt-4">
+                <p className="text-gray-700 mb-4 italic text-lg">"{testimonial.text}"</p>
+                <div className="border-t border-gray-200 pt-4">
                   <p className="font-semibold text-gray-900">{testimonial.name}</p>
                   <p className="text-sm text-gray-600">{testimonial.vehicle}</p>
                 </div>
@@ -239,43 +241,55 @@ const HomePage: React.FC = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Certified Technicians</h3>
                 <p className="text-gray-600">Our team consists of ASE-certified mechanics with years of experience.</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Quality Parts</h3>
                 <p className="text-gray-600">We use only high-quality OEM and aftermarket parts for all repairs.</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Warranty</h3>
                 <p className="text-gray-600">All our work comes with a comprehensive warranty for your peace of mind.</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Transparent Pricing</h3>
                 <p className="text-gray-600">No hidden fees or surprises - we provide clear, upfront pricing.</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Fast Service</h3>
                 <p className="text-gray-600">Most repairs completed same-day or within 24 hours.</p>
               </div>
             </div>
-            <div className="flex items-start">
-              <FaCheckCircle className="text-green-500 text-2xl mr-4 mt-1" />
+            <div className="flex items-start p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <CheckCircle className="text-green-600 text-xl" />
+              </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Service</h3>
                 <p className="text-gray-600">Dedicated customer service team to answer all your questions.</p>

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { 
-  FaPhone, 
-  FaEnvelope, 
-  FaMapMarkerAlt, 
-  FaClock, 
-  FaFacebook, 
-  FaTwitter, 
-  FaInstagram,
-  FaLinkedin,
-  FaCheckCircle
-} from 'react-icons/fa';
+  Phone, 
+  Mail, 
+  MapPin, 
+  Clock, 
+  Share2, 
+  MessageCircle, 
+  Heart, 
+  Link, 
+  CheckCircle 
+} from '../../utils/icons';
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -41,22 +41,21 @@ const ContactPage: React.FC = () => {
       subject: '',
       message: ''
     });
-    
     // Reset success message after 5 seconds
     setTimeout(() => setIsSubmitted(false), 5000);
   };
 
   const contactInfo = [
     {
-      icon: <FaPhone className="text-2xl text-blue-600" />,
+      icon: <Phone className="w-6 h-6 text-blue-600" />,
       title: "Phone",
       details: [
-        "Main: (555) 123-4567",
-        "Emergency: (555) 123-4568"
+        "(555) 123-4567",
+        "(555) 123-4568 (Emergency)"
       ]
     },
     {
-      icon: <FaEnvelope className="text-2xl text-blue-600" />,
+      icon: <Mail className="w-6 h-6 text-blue-600" />,
       title: "Email",
       details: [
         "info@autorepair.com",
@@ -64,7 +63,7 @@ const ContactPage: React.FC = () => {
       ]
     },
     {
-      icon: <FaMapMarkerAlt className="text-2xl text-blue-600" />,
+      icon: <MapPin className="w-6 h-6 text-blue-600" />,
       title: "Address",
       details: [
         "123 Auto Repair Street",
@@ -72,21 +71,20 @@ const ContactPage: React.FC = () => {
       ]
     },
     {
-      icon: <FaClock className="text-2xl text-blue-600" />,
-      title: "Business Hours",
+      icon: <Clock className="w-6 h-6 text-blue-600" />,
+      title: "Hours",
       details: [
-        "Monday - Friday: 8:00 AM - 6:00 PM",
-        "Saturday: 9:00 AM - 4:00 PM",
-        "Sunday: Closed"
+        "Mon-Fri: 8AM-6PM",
+        "Sat: 9AM-4PM"
       ]
     }
   ];
 
   const socialLinks = [
-    { icon: <FaFacebook />, href: "#", label: "Facebook" },
-    { icon: <FaTwitter />, href: "#", label: "Twitter" },
-    { icon: <FaInstagram />, href: "#", label: "Instagram" },
-    { icon: <FaLinkedin />, href: "#", label: "LinkedIn" }
+    { icon: <Share2 className="w-5 h-5" />, href: "#", label: "Share" },
+    { icon: <MessageCircle className="w-5 h-5" />, href: "#", label: "Message" },
+    { icon: <Heart className="w-5 h-5" />, href: "#", label: "Like" },
+    { icon: <Link className="w-5 h-5" />, href: "#", label: "Link" }
   ];
 
   return (
@@ -142,7 +140,7 @@ const ContactPage: React.FC = () => {
               
               {isSubmitted && (
                 <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center">
-                  <FaCheckCircle className="mr-2" />
+                  <CheckCircle className="mr-2" />
                   Thank you! Your message has been sent successfully. We'll get back to you soon.
                 </div>
               )}
@@ -253,7 +251,7 @@ const ContactPage: React.FC = () => {
                 </h3>
                 <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
                   <div className="text-center text-gray-600">
-                    <FaMapMarkerAlt className="text-4xl mx-auto mb-4" />
+                    <MapPin className="text-4xl mx-auto mb-4" />
                     <p className="text-lg font-semibold">Interactive Map</p>
                     <p className="text-sm">123 Auto Repair Street, City, State 12345</p>
                     <p className="text-sm mt-2">(Map integration would go here)</p>
