@@ -28,8 +28,8 @@ import {
   RefreshCw,
   BarChart3,
   FileText,
-  Users,
-  Truck
+  Truck,
+  Cog
 } from '../utils/icons'
 
 ChartJS.register(
@@ -239,7 +239,7 @@ export default function ReportsPage() {
               <p className="text-sm text-green-600 mt-1">+12.5% vs last period</p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <HiCurrencyDollar className="w-6 h-6 text-green-600" />
+                             <DollarSign className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function ReportsPage() {
               <p className="text-sm text-blue-600 mt-1">{metrics.customers.retentionRate.toFixed(1)}% retention</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <HiUsers className="w-6 h-6 text-blue-600" />
+                             <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -265,7 +265,7 @@ export default function ReportsPage() {
               <p className="text-sm text-purple-600 mt-1">{metrics.services.completionRate.toFixed(1)}% completion rate</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
-              <HiCog className="w-6 h-6 text-purple-600" />
+                             <Cog className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function ReportsPage() {
               <p className="text-sm text-yellow-600 mt-1">+8.3% vs last period</p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
-              <HiTrendingUp className="w-6 h-6 text-yellow-600" />
+                             <TrendingUp className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>

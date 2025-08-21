@@ -129,6 +129,7 @@ import {
   Flag,
   Activity,
   Network,
+  Printer,
 } from 'lucide-react'
 
 // Export all icons for direct use
@@ -258,6 +259,7 @@ export {
   Flag,
   Activity,
   Network,
+  Printer,
 }
 
 // Icon size constants for consistency

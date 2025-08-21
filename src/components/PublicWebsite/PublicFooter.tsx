@@ -8,7 +8,7 @@ import {
   Share2,
   MessageCircle,
   Heart,
-  Link,
+  Link as LinkIcon,
   ChevronRight
 } from '../../utils/icons';
 
@@ -35,7 +35,7 @@ const PublicFooter: React.FC = () => {
     { icon: <Share2 className="w-4 h-4" />, href: '#', label: 'Share' },
     { icon: <MessageCircle className="w-4 h-4" />, href: '#', label: 'Message' },
     { icon: <Heart className="w-4 h-4" />, href: '#', label: 'Like' },
-    { icon: <Link className="w-4 h-4" />, href: '#', label: 'Link' }
+    { icon: <LinkIcon className="w-4 h-4" />, href: '#', label: 'Link' }
   ];
 
   return (
