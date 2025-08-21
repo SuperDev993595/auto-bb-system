@@ -1121,6 +1121,15 @@ router.post('/', requireAnyAdmin, async (req, res) => {
 
     // Check if this is a service catalog item (has name, category, etc.)
     if (value.name && value.category) {
+      // Check for duplicate service name
+      const existingService = await ServiceCatalog.findOne({ name: value.name });
+      if (existingService) {
+        return res.status(400).json({
+          success: false,
+          message: 'Service with this name already exists'
+        });
+      }
+
       // Create service catalog item
       const serviceCatalog = new ServiceCatalog({
         name: value.name,
@@ -1135,10 +1144,14 @@ router.post('/', requireAnyAdmin, async (req, res) => {
       await serviceCatalog.save();
       await serviceCatalog.populate('createdBy', 'name email');
 
+      // Transform response to include basePrice field for compatibility
+      const serviceResponse = serviceCatalog.toObject();
+      serviceResponse.basePrice = serviceCatalog.laborRate;
+
       res.status(201).json({
         success: true,
         message: 'Service created successfully',
-        data: { service: serviceCatalog }
+        data: { service: serviceResponse }
       });
     } else {
       // Create actual service record
@@ -1194,7 +1207,23 @@ router.post('/', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.get('/:id', requireAnyAdmin, async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id)
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id)
+      .populate('createdBy', 'name email');
+    
+    if (service) {
+      // Transform response to include basePrice field for compatibility
+      const serviceResponse = service.toObject();
+      serviceResponse.basePrice = service.laborRate;
+      
+      return res.json({
+        success: true,
+        data: { service: serviceResponse }
+      });
+    }
+
+    // If not found in ServiceCatalog, try Service records
+    service = await Service.findById(req.params.id)
       .populate('customerId', 'name email phone')
       .populate('vehicleId', 'make model year')
       .populate('appointmentId', 'date time');
@@ -1234,7 +1263,33 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    const service = await Service.findById(req.params.id);
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id);
+    if (service) {
+      // Update service catalog item - map basePrice to laborRate
+      const updateData = { ...value };
+      if (updateData.basePrice !== undefined) {
+        updateData.laborRate = updateData.basePrice;
+        delete updateData.basePrice;
+      }
+      
+      Object.assign(service, updateData);
+      await service.save();
+      await service.populate('createdBy', 'name email');
+      
+      // Transform response to include basePrice field for compatibility
+      const serviceResponse = service.toObject();
+      serviceResponse.basePrice = service.laborRate;
+      
+      return res.json({
+        success: true,
+        message: 'Service updated successfully',
+        data: { service: serviceResponse }
+      });
+    }
+
+    // If not found in ServiceCatalog, try Service records
+    service = await Service.findById(req.params.id);
     if (!service) {
       return res.status(404).json({
         success: false,
@@ -1242,7 +1297,7 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
       });
     }
 
-    // Update service
+    // Update service record
     Object.assign(service, value);
     await service.save();
 
@@ -1273,7 +1328,18 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.delete('/:id', requireAnyAdmin, async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id);
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id);
+    if (service) {
+      await ServiceCatalog.findByIdAndDelete(req.params.id);
+      return res.json({
+        success: true,
+        message: 'Service deleted successfully'
+      });
+    }
+
+    // If not found in ServiceCatalog, try Service records
+    service = await Service.findById(req.params.id);
     if (!service) {
       return res.status(404).json({
         success: false,
@@ -1304,12 +1370,15 @@ router.get('/categories', requireAnyAdmin, async (req, res) => {
   try {
     // Get categories from ServiceCatalog
     const categories = await ServiceCatalog.distinct('category');
+    console.log('Categories found:', categories);
     res.json({
       success: true,
       data: { categories }
     });
   } catch (error) {
     console.error('Get categories error:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -1324,7 +1393,31 @@ router.post('/:id/pricing', requireAnyAdmin, async (req, res) => {
   try {
     const { basePrice, laborRate, discount } = req.body;
 
-    const service = await Service.findById(req.params.id);
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id);
+    if (service) {
+      // Update service catalog pricing - prioritize basePrice over laborRate
+      if (basePrice !== undefined) {
+        service.laborRate = basePrice;
+      } else if (laborRate !== undefined) {
+        service.laborRate = laborRate;
+      }
+      
+      await service.save();
+      
+      // Transform response to include basePrice field for compatibility
+      const serviceResponse = service.toObject();
+      serviceResponse.basePrice = service.laborRate;
+      
+      return res.json({
+        success: true,
+        message: 'Service pricing updated successfully',
+        data: { service: serviceResponse }
+      });
+    }
+
+    // If not found in ServiceCatalog, try Service records
+    service = await Service.findById(req.params.id);
     if (!service) {
       return res.status(404).json({
         success: false,
@@ -1359,12 +1452,17 @@ router.post('/:id/pricing', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.get('/:id/technicians', requireAnyAdmin, async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id);
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id);
     if (!service) {
-      return res.status(404).json({
-        success: false,
-        message: 'Service not found'
-      });
+      // If not found in ServiceCatalog, try Service records
+      service = await Service.findById(req.params.id);
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
     }
 
     // For now, return all technicians
@@ -1391,12 +1489,17 @@ router.post('/:id/technicians', requireAnyAdmin, async (req, res) => {
   try {
     const { technicianIds } = req.body;
 
-    const service = await Service.findById(req.params.id);
+    // First try to find in ServiceCatalog
+    let service = await ServiceCatalog.findById(req.params.id);
     if (!service) {
-      return res.status(404).json({
-        success: false,
-        message: 'Service not found'
-      });
+      // If not found in ServiceCatalog, try Service records
+      service = await Service.findById(req.params.id);
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
     }
 
     // For now, just update the technician field

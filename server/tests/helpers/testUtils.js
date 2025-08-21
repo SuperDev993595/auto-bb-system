@@ -55,11 +55,9 @@ const testCustomerData = {
 // Create a test user
 const createTestUser = async (userType = 'customer') => {
   const userData = testUsers[userType];
-  const hashedPassword = await bcrypt.hash(userData.password, 10);
   
   const user = new User({
     ...userData,
-    password: hashedPassword,
     isActive: true
   });
   
