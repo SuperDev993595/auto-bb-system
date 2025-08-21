@@ -138,7 +138,7 @@ const callLogSchema = Joi.object({
 });
 
 // Get customers (admin access) - allows admins to search customers, or users to find their own customer record
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', requireAnyAdmin, async (req, res) => {
   try {
     const {
       page = 1,
@@ -338,7 +338,7 @@ router.put('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
     const customerUpdateSchema = Joi.object({
       name: Joi.string().min(2).max(100).optional(),
       email: Joi.string().email().optional(),
-      phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
+      phone: Joi.string().min(1).max(20).optional(),
       businessName: Joi.string().max(100).optional(),
       address: Joi.object({
         street: Joi.string().max(200).optional(),
@@ -1599,7 +1599,7 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
 
     res.json({
       success: true,
-      data: transformedCustomer
+      data: { customer: transformedCustomer }
     });
   } catch (error) {
     console.error('Error fetching customer:', error);

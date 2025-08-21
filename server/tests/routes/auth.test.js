@@ -286,22 +286,24 @@ describe('Authentication Routes', () => {
 
   describe('POST /api/auth/reset-password', () => {
     it('should reset password with valid token', async () => {
-      // This test would require a valid reset token
-      // In a real scenario, you'd need to generate one first
+      // Create a test user and generate a real reset token
+      const user = await createTestUser('customer');
+      
+      // Generate reset token
+      const crypto = require('crypto');
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+      const resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+      // Save reset token to user
+      user.resetPasswordToken = resetPasswordToken;
+      user.resetPasswordExpires = resetPasswordExpires;
+      await user.save();
+
       const resetData = {
-        token: 'valid-reset-token',
+        token: resetToken,
         password: 'newpassword123'
       };
-
-      // Mock the token verification
-      jest.mock('../../models/User', () => ({
-        findOne: jest.fn().mockResolvedValue({
-          _id: 'test-user-id',
-          resetPasswordToken: 'valid-reset-token',
-          resetPasswordExpires: new Date(Date.now() + 3600000), // 1 hour from now
-          save: jest.fn().mockResolvedValue(true)
-        })
-      }));
 
       const response = await request(app)
         .post('/api/auth/reset-password')
@@ -551,7 +553,7 @@ describe('Authentication Routes', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('password');
+      expect(response.body.message).toContain('newPassword');
     });
 
     it('should reject change without authentication', async () => {
