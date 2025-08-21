@@ -1334,6 +1334,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             onChange={handleChange}
                             value={form.customer}
                             disabled={isLoading || isSavingToDatabase}
+                            required
                         />
                             )}
                         {errors.customer && (
@@ -1362,6 +1363,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                          onChange={handleChange}
                                          value={form.email}
                                          disabled={isLoading || isSavingToDatabase}
+                                         required
                                      />
                                      {/* Email status indicator */}
                                      {emailStatus === 'checking' && (
@@ -1428,6 +1430,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             value={form.phone}
                             disabled={isLoading || isSavingToDatabase}
                             maxLength={14}
+                            required
                         />
                         {errors.phone && (
                             <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
@@ -1627,6 +1630,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             value={`${form.scheduledDate}T${form.scheduledTime}`}
                             min={new Date().toISOString().slice(0, 16)}
                             disabled={isLoading || isSavingToDatabase}
+                            required
                         />
                         {/* Debug info - remove after fixing */}
                         {isEditing && (
@@ -1669,6 +1673,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                             }}
                             value={form.serviceType}
                             disabled={isLoading || isSavingToDatabase}
+                            required
                         >
                             <option value="">Select a service type</option>
                             {serviceTypes.length > 0 ? (

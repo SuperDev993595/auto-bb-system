@@ -78,6 +78,7 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
                             value={date} 
                             onChange={e => setDate(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            required
                         />
                     </label>
                     <label className="block">
@@ -90,6 +91,7 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
                             value={time} 
                             onChange={e => setTime(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            required
                         />
                     </label>
                 </div>
@@ -101,6 +103,7 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
                         value={serviceType} 
                         onChange={e => setServiceType(e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        required
                     >
                         <option value="">Select Service</option>
                         <option value="oil_change">Oil Change</option>
@@ -149,6 +152,7 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
                         value={vehicle} 
                         onChange={e => setVehicle(e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        required
                     />
                 </label>
 

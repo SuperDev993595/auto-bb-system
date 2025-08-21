@@ -56,12 +56,13 @@ export default function PostPaymentModal({ customerId, onClose, onSuccess }: Pro
         >
             <div className="grid gap-4">
                 <label className="block">
-                    <span className="text-sm font-medium">Amount ($)</span>
+                    <span className="text-sm font-medium">Amount ($) *</span>
                     <input
                         type="number"
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
+                        required
                     />
                 </label>
 
@@ -76,11 +77,12 @@ export default function PostPaymentModal({ customerId, onClose, onSuccess }: Pro
                 </label>
 
                 <label className="block">
-                    <span className="text-sm font-medium">Payment Method</span>
+                    <span className="text-sm font-medium">Payment Method *</span>
                     <select
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
                         value={method}
                         onChange={(e) => setMethod(e.target.value)}
+                        required
                     >
                         <option value="">Select Method</option>
                         <option value="cash">Cash</option>

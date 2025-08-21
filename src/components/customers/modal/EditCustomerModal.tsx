@@ -47,16 +47,32 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
     }
   }, [customer])
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const phoneNumber = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (phoneNumber.length <= 3) {
+      return phoneNumber;
+    } else if (phoneNumber.length <= 6) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    } else {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    }
+  }
+
   const handleInputChange = (field: string, value: string) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.')
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof UpdateCustomerData],
-          [child]: value
-        }
-      }))
+      if (parent === 'address') {
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            [child]: value
+          }
+        }))
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -65,17 +81,29 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
     }
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    handleInputChange('phone', formatted);
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      await dispatch(updateCustomer({ id: customer._id, customerData: formData })).unwrap()
+      // Clean phone number before sending to backend (remove formatting)
+      const cleanedFormData = {
+        ...formData,
+        phone: formData.phone ? formData.phone.replace(/\D/g, '') : ''
+      }
+
+      await dispatch(updateCustomer({ id: customer._id, customerData: cleanedFormData })).unwrap()
       toast.success('Customer updated successfully!')
       onSuccess?.()
       onClose()
     } catch (error) {
       console.error('Update customer error:', error)
+      toast.error('Failed to update customer. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -122,7 +150,7 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Name
+                Business Name *
               </label>
               <div className="relative">
                 <FaBuilding className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -131,6 +159,7 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
                   value={formData.businessName}
                   onChange={(e) => handleInputChange('businessName', e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
               </div>
             </div>
@@ -153,15 +182,17 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
+                Phone *
               </label>
               <div className="relative">
                 <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  onChange={handlePhoneChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  maxLength={14}
+                  required
                 />
               </div>
             </div>
@@ -176,49 +207,53 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street Address
+                  Street Address *
                 </label>
                 <input
                   type="text"
-                  value={formData.address.street}
+                  value={formData.address?.street || ''}
                   onChange={(e) => handleInputChange('address.street', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City
+                  City *
                 </label>
                 <input
                   type="text"
-                  value={formData.address.city}
+                  value={formData.address?.city || ''}
                   onChange={(e) => handleInputChange('address.city', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State
+                  State *
                 </label>
                 <input
                   type="text"
-                  value={formData.address.state}
+                  value={formData.address?.state || ''}
                   onChange={(e) => handleInputChange('address.state', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ZIP Code
+                  ZIP Code *
                 </label>
                 <input
                   type="text"
-                  value={formData.address.zipCode}
+                  value={formData.address?.zipCode || ''}
                   onChange={(e) => handleInputChange('address.zipCode', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
               </div>
             </div>

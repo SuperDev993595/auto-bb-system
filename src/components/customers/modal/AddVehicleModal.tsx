@@ -145,7 +145,7 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Color
+                Color *
               </label>
               <div className="relative">
                 <FaPalette className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -155,13 +155,14 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
                   onChange={(e) => handleInputChange('color', e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Red"
+                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                VIN (Vehicle Identification Number)
+                VIN (Vehicle Identification Number) *
               </label>
               <div className="relative">
                 <FaHashtag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -172,13 +173,14 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="17-character VIN"
                   maxLength={17}
+                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                License Plate
+                License Plate *
               </label>
               <div className="relative">
                 <FaTag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -188,13 +190,14 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
                   onChange={(e) => handleInputChange('licensePlate', e.target.value.toUpperCase())}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="License plate number"
+                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Current Mileage
+                Current Mileage *
               </label>
               <div className="relative">
                 <FaTachometerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -205,6 +208,7 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   min="0"
                   placeholder="0"
+                  required
                 />
               </div>
             </div>

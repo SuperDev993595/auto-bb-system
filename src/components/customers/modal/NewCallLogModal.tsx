@@ -86,11 +86,12 @@ export default function NewCallLogModal({ customerId, onClose, onSuccess }: Prop
 
                 <div className="grid grid-cols-2 gap-4">
                     <label className="block">
-                        <span className="text-sm font-medium">Call Type</span>
+                        <span className="text-sm font-medium">Call Type *</span>
                         <select
                             value={type}
                             onChange={(e) => setType(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                            required
                         >
                             <option value="inbound">Inbound</option>
                             <option value="outbound">Outbound</option>

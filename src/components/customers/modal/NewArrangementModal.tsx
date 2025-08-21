@@ -58,15 +58,17 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
         >
             <div className="grid gap-4">
                 <label className="block">
-                    <span className="text-sm font-medium">Amount ($)</span>
+                    <span className="text-sm font-medium">Amount ($) *</span>
                     <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        required
                     />
                 </label>
                 <label className="block">
-                    <span className="text-sm font-medium">Due Date</span>
+                    <span className="text-sm font-medium">Due Date *</span>
                     <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                        required
                     />
                 </label>
                 <div className="grid grid-cols-2 gap-4">

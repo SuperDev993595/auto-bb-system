@@ -12,7 +12,12 @@ interface Appointment {
     scheduledDate: string
     scheduledTime: string
     status: string
-    serviceType?: string
+    serviceType?: string | {
+        _id: string
+        name: string
+        category?: string
+        estimatedDuration?: number
+    }
     notes?: string
     customer: {
         _id: string
@@ -162,50 +167,63 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                         {appointments.map((appointment) => {
-                            const { date, time } = formatDateTime(appointment.scheduledDate, appointment.scheduledTime)
-                            return (
-                                <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex-1">
-                                            <div className="flex gap-2 mb-1">
-                                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(appointment.status)}`}>
-                                                    {appointment.status}
-                                                </span>
-                                                {appointment.serviceType && (
-                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                                                        {appointment.serviceType}
+                            try {
+                                const { date, time } = formatDateTime(appointment.scheduledDate, appointment.scheduledTime)
+                                return (
+                                    <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex-1">
+                                                <div className="flex gap-2 mb-1">
+                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(appointment.status || 'scheduled')}`}>
+                                                        {appointment.status || 'scheduled'}
                                                     </span>
-                                                )}
+                                                    {appointment.serviceType && (
+                                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                                            {typeof appointment.serviceType === 'string' 
+                                                                ? appointment.serviceType 
+                                                                : appointment.serviceType?.name || 'Unknown Service'
+                                                            }
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
+                                            <button
+                                                onClick={() => handleDeleteAppointment(appointment._id)}
+                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                title="Delete Appointment"
+                                            >
+                                                <FaTrash className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => handleDeleteAppointment(appointment._id)}
-                                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                            title="Delete Appointment"
-                                        >
-                                            <FaTrash className="w-4 h-4" />
-                                        </button>
+                                        <p className="text-sm text-gray-600 mb-1">
+                                            📅 {date} • {time}
+                                        </p>
+                                        {appointment.vehicle && (
+                                            <p className="text-sm text-gray-600 mb-1">
+                                                🚗 {appointment.vehicle.year || 'N/A'} {appointment.vehicle.make || 'Unknown'} {appointment.vehicle.model || 'Unknown'}
+                                            </p>
+                                        )}
+                                        {appointment.technician && appointment.technician.name && (
+                                            <p className="text-sm text-gray-600 mb-1">
+                                                👨‍🔧 {appointment.technician.name}
+                                            </p>
+                                        )}
+                                        {appointment.notes && appointment.notes.trim() && (
+                                            <p className="text-sm italic text-gray-500">
+                                                {appointment.notes}
+                                            </p>
+                                        )}
                                     </div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        📅 {date} • {time}
-                                    </p>
-                                    {appointment.vehicle && (
-                                        <p className="text-sm text-gray-600 mb-1">
-                                            🚗 {appointment.vehicle.year} {appointment.vehicle.make} {appointment.vehicle.model}
-                                        </p>
-                                    )}
-                                    {appointment.technician && (
-                                        <p className="text-sm text-gray-600 mb-1">
-                                            👨‍🔧 {appointment.technician.name}
-                                        </p>
-                                    )}
-                                    {appointment.notes && (
-                                        <p className="text-sm italic text-gray-500">
-                                            {appointment.notes}
-                                        </p>
-                                    )}
-                                </div>
-                            )
+                                )
+                            } catch (error) {
+                                console.error('Error rendering appointment:', error, appointment)
+                                return (
+                                    <div key={appointment._id} className="bg-white border rounded-xl p-4 shadow-sm">
+                                        <p className="text-sm text-red-600">Error displaying appointment</p>
+                                        <p className="text-xs text-gray-500">ID: {appointment._id}</p>
+                                    </div>
+                                )
+                            }
                         })}
                     </div>
 
