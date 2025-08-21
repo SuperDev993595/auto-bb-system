@@ -15,7 +15,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:server:coverage": "jest --config server/jest.config.js --coverage",
-    "test:all": "npm run test:server && npm run test:client"
+    "test:all": "npm run test:server && npm run test:client",
+    "docs:generate": "node scripts/generate-api-docs.js",
+    "docs:serve": "npx http-server docs -p 8080 -o"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -35,6 +37,9 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
+    "winston": "^3.11.0",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.2",
     "html2canvas": "^1.4.1",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",

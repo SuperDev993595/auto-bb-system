@@ -1,17 +1,22 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const connectDB = require('./config/database');
 
+// Import enhanced middleware
+const { securityHeaders, corsOptions, sanitizeRequest } = require('./middleware/security');
+const { apiLimiter, authLimiter, passwordResetLimiter } = require('./middleware/rateLimit');
+const { requestLogger, errorLogger, performanceMonitor } = require('./middleware/logging');
+const { cacheRoutes } = require('./middleware/cache');
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const customerRoutes = require('./routes/customers');
 const businessClientRoutes = require('./routes/businessClients');
+const healthRoutes = require('./routes/health');
+const metricsRoutes = require('./routes/metrics');
 
 // Initialize cron service for automated notifications
 require('./services/cronService');
@@ -54,31 +59,22 @@ const io = socketIo(server, {
   }
 });
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(limiter);
+// Enhanced middleware stack
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+app.use(apiLimiter);
+app.use(sanitizeRequest);
+app.use(requestLogger);
+app.use(performanceMonitor);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Public health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
+// Enhanced health and metrics endpoints
+app.use('/api/health', healthRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
@@ -188,12 +184,8 @@ app.use('/api/email', authenticateToken, emailRoutes);
 app.use('/api/sms', authenticateToken, smsRoutes);
 app.use('/api/system-admin', authenticateToken, systemAdminRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
 // Error handling
+app.use(errorLogger);
 app.use(errorHandler);
 
 // Handle React routing, return all requests to React app
