@@ -154,7 +154,8 @@ export default function ContactLogsPage() {
   }
 
   return (
-    <div className="page-container">
+    <>
+      <div className="page-container">
       <div className="page-header">
         <div className="page-header-content">
           <div className="page-header-text">
@@ -430,6 +431,6 @@ export default function ContactLogsPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

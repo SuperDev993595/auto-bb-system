@@ -960,44 +960,46 @@ export default function RemindersPage() {
   )
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <PageTitle title="Reminders & Notifications" />
+    <>
+      <div className="page-container">
+        <div className="page-header">
+          <div className="page-header-content">
+            <div className="page-header-text">
+              <PageTitle title="Reminders & Notifications" />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="card">
-        <div className="tab-container">
-          <div className="tab-header">
-            <nav className="tab-buttons">
-              {[
-                { key: 'reminders', label: 'Active Reminders', count: reminders.length },
-                { key: 'templates', label: 'Templates', count: templates.length },
-                { key: 'settings', label: 'Settings', count: 0 }
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as TabType)}
-                  className={`tab-button ${
-                    activeTab === tab.key
-                      ? 'tab-button-active'
-                      : 'tab-button-inactive'
-                  }`}
-                >
-                  {tab.label} {tab.count > 0 && `(${tab.count})`}
-                </button>
-              ))}
-            </nav>
-          </div>
+        {/* Tab Navigation */}
+        <div className="card">
+          <div className="tab-container">
+            <div className="tab-header">
+              <nav className="tab-buttons">
+                {[
+                  { key: 'reminders', label: 'Active Reminders', count: reminders.length },
+                  { key: 'templates', label: 'Templates', count: templates.length },
+                  { key: 'settings', label: 'Settings', count: 0 }
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key as TabType)}
+                    className={`tab-button ${
+                      activeTab === tab.key
+                        ? 'tab-button-active'
+                        : 'tab-button-inactive'
+                    }`}
+                  >
+                    {tab.label} {tab.count > 0 && `(${tab.count})`}
+                  </button>
+                ))}
+              </nav>
+            </div>
 
-          <div className="tab-content">
-            {activeTab === 'reminders' && renderReminders()}
-            {activeTab === 'templates' && renderTemplates()}
-            {activeTab === 'settings' && renderSettings()}
+            <div className="tab-content">
+              {activeTab === 'reminders' && renderReminders()}
+              {activeTab === 'templates' && renderTemplates()}
+              {activeTab === 'settings' && renderSettings()}
+            </div>
           </div>
         </div>
       </div>
@@ -1049,6 +1051,6 @@ export default function RemindersPage() {
           isLoading={remindersLoading}
         />
       )}
-    </div>
+    </>
   )
 }
