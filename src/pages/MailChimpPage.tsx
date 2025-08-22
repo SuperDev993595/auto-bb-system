@@ -245,29 +245,31 @@ export default function MailChimpPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'sent':
-        return 'bg-green-100 text-green-800';
+        return 'status-success';
       case 'sending':
-        return 'bg-blue-100 text-blue-800';
+        return 'status-info';
       case 'save':
-        return 'bg-gray-100 text-gray-800';
+        return 'status-secondary';
       case 'schedule':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'status-warning';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'status-secondary';
     }
   };
 
   return (
-    <div className="space-y-6">
-      <PageTitle title="MailChimp Integration" icon={HiMail} />
+    <div className="page-container">
+      <div className="page-header">
+        <PageTitle title="MailChimp Integration" icon={HiMail} />
+      </div>
       
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+      <div className="card">
+        <div className="p-6 border-b border-secondary-200">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Marketing Campaigns</h2>
+            <h2 className="page-subtitle">Marketing Campaigns</h2>
             <button 
               onClick={openCreateModal}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="btn-primary"
             >
               <HiPlus className="h-5 w-5 mr-2" />
               Create Campaign
@@ -275,75 +277,75 @@ export default function MailChimpPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipients</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Performance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="table-header-cell">Campaign</th>
+                <th className="table-header-cell">Status</th>
+                <th className="table-header-cell">Recipients</th>
+                <th className="table-header-cell">Performance</th>
+                <th className="table-header-cell">Created</th>
+                <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Loading campaigns...</td>
+                  <td colSpan={6} className="table-cell text-center text-secondary-500">Loading campaigns...</td>
                 </tr>
               ) : campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">No campaigns found</td>
+                  <td colSpan={6} className="table-cell text-center text-secondary-500">No campaigns found</td>
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                  <tr key={campaign._id} className="table-row hover:bg-secondary-50">
+                    <td className="table-cell">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
-                        <div className="text-sm text-gray-500">{campaign.subject}</div>
+                        <div className="text-sm font-medium text-secondary-900">{campaign.name}</div>
+                        <div className="text-sm text-secondary-500">{campaign.subject}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(campaign.status)}`}>
+                    <td className="table-cell">
+                      <span className={`status-badge ${getStatusColor(campaign.status)}`}>
                         {campaign.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="table-cell text-sm text-secondary-900">
                       {campaign.recipients.recipientCount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
+                    <td className="table-cell">
+                      <div className="text-sm text-secondary-900">
                         <div>Opens: {campaign.analytics?.opens?.toLocaleString() || '0'}</div>
                         <div>Rate: {campaign.analytics?.openRate ? `${campaign.analytics.openRate.toFixed(1)}%` : 'N/A'}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="table-cell text-sm text-secondary-500">
                       {new Date(campaign.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium">
+                    <td className="table-cell text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button className="text-primary-600 hover:text-primary-900 transition-colors">
                           <HiEye className="h-5 w-5" />
                         </button>
                         <button 
                           onClick={() => openEditModal(campaign)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
                         >
                           <HiPencil className="h-5 w-5" />
                         </button>
                         {campaign.status === 'save' && (
                           <button
                             onClick={() => handleSendCampaign(campaign._id)}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-success-600 hover:text-success-900 transition-colors"
                           >
                             <HiPaperAirplane className="h-5 w-5" />
                           </button>
                         )}
                         <button
                           onClick={() => openDeleteModal(campaign)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-error-600 hover:text-error-900 transition-colors"
                         >
                           <HiTrash className="h-5 w-5" />
                         </button>
@@ -359,37 +361,37 @@ export default function MailChimpPage() {
 
       {/* Create Campaign Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Create New Campaign</h3>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Create New Campaign</h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="modal-close"
               >
                 <HiX className="h-6 w-6" />
               </button>
             </div>
             
-            <form onSubmit={handleCreateCampaign} className="space-y-4">
+            <form onSubmit={handleCreateCampaign} className="modal-content space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name *</label>
+                  <label className="form-label">Campaign Name *</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject Line *</label>
+                  <label className="form-label">Subject Line *</label>
                   <input
                     type="text"
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
@@ -397,77 +399,77 @@ export default function MailChimpPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Name *</label>
+                  <label className="form-label">From Name *</label>
                   <input
                     type="text"
                     value={formData.settings.fromName}
                     onChange={(e) => handleInputChange('settings.fromName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Email *</label>
+                  <label className="form-label">From Email *</label>
                   <input
                     type="email"
                     value={formData.settings.fromEmail}
                     onChange={(e) => handleInputChange('settings.fromEmail', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reply To</label>
+                  <label className="form-label">Reply To</label>
                   <input
                     type="email"
                     value={formData.settings.replyTo}
                     onChange={(e) => handleInputChange('settings.replyTo', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
+                <label className="form-label">HTML Content</label>
                 <textarea
                   value={formData.content.html}
                   onChange={(e) => handleInputChange('content.html', e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field"
                   placeholder="<h1>Hello World</h1>"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Plain Text Content</label>
+                <label className="form-label">Plain Text Content</label>
                 <textarea
                   value={formData.content.plainText}
                   onChange={(e) => handleInputChange('content.plainText', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field"
                   placeholder="Hello World"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">List ID *</label>
+                  <label className="form-label">List ID *</label>
                   <input
                     type="text"
                     value={formData.recipients.listId}
                     onChange={(e) => handleInputChange('recipients.listId', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     placeholder="e.g., list123456"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">List Name</label>
+                  <label className="form-label">List Name</label>
                   <input
                     type="text"
                     value={formData.recipients.listName}
                     onChange={(e) => handleInputChange('recipients.listName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     placeholder="e.g., Newsletter Subscribers"
                   />
                 </div>
@@ -477,14 +479,14 @@ export default function MailChimpPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Campaign'}
                 </button>
@@ -496,37 +498,37 @@ export default function MailChimpPage() {
 
       {/* Edit Campaign Modal */}
       {showEditModal && selectedCampaign && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Edit Campaign</h3>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Edit Campaign</h3>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="modal-close"
               >
                 <HiX className="h-6 w-6" />
               </button>
             </div>
             
-            <form onSubmit={handleEditCampaign} className="space-y-4">
+            <form onSubmit={handleEditCampaign} className="modal-content space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name *</label>
+                  <label className="form-label">Campaign Name *</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject Line *</label>
+                  <label className="form-label">Subject Line *</label>
                   <input
                     type="text"
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
@@ -534,76 +536,76 @@ export default function MailChimpPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Name *</label>
+                  <label className="form-label">From Name *</label>
                   <input
                     type="text"
                     value={formData.settings.fromName}
                     onChange={(e) => handleInputChange('settings.fromName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">From Email *</label>
+                  <label className="form-label">From Email *</label>
                   <input
                     type="email"
                     value={formData.settings.fromEmail}
                     onChange={(e) => handleInputChange('settings.fromEmail', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reply To</label>
+                  <label className="form-label">Reply To</label>
                   <input
                     type="email"
                     value={formData.settings.replyTo}
                     onChange={(e) => handleInputChange('settings.replyTo', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
+                <label className="form-label">HTML Content</label>
                 <textarea
                   value={formData.content.html}
                   onChange={(e) => handleInputChange('content.html', e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Plain Text Content</label>
+                <label className="form-label">Plain Text Content</label>
                 <textarea
                   value={formData.content.plainText}
                   onChange={(e) => handleInputChange('content.plainText', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field"
                   placeholder="Hello World"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">List ID *</label>
+                  <label className="form-label">List ID *</label>
                   <input
                     type="text"
                     value={formData.recipients.listId}
                     onChange={(e) => handleInputChange('recipients.listId', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     placeholder="e.g., list123456"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">List Name</label>
+                  <label className="form-label">List Name</label>
                   <input
                     type="text"
                     value={formData.recipients.listName}
                     onChange={(e) => handleInputChange('recipients.listName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-field"
                     placeholder="e.g., Newsletter Subscribers"
                   />
                 </div>
@@ -613,14 +615,14 @@ export default function MailChimpPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   {isSubmitting ? 'Updating...' : 'Update Campaign'}
                 </button>
@@ -632,23 +634,23 @@ export default function MailChimpPage() {
 
       {/* Delete Campaign Modal */}
       {showDeleteModal && selectedCampaign && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Delete Campaign</h3>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Delete Campaign</h3>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="modal-close"
               >
                 <HiX className="h-6 w-6" />
               </button>
             </div>
             
-            <div className="mb-6">
-              <p className="text-gray-600">
+            <div className="modal-content mb-6">
+              <p className="text-secondary-600">
                 Are you sure you want to delete the campaign <strong>"{selectedCampaign.name}"</strong>?
               </p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-secondary-500 mt-2">
                 This action cannot be undone.
               </p>
             </div>
@@ -656,14 +658,14 @@ export default function MailChimpPage() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                className="btn-secondary"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteCampaign}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                className="btn-error"
               >
                 {isSubmitting ? 'Deleting...' : 'Delete Campaign'}
               </button>

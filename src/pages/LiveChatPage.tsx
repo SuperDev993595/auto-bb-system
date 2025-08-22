@@ -251,32 +251,32 @@ export default function LiveChatPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'closed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'waiting': return 'status-pending';
+      case 'active': return 'status-active';
+      case 'resolved': return 'status-active';
+      case 'closed': return 'status-inactive';
+      default: return 'status-inactive';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'urgent': return 'bg-error-100 text-error-800';
+      case 'high': return 'bg-warning-100 text-warning-800';
+      case 'medium': return 'bg-primary-100 text-primary-800';
+      case 'low': return 'bg-success-100 text-success-800';
+      default: return 'bg-secondary-100 text-secondary-800';
     }
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'service': return 'bg-purple-100 text-purple-800';
-      case 'billing': return 'bg-indigo-100 text-indigo-800';
-      case 'technical': return 'bg-blue-100 text-blue-800';
-      case 'complaint': return 'bg-red-100 text-red-800';
-      case 'other': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-green-100 text-green-800';
+      case 'service': return 'bg-primary-100 text-primary-800';
+      case 'billing': return 'bg-info-100 text-info-800';
+      case 'technical': return 'bg-warning-100 text-warning-800';
+      case 'complaint': return 'bg-error-100 text-error-800';
+      case 'other': return 'bg-secondary-100 text-secondary-800';
+      default: return 'bg-success-100 text-success-800';
     }
   };
 
@@ -302,50 +302,54 @@ export default function LiveChatPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <PageTitle title="Live Chat Support" icon={HiChat} />
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            Welcome, <span className="font-medium">{currentUser.name}</span>
-            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-            </span>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Live Chat Support" icon={HiChat} />
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-          >
-            Logout
-          </button>
+          <div className="page-header-actions">
+            <div className="text-sm text-secondary-600">
+              Welcome, <span className="font-medium text-secondary-900">{currentUser.name}</span>
+              <span className="ml-2 px-2 py-1 bg-info-100 text-info-800 text-xs rounded-full">
+                {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-error-600 hover:text-error-800 hover:bg-error-50 rounded px-3 py-1 text-sm transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat List */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b border-gray-200">
+          <div className="card">
+            <div className="p-4 border-b border-secondary-200">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900">Active Chats</h3>
+                <h3 className="text-lg font-medium text-secondary-900">Active Chats</h3>
                 <div className="flex items-center space-x-2">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <span className="bg-info-100 text-info-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                     {chats.filter(chat => chat.status === 'active' || chat.status === 'waiting').length}
                   </span>
                   <button
                     onClick={fetchChats}
                     disabled={loading}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    className="p-1 text-secondary-400 hover:text-secondary-600 disabled:opacity-50 transition-colors"
                   >
                     <HiRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                   </button>
@@ -357,7 +361,7 @@ export default function LiveChatPage() {
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="select-field"
                 >
                   <option value="">All Status</option>
                   <option value="waiting">Waiting</option>
@@ -369,7 +373,7 @@ export default function LiveChatPage() {
                 <select
                   value={filters.category}
                   onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="select-field"
                 >
                   <option value="">All Categories</option>
                   <option value="general">General</option>
@@ -383,7 +387,7 @@ export default function LiveChatPage() {
                 <select
                   value={filters.priority}
                   onChange={(e) => setFilters({ ...filters, priority: e.target.value, page: 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="select-field"
                 >
                   <option value="">All Priorities</option>
                   <option value="urgent">Urgent</option>
@@ -397,16 +401,16 @@ export default function LiveChatPage() {
                   placeholder="Search chats..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field"
                 />
               </div>
             </div>
 
             <div className="max-h-96 overflow-y-auto">
               {loading ? (
-                <div className="p-4 text-center text-gray-500">Loading chats...</div>
+                <div className="p-4 text-center text-secondary-500">Loading chats...</div>
               ) : chats.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">No chats found</div>
+                <div className="p-4 text-center text-secondary-500">No chats found</div>
               ) : (
                 chats.map((chat) => {
                   const unreadCount = getUnreadCount(chat);
@@ -414,14 +418,14 @@ export default function LiveChatPage() {
                     <div
                       key={chat._id}
                       onClick={() => setSelectedChat(chat)}
-                      className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedChat?._id === chat._id ? 'bg-blue-50 border-blue-200' : ''
-                      } ${unreadCount > 0 ? 'bg-yellow-50' : ''}`}
+                      className={`p-4 border-b border-secondary-100 cursor-pointer hover:bg-secondary-50 transition-colors ${
+                        selectedChat?._id === chat._id ? 'bg-primary-50 border-primary-200' : ''
+                      } ${unreadCount > 0 ? 'bg-warning-50' : ''}`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(chat.status)}`}>
+                            <span className={`status-badge ${getStatusColor(chat.status)}`}>
                               {chat.status}
                             </span>
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(chat.priority)}`}>
@@ -431,23 +435,23 @@ export default function LiveChatPage() {
                               {chat.category}
                             </span>
                           </div>
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-sm font-medium text-secondary-900 truncate">
                             {chat.customer.name}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-sm text-secondary-500 truncate">
                             {chat.subject || 'No subject'}
                           </p>
                           {chat.assignedTo && (
-                            <p className="text-xs text-blue-600 mt-1">
+                            <p className="text-xs text-info-600 mt-1">
                               Assigned to: {chat.assignedTo.name}
                             </p>
                           )}
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-secondary-400">
                               {formatTime(chat.lastActivity)}
                             </span>
                             {unreadCount > 0 && (
-                              <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                              <span className="bg-error-100 text-error-800 text-xs font-medium px-2 py-0.5 rounded-full">
                                 {unreadCount}
                               </span>
                             )}
@@ -462,22 +466,22 @@ export default function LiveChatPage() {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-secondary-200">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
                     disabled={!pagination.hasPrevPage}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-secondary-600">
                     Page {pagination.currentPage} of {pagination.totalPages}
                   </span>
                   <button
                     onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
                     disabled={!pagination.hasNextPage}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -490,24 +494,24 @@ export default function LiveChatPage() {
         {/* Chat Details */}
         <div className="lg:col-span-2">
           {selectedChat ? (
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-4 border-b border-gray-200">
+            <div className="card">
+              <div className="p-4 border-b border-secondary-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">{selectedChat.customer.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-lg font-medium text-secondary-900">{selectedChat.customer.name}</h3>
+                    <p className="text-sm text-secondary-500">
                       {selectedChat.customer.email && `${selectedChat.customer.email} • `}
                       {selectedChat.customer.phone && `${selectedChat.customer.phone} • `}
                       Session: {selectedChat.customer.sessionId.slice(-8)}
                     </p>
                     {selectedChat.assignedTo && (
-                      <p className="text-sm text-blue-600 mt-1">
+                      <p className="text-sm text-info-600 mt-1">
                         Assigned to: {selectedChat.assignedTo.name}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedChat.status)}`}>
+                    <span className={`status-badge ${getStatusColor(selectedChat.status)}`}>
                       {selectedChat.status}
                     </span>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(selectedChat.priority)}`}>
@@ -530,10 +534,10 @@ export default function LiveChatPage() {
                     <div
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         message.sender.name === 'Customer'
-                          ? 'bg-gray-100 text-gray-900'
+                          ? 'bg-secondary-100 text-secondary-900'
                           : message.messageType === 'system'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-blue-600 text-white'
+                          ? 'bg-warning-100 text-warning-800'
+                          : 'bg-primary-600 text-white'
                       }`}
                     >
                       <div className="text-sm font-medium mb-1">
@@ -548,7 +552,7 @@ export default function LiveChatPage() {
                               href={attachment.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block text-xs text-blue-600 hover:underline"
+                              className="block text-xs text-primary-600 hover:underline"
                             >
                               📎 {attachment.filename}
                             </a>
@@ -556,7 +560,7 @@ export default function LiveChatPage() {
                         </div>
                       )}
                       <div className={`text-xs mt-1 ${
-                        message.sender.name === 'Customer' ? 'text-gray-500' : 'text-blue-100'
+                        message.sender.name === 'Customer' ? 'text-secondary-500' : 'text-primary-100'
                       }`}>
                         {formatTime(message.createdAt)}
                       </div>
@@ -567,20 +571,20 @@ export default function LiveChatPage() {
 
               {/* Message Input */}
               {selectedChat.status !== 'closed' && selectedChat.status !== 'resolved' && (
-                <div className="p-4 border-t border-gray-200">
+                <div className="p-4 border-t border-secondary-200">
                   <div className="flex space-x-2">
                     <textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="input-field flex-1 resize-none"
                       rows={2}
                     />
                     <button
                       onClick={handleSendMessage}
                       disabled={!newMessage.trim() || sendingMessage}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                     >
                       <HiPaperAirplane className="h-4 w-4" />
                     </button>
@@ -589,13 +593,13 @@ export default function LiveChatPage() {
               )}
 
               {/* Chat Actions */}
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-secondary-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     {selectedChat.status === 'waiting' && (
                       <button
                         onClick={() => handleAssignChat(selectedChat._id)}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        className="btn-primary"
                       >
                         <HiUserAdd className="h-4 w-4 mr-1" />
                         Assign to Me
@@ -604,7 +608,7 @@ export default function LiveChatPage() {
                     {selectedChat.status === 'active' && (
                       <button
                         onClick={() => handleResolveChat(selectedChat._id)}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                        className="btn-success"
                       >
                         <HiCheckCircle className="h-4 w-4 mr-1" />
                         Resolve
@@ -613,14 +617,14 @@ export default function LiveChatPage() {
                     {selectedChat.status !== 'closed' && (
                       <button
                         onClick={() => handleCloseChat(selectedChat._id)}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="btn-secondary"
                       >
                         <HiXCircle className="h-4 w-4 mr-1" />
                         Close
                       </button>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-secondary-500">
                     Started {new Date(selectedChat.createdAt).toLocaleDateString()}
                     {selectedChat.rating && (
                       <span className="ml-2">
@@ -632,10 +636,10 @@ export default function LiveChatPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <HiChat className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Chat</h3>
-              <p className="text-gray-500">Choose a chat from the list to view the conversation</p>
+            <div className="empty-state">
+              <HiChat className="empty-state-icon" />
+              <h3 className="empty-state-title">Select a Chat</h3>
+              <p className="empty-state-description">Choose a chat from the list to view the conversation</p>
             </div>
           )}
         </div>

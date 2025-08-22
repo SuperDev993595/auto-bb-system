@@ -244,28 +244,28 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+    <div className="page-container">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl shadow-xl p-6 text-white">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold mb-1">Task Management</h1>
-            <p className="text-indigo-100 text-base">Organize and track your team's tasks and projects</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h1 className="page-title">Task Management</h1>
+            <p className="page-subtitle">Organize and track your team's tasks and projects</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="page-header-actions">
             <button 
               onClick={() => {
                 dispatch(fetchTasks({}))
                 dispatch(fetchTaskStats())
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-medium transition-all duration-200"
+              className="btn-secondary"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             <button 
               onClick={handleAddTask}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+              className="btn-primary-outline"
             >
               <Plus className="w-5 h-5" />
               Add Task

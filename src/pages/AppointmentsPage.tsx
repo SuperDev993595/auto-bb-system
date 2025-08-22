@@ -526,109 +526,87 @@ export default function AppointmentsPage() {
 
     if (isLoadingData) {
         return (
-            <div className="p-6 flex items-center justify-center min-h-[400px]">
+            <div className="loading-container">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                    <p className="text-gray-600">Loading appointments...</p>
+                    <Loader2 className="loading-spinner" />
+                    <p className="loading-text">Loading appointments...</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+        <div className="page-container">
             {/* Header Section */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-                    <div className="mb-4 lg:mb-0">
-                        <h1 className="text-3xl font-bold mb-1">Appointment Management</h1>
-                        <p className="text-blue-100 text-base">Schedule and manage customer appointments</p>
+            <div className="page-header">
+                <div className="page-header-content">
+                    <div className="page-header-text">
+                        <h1 className="page-title">Appointment Management</h1>
+                        <p className="page-subtitle">Schedule and manage customer appointments</p>
                     </div>
-                    <button 
-                        onClick={() => setShowNewAppointmentModal(true)}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
-                    >
-                        <Plus className="w-5 h-5" />
-                        New Appointment
-                    </button>
+                    <div className="page-header-actions">
+                        <button 
+                            onClick={() => setShowNewAppointmentModal(true)}
+                            className="btn-primary-outline"
+                        >
+                            <Plus className="w-5 h-5" />
+                            New Appointment
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                                <Calendar className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-gray-600">Today</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
-                                </p>
-                            </div>
+            <div className="grid-responsive">
+                <div className="stats-card">
+                    <div className="stats-card-header">
+                        <div className="stats-card-icon bg-primary-500">
+                            <Calendar className="w-6 h-6 text-white" />
                         </div>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-sm text-gray-600">Today's Appointments</p>
+                        <div className="stats-card-label">Today</div>
+                        <div className="stats-card-value">
+                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
+                        </div>
+                        <div className="stats-card-subtitle">Today's Appointments</div>
                     </div>
                 </div>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                                <CheckCircle className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-gray-600">Confirmed</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
-                                </p>
-                            </div>
+                <div className="stats-card">
+                    <div className="stats-card-header">
+                        <div className="stats-card-icon bg-success-500">
+                            <CheckCircle className="w-6 h-6 text-white" />
                         </div>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-sm text-gray-600">Confirmed Appointments</p>
+                        <div className="stats-card-label">Confirmed</div>
+                        <div className="stats-card-value">
+                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
+                        </div>
+                        <div className="stats-card-subtitle">Confirmed Appointments</div>
                     </div>
                 </div>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                                <Clock className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
-                                </p>
-                            </div>
+                <div className="stats-card">
+                    <div className="stats-card-header">
+                        <div className="stats-card-icon bg-warning-500">
+                            <Clock className="w-6 h-6 text-white" />
                         </div>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-sm text-gray-600">In Progress</p>
+                        <div className="stats-card-label">In Progress</div>
+                        <div className="stats-card-value">
+                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
+                        </div>
+                        <div className="stats-card-subtitle">In Progress</div>
                     </div>
                 </div>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-slate-500 rounded-xl flex items-center justify-center">
-                                <TrendingUp className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-gray-600">Completed</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
-                                </p>
-                            </div>
+                <div className="stats-card">
+                    <div className="stats-card-header">
+                        <div className="stats-card-icon bg-info-500">
+                            <TrendingUp className="w-6 h-6 text-white" />
                         </div>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-sm text-gray-600">Completed Today</p>
+                        <div className="stats-card-label">Completed</div>
+                        <div className="stats-card-value">
+                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
+                        </div>
+                        <div className="stats-card-subtitle">Completed Today</div>
                     </div>
                 </div>
             </div>

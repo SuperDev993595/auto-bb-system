@@ -70,11 +70,11 @@ export default function Sidebar() {
     const { user } = useAuth();
 
     return (
-        <aside className="bg-gray-900 text-white w-64 flex flex-col h-screen">
+        <aside className="bg-secondary-900 text-white w-64 flex flex-col h-screen">
             {/* Fixed Header */}
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-secondary-700">
                 <Link to="/" className="block">
-                    <div className="text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer">
+                    <div className="text-xl font-bold text-primary-400 hover:text-primary-300 transition-colors cursor-pointer">
                         🔧 AutoCRM Pro
                     </div>
                 </Link>
@@ -88,7 +88,7 @@ export default function Sidebar() {
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`flex items-center gap-2 px-4 py-2 rounded hover:bg-gray-800 transition ${location.pathname === item.to ? "bg-gray-800 text-yellow-400" : "text-gray-300"
+                            className={`flex items-center gap-2 px-4 py-2 rounded hover:bg-secondary-800 transition ${location.pathname === item.to ? "bg-secondary-800 text-primary-400" : "text-secondary-300"
                                 }`}
                         >
                             {item.icon}

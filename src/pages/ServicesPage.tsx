@@ -194,25 +194,21 @@ export default function ServicesPage() {
     switch (status?.toLowerCase()) {
       case 'active':
       case 'completed':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+        return 'status-active'
       case 'pending':
       case 'scheduled':
-        return 'bg-amber-100 text-amber-800 border-amber-200'
+        return 'status-pending'
       case 'in-progress':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'status-in-progress'
       case 'cancelled':
       case 'inactive':
-        return 'bg-red-100 text-red-800 border-red-200'
+        return 'status-inactive'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'status-pending'
     }
   }
 
-  const getTabButtonStyle = (tab: TabType) => {
-    return activeTab === tab 
-      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
-      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
-  }
+
 
   const handleRefresh = () => {
     dispatch(fetchServiceCatalog({}))
@@ -224,18 +220,18 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+    <div className="page-container">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl shadow-xl p-6 text-white">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold mb-1">Service Management</h1>
-            <p className="text-emerald-100 text-base">Manage services, work orders, and technicians</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h1 className="page-title">Service Management</h1>
+            <p className="page-subtitle">Manage services, work orders, and technicians</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="page-header-actions">
             <button 
               onClick={handleRefresh}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-medium transition-all duration-200"
+              className="btn-secondary"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
@@ -246,7 +242,7 @@ export default function ServicesPage() {
                 else if (activeTab === 'workorders') handleAddWorkOrder()
                 else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+              className="btn-primary-outline"
             >
               <Plus className="w-5 h-5" />
               {activeTab === 'catalog' ? 'Add Service' : 
@@ -257,78 +253,78 @@ export default function ServicesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+              <div className="stats-card-icon">
                 <Wrench className="w-6 h-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalServices}</p>
+                <p className="stats-card-label">Total</p>
+                <p className="stats-card-value">{totalServices}</p>
               </div>
             </div>
           </div>
           <div className="p-4">
-            <p className="text-sm text-gray-600">Active Services</p>
-            <p className="text-lg font-semibold text-emerald-600">{activeServices}</p>
+            <p className="stats-card-subtitle">Active Services</p>
+            <p className="stats-card-subvalue">{activeServices}</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+        <div className="stats-card">
+          <div className="stats-card-header">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+              <div className="stats-card-icon">
                 <ClipboardList className="w-6 h-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalWorkOrders}</p>
+                <p className="stats-card-label">Total</p>
+                <p className="stats-card-value">{totalWorkOrders}</p>
               </div>
             </div>
           </div>
           <div className="p-4">
-            <p className="text-sm text-gray-600">Pending Orders</p>
-            <p className="text-lg font-semibold text-blue-600">{pendingWorkOrders}</p>
+            <p className="stats-card-subtitle">Pending Orders</p>
+            <p className="stats-card-subvalue">{pendingWorkOrders}</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
+        <div className="stats-card">
+          <div className="stats-card-header">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="stats-card-icon">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalTechnicians}</p>
+                <p className="stats-card-label">Total</p>
+                <p className="stats-card-value">{totalTechnicians}</p>
               </div>
             </div>
           </div>
           <div className="p-4">
-            <p className="text-sm text-gray-600">Active Technicians</p>
-            <p className="text-lg font-semibold text-purple-600">{activeTechnicians}</p>
+            <p className="stats-card-subtitle">Active Technicians</p>
+            <p className="stats-card-subvalue">{activeTechnicians}</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
+        <div className="stats-card">
+          <div className="stats-card-header">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+              <div className="stats-card-icon">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="stats-card-label">Revenue</p>
+                <p className="stats-card-value">
                   ${catalogStats?.totalRevenue?.toLocaleString() || '0'}
                 </p>
               </div>
             </div>
           </div>
           <div className="p-4">
-            <p className="text-sm text-gray-600">This Month</p>
-            <p className="text-lg font-semibold text-amber-600">
+            <p className="stats-card-subtitle">This Month</p>
+            <p className="stats-card-subvalue">
               +{catalogStats?.monthlyGrowth || 0}%
             </p>
           </div>
@@ -336,12 +332,12 @@ export default function ServicesPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+      <div className="tab-container">
+        <div className="tab-header">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-gray-600" />
-              <h3 className="text-base font-semibold text-gray-800">Service Management</h3>
+              <Settings className="w-4 h-4 text-secondary-600" />
+              <h3 className="text-base font-semibold text-secondary-800">Service Management</h3>
             </div>
             <div className="flex items-center gap-2">
               {/* View Toggle */}
@@ -350,8 +346,8 @@ export default function ServicesPage() {
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'grid' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-primary-100 text-primary-600' 
+                      : 'text-secondary-600 hover:text-secondary-900'
                   }`}
                   title="Grid View"
                 >
@@ -361,8 +357,8 @@ export default function ServicesPage() {
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'list' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-primary-100 text-primary-600' 
+                      : 'text-secondary-600 hover:text-secondary-900'
                   }`}
                   title="List View"
                 >
@@ -375,10 +371,10 @@ export default function ServicesPage() {
         
         <div className="p-6">
           {/* Tab Buttons */}
-          <div className="flex space-x-2 mb-6">
+          <div className="tab-buttons">
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('catalog')}`}
+              className={`tab-button ${activeTab === 'catalog' ? 'tab-button-active' : 'tab-button-inactive'}`}
             >
               <div className="flex items-center gap-2">
                 <Wrench className="w-4 h-4" />
@@ -387,7 +383,7 @@ export default function ServicesPage() {
             </button>
             <button
               onClick={() => setActiveTab('workorders')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('workorders')}`}
+              className={`tab-button ${activeTab === 'workorders' ? 'tab-button-active' : 'tab-button-inactive'}`}
             >
               <div className="flex items-center gap-2">
                 <ClipboardList className="w-4 h-4" />
@@ -396,7 +392,7 @@ export default function ServicesPage() {
             </button>
             <button
               onClick={() => setActiveTab('technicians')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('technicians')}`}
+              className={`tab-button ${activeTab === 'technicians' ? 'tab-button-active' : 'tab-button-inactive'}`}
             >
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -406,10 +402,10 @@ export default function ServicesPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
+          <div className="bg-gradient-to-r from-secondary-50 to-secondary-100 rounded-xl p-6 mb-6">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 relative">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <div className="input-icon">
                   <Search className="w-5 h-5" />
                 </div>
                 <input
@@ -417,7 +413,7 @@ export default function ServicesPage() {
                   placeholder={`Search ${activeTab}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  className="input-field-with-icon"
                 />
               </div>
               
@@ -426,7 +422,7 @@ export default function ServicesPage() {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="select-field"
                   >
                     <option value="all">All Categories</option>
                     {safeAvailableCategories.map(category => (
@@ -441,7 +437,7 @@ export default function ServicesPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="select-field"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
@@ -455,14 +451,14 @@ export default function ServicesPage() {
           </div>
 
           {/* Content Area */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="table-container">
             {activeTab === 'catalog' && (
               <div className="p-6">
                 {catalogLoading ? (
-                  <div className="flex items-center justify-center py-12">
+                  <div className="loading-container">
                     <div className="text-center">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                      <p className="text-gray-600">Loading service catalog...</p>
+                      <Loader2 className="loading-spinner" />
+                      <p className="loading-text">Loading service catalog...</p>
                     </div>
                   </div>
                 ) : filteredCatalog.length > 0 ? (

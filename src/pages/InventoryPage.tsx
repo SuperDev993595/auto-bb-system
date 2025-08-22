@@ -1048,15 +1048,15 @@ export default function InventoryPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+    <div className="page-container">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 rounded-2xl shadow-xl p-6 text-white">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold mb-1">Inventory Management</h1>
-            <p className="text-orange-100 text-base">Manage inventory, suppliers, and purchase orders</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h1 className="page-title">Inventory Management</h1>
+            <p className="page-subtitle">Manage inventory, suppliers, and purchase orders</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="page-header-actions">
             <button 
               onClick={() => {
                 const timestamp = new Date().toISOString().split('T')[0]
@@ -1065,7 +1065,7 @@ export default function InventoryPage() {
                 else if (activeTab === 'suppliers') exportSuppliers(timestamp)
                 else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-medium transition-all duration-200"
+              className="btn-secondary"
             >
               <Download className="w-4 h-4" />
               Export
@@ -1076,7 +1076,7 @@ export default function InventoryPage() {
                 else if (activeTab === 'suppliers') handleAddSupplier()
                 else if (activeTab === 'purchase-orders') handleAddPurchaseOrder()
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+              className="btn-primary-outline"
             >
               <Plus className="w-5 h-5" />
               {activeTab === 'inventory' ? 'Add Item' : 
@@ -1087,78 +1087,54 @@ export default function InventoryPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
-              </div>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-primary-500">
+              <Package className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Active Items</p>
-            <p className="text-lg font-semibold text-orange-600">
+            <div className="stats-card-label">Total</div>
+            <div className="stats-card-value">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</div>
+            <div className="stats-card-subtitle">Active Items</div>
+            <div className="stats-card-subvalue">
               ${(items && Array.isArray(items) ? items : []).reduce((sum, item) => sum + (item.totalValue || 0), 0).toLocaleString()}
-            </p>
+            </div>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{(transactions && Array.isArray(transactions) ? transactions : []).length}</p>
-              </div>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-info-500">
+              <ClipboardList className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Transactions</p>
-            <p className="text-lg font-semibold text-blue-600">This Month</p>
+            <div className="stats-card-label">Total</div>
+            <div className="stats-card-value">{(transactions && Array.isArray(transactions) ? transactions : []).length}</div>
+            <div className="stats-card-subtitle">Transactions</div>
+            <div className="stats-card-subvalue">This Month</div>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</p>
-              </div>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-success-500">
+              <Users className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Active Suppliers</p>
-            <p className="text-lg font-semibold text-emerald-600">Partners</p>
+            <div className="stats-card-label">Total</div>
+            <div className="stats-card-value">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</div>
+            <div className="stats-card-subtitle">Active Suppliers</div>
+            <div className="stats-card-subvalue">Partners</div>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <ShoppingCart className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</p>
-              </div>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-warning-500">
+              <ShoppingCart className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Purchase Orders</p>
-            <p className="text-lg font-semibold text-purple-600">Pending</p>
+            <div className="stats-card-label">Total</div>
+            <div className="stats-card-value">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</div>
+            <div className="stats-card-subtitle">Purchase Orders</div>
+            <div className="stats-card-subvalue">Pending: {pendingOrders.length}</div>
           </div>
         </div>
       </div>

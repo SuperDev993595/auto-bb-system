@@ -365,14 +365,14 @@ export default function RemindersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'sent': return 'bg-green-100 text-green-800'
-      case 'acknowledged': return 'bg-blue-100 text-blue-800'
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      case 'delivered': return 'bg-blue-100 text-blue-800'
-      case 'failed': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'pending': return 'status-pending'
+      case 'sent': return 'status-active'
+      case 'acknowledged': return 'status-active'
+      case 'completed': return 'status-active'
+      case 'cancelled': return 'status-inactive'
+      case 'delivered': return 'status-active'
+      case 'failed': return 'status-inactive'
+      default: return 'status-inactive'
     }
   }
 
@@ -389,33 +389,35 @@ export default function RemindersPage() {
   const renderReminders = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Active Reminders</h2>
-          <p className="text-gray-600">Manage and track customer notifications</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-            <HiRefresh className="w-4 h-4" />
-            Process Queue
-          </button>
-          <button 
-            onClick={() => setShowCreateReminderModal(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-          >
-            <HiPlus className="w-4 h-4" />
-            Create Reminder
-          </button>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h2 className="page-title">Active Reminders</h2>
+            <p className="page-subtitle">Manage and track customer notifications</p>
+          </div>
+          <div className="page-header-actions">
+            <button className="btn-secondary">
+              <HiRefresh className="w-4 h-4" />
+              Process Queue
+            </button>
+            <button 
+              onClick={() => setShowCreateReminderModal(true)}
+              className="btn-primary-outline"
+            >
+              <HiPlus className="w-4 h-4" />
+              Create Reminder
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="card">
         <div className="flex gap-4 items-center">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="select-field"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -427,7 +429,7 @@ export default function RemindersPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="select-field"
           >
             <option value="all">All Types</option>
             <option value="appointment">Appointment</option>
@@ -439,120 +441,111 @@ export default function RemindersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {reminders.filter(r => r.status === 'pending').length}
-              </p>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Pending</div>
+            <div className="stats-card-value text-warning-600">
+              {reminders.filter(r => r.status === 'pending').length}
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <HiClock className="w-6 h-6 text-yellow-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-warning-500">
+            <HiClock className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Sent Today</p>
-              <p className="text-2xl font-bold text-green-600">
-                {reminders.filter(r => r.status === 'sent').length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Sent Today</div>
+            <div className="stats-card-value text-success-600">
+              {reminders.filter(r => r.status === 'sent').length}
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiCheck className="w-6 h-6 text-green-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-success-500">
+            <HiCheck className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Failed</p>
-              <p className="text-2xl font-bold text-red-600">
-                {reminders.filter(r => r.status === 'failed').length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Failed</div>
+            <div className="stats-card-value text-error-600">
+              {reminders.filter(r => r.status === 'failed').length}
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <HiX className="w-6 h-6 text-red-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-error-500">
+            <HiX className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Templates</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {templates.filter(t => t.isActive).length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Active Templates</div>
+            <div className="stats-card-value text-info-600">
+              {templates.filter(t => t.isActive).length}
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiTemplate className="w-6 h-6 text-blue-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-info-500">
+            <HiTemplate className="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
 
       {/* Reminders List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type & Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Message
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Scheduled
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Method
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+      <div className="table-container">
+        <table className="table">
+          <thead className="table-header">
+            <tr>
+              <th className="table-header-cell">
+                Type & Customer
+              </th>
+              <th className="table-header-cell">
+                Message
+              </th>
+              <th className="table-header-cell">
+                Scheduled
+              </th>
+              <th className="table-header-cell">
+                Method
+              </th>
+              <th className="table-header-cell">
+                Status
+              </th>
+              <th className="table-header-cell">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="table-body">
               {filteredReminders.map(reminder => (
-                <tr key={(reminder as any)._id || reminder.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={(reminder as any)._id || reminder.id} className="table-row">
+                  <td className="table-cell">
                     <div className="flex items-center gap-3">
                       {getTypeIcon(reminder.type)}
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-secondary-900">
                           {(reminder as any).customer?.name || reminder.customerName || 'Unknown Customer'}
                         </div>
-                        <div className="text-sm text-gray-500 capitalize">
+                        <div className="text-sm text-secondary-500 capitalize">
                           {(reminder.type || '').replace('-', ' ')}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate">
+                  <td className="table-cell">
+                    <div className="text-sm text-secondary-900 max-w-xs truncate">
                       {(reminder as any).title || reminder.message || 'No title'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="table-cell">
+                    <div className="text-sm text-secondary-900">
                       {new Date((reminder as any).dueDate || reminder.scheduledDate).toLocaleDateString()}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-secondary-500">
                       {new Date((reminder as any).dueDate || reminder.scheduledDate).toLocaleTimeString()}
                     </div>
                   </td>
-                                     <td className="px-6 py-4 whitespace-nowrap">
+                                     <td className="table-cell">
                      <div className="flex items-center gap-2">
                        {(() => {
                          const methods = (reminder as any).notificationMethods || [reminder.method];
@@ -562,23 +555,23 @@ export default function RemindersPage() {
                          if (hasEmail && hasSms) {
                            return (
                              <>
-                               <HiMail className="w-4 h-4 text-blue-500" />
-                               <HiPhone className="w-4 h-4 text-green-500" />
-                               <span className="text-sm text-gray-900">Email, SMS</span>
+                               <HiMail className="w-4 h-4 text-info-500" />
+                               <HiPhone className="w-4 h-4 text-success-500" />
+                               <span className="text-sm text-secondary-900">Email, SMS</span>
                              </>
                            );
                          } else if (hasEmail) {
                            return (
                              <>
-                               <HiMail className="w-4 h-4 text-blue-500" />
-                               <span className="text-sm text-gray-900">Email</span>
+                               <HiMail className="w-4 h-4 text-info-500" />
+                               <span className="text-sm text-secondary-900">Email</span>
                              </>
                            );
                          } else if (hasSms) {
                            return (
                              <>
-                               <HiPhone className="w-4 h-4 text-green-500" />
-                               <span className="text-sm text-gray-900">SMS</span>
+                               <HiPhone className="w-4 h-4 text-success-500" />
+                               <span className="text-sm text-secondary-900">SMS</span>
                              </>
                            );
                          } else {
@@ -587,33 +580,33 @@ export default function RemindersPage() {
                            return (
                              <>
                                {method === 'email' ? (
-                                 <HiMail className="w-4 h-4 text-blue-500" />
+                                 <HiMail className="w-4 h-4 text-info-500" />
                                ) : (
-                                 <HiPhone className="w-4 h-4 text-green-500" />
+                                 <HiPhone className="w-4 h-4 text-success-500" />
                                )}
-                               <span className="text-sm text-gray-900 capitalize">{method}</span>
+                               <span className="text-sm text-secondary-900 capitalize">{method}</span>
                              </>
                            );
                          }
                        })()}
                      </div>
                    </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reminder.status)}`}>
+                  <td className="table-cell">
+                    <span className={`status-badge ${getStatusColor(reminder.status)}`}>
                       {reminder.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="table-cell">
                     <div className="flex items-center gap-2">
                       <button 
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-primary-600 hover:text-primary-900 transition-colors"
                         title="View details"
                       >
                         <HiEye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleEditReminder(reminder)}
-                        className="text-yellow-600 hover:text-yellow-900"
+                        className="text-warning-600 hover:text-warning-900 transition-colors"
                         title="Edit reminder"
                       >
                         <HiPencil className="w-4 h-4" />
@@ -621,7 +614,7 @@ export default function RemindersPage() {
                       {reminder.status === 'pending' && (
                         <button 
                           onClick={() => handleStatusUpdate((reminder as any)._id || reminder.id, 'sent')}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-success-600 hover:text-success-900 transition-colors"
                           title="Mark as sent"
                         >
                           <HiCheck className="w-4 h-4" />
@@ -629,7 +622,7 @@ export default function RemindersPage() {
                       )}
                       <button 
                         onClick={() => handleDeleteReminder((reminder as any)._id || reminder.id, (reminder as any).customer?.name || reminder.customerName || 'Unknown Customer')}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-error-600 hover:text-error-900 transition-colors"
                         title="Delete reminder"
                       >
                         <HiTrash className="w-4 h-4" />
@@ -648,30 +641,34 @@ export default function RemindersPage() {
   const renderTemplates = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Reminder Templates</h2>
-          <p className="text-gray-600">Manage automated reminder templates</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h2 className="page-title">Reminder Templates</h2>
+            <p className="page-subtitle">Manage automated reminder templates</p>
+          </div>
+          <div className="page-header-actions">
+            <button 
+              onClick={() => setShowCreateTemplateModal(true)}
+              className="btn-primary-outline"
+            >
+              <HiPlus className="w-4 h-4" />
+              Create Template
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowCreateTemplateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create Template
-        </button>
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid-responsive">
         {templates.map(template => (
-          <div key={template.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={template.id} className="card">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
                 {getTypeIcon(template.type)}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{template.name}</h3>
-                  <span className="text-sm text-gray-500 capitalize">
+                  <h3 className="text-lg font-semibold text-secondary-900">{template.name}</h3>
+                  <span className="text-sm text-secondary-500 capitalize">
                     {(template.type || '').replace('-', ' ')} reminder
                   </span>
                 </div>
@@ -679,16 +676,16 @@ export default function RemindersPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleToggleTemplate(template.id)}
-                  className={`p-2 rounded-lg ${
+                  className={`p-2 rounded-lg transition-colors ${
                     template.isActive 
-                      ? 'text-green-600 bg-green-100 hover:bg-green-200' 
-                      : 'text-gray-400 bg-gray-100 hover:bg-gray-200'
+                      ? 'text-success-600 bg-success-100 hover:bg-success-200' 
+                      : 'text-secondary-400 bg-secondary-100 hover:bg-secondary-200'
                   }`}
                   title={template.isActive ? 'Disable template' : 'Enable template'}
                 >
                   {template.isActive ? <HiPlay className="w-4 h-4" /> : <HiPause className="w-4 h-4" />}
                 </button>
-                <button className="p-2 text-gray-400 hover:text-blue-600">
+                <button className="p-2 text-secondary-400 hover:text-primary-600 transition-colors">
                   <HiCog className="w-4 h-4" />
                 </button>
               </div>
@@ -696,17 +693,17 @@ export default function RemindersPage() {
             
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-gray-700">Timing</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm font-medium text-secondary-700">Timing</p>
+                <p className="text-sm text-secondary-600">
                   {template.timing?.value || 0} {template.timing?.unit || 'hours'} {template.timing?.when || 'before'} event
                 </p>
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-700">Methods</p>
+                <p className="text-sm font-medium text-secondary-700">Methods</p>
                 <div className="flex gap-2 mt-1">
                   {(template.methods || []).map(method => (
-                    <span key={method} className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    <span key={method} className="inline-flex items-center gap-1 text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded">
                       {method === 'email' ? <HiMail className="w-3 h-3" /> : <HiPhone className="w-3 h-3" />}
                       {method}
                     </span>
@@ -715,33 +712,33 @@ export default function RemindersPage() {
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-700">Subject</p>
-                <p className="text-sm text-gray-600 truncate">{template.subject || 'No subject'}</p>
+                <p className="text-sm font-medium text-secondary-700">Subject</p>
+                <p className="text-sm text-secondary-600 truncate">{template.subject || 'No subject'}</p>
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-700">Message Preview</p>
-                <p className="text-sm text-gray-600 line-clamp-3">{template.message || 'No message'}</p>
+                <p className="text-sm font-medium text-secondary-700">Message Preview</p>
+                <p className="text-sm text-secondary-600 line-clamp-3">{template.message || 'No message'}</p>
               </div>
             </div>
             
-            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                template.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            <div className="mt-4 pt-4 border-t border-secondary-200 flex justify-between items-center">
+              <span className={`status-badge ${
+                template.isActive ? 'status-active' : 'status-inactive'
               }`}>
                 {template.isActive ? 'Active' : 'Inactive'}
               </span>
               <div className="flex gap-2">
                 <button 
                   onClick={() => handleEditTemplate(template)}
-                  className="text-blue-600 hover:text-blue-900 text-sm flex items-center gap-1"
+                  className="text-primary-600 hover:text-primary-900 text-sm flex items-center gap-1 transition-colors"
                 >
                   <HiPencil className="w-3 h-3" />
                   Edit
                 </button>
                 <button 
                   onClick={() => handleDeleteTemplate(template.id, template.name || 'Unknown Template')}
-                  className="text-red-600 hover:text-red-900 text-sm flex items-center gap-1"
+                  className="text-error-600 hover:text-error-900 text-sm flex items-center gap-1 transition-colors"
                 >
                   <HiTrash className="w-3 h-3" />
                   Delete
@@ -757,29 +754,33 @@ export default function RemindersPage() {
   const renderSettings = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-800">Notification Settings</h2>
-        <p className="text-gray-600">Configure email and SMS notification providers</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h2 className="page-title">Notification Settings</h2>
+            <p className="page-subtitle">Configure email and SMS notification providers</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid-responsive">
         {/* Email Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="card">
           <div className="flex items-center gap-3 mb-4">
-            <HiMail className="w-6 h-6 text-blue-600" />
+            <HiMail className="w-6 h-6 text-info-600" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Email Configuration</h3>
-              <p className="text-sm text-gray-600">SMTP settings for email notifications</p>
+              <h3 className="text-lg font-semibold text-secondary-900">Email Configuration</h3>
+              <p className="text-sm text-secondary-600">SMTP settings for email notifications</p>
             </div>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Enable Email</span>
+              <span className="text-sm font-medium text-secondary-700">Enable Email</span>
               <button 
                 onClick={() => handleSettingsChange('emailEnabled', !settingsForm.emailEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  settingsForm.emailEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settingsForm.emailEnabled ? 'bg-primary-600' : 'bg-secondary-200'
                 }`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -789,45 +790,45 @@ export default function RemindersPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">SMTP Server</label>
+              <label className="form-label">SMTP Server</label>
               <input
                 type="text"
                 value={settingsForm.emailProvider.smtp}
                 onChange={(e) => handleEmailProviderChange('smtp', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="input-field"
                 placeholder="smtp.gmail.com"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+              <label className="form-label">Port</label>
               <input
                 type="number"
                 value={settingsForm.emailProvider.port}
                 onChange={(e) => handleEmailProviderChange('port', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="input-field"
                 placeholder="587"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="form-label">Username</label>
               <input
                 type="email"
                 value={settingsForm.emailProvider.username}
                 onChange={(e) => handleEmailProviderChange('username', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="input-field"
                 placeholder="your-email@gmail.com"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="form-label">Password</label>
               <input
                 type="password"
                 value={settingsForm.emailProvider.password}
                 onChange={(e) => handleEmailProviderChange('password', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="input-field"
                 placeholder="••••••••"
               />
             </div>
@@ -835,22 +836,22 @@ export default function RemindersPage() {
         </div>
 
         {/* SMS Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="card">
           <div className="flex items-center gap-3 mb-4">
-            <HiPhone className="w-6 h-6 text-green-600" />
+            <HiPhone className="w-6 h-6 text-success-600" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">SMS Configuration</h3>
-              <p className="text-sm text-gray-600">SMS provider settings</p>
+              <h3 className="text-lg font-semibold text-secondary-900">SMS Configuration</h3>
+              <p className="text-sm text-secondary-600">SMS provider settings</p>
             </div>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Enable SMS</span>
+              <span className="text-sm font-medium text-secondary-700">Enable SMS</span>
               <button 
                 onClick={() => handleSettingsChange('smsEnabled', !settingsForm.smsEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  settingsForm.smsEnabled ? 'bg-green-600' : 'bg-gray-200'
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settingsForm.smsEnabled ? 'bg-success-600' : 'bg-secondary-200'
                 }`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -860,8 +861,8 @@ export default function RemindersPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Service Provider</label>
-              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <label className="form-label">Service Provider</label>
+              <select className="select-field">
                 <option value="twilio">Twilio</option>
                 <option value="nexmo">Nexmo</option>
                 <option value="aws-sns">AWS SNS</option>
@@ -869,18 +870,18 @@ export default function RemindersPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+              <label className="form-label">API Key</label>
               <input
                 type="password"
                 value={settingsForm.smsProvider.apiKey}
                 onChange={(e) => handleSmsProviderChange('apiKey', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="input-field"
                 placeholder="••••••••••••••••"
               />
             </div>
             
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
+            <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
+              <p className="text-sm text-warning-800">
                 <strong>Note:</strong> SMS notifications require a valid API key from your chosen provider. 
                 Charges may apply based on your provider's pricing.
               </p>
@@ -890,57 +891,57 @@ export default function RemindersPage() {
       </div>
 
       {/* Business Information */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Business Information</h3>
-        <p className="text-sm text-gray-600 mb-4">This information will be used in reminder templates</p>
+      <div className="card">
+        <h3 className="text-lg font-semibold text-secondary-900 mb-4">Business Information</h3>
+        <p className="text-sm text-secondary-600 mb-4">This information will be used in reminder templates</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+            <label className="form-label">Business Name</label>
             <input
               type="text"
               value={settingsForm.businessInfo.name}
               onChange={(e) => handleBusinessInfoChange('name', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <label className="form-label">Phone Number</label>
             <input
               type="tel"
               value={settingsForm.businessInfo.phone}
               onChange={(e) => handleBusinessInfoChange('phone', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="form-label">Email Address</label>
             <input
               type="email"
               value={settingsForm.businessInfo.email}
               onChange={(e) => handleBusinessInfoChange('email', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Website (Optional)</label>
+            <label className="form-label">Website (Optional)</label>
             <input
               type="url"
               value={settingsForm.businessInfo.website || ''}
               onChange={(e) => handleBusinessInfoChange('website', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="input-field"
             />
           </div>
           
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label className="form-label">Address</label>
             <textarea
               value={settingsForm.businessInfo.address}
               onChange={(e) => handleBusinessInfoChange('address', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="input-field"
               rows={2}
             />
           </div>
@@ -949,7 +950,7 @@ export default function RemindersPage() {
         <div className="mt-6 flex justify-end">
           <button 
             onClick={handleSaveSettings}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium"
+            className="btn-primary"
           >
             Save Settings
           </button>
@@ -959,37 +960,45 @@ export default function RemindersPage() {
   )
 
   return (
-    <div className="p-6 space-y-6">
-      <PageTitle title="Reminders & Notifications" />
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Reminders & Notifications" />
+          </div>
+        </div>
+      </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            {[
-              { key: 'reminders', label: 'Active Reminders', count: reminders.length },
-              { key: 'templates', label: 'Templates', count: templates.length },
-              { key: 'settings', label: 'Settings', count: 0 }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as TabType)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label} {tab.count > 0 && `(${tab.count})`}
-              </button>
-            ))}
-          </nav>
-        </div>
+      <div className="card">
+        <div className="tab-container">
+          <div className="tab-header">
+            <nav className="tab-buttons">
+              {[
+                { key: 'reminders', label: 'Active Reminders', count: reminders.length },
+                { key: 'templates', label: 'Templates', count: templates.length },
+                { key: 'settings', label: 'Settings', count: 0 }
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as TabType)}
+                  className={`tab-button ${
+                    activeTab === tab.key
+                      ? 'tab-button-active'
+                      : 'tab-button-inactive'
+                  }`}
+                >
+                  {tab.label} {tab.count > 0 && `(${tab.count})`}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-        <div className="p-6">
-          {activeTab === 'reminders' && renderReminders()}
-          {activeTab === 'templates' && renderTemplates()}
-          {activeTab === 'settings' && renderSettings()}
+          <div className="tab-content">
+            {activeTab === 'reminders' && renderReminders()}
+            {activeTab === 'templates' && renderTemplates()}
+            {activeTab === 'settings' && renderSettings()}
+          </div>
         </div>
       </div>
 

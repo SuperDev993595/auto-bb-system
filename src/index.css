@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Design System */
+@import './styles/design-system.css';
+
 @layer utilities {
     .animate-fade-in-down {
         animation: fade-in-down 0.8s ease-out;
@@ -34,5 +37,78 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+    }
+}
+
+/* Base styles for consistent typography */
+@layer base {
+    html {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    
+    body {
+        @apply text-secondary-900 bg-secondary-50;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-semibold text-secondary-900;
+    }
+    
+    h1 {
+        @apply text-3xl lg:text-4xl;
+    }
+    
+    h2 {
+        @apply text-2xl lg:text-3xl;
+    }
+    
+    h3 {
+        @apply text-xl lg:text-2xl;
+    }
+    
+    h4 {
+        @apply text-lg lg:text-xl;
+    }
+    
+    h5 {
+        @apply text-base lg:text-lg;
+    }
+    
+    h6 {
+        @apply text-sm lg:text-base;
+    }
+    
+    p {
+        @apply text-secondary-700 leading-relaxed;
+    }
+    
+    a {
+        @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
+    }
+}
+
+/* Component styles */
+@layer components {
+    /* Consistent focus styles */
+    .focus-ring {
+        @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    }
+    
+    /* Consistent transition styles */
+    .transition-standard {
+        @apply transition-all duration-200 ease-in-out;
+    }
+    
+    .transition-smooth {
+        @apply transition-all duration-300 ease-out;
+    }
+    
+    /* Consistent hover effects */
+    .hover-lift {
+        @apply hover:-translate-y-1 hover:shadow-medium transition-transform duration-200;
+    }
+    
+    .hover-glow {
+        @apply hover:shadow-glow-primary transition-shadow duration-200;
     }
 }
