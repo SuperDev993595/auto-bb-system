@@ -1,5 +1,5 @@
 import { Customer } from '../../../services/customers'
-import { Edit, Trash2 } from '../../../utils/icons'
+import { Edit, Trash2, Phone, Mail, MapPin, Building2, Calendar, Car, Wrench, FileText, User, Shield, Star } from '../../../utils/icons'
 
 type Props = {
     customer: Customer
@@ -9,197 +9,321 @@ type Props = {
 
 export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle }: Props) {
     return (
-        <div className="space-y-6">
-            {/* Contact & Basic Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-sm text-gray-700">
-                {/* Contact Info */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Contact Information</h3>
-                    <div className="space-y-2">
-                        <div>
-                            <p className="text-xs text-gray-400">Phone</p>
-                            <p className="font-medium">{customer.phone}</p>
+        <div className="space-y-8">
+            {/* Hero Section with Customer Name and Status */}
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <User className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400">Email</p>
-                            <p className="font-medium">{customer.email}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Address</p>
-                            <p className="font-medium">
-                                {customer.address?.street || customer.address?.city || customer.address?.state 
-                                  ? `${customer.address?.street || ''}${customer.address?.street && (customer.address?.city || customer.address?.state) ? ', ' : ''}${customer.address?.city || ''}${customer.address?.city && customer.address?.state ? ', ' : ''}${customer.address?.state || ''}${customer.address?.zipCode ? ` ${customer.address.zipCode}` : ''}`
-                                  : 'N/A'
-                                }
+                            <h1 className="text-3xl font-bold">{customer.name || customer.businessName || 'Unnamed Customer'}</h1>
+                            <p className="text-blue-100 text-lg">
+                                {customer.businessName ? 'Business Customer' : 'Individual Customer'}
                             </p>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Business Name</p>
-                            <p className="font-medium">{customer.businessName || 'N/A'}</p>
+                    </div>
+                    <div className="text-right">
+                        <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                            customer.status === 'active' 
+                                ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30' 
+                                : customer.status === 'inactive'
+                                ? 'bg-red-500/20 text-red-100 border border-red-400/30'
+                                : 'bg-amber-500/20 text-amber-100 border border-amber-400/30'
+                        }`}>
+                            <Shield className="w-4 h-4 mr-2" />
+                            {customer.status}
+                        </div>
+                        <p className="text-blue-100 text-sm mt-2">ID: {customer._id}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Contact & Basic Info Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Contact Info Card */}
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                                <Phone className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-800">Contact Information</h3>
+                        </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors">
+                            <Phone className="w-5 h-5 text-blue-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Phone</p>
+                                <p className="font-semibold text-gray-800">{customer.phone || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors">
+                            <Mail className="w-5 h-5 text-blue-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Email</p>
+                                <p className="font-semibold text-gray-800">{customer.email || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors">
+                            <MapPin className="w-5 h-5 text-blue-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Address</p>
+                                <p className="font-semibold text-gray-800">
+                                    {customer.address?.street || customer.address?.city || customer.address?.state 
+                                      ? `${customer.address?.street || ''}${customer.address?.street && (customer.address?.city || customer.address?.state) ? ', ' : ''}${customer.address?.city || ''}${customer.address?.city && customer.address?.state ? ', ' : ''}${customer.address?.state || ''}${customer.address?.zipCode ? ` ${customer.address.zipCode}` : ''}`
+                                      : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        {customer.businessName && (
+                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors">
+                                <Building2 className="w-5 h-5 text-blue-500" />
+                                <div>
+                                    <p className="text-xs text-gray-500 font-medium">Business Name</p>
+                                    <p className="font-semibold text-gray-800">{customer.businessName}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Account Info Card */}
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-800">Account Details</h3>
+                        </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
+                            <Calendar className="w-5 h-5 text-emerald-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Customer Since</p>
+                                <p className="font-semibold text-gray-800">{new Date(customer.createdAt).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
+                            <Calendar className="w-5 h-5 text-emerald-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Last Updated</p>
+                                <p className="font-semibold text-gray-800">{new Date(customer.updatedAt).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
+                            <Car className="w-5 h-5 text-emerald-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Total Vehicles</p>
+                                <p className="font-semibold text-gray-800">{customer.vehicles?.length || 0}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
+                            <Wrench className="w-5 h-5 text-emerald-500" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Service Records</p>
+                                <p className="font-semibold text-gray-800">{customer.serviceHistory?.length || 0}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Account Info */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Account Details</h3>
-                    <div className="space-y-2">
-                        <div>
-                            <p className="text-xs text-gray-400">Customer Since</p>
-                            <p className="font-medium">{new Date(customer.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Last Updated</p>
-                            <p className="font-medium">{new Date(customer.updatedAt).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Total Vehicles</p>
-                            <p className="font-medium">{customer.vehicles?.length || 0}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Service Records</p>
-                            <p className="font-medium">{customer.serviceHistory?.length || 0}</p>
+                {/* Quick Stats Card */}
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                <Star className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-800">Quick Stats</h3>
                         </div>
                     </div>
-                </div>
-
-                {/* Status */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Status</h3>
-                    <div className="space-y-2">
-                        <div>
-                            <p className="text-xs text-gray-400">Account Status</p>
-                            <p className="font-medium">
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                    customer.status === 'active' 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : customer.status === 'inactive'
-                                        ? 'bg-red-100 text-red-800'
-                                        : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                    {customer.status}
-                                </span>
-                            </p>
+                    <div className="p-6 space-y-4">
+                        <div className="text-center p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                            <p className="text-2xl font-bold">{customer.vehicles?.length || 0}</p>
+                            <p className="text-sm opacity-90">Vehicles</p>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-400">Customer ID</p>
-                            <p className="font-medium text-xs font-mono">{customer._id}</p>
+                        <div className="text-center p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
+                            <p className="text-2xl font-bold">{customer.serviceHistory?.length || 0}</p>
+                            <p className="text-sm opacity-90">Services</p>
+                        </div>
+                        <div className="text-center p-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                            <p className="text-2xl font-bold">{customer.status === 'active' ? 'Active' : 'Inactive'}</p>
+                            <p className="text-sm opacity-90">Status</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Vehicles Section */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Vehicles</h3>
-                    <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200">
-                        + Add Vehicle
-                    </button>
-                </div>
-                {customer.vehicles && customer.vehicles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {customer.vehicles.map((vehicle) => (
-                            <div key={vehicle._id} className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex-1">
-                                        <h4 className="font-medium text-gray-800">
-                                            {vehicle.year} {vehicle.make} {vehicle.model}
-                                        </h4>
-                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                            {vehicle.color}
-                                        </span>
-                                    </div>
-                                    <div className="flex gap-2 ml-2">
-                                        {onEditVehicle && (
-                                            <button
-                                                onClick={() => onEditVehicle(vehicle)}
-                                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                                                title="Edit Vehicle"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                        {onDeleteVehicle && (
-                                            <button
-                                                onClick={() => onDeleteVehicle(vehicle)}
-                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                                title="Delete Vehicle"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-1 text-sm text-gray-600">
-                                    <p><span className="font-medium">VIN:</span> {vehicle.vin}</p>
-                                    <p><span className="font-medium">License:</span> {vehicle.licensePlate}</p>
-                                    <p><span className="font-medium">Mileage:</span> {vehicle.mileage.toLocaleString()} miles</p>
-                                    {vehicle.status && (
-                                        <p><span className="font-medium">Status:</span> 
-                                            <span className={`ml-1 px-2 py-1 text-xs rounded-full ${
-                                                vehicle.status === 'active' 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : vehicle.status === 'inactive'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                                {vehicle.status}
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                                <Car className="w-5 h-5 text-white" />
                             </div>
-                        ))}
+                            <h3 className="text-2xl font-bold text-gray-800">Vehicles</h3>
+                        </div>
+                        <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                            + Add Vehicle
+                        </button>
                     </div>
-                ) : (
-                    <div className="text-center py-8 text-gray-500">
-                        <p>No vehicles registered for this customer.</p>
-                    </div>
-                )}
+                </div>
+                <div className="p-6">
+                    {customer.vehicles && customer.vehicles.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {customer.vehicles.map((vehicle) => (
+                                <div key={vehicle._id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-blue-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-800 text-lg mb-2">
+                                                {vehicle.year} {vehicle.make} {vehicle.model}
+                                            </h4>
+                                            <span className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 text-xs font-medium rounded-full border border-blue-200">
+                                                {vehicle.color}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {onEditVehicle && (
+                                                <button
+                                                    onClick={() => onEditVehicle(vehicle)}
+                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                                    title="Edit Vehicle"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            {onDeleteVehicle && (
+                                                <button
+                                                    onClick={() => onDeleteVehicle(vehicle)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                                    title="Delete Vehicle"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-sm text-gray-600">
+                                        <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                                            <span className="font-medium text-gray-700">VIN:</span>
+                                            <span className="font-mono text-xs">{vehicle.vin}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                                            <span className="font-medium text-gray-700">License:</span>
+                                            <span className="font-mono text-xs">{vehicle.licensePlate}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                                            <span className="font-medium text-gray-700">Mileage:</span>
+                                            <span className="font-mono text-xs">{vehicle.mileage.toLocaleString()} miles</span>
+                                        </div>
+                                        {vehicle.status && (
+                                            <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                                                <span className="font-medium text-gray-700">Status:</span>
+                                                <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                                    vehicle.status === 'active' 
+                                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                                        : vehicle.status === 'inactive'
+                                                        ? 'bg-red-100 text-red-800 border border-red-200'
+                                                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                }`}>
+                                                    {vehicle.status}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Car className="w-10 h-10 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-500 mb-2">No Vehicles Registered</h3>
+                            <p className="text-gray-400">This customer hasn't registered any vehicles yet.</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Recent Service History */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Recent Service History</h3>
-                    <button className="px-4 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium hover:bg-blue-50 rounded-lg transition-all duration-200">
-                        View All
-                    </button>
-                </div>
-                {customer.serviceHistory && customer.serviceHistory.length > 0 ? (
-                    <div className="space-y-3">
-                        {customer.serviceHistory.slice(0, 3).map((service) => (
-                            <div key={service._id} className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 className="font-medium text-gray-800">{service.serviceType}</h4>
-                                        <p className="text-sm text-gray-600">{service.description}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-medium text-gray-800">${service.cost.toFixed(2)}</p>
-                                        <p className="text-xs text-gray-500">{new Date(service.date).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-gray-500">
-                                    <span>Technician: {service.technician}</span>
-                                    <span>Vehicle: {service.vehicleId}</span>
-                                </div>
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                <Wrench className="w-5 h-5 text-white" />
                             </div>
-                        ))}
+                            <h3 className="text-2xl font-bold text-gray-800">Recent Service History</h3>
+                        </div>
+                        <button className="px-4 py-2 text-emerald-600 hover:text-emerald-700 text-sm font-semibold hover:bg-emerald-50 rounded-xl transition-all duration-200 border border-emerald-200 hover:border-emerald-300">
+                            View All
+                        </button>
                     </div>
-                ) : (
-                    <div className="text-center py-8 text-gray-500">
-                        <p>No service history available.</p>
-                    </div>
-                )}
+                </div>
+                <div className="p-6">
+                    {customer.serviceHistory && customer.serviceHistory.length > 0 ? (
+                        <div className="space-y-4">
+                            {customer.serviceHistory.slice(0, 3).map((service) => (
+                                <div key={service._id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-emerald-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-gray-800 text-lg mb-1">{service.serviceType}</h4>
+                                            <p className="text-gray-600">{service.description}</p>
+                                        </div>
+                                        <div className="text-right ml-4">
+                                            <p className="text-xl font-bold text-emerald-600">${service.cost.toFixed(2)}</p>
+                                            <p className="text-sm text-gray-500">{new Date(service.date).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm text-gray-500 pt-3 border-t border-gray-200">
+                                        <span className="flex items-center space-x-1">
+                                            <User className="w-4 h-4" />
+                                            <span>Technician: {service.technician}</span>
+                                        </span>
+                                        <span className="flex items-center space-x-1">
+                                            <Car className="w-4 h-4" />
+                                            <span>Vehicle: {service.vehicleId}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Wrench className="w-10 h-10 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-500 mb-2">No Service History</h3>
+                            <p className="text-gray-400">No service records available for this customer.</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Notes Section */}
             {customer.notes && (
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">Notes</h3>
-                    <p className="text-gray-600">{customer.notes}</p>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800">Notes</h3>
+                        </div>
+                    </div>
+                    <div className="p-6">
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <p className="text-gray-700 leading-relaxed">{customer.notes}</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
