@@ -10,36 +10,6 @@ type Props = {
 export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle }: Props) {
     return (
         <div className="space-y-8">
-            {/* Hero Section with Customer Name and Status */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <User className="w-8 h-8 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold">{customer.name || customer.businessName || 'Unnamed Customer'}</h1>
-                            <p className="text-blue-100 text-lg">
-                                {customer.businessName ? 'Business Customer' : 'Individual Customer'}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                            customer.status === 'active' 
-                                ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30' 
-                                : customer.status === 'inactive'
-                                ? 'bg-red-500/20 text-red-100 border border-red-400/30'
-                                : 'bg-amber-500/20 text-amber-100 border border-amber-400/30'
-                        }`}>
-                            <Shield className="w-4 h-4 mr-2" />
-                            {customer.status}
-                        </div>
-                        <p className="text-blue-100 text-sm mt-2">ID: {customer._id}</p>
-                    </div>
-                </div>
-            </div>
-
             {/* Contact & Basic Info Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Contact Info Card */}
