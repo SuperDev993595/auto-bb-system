@@ -56,7 +56,7 @@
 
 /* Stats Card */
 .stats-card {
-  @apply group bg-white rounded-2xl shadow-soft hover:shadow-large transition-all duration-300 border border-secondary-200 overflow-hidden;
+  @apply bg-white rounded-2xl shadow-soft hover:shadow-large transition-all duration-300 border border-secondary-200 overflow-hidden;
 }
 
 .stats-card-header {

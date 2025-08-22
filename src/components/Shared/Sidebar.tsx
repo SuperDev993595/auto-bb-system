@@ -1,26 +1,21 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-    CalendarCheck,
-    ClipboardList,
-    MessageCircle,
-    PhoneCall,
-    Users,
-    Wrench,
-    FileText,
-    Bell,
-    BarChart3,
-    Package,
-    Home,
-    Mail,
-    MessageSquare,
-    Search,
-    Upload,
-    File,
-    Settings,
-    Building
-} from "lucide-react";
+    HiHome,
+    HiUsers,
+    HiCalendar,
+    HiOfficeBuilding,
+    HiCog,
+    HiDocumentText,
+    HiCube,
+    HiChartBar,
+    HiBell,
+    HiClipboardList,
+    HiChatAlt,
+    HiPhone,
+    HiMail,
+    HiSearch
+} from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
-import "./Sidebar.css";
 
 type NavItem = {
     to: string;
@@ -31,38 +26,38 @@ type NavItem = {
 
 const navItems: NavItem[] = [
     // Dashboard Overview
-    { to: "/admin/dashboard", label: "Dashboard", icon: <Home size={18} /> },
+    { to: "/admin/dashboard", label: "Dashboard", icon: <HiHome size={18} /> },
     
     // Core CRM Functions
-    { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
-    { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
-    { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building size={18} />, roles: ['super_admin', 'admin'] },
-    { to: "/admin/dashboard/services", label: "Services", icon: <Wrench size={18} /> },
+    { to: "/admin/dashboard/customers", label: "Customers", icon: <HiUsers size={18} /> },
+    { to: "/admin/dashboard/appointments", label: "Appointments", icon: <HiCalendar size={18} /> },
+    { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <HiOfficeBuilding size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/services", label: "Services", icon: <HiCog size={18} /> },
     
     // Financial & Inventory
-    { to: "/admin/dashboard/invoices", label: "Invoices", icon: <FileText size={18} /> },
-    { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
+    { to: "/admin/dashboard/invoices", label: "Invoices", icon: <HiDocumentText size={18} /> },
+    { to: "/admin/dashboard/inventory", label: "Inventory", icon: <HiCube size={18} /> },
     
     // Analytics & Communication
-    { to: "/admin/dashboard/reports", label: "Reports", icon: <BarChart3 size={18} />, roles: ['super_admin', 'admin'] },
-    { to: "/admin/dashboard/reminders", label: "Reminders", icon: <Bell size={18} /> },
-    { to: "/admin/dashboard/contact-logs", label: "Communication", icon: <PhoneCall size={18} /> },
+    { to: "/admin/dashboard/reports", label: "Reports", icon: <HiChartBar size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/reminders", label: "Reminders", icon: <HiBell size={18} /> },
+    { to: "/admin/dashboard/contact-logs", label: "Communication", icon: <HiPhone size={18} /> },
     
     // Operations & Marketing
-    { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
-    { to: "/admin/dashboard/promotions", label: "Promotions", icon: <MessageCircle size={18} /> },
+    { to: "/admin/dashboard/tasks", label: "Tasks", icon: <HiClipboardList size={18} /> },
+    { to: "/admin/dashboard/promotions", label: "Promotions", icon: <HiChatAlt size={18} /> },
     
     // Advanced Features
-    { to: "/admin/dashboard/marketing", label: "Marketing", icon: <Mail size={18} />, roles: ['super_admin', 'admin'] },
-    { to: "/admin/dashboard/sms", label: "SMS", icon: <PhoneCall size={18} />, roles: ['super_admin', 'admin'] },
-    { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <Mail size={18} />, roles: ['super_admin', 'admin'] },
-    { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <MessageSquare size={18} /> },
-    { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <Search size={18} /> },
-    // { to: "/admin/dashboard/files", label: "File Management", icon: <Upload size={18} /> },
-    // { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <File size={18} /> },
+    { to: "/admin/dashboard/marketing", label: "Marketing", icon: <HiMail size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/sms", label: "SMS", icon: <HiPhone size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/mailchimp", label: "MailChimp", icon: <HiMail size={18} />, roles: ['super_admin', 'admin'] },
+    { to: "/admin/dashboard/live-chat", label: "Live Chat", icon: <HiChatAlt size={18} /> },
+    { to: "/admin/dashboard/yellowpages", label: "YellowPages", icon: <HiSearch size={18} /> },
+    // { to: "/admin/dashboard/files", label: "File Management", icon: <HiUpload size={18} /> },
+    // { to: "/admin/dashboard/pdf-generation", label: "PDF Generation", icon: <HiDocument size={18} /> },
     
     // System Administration (Super Admin Only)
-    { to: "/admin/dashboard/system-admin", label: "System Administration", icon: <Settings size={18} />, roles: ['super_admin'] },
+    { to: "/admin/dashboard/system-admin", label: "System Administration", icon: <HiCog size={18} />, roles: ['super_admin'] },
 ];
 
 export default function Sidebar() {
@@ -70,32 +65,45 @@ export default function Sidebar() {
     const { user } = useAuth();
 
     return (
-        <aside className="bg-secondary-900 text-white w-64 flex flex-col h-screen">
+        <aside className="bg-gradient-to-b from-secondary-900 to-secondary-800 text-white w-64 flex flex-col h-screen shadow-large border-r border-secondary-700">
             {/* Fixed Header */}
-            <div className="p-4 border-b border-secondary-700">
+            <div className="p-6 border-b border-secondary-700 bg-secondary-900/50">
                 <Link to="/" className="block">
-                    <div className="text-xl font-bold text-primary-400 hover:text-primary-300 transition-colors cursor-pointer">
-                        🔧 AutoCRM Pro
+                    <div className="text-xl font-bold text-primary-400 hover:text-primary-300 transition-colors cursor-pointer flex items-center gap-2">
+                        <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                            <HiCog className="w-5 h-5 text-white" />
+                        </div>
+                        AutoCRM Pro
                     </div>
                 </Link>
             </div>
 
             {/* Scrollable Navigation */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-nav">
+            <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
                 {navItems
                     .filter(item => !item.roles || item.roles.includes(user?.role || ''))
                     .map(item => (
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`flex items-center gap-2 px-4 py-2 rounded hover:bg-secondary-800 transition ${location.pathname === item.to ? "bg-secondary-800 text-primary-400" : "text-secondary-300"
-                                }`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                                location.pathname === item.to 
+                                    ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-soft" 
+                                    : "text-secondary-300 hover:bg-secondary-800 hover:text-white"
+                            }`}
                         >
                             {item.icon}
-                            {item.label}
+                            <span className="text-sm">{item.label}</span>
                         </Link>
                     ))}
             </nav>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-secondary-700 bg-secondary-900/50">
+                <div className="text-xs text-secondary-400 text-center">
+                    v2.0.0 • AutoCRM Pro
+                </div>
+            </div>
         </aside>
     );
 }

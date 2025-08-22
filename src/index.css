@@ -1,9 +1,9 @@
+/* Import Design System First */
+@import './styles/design-system.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Design System */
-@import './styles/design-system.css';
 
 @layer utilities {
     .animate-fade-in-down {
