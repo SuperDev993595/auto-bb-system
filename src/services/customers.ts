@@ -1,4 +1,5 @@
 import api, { apiResponse } from './api';
+import { rateLimitManager } from '../utils/rateLimitHelper';
 
 export interface Customer {
   _id: string;
@@ -152,8 +153,11 @@ export const customerService = {
       }
     });
     
+    const endpoint = `/customers?${params.toString()}`;
+    rateLimitManager.trackRequest(endpoint);
+    
     console.log('customerService.getCustomers: Making API call to /customers with params:', params.toString())
-    const response = await apiResponse(api.get(`/customers?${params.toString()}`));
+    const response = await apiResponse(api.get(endpoint));
     console.log('customerService.getCustomers: API response:', response)
     return response;
   },
@@ -163,7 +167,10 @@ export const customerService = {
     success: boolean;
     data: Customer;
   }> {
-    const response = await apiResponse(api.get(`/customers/${id}`));
+    const endpoint = `/customers/${id}`;
+    rateLimitManager.trackRequest(endpoint);
+    
+    const response = await apiResponse(api.get(endpoint));
     return response;
   },
 
