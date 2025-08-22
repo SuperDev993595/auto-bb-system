@@ -4,8 +4,21 @@ import AppointmentCard from "../components/Appointments/AppointmentCard"
 import AppointmentCalendar from "../components/Appointments/AppointmentCalendar"
 import AppointmentModal from "../components/Appointments/AppointmentModal"
 import PageTitle from "../components/Shared/PageTitle"
-import { Grid3X3, Calendar, Filter, Search, Plus, Loader2, RefreshCw, Clock, CheckCircle, AlertCircle, Users, TrendingUp } from "lucide-react"
-import { HiTrash } from "react-icons/hi"
+import { 
+    HiViewGrid, 
+    HiCalendar, 
+    HiFilter, 
+    HiSearch, 
+    HiPlus, 
+    HiRefresh, 
+    HiClock, 
+    HiCheckCircle, 
+    HiExclamationCircle, 
+    HiUsers, 
+    HiTrendingUp,
+    HiTrash,
+    HiLoader
+} from "react-icons/hi"
 import { addAppointment, setAppointments, setLoading } from "../redux/reducer/appointmentsReducer"
 import { toast } from "react-hot-toast"
 import appointmentService from "../services/appointments"
@@ -559,90 +572,94 @@ export default function AppointmentsPage() {
             {/* Stats Cards */}
             <div className="grid-responsive">
                 <div className="stats-card">
-                    <div className="stats-card-header">
+                    <div className="flex items-center justify-between p-6">
+                        <div>
+                            <p className="text-sm font-medium text-secondary-600 mb-1">Today's Appointments</p>
+                            <p className="text-3xl font-bold text-primary-600">
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
+                            </p>
+                        </div>
                         <div className="stats-card-icon bg-primary-500">
-                            <Calendar className="w-6 h-6 text-white" />
+                            <HiCalendar className="w-6 h-6 text-white" />
                         </div>
-                        <div className="stats-card-label">Today</div>
-                        <div className="stats-card-value">
-                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
-                        </div>
-                        <div className="stats-card-subtitle">Today's Appointments</div>
                     </div>
                 </div>
 
                 <div className="stats-card">
-                    <div className="stats-card-header">
+                    <div className="flex items-center justify-between p-6">
+                        <div>
+                            <p className="text-sm font-medium text-secondary-600 mb-1">Confirmed</p>
+                            <p className="text-3xl font-bold text-success-600">
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
+                            </p>
+                        </div>
                         <div className="stats-card-icon bg-success-500">
-                            <CheckCircle className="w-6 h-6 text-white" />
+                            <HiCheckCircle className="w-6 h-6 text-white" />
                         </div>
-                        <div className="stats-card-label">Confirmed</div>
-                        <div className="stats-card-value">
-                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
-                        </div>
-                        <div className="stats-card-subtitle">Confirmed Appointments</div>
                     </div>
                 </div>
 
                 <div className="stats-card">
-                    <div className="stats-card-header">
+                    <div className="flex items-center justify-between p-6">
+                        <div>
+                            <p className="text-sm font-medium text-secondary-600 mb-1">In Progress</p>
+                            <p className="text-3xl font-bold text-warning-600">
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
+                            </p>
+                        </div>
                         <div className="stats-card-icon bg-warning-500">
-                            <Clock className="w-6 h-6 text-white" />
+                            <HiClock className="w-6 h-6 text-white" />
                         </div>
-                        <div className="stats-card-label">In Progress</div>
-                        <div className="stats-card-value">
-                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
-                        </div>
-                        <div className="stats-card-subtitle">In Progress</div>
                     </div>
                 </div>
 
                 <div className="stats-card">
-                    <div className="stats-card-header">
+                    <div className="flex items-center justify-between p-6">
+                        <div>
+                            <p className="text-sm font-medium text-secondary-600 mb-1">Completed</p>
+                            <p className="text-3xl font-bold text-info-600">
+                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
+                            </p>
+                        </div>
                         <div className="stats-card-icon bg-info-500">
-                            <TrendingUp className="w-6 h-6 text-white" />
+                            <HiTrendingUp className="w-6 h-6 text-white" />
                         </div>
-                        <div className="stats-card-label">Completed</div>
-                        <div className="stats-card-value">
-                            {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
-                        </div>
-                        <div className="stats-card-subtitle">Completed Today</div>
                     </div>
                 </div>
             </div>
 
             {/* Unified Search and Filters */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-gray-200">
+            <div className="card">
+                <div className="p-6 border-b border-secondary-200">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Search className="w-4 h-4 text-blue-600" />
-                            <h3 className="text-base font-semibold text-gray-800">Search & Filters</h3>
+                        <div className="flex items-center gap-3">
+                            <HiSearch className="w-5 h-5 text-primary-600" />
+                            <h3 className="text-lg font-semibold text-secondary-900">Search & Filters</h3>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             {/* View Toggle */}
-                            <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                            <div className="flex bg-secondary-100 rounded-xl p-1">
                                 <button
                                     onClick={() => setViewMode('calendar')}
-                                    className={`p-1.5 rounded-md transition-all duration-200 ${
+                                    className={`p-2 rounded-lg transition-all duration-200 ${
                                         viewMode === 'calendar' 
-                                            ? 'bg-blue-100 text-blue-600' 
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-primary-600 text-white shadow-soft' 
+                                            : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                                     }`}
                                     title="Calendar View"
                                 >
-                                    <Calendar className="w-3.5 h-3.5" />
+                                    <HiCalendar className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-1.5 rounded-md transition-all duration-200 ${
+                                    className={`p-2 rounded-lg transition-all duration-200 ${
                                         viewMode === 'grid' 
-                                            ? 'bg-blue-100 text-blue-600' 
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-primary-600 text-white shadow-soft' 
+                                            : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                                     }`}
                                     title="Grid View"
                                 >
-                                    <Grid3X3 className="w-3.5 h-3.5" />
+                                    <HiViewGrid className="w-4 h-4" />
                                 </button>
                             </div>
 
@@ -652,10 +669,10 @@ export default function AppointmentsPage() {
                                     fetchAppointments();
                                     fetchTechnicians();
                                 }}
-                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                className="p-2 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
                                 title="Refresh data"
                             >
-                                <RefreshCw className="w-3.5 h-3.5" />
+                                <HiRefresh className="w-4 h-4" />
                             </button>
                         </div>
                     </div>

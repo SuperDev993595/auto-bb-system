@@ -7,7 +7,7 @@
 
 /* Page Container */
 .page-container {
-  @apply min-h-screen bg-gradient-to-br from-secondary-50 to-secondary-100 p-6 space-y-8;
+  @apply min-h-screen bg-gradient-to-br from-secondary-50 via-white to-secondary-100 p-6 space-y-8;
 }
 
 /* Page Header */
@@ -39,7 +39,7 @@
 
 /* Standard Card */
 .card {
-  @apply bg-white rounded-2xl shadow-soft border border-secondary-200 overflow-hidden transition-all duration-300 hover:shadow-medium;
+  @apply bg-white rounded-2xl shadow-soft border border-secondary-200 overflow-hidden transition-all duration-300 hover:shadow-medium hover:border-primary-200;
 }
 
 .card-header {
@@ -56,7 +56,7 @@
 
 /* Stats Card */
 .stats-card {
-  @apply bg-white rounded-2xl shadow-soft hover:shadow-large transition-all duration-300 border border-secondary-200 overflow-hidden;
+  @apply bg-white rounded-2xl shadow-soft hover:shadow-large transition-all duration-300 border border-secondary-200 overflow-hidden hover:border-primary-200;
 }
 
 .stats-card-header {
@@ -286,7 +286,7 @@
 
 /* Table Container */
 .table-container {
-  @apply bg-white rounded-xl border border-secondary-200 overflow-hidden;
+  @apply bg-white rounded-2xl border border-secondary-200 overflow-hidden shadow-soft;
 }
 
 /* Table */
@@ -295,23 +295,23 @@
 }
 
 .table-header {
-  @apply bg-gradient-to-r from-secondary-50 to-secondary-100;
+  @apply bg-gradient-to-r from-secondary-50 via-secondary-100 to-secondary-50;
 }
 
 .table-header-cell {
-  @apply px-6 py-4 text-left text-xs font-medium text-secondary-700 uppercase tracking-wider;
+  @apply px-6 py-4 text-left text-xs font-semibold text-secondary-700 uppercase tracking-wider border-b border-secondary-200;
 }
 
 .table-body {
-  @apply divide-y divide-secondary-200;
+  @apply divide-y divide-secondary-100;
 }
 
 .table-row {
-  @apply hover:bg-secondary-50 transition-colors duration-200;
+  @apply hover:bg-gradient-to-r hover:from-primary-50/30 hover:to-secondary-50/50 transition-all duration-200 border-b border-secondary-100 last:border-b-0;
 }
 
 .table-cell {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-secondary-900;
+  @apply px-6 py-5 text-sm text-secondary-900;
 }
 
 /* ===== LOADING STATES ===== */

@@ -176,159 +176,190 @@ export default function ContactLogsPage() {
       {/* Stats Cards */}
       <div className="grid-responsive">
         <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Total Contacts</div>
-            <div className="stats-card-value">{communicationLogs.length}</div>
-          </div>
-          <div className="stats-card-icon bg-info-500">
-            <HiChatAlt className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Contacts</p>
+              <p className="text-3xl font-bold text-secondary-900">{communicationLogs.length}</p>
+            </div>
+            <div className="stats-card-icon bg-info-500">
+              <HiChatAlt className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
         
         <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Phone Calls</div>
-            <div className="stats-card-value text-success-600">
-              {communicationLogs.filter(log => log.type === 'phone').length}
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Phone Calls</p>
+              <p className="text-3xl font-bold text-success-600">
+                {communicationLogs.filter(log => log.type === 'phone').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-success-500">
-            <HiPhone className="w-6 h-6 text-white" />
+            <div className="stats-card-icon bg-success-500">
+              <HiPhone className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
         
         <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Emails</div>
-            <div className="stats-card-value text-info-600">
-              {communicationLogs.filter(log => log.type === 'email').length}
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Emails</p>
+              <p className="text-3xl font-bold text-info-600">
+                {communicationLogs.filter(log => log.type === 'email').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-info-500">
-            <HiMail className="w-6 h-6 text-white" />
+            <div className="stats-card-icon bg-info-500">
+              <HiMail className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
         
         <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">In-Person</div>
-            <div className="stats-card-value text-warning-600">
-              {communicationLogs.filter(log => log.type === 'in-person').length}
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">In-Person</p>
+              <p className="text-3xl font-bold text-warning-600">
+                {communicationLogs.filter(log => log.type === 'in-person').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-warning-500">
-            <HiUser className="w-6 h-6 text-white" />
+            <div className="stats-card-icon bg-warning-500">
+              <HiUser className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="card">
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 relative">
-            <HiSearch className="input-icon" />
-            <input
-              type="text"
-              placeholder="Search communications..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field-with-icon"
-            />
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex-1 relative">
+              <HiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search communications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+              />
+            </div>
+            
+            <div className="relative">
+              <HiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-4 h-4" />
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="pl-10 pr-8 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white min-w-[160px]"
+              >
+                <option value="all">All Types</option>
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="in-person">In-Person</option>
+                <option value="sms">SMS</option>
+              </select>
+            </div>
           </div>
-          
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="select-field"
-          >
-            <option value="all">All Types</option>
-            <option value="phone">Phone</option>
-            <option value="email">Email</option>
-            <option value="in-person">In-Person</option>
-            <option value="sms">SMS</option>
-          </select>
         </div>
       </div>
 
       {/* Communication Logs */}
-      <div className="table-container">
+      <div className="card">
         {loading ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>
             <p className="loading-text">Loading communication logs...</p>
           </div>
         ) : (
-            <div className="space-y-4">
-              {filteredLogs.map(log => (
-                <div key={log.id} className="card hover-lift">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full ${getTypeColor(log.type)}`}>
-                        {getTypeIcon(log.type)}
+          <div className="overflow-hidden">
+            <table className="table">
+              <thead className="table-header">
+                <tr>
+                  <th className="table-header-cell">Type</th>
+                  <th className="table-header-cell">Subject</th>
+                  <th className="table-header-cell">Customer</th>
+                  <th className="table-header-cell">Employee</th>
+                  <th className="table-header-cell">Date</th>
+                  <th className="table-header-cell">Direction</th>
+                  <th className="table-header-cell">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="table-body">
+                {filteredLogs.map(log => (
+                  <tr key={log.id} className="table-row">
+                    <td className="table-cell">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${getTypeColor(log.type)}`}>
+                          {getTypeIcon(log.type)}
+                        </div>
+                        <span className="text-sm font-medium text-secondary-900 capitalize">{log.type}</span>
                       </div>
+                    </td>
+                    <td className="table-cell">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold text-secondary-900">{log.subject || 'No Subject'}</h3>
-                          <div className="flex items-center gap-1">
-                            {log.direction === 'inbound' ? (
-                              <HiArrowDown className="w-4 h-4 text-success-600" />
-                            ) : (
-                              <HiArrowUp className="w-4 h-4 text-info-600" />
-                            )}
-                            <span className="text-xs text-secondary-500 capitalize">{log.direction}</span>
-                          </div>
-                        </div>
-                        <p className="text-secondary-700 text-sm mb-2">{log.content}</p>
-                        <div className="flex items-center gap-4 text-sm text-secondary-500">
-                          <span>Customer: <strong>{getCustomerName(log.customerId)}</strong></span>
-                          <span>Employee: <strong>{log.employeeName}</strong></span>
-                        </div>
+                        <div className="font-medium text-secondary-900">{log.subject || 'No Subject'}</div>
+                        <div className="text-sm text-secondary-600 truncate max-w-xs">{log.content}</div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => handleEditLog(log)}
-                        className="text-primary-600 hover:text-primary-800 transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => setDeleteLogId(log.id || (log as any)._id)}
-                        className="text-error-600 hover:text-error-800 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center text-sm text-secondary-500 pt-2 border-t border-secondary-100">
-                    <div className="flex items-center gap-4">
+                    </td>
+                    <td className="table-cell">
+                      <div className="font-medium text-secondary-900">{getCustomerName(log.customerId)}</div>
+                    </td>
+                    <td className="table-cell">
+                      <div className="font-medium text-secondary-900">{log.employeeName}</div>
+                    </td>
+                    <td className="table-cell">
+                      <div className="text-sm text-secondary-900">{log.date}</div>
+                    </td>
+                    <td className="table-cell">
                       <div className="flex items-center gap-1">
-                        <HiCalendar className="w-4 h-4" />
-                        <span>{log.date}</span>
+                        {log.direction === 'inbound' ? (
+                          <HiArrowDown className="w-4 h-4 text-success-600" />
+                        ) : (
+                          <HiArrowUp className="w-4 h-4 text-info-600" />
+                        )}
+                        <span className="text-sm text-secondary-700 capitalize">{log.direction}</span>
                       </div>
-                    </div>
-                    <button 
-                      onClick={() => setSelectedLog(log)}
-                      className="text-primary-600 hover:text-primary-800 flex items-center gap-1 transition-colors"
-                    >
-                      <HiEye className="w-4 h-4" />
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
-              
-              {filteredLogs.length === 0 && (
-                <div className="empty-state">
-                  <HiChatAlt className="empty-state-icon" />
-                  <h3 className="empty-state-title">No communication logs found</h3>
-                  <p className="empty-state-description">Try adjusting your filters or log a new communication.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setSelectedLog(log)}
+                          className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                          title="View Details"
+                        >
+                          <HiEye className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleEditLog(log)}
+                          className="p-2 text-secondary-600 hover:text-secondary-800 hover:bg-secondary-50 rounded-lg transition-all duration-200"
+                          title="Edit"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => setDeleteLogId(log.id || (log as any)._id)}
+                          className="p-2 text-error-600 hover:text-error-800 hover:bg-error-50 rounded-lg transition-all duration-200"
+                          title="Delete"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {filteredLogs.length === 0 && (
+              <div className="empty-state">
+                <HiChatAlt className="empty-state-icon" />
+                <h3 className="empty-state-title">No communication logs found</h3>
+                <p className="empty-state-description">Try adjusting your filters or log a new communication.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       </div>
 
     {/* Modal for viewing details */}
