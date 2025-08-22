@@ -256,44 +256,44 @@ export default function YellowPagesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-800';
-      case 'contacted': return 'bg-yellow-100 text-yellow-800';
-      case 'interested': return 'bg-green-100 text-green-800';
-      case 'not_interested': return 'bg-red-100 text-red-800';
-      case 'converted': return 'bg-purple-100 text-purple-800';
-      case 'lost': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'new': return 'status-info';
+      case 'contacted': return 'status-warning';
+      case 'interested': return 'status-success';
+      case 'not_interested': return 'status-error';
+      case 'converted': return 'status-primary';
+      case 'lost': return 'status-secondary';
+      default: return 'status-secondary';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'urgent': return 'bg-error-100 text-error-800';
+      case 'high': return 'bg-warning-100 text-warning-800';
+      case 'medium': return 'bg-primary-100 text-primary-800';
+      case 'low': return 'bg-success-100 text-success-800';
+      default: return 'bg-secondary-100 text-secondary-800';
     }
   };
 
   const getMethodColor = (method: string) => {
     switch (method) {
-      case 'phone': return 'bg-blue-100 text-blue-800';
-      case 'email': return 'bg-green-100 text-green-800';
-      case 'in_person': return 'bg-purple-100 text-purple-800';
-      case 'social_media': return 'bg-pink-100 text-pink-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'phone': return 'bg-info-100 text-info-800';
+      case 'email': return 'bg-success-100 text-success-800';
+      case 'in_person': return 'bg-primary-100 text-primary-800';
+      case 'social_media': return 'bg-warning-100 text-warning-800';
+      default: return 'bg-secondary-100 text-secondary-800';
     }
   };
 
   const getOutcomeColor = (outcome: string) => {
     switch (outcome) {
-      case 'converted': return 'bg-green-100 text-green-800';
-      case 'interested': return 'bg-blue-100 text-blue-800';
-      case 'follow_up_needed': return 'bg-yellow-100 text-yellow-800';
-      case 'not_interested': return 'bg-red-100 text-red-800';
-      case 'spoke_to_decision_maker': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'converted': return 'bg-success-100 text-success-800';
+      case 'interested': return 'bg-info-100 text-info-800';
+      case 'follow_up_needed': return 'bg-warning-100 text-warning-800';
+      case 'not_interested': return 'bg-error-100 text-error-800';
+      case 'spoke_to_decision_maker': return 'bg-primary-100 text-primary-800';
+      default: return 'bg-secondary-100 text-secondary-800';
     }
   };
 
@@ -303,65 +303,67 @@ export default function YellowPagesPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <PageTitle title="YellowPages Integration" icon={HiSearch} />
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            Welcome, <span className="font-medium">{currentUser.name}</span>
-            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-            </span>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="flex justify-between items-center">
+          <PageTitle title="YellowPages Integration" icon={HiSearch} />
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-secondary-600">
+              Welcome, <span className="font-medium text-secondary-900">{currentUser.name}</span>
+              <span className="ml-2 px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
+                {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+              </span>
+            </div>
+            <button
+              onClick={() => authService.logout()}
+              className="px-3 py-1 text-sm text-error-600 hover:text-error-800 hover:bg-error-50 rounded transition-colors"
+            >
+              Logout
+            </button>
           </div>
-          <button
-            onClick={() => authService.logout()}
-            className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-          >
-            Logout
-          </button>
         </div>
       </div>
       
       {/* Search Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Search YellowPages</h3>
+      <div className="card">
+        <h3 className="page-subtitle mb-4">Search YellowPages</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
+            <label className="form-label">Keywords</label>
             <input
               type="text"
               value={searchParams.keywords}
               onChange={(e) => setSearchParams({ ...searchParams, keywords: e.target.value })}
               placeholder="e.g., auto repair, mechanic"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label className="form-label">Location</label>
             <input
               type="text"
               value={searchParams.location}
               onChange={(e) => setSearchParams({ ...searchParams, location: e.target.value })}
               placeholder="e.g., New York, NY"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Radius (miles)</label>
+            <label className="form-label">Radius (miles)</label>
             <select
               value={searchParams.radius}
               onChange={(e) => setSearchParams({ ...searchParams, radius: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="select-field"
             >
               <option value={5}>5 miles</option>
               <option value={10}>10 miles</option>
@@ -371,13 +373,13 @@ export default function YellowPagesPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label className="form-label">Category</label>
             <input
               type="text"
               value={searchParams.category}
               onChange={(e) => setSearchParams({ ...searchParams, category: e.target.value })}
               placeholder="e.g., Automotive"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             />
           </div>
         </div>
@@ -385,7 +387,7 @@ export default function YellowPagesPage() {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary"
           >
             <HiSearch className="h-5 w-5 mr-2" />
             Search YellowPages
@@ -396,7 +398,7 @@ export default function YellowPagesPage() {
               setFilters({ status: '', priority: '', assignedTo: '', search: '' });
               setPagination({ ...pagination, currentPage: 1 });
             }}
-            className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="btn-secondary"
           >
             <HiRefresh className="h-5 w-5 mr-2" />
             Clear All
@@ -405,13 +407,13 @@ export default function YellowPagesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Filters</h3>
+      <div className="card">
+        <h3 className="page-subtitle mb-4">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="select-field"
           >
             <option value="">All Status</option>
             <option value="new">New</option>
@@ -425,7 +427,7 @@ export default function YellowPagesPage() {
           <select
             value={filters.priority}
             onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="select-field"
           >
             <option value="">All Priorities</option>
             <option value="urgent">Urgent</option>
@@ -439,11 +441,11 @@ export default function YellowPagesPage() {
             placeholder="Search businesses..."
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input-field"
           />
 
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-secondary-600">
               Total: {pagination.totalRecords}
             </span>
           </div>
@@ -451,32 +453,32 @@ export default function YellowPagesPage() {
       </div>
 
       {/* Records List */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="card">
+        <div className="table-container">
+          <table className="table">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lead Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quality Score</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="table-header-cell">Business</th>
+                <th className="table-header-cell">Contact</th>
+                <th className="table-header-cell">Location</th>
+                <th className="table-header-cell">Lead Status</th>
+                <th className="table-header-cell">Quality Score</th>
+                <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={6} className="table-cell text-center text-secondary-500">
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <div className="loading-spinner"></div>
                       <span className="ml-2">Loading records...</span>
                     </div>
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">No records found</td>
+                  <td colSpan={6} className="table-cell text-center text-secondary-500">No records found</td>
                 </tr>
               ) : (
                 records.map((record) => (

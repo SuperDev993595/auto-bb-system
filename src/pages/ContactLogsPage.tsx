@@ -60,11 +60,11 @@ export default function ContactLogsPage() {
 
   const getTypeColor = (type: CommunicationLog['type']) => {
     switch (type) {
-      case 'phone': return 'bg-green-100 text-green-800'
-      case 'email': return 'bg-blue-100 text-blue-800'
-      case 'in-person': return 'bg-purple-100 text-purple-800'
-      case 'sms': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'phone': return 'bg-success-100 text-success-800'
+      case 'email': return 'bg-info-100 text-info-800'
+      case 'in-person': return 'bg-warning-100 text-warning-800'
+      case 'sms': return 'bg-primary-100 text-primary-800'
+      default: return 'bg-secondary-100 text-secondary-800'
     }
   }
 
@@ -154,93 +154,91 @@ export default function ContactLogsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <PageTitle title="Customer Communication Logs" />
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Log Communication
-        </button>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Customer Communication Logs" />
+          </div>
+          <div className="page-header-actions">
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary-outline"
+            >
+              <HiPlus className="w-4 h-4" />
+              Log Communication
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Contacts</p>
-              <p className="text-2xl font-bold text-gray-900">{communicationLogs.length}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiChatAlt className="w-6 h-6 text-blue-600" />
-            </div>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Total Contacts</div>
+            <div className="stats-card-value">{communicationLogs.length}</div>
+          </div>
+          <div className="stats-card-icon bg-info-500">
+            <HiChatAlt className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Phone Calls</p>
-              <p className="text-2xl font-bold text-green-600">
-                {communicationLogs.filter(log => log.type === 'phone').length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Phone Calls</div>
+            <div className="stats-card-value text-success-600">
+              {communicationLogs.filter(log => log.type === 'phone').length}
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiPhone className="w-6 h-6 text-green-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-success-500">
+            <HiPhone className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Emails</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {communicationLogs.filter(log => log.type === 'email').length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Emails</div>
+            <div className="stats-card-value text-info-600">
+              {communicationLogs.filter(log => log.type === 'email').length}
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiMail className="w-6 h-6 text-blue-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-info-500">
+            <HiMail className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">In-Person</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {communicationLogs.filter(log => log.type === 'in-person').length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">In-Person</div>
+            <div className="stats-card-value text-warning-600">
+              {communicationLogs.filter(log => log.type === 'in-person').length}
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <HiUser className="w-6 h-6 text-purple-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-warning-500">
+            <HiUser className="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="card">
         <div className="flex gap-4 items-center">
           <div className="flex-1 relative">
-            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <HiSearch className="input-icon" />
             <input
               type="text"
               placeholder="Search communications..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+              className="input-field-with-icon"
             />
           </div>
           
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="select-field"
           >
             <option value="all">All Types</option>
             <option value="phone">Phone</option>
@@ -252,17 +250,16 @@ export default function ContactLogsPage() {
       </div>
 
       {/* Communication Logs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6">
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">Loading communication logs...</p>
-            </div>
-          ) : (
+      <div className="table-container">
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading communication logs...</p>
+          </div>
+        ) : (
             <div className="space-y-4">
               {filteredLogs.map(log => (
-                <div key={log.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={log.id} className="card hover-lift">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-start gap-3">
                       <div className={`p-2 rounded-full ${getTypeColor(log.type)}`}>
@@ -270,40 +267,40 @@ export default function ContactLogsPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold text-gray-800">{log.subject || 'No Subject'}</h3>
+                          <h3 className="text-lg font-semibold text-secondary-900">{log.subject || 'No Subject'}</h3>
                           <div className="flex items-center gap-1">
                             {log.direction === 'inbound' ? (
-                              <HiArrowDown className="w-4 h-4 text-green-600" />
+                              <HiArrowDown className="w-4 h-4 text-success-600" />
                             ) : (
-                              <HiArrowUp className="w-4 h-4 text-blue-600" />
+                              <HiArrowUp className="w-4 h-4 text-info-600" />
                             )}
-                            <span className="text-xs text-gray-500 capitalize">{log.direction}</span>
+                            <span className="text-xs text-secondary-500 capitalize">{log.direction}</span>
                           </div>
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">{log.content}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <p className="text-secondary-700 text-sm mb-2">{log.content}</p>
+                        <div className="flex items-center gap-4 text-sm text-secondary-500">
                           <span>Customer: <strong>{getCustomerName(log.customerId)}</strong></span>
                           <span>Employee: <strong>{log.employeeName}</strong></span>
                         </div>
                       </div>
                     </div>
-                                         <div className="flex items-center gap-2">
-                       <button 
-                         onClick={() => handleEditLog(log)}
-                         className="text-blue-600 hover:text-blue-800"
-                       >
-                         Edit
-                       </button>
-                                            <button 
-                       onClick={() => setDeleteLogId(log.id || (log as any)._id)}
-                       className="text-red-600 hover:text-red-800"
-                     >
-                       Delete
-                     </button>
-                     </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleEditLog(log)}
+                        className="text-primary-600 hover:text-primary-800 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => setDeleteLogId(log.id || (log as any)._id)}
+                        className="text-error-600 hover:text-error-800 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="flex justify-between items-center text-sm text-gray-500 pt-2 border-t border-gray-100">
+                  <div className="flex justify-between items-center text-sm text-secondary-500 pt-2 border-t border-secondary-100">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
                         <HiCalendar className="w-4 h-4" />
@@ -312,7 +309,7 @@ export default function ContactLogsPage() {
                     </div>
                     <button 
                       onClick={() => setSelectedLog(log)}
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      className="text-primary-600 hover:text-primary-800 flex items-center gap-1 transition-colors"
                     >
                       <HiEye className="w-4 h-4" />
                       View Details
@@ -322,10 +319,10 @@ export default function ContactLogsPage() {
               ))}
               
               {filteredLogs.length === 0 && (
-                <div className="text-center py-12">
-                  <HiChatAlt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-500 mb-2">No communication logs found</h3>
-                  <p className="text-gray-400">Try adjusting your filters or log a new communication.</p>
+                <div className="empty-state">
+                  <HiChatAlt className="empty-state-icon" />
+                  <h3 className="empty-state-title">No communication logs found</h3>
+                  <p className="empty-state-description">Try adjusting your filters or log a new communication.</p>
                 </div>
               )}
             </div>
@@ -335,49 +332,49 @@ export default function ContactLogsPage() {
 
       {/* Modal for viewing details */}
       {selectedLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">Communication Details</h3>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Communication Details</h3>
               <button 
                 onClick={() => setSelectedLog(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="modal-close"
               >
                 ×
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="modal-content">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Customer</label>
-                  <p className="mt-1 text-sm text-gray-900">{getCustomerName(selectedLog.customerId)}</p>
+                  <label className="form-label">Customer</label>
+                  <p className="form-value">{getCustomerName(selectedLog.customerId)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Employee</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedLog.employeeName}</p>
+                  <label className="form-label">Employee</label>
+                  <p className="form-value">{selectedLog.employeeName}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedLog.date}</p>
+                  <label className="form-label">Date</label>
+                  <p className="form-value">{selectedLog.date}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <label className="form-label">Type</label>
                   <div className="flex items-center gap-2 mt-1">
                     {getTypeIcon(selectedLog.type)}
-                    <span className="text-sm text-gray-900 capitalize">{selectedLog.type}</span>
+                    <span className="text-sm text-secondary-900 capitalize">{selectedLog.type}</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Subject</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedLog.subject || 'No Subject'}</p>
+                <label className="form-label">Subject</label>
+                <p className="form-value">{selectedLog.subject || 'No Subject'}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Content</label>
-                <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded">{selectedLog.content}</p>
+                <label className="form-label">Content</label>
+                <p className="form-value bg-secondary-50 p-3 rounded">{selectedLog.content}</p>
               </div>
             </div>
           </div>
@@ -408,23 +405,27 @@ export default function ContactLogsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteLogId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this communication log? This action cannot be undone.</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteLogId(null)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteLog(deleteLogId)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Delete
-              </button>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Confirm Delete</h3>
+            </div>
+            <div className="modal-content">
+              <p className="text-secondary-600 mb-6">Are you sure you want to delete this communication log? This action cannot be undone.</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteLogId(null)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteLog(deleteLogId)}
+                  className="btn-error"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

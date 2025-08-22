@@ -190,88 +190,85 @@ export default function InvoicesPage() {
   const renderInvoices = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Invoices</h2>
-          <p className="text-gray-600">Manage customer invoices and payments</p>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={() => dispatch(markAsOverdue())}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-          >
-            <HiRefresh className="w-4 h-4" />
-            Update Overdue
-          </button>
-          <button 
-            onClick={() => setShowAddInvoiceModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-          >
-            <HiPlus className="w-4 h-4" />
-            Create Invoice
-          </button>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <h2 className="page-title">Invoices</h2>
+            <p className="page-subtitle">Manage customer invoices and payments</p>
+          </div>
+          <div className="page-header-actions">
+            <button 
+              onClick={() => dispatch(markAsOverdue())}
+              className="btn-secondary"
+            >
+              <HiRefresh className="w-4 h-4" />
+              Update Overdue
+            </button>
+            <button 
+              onClick={() => setShowAddInvoiceModal(true)}
+              className="btn-primary-outline"
+            >
+              <HiPlus className="w-4 h-4" />
+              Create Invoice
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">{totalInvoices}</p>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-primary-500">
+              <HiDocumentText className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiDocumentText className="w-6 h-6 text-blue-600" />
-            </div>
+            <div className="stats-card-label">Total</div>
+            <div className="stats-card-value">{totalInvoices}</div>
+            <div className="stats-card-subtitle">Invoices</div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Paid</p>
-              <p className="text-2xl font-bold text-green-600">{paidInvoices}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-success-500">
+              <HiCheck className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiCheck className="w-6 h-6 text-green-600" />
-            </div>
+            <div className="stats-card-label">Paid</div>
+            <div className="stats-card-value">{paidInvoices}</div>
+            <div className="stats-card-subtitle">Invoices</div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-red-600">{overdueInvoices}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-error-500">
+              <HiExclamation className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <HiExclamation className="w-6 h-6 text-red-600" />
-            </div>
+            <div className="stats-card-label">Overdue</div>
+            <div className="stats-card-value">{overdueInvoices}</div>
+            <div className="stats-card-subtitle">Invoices</div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-blue-600">${totalRevenue.toLocaleString()}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-info-500">
+              <HiCurrencyDollar className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiCurrencyDollar className="w-6 h-6 text-blue-600" />
-            </div>
+            <div className="stats-card-label">Total Revenue</div>
+            <div className="stats-card-value">${totalRevenue.toLocaleString()}</div>
+            <div className="stats-card-subtitle">Collected</div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Outstanding</p>
-              <p className="text-2xl font-bold text-yellow-600">${outstandingAmount.toLocaleString()}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-warning-500">
+              <HiClock className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <HiClock className="w-6 h-6 text-yellow-600" />
-            </div>
+            <div className="stats-card-label">Outstanding</div>
+            <div className="stats-card-value">${outstandingAmount.toLocaleString()}</div>
+            <div className="stats-card-subtitle">Pending</div>
           </div>
         </div>
       </div>
@@ -760,7 +757,7 @@ export default function InvoicesPage() {
   )
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="page-container">
       <PageTitle title="Invoices & Billing" />
 
       {/* Tab Navigation */}

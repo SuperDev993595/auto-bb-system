@@ -142,128 +142,127 @@ export default function MarketingDashboard() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-success-500" />;
       case 'scheduled':
-        return <Clock className="w-5 h-5 text-blue-500" />;
+        return <Clock className="w-5 h-5 text-info-500" />;
       case 'draft':
-        return <Edit className="w-5 h-5 text-gray-500" />;
+        return <Edit className="w-5 h-5 text-secondary-500" />;
       case 'failed':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <XCircle className="w-5 h-5 text-error-500" />;
       default:
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+        return <AlertTriangle className="w-5 h-5 text-warning-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'sent':
-        return 'bg-green-100 text-green-800';
+        return 'status-active';
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
+        return 'status-pending';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'status-inactive';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'status-inactive';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'status-pending';
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'email':
-        return <Mail className="w-5 h-5 text-blue-500" />;
+        return <Mail className="w-5 h-5 text-info-500" />;
       case 'sms':
-        return <Phone className="w-5 h-5 text-green-500" />;
+        return <Phone className="w-5 h-5 text-success-500" />;
       case 'mailchimp':
-        return <Users className="w-5 h-5 text-purple-500" />;
+        return <Users className="w-5 h-5 text-primary-500" />;
       default:
-        return <Mail className="w-5 h-5 text-gray-500" />;
+        return <Mail className="w-5 h-5 text-secondary-500" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading marketing data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <PageTitle title="Marketing Dashboard" />
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Marketing Dashboard" />
+          </div>
+        </div>
+      </div>
       
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Mail className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalCampaigns || 0}</p>
-            </div>
+      <div className="grid-responsive mb-8">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Total Campaigns</div>
+            <div className="stats-card-value">{stats?.totalCampaigns || 0}</div>
+          </div>
+          <div className="stats-card-icon bg-info-500">
+            <Mail className="w-6 h-6 text-white" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Users className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Recipients</p>
-              <p className="text-2xl font-bold text-gray-900">{(stats?.totalRecipients || 0).toLocaleString()}</p>
-            </div>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Total Recipients</div>
+            <div className="stats-card-value">{(stats?.totalRecipients || 0).toLocaleString()}</div>
+          </div>
+          <div className="stats-card-icon bg-success-500">
+            <Users className="w-6 h-6 text-white" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Delivery Rate</div>
+            <div className="stats-card-value">
+              {stats?.totalRecipients && stats.totalRecipients > 0 
+                ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) 
+                : '0.0'}%
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Delivery Rate</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats?.totalRecipients && stats.totalRecipients > 0 
-                  ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) 
-                  : '0.0'}%
-              </p>
-            </div>
+          </div>
+          <div className="stats-card-icon bg-primary-500">
+            <BarChart3 className="w-6 h-6 text-white" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <Eye className="w-6 h-6 text-yellow-600" />
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Open Rate</div>
+            <div className="stats-card-value">
+              {stats?.totalSent && stats.totalSent > 0 
+                ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) 
+                : '0.0'}%
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Open Rate</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats?.totalSent && stats.totalSent > 0 
-                  ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) 
-                  : '0.0'}%
-              </p>
-            </div>
+          </div>
+          <div className="stats-card-icon bg-warning-500">
+            <Eye className="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+      <div className="card mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="form-label">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="select-field"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -274,11 +273,11 @@ export default function MarketingDashboard() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <label className="form-label">Type</label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="select-field"
             >
               <option value="all">All Types</option>
               <option value="email">Email</option>
@@ -288,13 +287,13 @@ export default function MarketingDashboard() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label className="form-label">Search</label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search campaigns..."
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="input-field"
             />
           </div>
           
@@ -305,7 +304,7 @@ export default function MarketingDashboard() {
                 setTypeFilter('all');
                 setSearchTerm('');
               }}
-              className="w-full px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200"
+              className="btn-secondary w-full"
             >
               Clear Filters
             </button>
@@ -317,46 +316,52 @@ export default function MarketingDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+          className="card hover-lift text-left"
         >
-          <Mail className="w-6 h-6 text-blue-600 mr-3" />
-          <div className="text-left">
-            <p className="font-medium text-gray-900">Create Email Campaign</p>
-            <p className="text-sm text-gray-600">Send to your customer list</p>
+          <div className="flex items-center">
+            <Mail className="w-6 h-6 text-info-600 mr-3" />
+            <div>
+              <p className="font-medium text-secondary-900">Create Email Campaign</p>
+              <p className="text-sm text-secondary-600">Send to your customer list</p>
+            </div>
           </div>
         </button>
 
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
+          className="card hover-lift text-left"
         >
-          <Phone className="w-6 h-6 text-green-600 mr-3" />
-          <div className="text-left">
-            <p className="font-medium text-gray-900">Send SMS</p>
-            <p className="text-sm text-gray-600">Quick text message</p>
+          <div className="flex items-center">
+            <Phone className="w-6 h-6 text-success-600 mr-3" />
+            <div>
+              <p className="font-medium text-secondary-900">Send SMS</p>
+              <p className="text-sm text-secondary-600">Quick text message</p>
+            </div>
           </div>
         </button>
 
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
+          className="card hover-lift text-left"
         >
-          <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <div className="text-left">
-            <p className="font-medium text-gray-900">Create Template</p>
-            <p className="text-sm text-gray-600">Design reusable templates</p>
+          <div className="flex items-center">
+            <FileText className="w-6 h-6 text-primary-600 mr-3" />
+            <div>
+              <p className="font-medium text-secondary-900">Create Template</p>
+              <p className="text-sm text-secondary-600">Design reusable templates</p>
+            </div>
           </div>
         </button>
       </div>
 
       {/* Campaigns Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+      <div className="table-container">
+        <div className="p-6 border-b border-secondary-200">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Recent Campaigns</h2>
+            <h2 className="text-lg font-medium text-secondary-900">Recent Campaigns</h2>
             <button 
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="btn-primary"
             >
               <Plus className="h-5 w-5 mr-2" />
               Create Campaign
@@ -365,67 +370,67 @@ export default function MarketingDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="table">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recipients</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Performance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="table-header-cell">Campaign</th>
+                <th className="table-header-cell">Type</th>
+                <th className="table-header-cell">Status</th>
+                <th className="table-header-cell">Recipients</th>
+                <th className="table-header-cell">Performance</th>
+                <th className="table-header-cell">Created</th>
+                <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-secondary-500">
                     No campaigns found. Create your first campaign to get started.
                   </td>
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={campaign._id} className="table-row">
+                    <td className="table-cell">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
-                        <div className="text-sm text-gray-500">{campaign.type}</div>
+                        <div className="text-sm font-medium text-secondary-900">{campaign.name}</div>
+                        <div className="text-sm text-secondary-500">{campaign.type}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell">
                       <div className="flex items-center">
                         {getTypeIcon(campaign.type)}
-                        <span className="ml-2 text-sm text-gray-900 capitalize">{campaign.type}</span>
+                        <span className="ml-2 text-sm text-secondary-900 capitalize">{campaign.type}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell">
                       <div className="flex items-center">
                         {getStatusIcon(campaign.status)}
-                        <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(campaign.status)}`}>
+                        <span className={`ml-2 status-badge ${getStatusColor(campaign.status)}`}>
                           {campaign.status}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="table-cell text-sm text-secondary-900">
                       {campaign.recipientCount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="table-cell">
+                      <div className="text-sm text-secondary-900">
                         {campaign.sentCount} sent
                         {campaign.openedCount > 0 && ` • ${campaign.openedCount} opened`}
                         {campaign.clickedCount > 0 && ` • ${campaign.clickedCount} clicked`}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="table-cell text-sm text-secondary-500">
                       {new Date(campaign.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="table-cell text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleStatusUpdate(campaign._id, 'sent')}
                           disabled={campaign.status === 'sent'}
-                          className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
+                          className="text-info-600 hover:text-info-900 disabled:text-secondary-400 transition-colors"
                         >
                           <Send className="w-4 h-4" />
                         </button>
@@ -434,7 +439,7 @@ export default function MarketingDashboard() {
                             // TODO: Implement view campaign details
                             toast.success('View campaign details - Coming soon!');
                           }}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -444,14 +449,14 @@ export default function MarketingDashboard() {
                             // TODO: Implement edit campaign
                             toast.success('Edit campaign - Coming soon!');
                           }}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
                           title="Edit Campaign"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(campaign)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-error-600 hover:text-error-900 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

@@ -731,100 +731,106 @@ export default function ReportsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+    <div className="page-container">
       {/* Header with title and controls */}
-      <div className="flex justify-between items-center">
-        <div>
-          <PageTitle title="Reports & Analytics" />
-          <p className="text-gray-600 mt-1">Comprehensive business insights and performance metrics</p>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Date Range Selector */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Date Range:</label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            >
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-              <option value="1y">Last year</option>
-              <option value="custom">Custom range</option>
-            </select>
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Reports & Analytics" />
+            <p className="page-subtitle">Comprehensive business insights and performance metrics</p>
           </div>
-          
-          {/* Custom Date Range Inputs */}
-          {dateRange === 'custom' && (
+          <div className="page-header-actions">
+            {/* Date Range Selector */}
             <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                placeholder="Start Date"
-              />
-              <span className="text-gray-500">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="border border-gray-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                placeholder="End Date"
-              />
+              <label className="text-sm font-medium text-secondary-700">Date Range:</label>
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value as DateRange)}
+                className="select-field"
+              >
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="1y">Last year</option>
+                <option value="custom">Custom range</option>
+              </select>
             </div>
-          )}
-          
-          {/* Export Button */}
-          <button 
-            onClick={handleExport}
-            disabled={isExporting}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 hover:shadow-md"
-            title="Export current report data"
-          >
-            <Download className="w-4 h-4" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </button>
+            
+            {/* Custom Date Range Inputs */}
+            {dateRange === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="input-field"
+                  placeholder="Start Date"
+                />
+                <span className="text-secondary-500">to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="input-field"
+                  placeholder="End Date"
+                />
+              </div>
+            )}
+            
+            {/* Export Button */}
+            <button 
+              onClick={handleExport}
+              disabled={isExporting}
+              className="btn-primary"
+              title="Export current report data"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting...' : 'Export'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Quick Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-xl font-bold text-green-600">${metrics.revenue.total.toLocaleString()}</p>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-success-500">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="stats-card-label">Total Revenue</div>
+            <div className="stats-card-value">${metrics.revenue.total.toLocaleString()}</div>
+            <div className="stats-card-subtitle">This Period</div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Customers</p>
-              <p className="text-xl font-bold text-blue-600">{metrics.customers.active}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-primary-500">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <Users className="w-6 h-6 text-blue-600" />
+            <div className="stats-card-label">Active Customers</div>
+            <div className="stats-card-value">{metrics.customers.active}</div>
+            <div className="stats-card-subtitle">This Period</div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Services Completed</p>
-              <p className="text-xl font-bold text-purple-600">{metrics.services.completed}</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-info-500">
+              <Cog className="w-6 h-6 text-white" />
             </div>
-            <Cog className="w-6 h-6 text-purple-600" />
+            <div className="stats-card-label">Services Completed</div>
+            <div className="stats-card-value">{metrics.services.completed}</div>
+            <div className="stats-card-subtitle">This Period</div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Completion Rate</p>
-              <p className="text-xl font-bold text-yellow-600">{metrics.services.completionRate.toFixed(1)}%</p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-icon bg-warning-500">
+              <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <TrendingUp className="w-6 h-6 text-yellow-600" />
+            <div className="stats-card-label">Completion Rate</div>
+            <div className="stats-card-value">{metrics.services.completionRate.toFixed(1)}%</div>
+            <div className="stats-card-subtitle">Service Success</div>
           </div>
         </div>
       </div>

@@ -178,21 +178,21 @@ export default function PromotionsPage() {
 
   const getStatusColor = (status: Promotion['status']) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'scheduled': return 'bg-blue-100 text-blue-800'
-      case 'ended': return 'bg-gray-100 text-gray-800'
-      case 'paused': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'active': return 'status-active'
+      case 'scheduled': return 'status-pending'
+      case 'ended': return 'status-inactive'
+      case 'paused': return 'status-pending'
+      default: return 'status-inactive'
     }
   }
 
   const getTypeColor = (type: Promotion['type']) => {
     switch (type) {
-      case 'discount': return 'bg-purple-100 text-purple-800'
-      case 'service': return 'bg-blue-100 text-blue-800'
-      case 'referral': return 'bg-green-100 text-green-800'
-      case 'seasonal': return 'bg-orange-100 text-orange-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'discount': return 'bg-primary-100 text-primary-800'
+      case 'service': return 'bg-info-100 text-info-800'
+      case 'referral': return 'bg-success-100 text-success-800'
+      case 'seasonal': return 'bg-warning-100 text-warning-800'
+      default: return 'bg-secondary-100 text-secondary-800'
     }
   }
 
@@ -207,105 +207,103 @@ export default function PromotionsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-          <p className="text-gray-600">Loading promotions...</p>
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading promotions...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <PageTitle title="Marketing & Promotions" />
-        <button 
-          onClick={handleAddPromotion}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create Promotion
-        </button>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-header-text">
+            <PageTitle title="Marketing & Promotions" />
+          </div>
+          <div className="page-header-actions">
+            <button 
+              onClick={handleAddPromotion}
+              className="btn-primary-outline"
+            >
+              <HiPlus className="w-4 h-4" />
+              Create Promotion
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Promotions</p>
-              <p className="text-2xl font-bold text-green-600">
-                {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
-              </p>
+      <div className="grid-responsive">
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Active Promotions</div>
+            <div className="stats-card-value text-success-600">
+              {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <HiSpeakerphone className="w-6 h-6 text-green-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-success-500">
+            <HiSpeakerphone className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Usage</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Total Usage</div>
+            <div className="stats-card-value text-info-600">
+              {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <HiUsers className="w-6 h-6 text-blue-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-info-500">
+            <HiUsers className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Scheduled</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Scheduled</div>
+            <div className="stats-card-value text-warning-600">
+              {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <HiCalendar className="w-6 h-6 text-purple-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-warning-500">
+            <HiCalendar className="w-6 h-6 text-white" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Avg Savings</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                ${Math.round(stats?.overview?.avgDiscountValue || 0)}
-              </p>
+        <div className="stats-card">
+          <div className="stats-card-header">
+            <div className="stats-card-label">Avg Savings</div>
+            <div className="stats-card-value text-primary-600">
+              ${Math.round(stats?.overview?.avgDiscountValue || 0)}
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <HiCurrencyDollar className="w-6 h-6 text-yellow-600" />
-            </div>
+          </div>
+          <div className="stats-card-icon bg-primary-500">
+            <HiCurrencyDollar className="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="card">
         <div className="flex gap-4 items-center">
           <div className="flex-1 relative">
-            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <HiSearch className="input-icon" />
             <input
               type="text"
               placeholder="Search promotions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+              className="input-field-with-icon"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="select-field"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -317,7 +315,7 @@ export default function PromotionsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="select-field"
           >
             <option value="all">All Types</option>
             <option value="discount">Discount</option>
@@ -329,17 +327,17 @@ export default function PromotionsPage() {
       </div>
 
       {/* Promotions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid-responsive">
         {filteredPromotions.map(promotion => (
-          <div key={promotion._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={promotion._id} className="card">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">{promotion.title}</h3>
+                <h3 className="text-lg font-semibold text-secondary-900">{promotion.title}</h3>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(promotion.type)}`}>
+                  <span className={`status-badge ${getTypeColor(promotion.type)}`}>
                     {promotion.type}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
+                  <span className={`status-badge ${getStatusColor(promotion.status)}`}>
                     {promotion.status}
                   </span>
                 </div>
@@ -347,14 +345,14 @@ export default function PromotionsPage() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => handleEditPromotion(promotion)}
-                  className="p-2 text-gray-400 hover:text-blue-600"
+                  className="p-2 text-secondary-400 hover:text-primary-600 transition-colors"
                   title="Edit promotion"
                 >
                   <HiPencil className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => handleDeleteClick(promotion)}
-                  className="p-2 text-gray-400 hover:text-red-600"
+                  className="p-2 text-secondary-400 hover:text-error-600 transition-colors"
                   title="Delete promotion"
                 >
                   <HiTrash className="w-4 h-4" />
@@ -362,7 +360,7 @@ export default function PromotionsPage() {
                 {promotion.status === 'active' ? (
                   <button 
                     onClick={() => handleStatusUpdate(promotion._id, 'paused')}
-                    className="p-2 text-gray-400 hover:text-yellow-600"
+                    className="p-2 text-secondary-400 hover:text-warning-600 transition-colors"
                     title="Pause promotion"
                   >
                     <HiPause className="w-4 h-4" />
@@ -370,7 +368,7 @@ export default function PromotionsPage() {
                 ) : promotion.status === 'paused' ? (
                   <button 
                     onClick={() => handleStatusUpdate(promotion._id, 'active')}
-                    className="p-2 text-gray-400 hover:text-green-600"
+                    className="p-2 text-secondary-400 hover:text-success-600 transition-colors"
                     title="Activate promotion"
                   >
                     <HiPlay className="w-4 h-4" />
@@ -379,12 +377,12 @@ export default function PromotionsPage() {
               </div>
             </div>
             
-            <p className="text-gray-600 text-sm mb-4">{promotion.description}</p>
+            <p className="text-secondary-600 text-sm mb-4">{promotion.description}</p>
             
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Discount</span>
-                <span className="font-medium">
+                <span className="text-secondary-500">Discount</span>
+                <span className="font-medium text-secondary-900">
                   {promotion.discountType === 'percentage' 
                     ? `${promotion.discountValue}% off`
                     : promotion.discountValue === 0
@@ -395,26 +393,26 @@ export default function PromotionsPage() {
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Valid Period</span>
-                <span className="font-medium">
+                <span className="text-secondary-500">Valid Period</span>
+                <span className="font-medium text-secondary-900">
                   {formatDate(promotion.startDate)} - {formatDate(promotion.endDate)}
                 </span>
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Target</span>
-                <span className="font-medium">{promotion.targetAudience}</span>
+                <span className="text-secondary-500">Target</span>
+                <span className="font-medium text-secondary-900">{promotion.targetAudience}</span>
               </div>
               
               {promotion.maxUsage && (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Usage</span>
-                    <span className="font-medium">{promotion.usageCount}/{promotion.maxUsage}</span>
+                    <span className="text-secondary-500">Usage</span>
+                    <span className="font-medium text-secondary-900">{promotion.usageCount}/{promotion.maxUsage}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-secondary-200 rounded-full h-2">
                     <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-primary-600 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${calculateProgress(promotion.usageCount, promotion.maxUsage)}%` }}
                     ></div>
                   </div>
@@ -422,7 +420,7 @@ export default function PromotionsPage() {
               )}
               
               {promotion.conditions && (
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                <div className="text-xs text-secondary-500 bg-secondary-50 p-2 rounded">
                   <strong>Conditions:</strong> {promotion.conditions}
                 </div>
               )}
@@ -432,10 +430,10 @@ export default function PromotionsPage() {
       </div>
 
       {!loading && filteredPromotions.length === 0 && (
-        <div className="text-center py-12">
-          <HiSpeakerphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-500 mb-2">No promotions found</h3>
-          <p className="text-gray-400">Try adjusting your filters or create a new promotion.</p>
+        <div className="empty-state">
+          <HiSpeakerphone className="empty-state-icon" />
+          <h3 className="empty-state-title">No promotions found</h3>
+          <p className="empty-state-description">Try adjusting your filters or create a new promotion.</p>
         </div>
       )}
 

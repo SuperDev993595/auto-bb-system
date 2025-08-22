@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import PageTitle from '../components/Shared/PageTitle';
-import { FaFileAlt, FaDownload, FaEnvelope, FaCog, FaPlus, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { HiDocumentText, HiDownload, HiMail, HiCog, HiPlus, HiPencil, HiTrash, HiEye, HiX } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 
 interface PDFTemplate {
@@ -178,35 +178,33 @@ const PDFGenerationPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <PageTitle title="PDF Generation" icon={FaFileAlt} />
+    <div className="page-container">
+      <div className="page-header">
+        <PageTitle title="PDF Generation" icon={HiDocumentText} />
+      </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('templates')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-              activeTab === 'templates'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <FaCog className="w-4 h-4" />
-            <span>Templates</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-              activeTab === 'reports'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-                            <FaFileAlt className="w-4 h-4" />
-            <span>Generated Reports</span>
-          </button>
-        </nav>
+      <div className="card mb-6">
+        <div className="tab-container">
+          <div className="tab-header">
+            <nav className="tab-buttons">
+              <button
+                onClick={() => setActiveTab('templates')}
+                className={`tab-button ${activeTab === 'templates' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiCog className="w-4 h-4" />
+                <span>Templates</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`tab-button ${activeTab === 'reports' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiDocumentText className="w-4 h-4" />
+                <span>Generated Reports</span>
+              </button>
+            </nav>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -214,12 +212,12 @@ const PDFGenerationPage: React.FC = () => {
           <div>
             {/* Templates Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">PDF Templates</h2>
+              <h2 className="page-subtitle">PDF Templates</h2>
               <button
                 onClick={() => setShowCreateTemplateModal(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"
+                className="btn-primary"
               >
-                <FaPlus className="w-4 h-4" />
+                <HiPlus className="w-4 h-4" />
                 <span>Create Template</span>
               </button>
             </div>
@@ -227,42 +225,42 @@ const PDFGenerationPage: React.FC = () => {
             {/* Templates Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {templates.map((template) => (
-                <div key={template.id} className="bg-white rounded-lg shadow-md p-6 border">
+                <div key={template.id} className="card hover-lift">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
-                      <p className="text-sm text-gray-600">{getReportTypeName(template.type)}</p>
+                      <h3 className="text-lg font-semibold text-secondary-900">{template.name}</h3>
+                      <p className="text-sm text-secondary-600">{getReportTypeName(template.type)}</p>
                     </div>
                     {template.isDefault && (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                      <span className="status-badge bg-success-100 text-success-800">
                         Default
                       </span>
                     )}
                   </div>
                   
-                  <p className="text-gray-700 mb-4">{template.description}</p>
+                  <p className="text-secondary-700 mb-4">{template.description}</p>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-secondary-500">
                       Created: {new Date(template.createdAt).toLocaleDateString()}
                     </span>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setSelectedTemplate(template)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-primary-600 hover:text-primary-800 transition-colors"
                       >
-                        <FaEye className="w-4 h-4" />
+                        <HiEye className="w-4 h-4" />
                       </button>
                       {!template.isDefault && (
                         <>
-                          <button className="text-gray-600 hover:text-gray-800">
-                            <FaEdit className="w-4 h-4" />
+                          <button className="text-secondary-600 hover:text-secondary-800 transition-colors">
+                            <HiPencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteTemplate(template.id)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-error-600 hover:text-error-800 transition-colors"
                           >
-                            <FaTrash className="w-4 h-4" />
+                            <HiTrash className="w-4 h-4" />
                           </button>
                         </>
                       )}
@@ -278,91 +276,81 @@ const PDFGenerationPage: React.FC = () => {
           <div>
             {/* Reports Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Generated Reports</h2>
+              <h2 className="page-subtitle">Generated Reports</h2>
               <button
                 onClick={() => setShowGenerateReportModal(true)}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center space-x-2"
+                className="btn-success"
               >
-                <FaPlus className="w-4 h-4" />
+                <HiPlus className="w-4 h-4" />
                 <span>Generate Report</span>
               </button>
             </div>
 
             {/* Reports Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="card">
               {reports.length === 0 ? (
                 <div className="p-8 text-center">
-                  <FaFileAlt className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No reports generated yet</p>
+                  <HiDocumentText className="w-12 h-12 text-secondary-400 mx-auto mb-4" />
+                  <p className="text-secondary-600">No reports generated yet</p>
                   <button
                     onClick={() => setShowGenerateReportModal(true)}
-                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    className="mt-4 btn-primary"
                   >
                     Generate Your First Report
                   </button>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <div className="table-container">
+                  <table className="table">
+                    <thead className="table-header">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Report Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
+                        <th className="table-header-cell">Report Name</th>
+                        <th className="table-header-cell">Type</th>
+                        <th className="table-header-cell">Status</th>
+                        <th className="table-header-cell">Created</th>
+                        <th className="table-header-cell text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="table-body">
                       {reports.map((report) => (
-                        <tr key={report.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <tr key={report.id} className="table-row">
+                          <td className="table-cell whitespace-nowrap text-sm font-medium text-secondary-900">
                             {report.name}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="table-cell whitespace-nowrap text-sm text-secondary-500">
                             {getReportTypeName(report.type)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          <td className="table-cell whitespace-nowrap">
+                            <span className={`status-badge ${
                               report.status === 'completed'
-                                ? 'bg-green-100 text-green-800'
+                                ? 'status-success'
                                 : report.status === 'generating'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'status-warning'
+                                : 'status-error'
                             }`}>
                               {report.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="table-cell whitespace-nowrap text-sm text-secondary-500">
                             {new Date(report.createdAt).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="table-cell whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex items-center justify-end space-x-2">
                               {report.status === 'completed' && (
                                 <>
                                   <button
                                     onClick={() => handleDownloadReport(report)}
-                                    className="text-blue-600 hover:text-blue-900"
+                                    className="text-primary-600 hover:text-primary-900 transition-colors"
                                     title="Download"
                                   >
-                                    <FaDownload className="w-4 h-4" />
+                                    <HiDownload className="w-4 h-4" />
                                   </button>
                                   <button
                                     onClick={() => handleEmailReport(report)}
-                                    className="text-green-600 hover:text-green-900"
+                                    className="text-success-600 hover:text-success-900 transition-colors"
                                     title="Email"
                                   >
-                                    <FaEnvelope className="w-4 h-4" />
+                                    <HiMail className="w-4 h-4" />
                                   </button>
                                 </>
                               )}
@@ -381,148 +369,162 @@ const PDFGenerationPage: React.FC = () => {
 
       {/* Create Template Modal */}
       {showCreateTemplateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Create PDF Template</h3>
-              <form onSubmit={handleCreateTemplate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Template Name</label>
-                  <input
-                    type="text"
-                    value={templateForm.name}
-                    onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Report Type</label>
-                  <select
-                    value={templateForm.type}
-                    onChange={(e) => setTemplateForm({ ...templateForm, type: e.target.value as PDFTemplate['type'] })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="daily_activity">Daily Activity Report</option>
-                    <option value="customer_report">Customer Report</option>
-                    <option value="work_completion">Work Completion Summary</option>
-                    <option value="super_admin_daily">Super Admin Daily Report</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    value={templateForm.description}
-                    onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
-                    rows={3}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateTemplateModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    {loading ? 'Creating...' : 'Create Template'}
-                  </button>
-                </div>
-              </form>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Create PDF Template</h3>
+              <button
+                onClick={() => setShowCreateTemplateModal(false)}
+                className="modal-close"
+              >
+                <HiX className="h-6 w-6" />
+              </button>
             </div>
+            
+            <form onSubmit={handleCreateTemplate} className="modal-content space-y-4">
+              <div>
+                <label className="form-label">Template Name</label>
+                <input
+                  type="text"
+                  value={templateForm.name}
+                  onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Report Type</label>
+                <select
+                  value={templateForm.type}
+                  onChange={(e) => setTemplateForm({ ...templateForm, type: e.target.value as PDFTemplate['type'] })}
+                  className="select-field"
+                  required
+                >
+                  <option value="daily_activity">Daily Activity Report</option>
+                  <option value="customer_report">Customer Report</option>
+                  <option value="work_completion">Work Completion Summary</option>
+                  <option value="super_admin_daily">Super Admin Daily Report</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Description</label>
+                <textarea
+                  value={templateForm.description}
+                  onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
+                  rows={3}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTemplateModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary"
+                >
+                  {loading ? 'Creating...' : 'Create Template'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Generate Report Modal */}
       {showGenerateReportModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Generate PDF Report</h3>
-              <form onSubmit={handleGenerateReport} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Template</label>
-                  <select
-                    value={reportForm.templateId}
-                    onChange={(e) => setReportForm({ ...reportForm, templateId: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select a template</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
-                  <input
-                    type="date"
-                    value={reportForm.date}
-                    onChange={(e) => setReportForm({ ...reportForm, date: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Customer ID (Optional)</label>
-                  <input
-                    type="text"
-                    value={reportForm.customerId}
-                    onChange={(e) => setReportForm({ ...reportForm, customerId: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter customer ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">User ID (Optional)</label>
-                  <input
-                    type="text"
-                    value={reportForm.userId}
-                    onChange={(e) => setReportForm({ ...reportForm, userId: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter user ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
-                  <input
-                    type="email"
-                    value={reportForm.email}
-                    onChange={(e) => setReportForm({ ...reportForm, email: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter email to send report"
-                  />
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowGenerateReportModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
-                  >
-                    {loading ? 'Generating...' : 'Generate Report'}
-                  </button>
-                </div>
-              </form>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Generate PDF Report</h3>
+              <button
+                onClick={() => setShowGenerateReportModal(false)}
+                className="modal-close"
+              >
+                <HiX className="h-6 w-6" />
+              </button>
             </div>
+            
+            <form onSubmit={handleGenerateReport} className="modal-content space-y-4">
+              <div>
+                <label className="form-label">Template</label>
+                <select
+                  value={reportForm.templateId}
+                  onChange={(e) => setReportForm({ ...reportForm, templateId: e.target.value })}
+                  className="select-field"
+                  required
+                >
+                  <option value="">Select a template</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Date</label>
+                <input
+                  type="date"
+                  value={reportForm.date}
+                  onChange={(e) => setReportForm({ ...reportForm, date: e.target.value })}
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Customer ID (Optional)</label>
+                <input
+                  type="text"
+                  value={reportForm.customerId}
+                  onChange={(e) => setReportForm({ ...reportForm, customerId: e.target.value })}
+                  className="input-field"
+                  placeholder="Enter customer ID"
+                />
+              </div>
+              <div>
+                <label className="form-label">User ID (Optional)</label>
+                <input
+                  type="text"
+                  value={reportForm.userId}
+                  onChange={(e) => setReportForm({ ...reportForm, userId: e.target.value })}
+                  className="input-field"
+                  placeholder="Enter user ID"
+                />
+              </div>
+              <div>
+                <label className="form-label">Email (Optional)</label>
+                <input
+                  type="email"
+                  value={reportForm.email}
+                  onChange={(e) => setReportForm({ ...reportForm, email: e.target.value })}
+                  className="input-field"
+                  placeholder="Enter email to send report"
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowGenerateReportModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-success"
+                >
+                  {loading ? 'Generating...' : 'Generate Report'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

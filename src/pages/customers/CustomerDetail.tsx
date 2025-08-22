@@ -22,17 +22,22 @@ import {
   FileText,
   Calendar,
   Truck,
-  Phone
+  Phone,
+  Edit,
+  Trash2,
+  Car,
+  ArrowLeft,
+  Settings,
+  Activity
 } from '../../utils/icons'
-import { Edit, Trash2, Car } from '../../utils/icons'
 
 const tabs = [
-  { key: 'Overview', label: 'Overview', icon: User },
-  { key: 'Payments', label: 'Payments', icon: DollarSign },
-  { key: 'Arrangements', label: 'Arrangements', icon: FileText },
-  { key: 'Appointments', label: 'Appointments', icon: Calendar },
-  { key: 'Towing', label: 'Towing', icon: Truck },
-  { key: 'Call Logs', label: 'Call Logs', icon: Phone }
+  { key: 'Overview', label: 'Overview', icon: User, color: 'from-blue-500 to-indigo-500' },
+  { key: 'Payments', label: 'Payments', icon: DollarSign, color: 'from-emerald-500 to-teal-500' },
+  { key: 'Arrangements', label: 'Arrangements', icon: FileText, color: 'from-purple-500 to-pink-500' },
+  { key: 'Appointments', label: 'Appointments', icon: Calendar, color: 'from-orange-500 to-red-500' },
+  { key: 'Towing', label: 'Towing', icon: Truck, color: 'from-amber-500 to-yellow-500' },
+  { key: 'Call Logs', label: 'Call Logs', icon: Phone, color: 'from-cyan-500 to-blue-500' }
 ]
 
 export default function CustomerDetail() {
@@ -58,10 +63,16 @@ export default function CustomerDetail() {
   // Loading state
   if (loading) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600 font-medium">Loading customer information...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="flex flex-col items-center justify-center py-20 space-y-6">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Loading Customer Information</h3>
+            <p className="text-gray-500">Please wait while we fetch the details...</p>
+          </div>
         </div>
       </div>
     )
@@ -70,9 +81,21 @@ export default function CustomerDetail() {
   // Error state
   if (error) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="p-8 text-center text-red-600 font-medium">
-          Error loading customer: {error}
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-md mx-auto mt-20">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-red-100">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Activity className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Error Loading Customer</h3>
+            <p className="text-red-600 font-medium mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -81,9 +104,21 @@ export default function CustomerDetail() {
   // Customer not found
   if (!customer) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="p-8 text-center text-red-600 font-medium">
-          Customer not found. Please check the URL or try refreshing the page.
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-md mx-auto mt-20">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Customer Not Found</h3>
+            <p className="text-gray-600 mb-4">The customer you're looking for doesn't exist or has been removed.</p>
+            <button 
+              onClick={() => window.history.back()}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -111,117 +146,162 @@ export default function CustomerDetail() {
     console.error('Invalid customer data:', actualCustomer)
     console.error('Original customer object:', customer)
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="p-8 text-center text-red-600 font-medium">
-          Invalid customer data. Some required information is missing.
-          <br />
-          <span className="text-sm">Please check the console for debugging information.</span>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-md mx-auto mt-20">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-red-100">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Settings className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Invalid Customer Data</h3>
+            <p className="text-red-600 font-medium mb-2">Some required information is missing.</p>
+            <p className="text-sm text-gray-500 mb-4">Please check the console for debugging information.</p>
+            <button 
+              onClick={() => window.history.back()}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Top Profile Header */}
-      <div className="bg-white shadow-xl rounded-2xl p-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {actualCustomer.name || actualCustomer.businessName || 'Unnamed Customer'}
-          </h1>
-          <div className="space-y-1 mt-2">
-            {actualCustomer.businessName && actualCustomer.name !== actualCustomer.businessName && (
-              <p className="text-sm text-gray-600">Contact: {actualCustomer.name}</p>
-            )}
-            <p className="text-sm text-gray-500">
-              Customer ID: {actualCustomer._id || 'N/A'}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Back Navigation */}
+      <div className="p-6">
+        <button 
+          onClick={() => window.history.back()}
+          className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 mb-6 group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+          <span className="font-medium">Back to Customers</span>
+        </button>
+      </div>
+
+      {/* Hero Profile Header */}
+      <div className="px-6 mb-8">
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full translate-y-16 -translate-x-16"></div>
           </div>
-        </div>
-        <div className="flex gap-3 mt-4 md:mt-0">
-          <button 
-            onClick={() => setShowEditModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </button>
-          <button 
-            onClick={() => setShowAddVehicleModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
-          >
-            <Car className="w-4 h-4" />
-            Add Vehicle
-          </button>
-          <button 
-            onClick={() => setShowDeleteModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          
+          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center">
+            <div className="flex items-center space-x-6 mb-6 lg:mb-0">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
+                <User className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  {actualCustomer.name || actualCustomer.businessName || 'Unnamed Customer'}
+                </h1>
+                <div className="space-y-1">
+                  {actualCustomer.businessName && actualCustomer.name !== actualCustomer.businessName && (
+                    <p className="text-blue-100 text-lg">Contact: {actualCustomer.name}</p>
+                  )}
+                  <p className="text-blue-100 text-sm">
+                    Customer ID: {actualCustomer._id || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={() => setShowEditModal(true)}
+                className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-white/30 hover:border-white/50"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Customer
+              </button>
+              <button 
+                onClick={() => setShowAddVehicleModal(true)}
+                className="px-6 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-sm text-emerald-100 rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-emerald-400/30 hover:border-emerald-400/50"
+              >
+                <Car className="w-4 h-4" />
+                Add Vehicle
+              </button>
+              <button 
+                onClick={() => setShowDeleteModal(true)}
+                className="px-6 py-3 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-red-100 rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-red-400/30 hover:border-red-400/50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Customer
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white shadow-lg rounded-2xl px-6 py-4 mb-8 overflow-x-auto border border-gray-100">
-        <nav className="flex gap-6 whitespace-nowrap">
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-3 text-sm font-medium px-4 py-3 border-b-2 transition-all duration-200 ${activeTab === key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-blue-500 hover:border-blue-200'
+      <div className="px-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-xl px-6 py-4 border border-gray-100 overflow-x-auto">
+          <nav className="flex gap-2 whitespace-nowrap">
+            {tabs.map(({ key, label, icon: Icon, color }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-3 text-sm font-medium px-6 py-4 rounded-xl transition-all duration-300 ${
+                  activeTab === key
+                    ? `bg-gradient-to-r ${color} text-white shadow-lg transform scale-105`
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
+              >
+                <Icon className={`w-5 h-5 ${activeTab === key ? 'text-white' : 'text-gray-400'}`} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-xl p-8">
-        {activeTab === 'Overview' && (
-          <OverviewSection 
-            customer={actualCustomer} 
-            onEditVehicle={(vehicle) => {
-              setSelectedVehicle(vehicle)
-              setShowEditVehicleModal(true)
-            }}
-            onDeleteVehicle={(vehicle) => {
-              setSelectedVehicle(vehicle)
-              setShowDeleteVehicleModal(true)
-            }}
-          />
-        )}
-        {activeTab === 'Payments' && (
-          <div className="min-h-[200px]">
-            <PaymentsSection customer={actualCustomer} />
+      <div className="px-6 pb-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="p-8">
+            {activeTab === 'Overview' && (
+              <OverviewSection 
+                customer={actualCustomer} 
+                onEditVehicle={(vehicle) => {
+                  setSelectedVehicle(vehicle)
+                  setShowEditVehicleModal(true)
+                }}
+                onDeleteVehicle={(vehicle) => {
+                  setSelectedVehicle(vehicle)
+                  setShowDeleteVehicleModal(true)
+                }}
+              />
+            )}
+            {activeTab === 'Payments' && (
+              <div className="min-h-[400px]">
+                <PaymentsSection customer={actualCustomer} />
+              </div>
+            )}
+            {activeTab === 'Arrangements' && (
+              <div className="min-h-[400px]">
+                <ArrangementsSection customer={actualCustomer} />
+              </div>
+            )}
+            {activeTab === 'Appointments' && (
+              <div className="min-h-[400px]">
+                <AppointmentsSection customer={actualCustomer} />
+              </div>
+            )}
+            {activeTab === 'Towing' && (
+              <div className="min-h-[400px]">
+                <TowingSection customer={actualCustomer} />
+              </div>
+            )}
+            {activeTab === 'Call Logs' && (
+              <div className="min-h-[400px]">
+                <CallLogsSection customer={actualCustomer} />
+              </div>
+            )}
           </div>
-        )}
-        {activeTab === 'Arrangements' && (
-          <div className="min-h-[200px]">
-            <ArrangementsSection customer={actualCustomer} />
-          </div>
-        )}
-        {activeTab === 'Appointments' && (
-          <div className="min-h-[200px]">
-            <AppointmentsSection customer={actualCustomer} />
-          </div>
-        )}
-        {activeTab === 'Towing' && (
-          <div className="min-h-[200px]">
-            <TowingSection customer={actualCustomer} />
-          </div>
-        )}
-        {activeTab === 'Call Logs' && (
-          <div className="min-h-[200px]">
-            <CallLogsSection customer={actualCustomer} />
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Modals */}

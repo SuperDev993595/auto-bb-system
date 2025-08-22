@@ -131,30 +131,30 @@ export default function FileUploadPage() {
   const getFileIcon = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext || '')) {
-      return <HiPhotograph className="h-6 w-6 text-green-500" />;
+      return <HiPhotograph className="h-6 w-6 text-success-600" />;
     } else if (['pdf'].includes(ext || '')) {
-      return <HiDocument className="h-6 w-6 text-red-500" />;
+      return <HiDocument className="h-6 w-6 text-error-600" />;
     } else if (['doc', 'docx'].includes(ext || '')) {
-      return <HiDocument className="h-6 w-6 text-blue-500" />;
+      return <HiDocument className="h-6 w-6 text-primary-600" />;
     } else if (['xls', 'xlsx'].includes(ext || '')) {
-      return <HiDocument className="h-6 w-6 text-green-600" />;
+      return <HiDocument className="h-6 w-6 text-success-600" />;
     } else {
-      return <HiDocument className="h-6 w-6 text-gray-500" />;
+      return <HiDocument className="h-6 w-6 text-secondary-500" />;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-container">
       <PageTitle title="File Management" icon={HiUpload} />
       
       {/* File Type Selector */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="card">
         <div className="flex items-center space-x-4">
-          <label className="text-sm font-medium text-gray-700">File Type:</label>
+          <label className="form-label mb-0">File Type:</label>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="select-field"
           >
             <option value="general">General Files</option>
             <option value="avatars">User Avatars</option>
@@ -165,31 +165,31 @@ export default function FileUploadPage() {
       </div>
 
       {/* Upload Area */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Files</h3>
+      <div className="card">
+        <h3 className="page-subtitle">Upload Files</h3>
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
             isDragActive
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
+              ? 'border-primary-400 bg-primary-50'
+              : 'border-secondary-300 hover:border-secondary-400'
           }`}
         >
           <input {...getInputProps()} />
-          <HiUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <HiUpload className="h-12 w-12 text-secondary-400 mx-auto mb-4" />
           {uploading ? (
-            <p className="text-gray-600">Uploading files...</p>
+            <p className="text-secondary-600">Uploading files...</p>
           ) : isDragActive ? (
-            <p className="text-blue-600">Drop the files here...</p>
+            <p className="text-primary-600">Drop the files here...</p>
           ) : (
             <div>
-              <p className="text-gray-600 mb-2">
+              <p className="text-secondary-600 mb-2">
                 Drag & drop files here, or click to select files
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-secondary-500">
                 Supported formats: Images, PDFs, Documents, Spreadsheets, Text files
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-secondary-500">
                 Maximum file size: 10MB, Maximum files: 5
               </p>
             </div>
@@ -198,67 +198,73 @@ export default function FileUploadPage() {
       </div>
 
       {/* Files List */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Uploaded Files</h3>
+      <div className="card">
+        <div className="border-b border-secondary-200 pb-4 mb-4">
+          <h3 className="page-subtitle">Uploaded Files</h3>
         </div>
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-6 text-center text-gray-500">Loading files...</div>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading files...</p>
+            </div>
           ) : files.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No files found</div>
+            <div className="text-center py-8">
+              <HiFolder className="h-12 w-12 text-secondary-400 mx-auto mb-4" />
+              <p className="text-secondary-600">No files found</p>
+            </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="table">
+              <thead className="table-header">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">File</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modified</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="table-header-cell">File</th>
+                  <th className="table-header-cell">Size</th>
+                  <th className="table-header-cell">Created</th>
+                  <th className="table-header-cell">Modified</th>
+                  <th className="table-header-cell text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="table-body">
                 {files.map((file) => (
-                  <tr key={file.filename} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                  <tr key={file.filename} className="table-row hover:bg-secondary-50">
+                    <td className="table-cell">
                       <div className="flex items-center">
                         {getFileIcon(file.filename)}
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">{file.filename}</div>
-                          <div className="text-sm text-gray-500">{file.url}</div>
+                          <div className="text-sm font-medium text-secondary-900">{file.filename}</div>
+                          <div className="text-sm text-secondary-500">{file.url}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="table-cell text-sm text-secondary-900">
                       {formatFileSize(file.size)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="table-cell text-sm text-secondary-500">
                       {new Date(file.created).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="table-cell text-sm text-secondary-500">
                       {new Date(file.modified).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium">
+                    <td className="table-cell text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => window.open(file.url, '_blank')}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-primary-600 hover:text-primary-900 transition-colors"
                           title="View File"
                         >
                           <HiEye className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDownload(file.filename)}
-                          className="text-green-600 hover:text-green-900"
+                          className="text-success-600 hover:text-success-900 transition-colors"
                           title="Download File"
                         >
                           <HiDownload className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(file.filename)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-error-600 hover:text-error-900 transition-colors"
                           title="Delete File"
                         >
                           <HiTrash className="h-5 w-5" />

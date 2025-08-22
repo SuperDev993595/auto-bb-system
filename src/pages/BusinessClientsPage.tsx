@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Eye, 
-  Pencil, 
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  Building,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Users,
-  BarChart3
-} from 'lucide-react';
+  HiPlus, 
+  HiSearch, 
+  HiFilter, 
+  HiEye, 
+  HiPencil, 
+  HiTrash,
+  HiCheckCircle,
+  HiXCircle,
+  HiClock,
+  HiExclamation,
+  HiOfficeBuilding,
+  HiPhone,
+  HiMail,
+  HiLocationMarker,
+  HiCalendar,
+  HiCurrencyDollar,
+  HiUsers,
+  HiChartBar
+} from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
 import businessClientService, { 
   BusinessClient, 
@@ -191,30 +191,30 @@ export default function BusinessClientsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <HiCheckCircle className="w-5 h-5 text-success-500" />;
       case 'pending':
-        return <Clock className="w-5 h-5 text-yellow-500" />;
+        return <HiClock className="w-5 h-5 text-warning-500" />;
       case 'suspended':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <HiXCircle className="w-5 h-5 text-error-500" />;
       case 'inactive':
-        return <AlertTriangle className="w-5 h-5 text-gray-500" />;
+        return <HiExclamation className="w-5 h-5 text-secondary-500" />;
       default:
-        return <AlertTriangle className="w-5 h-5 text-gray-500" />;
+        return <HiExclamation className="w-5 h-5 text-secondary-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'status-success';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'status-warning';
       case 'suspended':
-        return 'bg-red-100 text-red-800';
+        return 'status-error';
       case 'inactive':
-        return 'bg-gray-100 text-gray-800';
+        return 'status-secondary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'status-secondary';
     }
   };
 
@@ -224,64 +224,67 @@ export default function BusinessClientsPage() {
 
   if (loading && businessClients.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading business clients...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <PageTitle title="Business Clients" />
+    <div className="page-container">
+      <div className="page-header">
+        <PageTitle title="Business Clients" />
+      </div>
       
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid-responsive mb-8">
+        <div className="stats-card">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building className="w-6 h-6 text-blue-600" />
+            <div className="stats-icon bg-primary-100">
+              <HiOfficeBuilding className="w-6 h-6 text-primary-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalClients}</p>
+              <p className="text-sm font-medium text-secondary-600">Total Clients</p>
+              <p className="text-2xl font-bold text-secondary-900">{stats.totalClients}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="stats-card">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="stats-icon bg-success-100">
+              <HiCheckCircle className="w-6 h-6 text-success-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.activeClients}</p>
+              <p className="text-sm font-medium text-secondary-600">Active Clients</p>
+              <p className="text-2xl font-bold text-secondary-900">{stats.activeClients}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="stats-card">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
+            <div className="stats-icon bg-warning-100">
+              <HiClock className="w-6 h-6 text-warning-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Trial Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.trialClients}</p>
+              <p className="text-sm font-medium text-secondary-600">Trial Clients</p>
+              <p className="text-2xl font-bold text-secondary-900">{stats.trialClients}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="stats-card">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-purple-600" />
+            <div className="stats-icon bg-info-100">
+              <HiCurrencyDollar className="w-6 h-6 text-info-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-secondary-600">Monthly Revenue</p>
+              <p className="text-2xl font-bold text-secondary-900">
                 {businessClientService.formatCurrency(stats.monthlyRecurringRevenue)}
               </p>
             </div>
@@ -291,17 +294,17 @@ export default function BusinessClientsPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="mb-6 bg-error-50 border border-error-200 rounded-lg p-4">
           <div className="flex">
-            <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
+            <HiExclamation className="w-5 h-5 text-error-400 mt-0.5" />
             <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
+              <p className="text-sm text-error-800">{error}</p>
               <button
                 onClick={() => {
                   setError(null);
                   loadBusinessClients();
                 }}
-                className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+                className="mt-2 text-sm text-error-600 hover:text-error-500 underline"
               >
                 Try again
               </button>
@@ -311,25 +314,25 @@ export default function BusinessClientsPage() {
       )}
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
+      <div className="card mb-6">
+        <div className="p-6 border-b border-secondary-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search business clients..."
                   value={filters.search || ''}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field pl-10"
                 />
               </div>
               
               <select
                 value={filters.status || ''}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="select-field"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -341,7 +344,7 @@ export default function BusinessClientsPage() {
               <select
                 value={filters.businessType || ''}
                 onChange={(e) => handleFilterChange('businessType', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="select-field"
               >
                 <option value="">All Types</option>
                 <option value="auto_repair">Auto Repair</option>
@@ -357,7 +360,7 @@ export default function BusinessClientsPage() {
               <select
                 value={filters.subscriptionStatus || ''}
                 onChange={(e) => handleFilterChange('subscriptionStatus', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="select-field"
               >
                 <option value="">All Subscriptions</option>
                 <option value="active">Active</option>
@@ -370,47 +373,47 @@ export default function BusinessClientsPage() {
 
             <button 
               onClick={handleAddClient}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="btn-primary"
             >
-              <Plus className="h-5 w-5 mr-2" />
+              <HiPlus className="h-5 w-5 mr-2" />
               Add Business Client
             </button>
           </div>
         </div>
 
         {/* Business Clients Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subscription</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="table-header-cell">Business</th>
+                <th className="table-header-cell">Contact</th>
+                <th className="table-header-cell">Status</th>
+                <th className="table-header-cell">Subscription</th>
+                <th className="table-header-cell">Location</th>
+                <th className="table-header-cell">Created</th>
+                <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {businessClients.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="table-cell text-center text-secondary-500">
                     {loading ? (
                       <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                        <div className="loading-spinner mr-2"></div>
                         Loading business clients...
                       </div>
                     ) : (
                       <div>
-                        <Building className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-lg font-medium text-gray-900 mb-2">No business clients found</p>
-                        <p className="text-gray-500 mb-4">Get started by creating your first business client.</p>
+                        <HiOfficeBuilding className="w-12 h-12 text-secondary-300 mx-auto mb-4" />
+                        <p className="text-lg font-medium text-secondary-900 mb-2">No business clients found</p>
+                        <p className="text-secondary-500 mb-4">Get started by creating your first business client.</p>
                         <button
                           onClick={handleAddClient}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          className="btn-primary"
                         >
-                          <Plus className="h-5 w-5 mr-2" />
+                          <HiPlus className="h-5 w-5 mr-2" />
                           Add Business Client
                         </button>
                       </div>
@@ -419,67 +422,67 @@ export default function BusinessClientsPage() {
                 </tr>
               ) : (
                 businessClients.map((client) => (
-                  <tr key={client._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={client._id} className="table-row">
+                    <td className="table-cell whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{client.businessName}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm font-medium text-secondary-900">{client.businessName}</div>
+                        <div className="text-sm text-secondary-500">
                           {businessClientService.getBusinessTypeLabel(client.businessType)}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{client.contactPerson.name}</div>
-                        <div className="text-sm text-gray-500">{client.contactPerson.email}</div>
-                        <div className="text-sm text-gray-500">{client.contactPerson.phone}</div>
+                        <div className="text-sm font-medium text-secondary-900">{client.contactPerson.name}</div>
+                        <div className="text-sm text-secondary-500">{client.contactPerson.email}</div>
+                        <div className="text-sm text-secondary-500">{client.contactPerson.phone}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell whitespace-nowrap">
                       <div className="flex items-center">
                         {getStatusIcon(client.status)}
-                        <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
+                        <span className={`ml-2 status-badge ${getStatusColor(client.status)}`}>
                           {client.status}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-secondary-900">
                           {businessClientService.getPlanLabel(client.subscription.plan)}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-secondary-500">
                           {businessClientService.formatCurrency(client.subscription.monthlyFee)}
                         </div>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSubscriptionStatusColor(client.subscription.status)}`}>
+                        <span className={`status-badge ${getSubscriptionStatusColor(client.subscription.status)}`}>
                           {client.subscription.status}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="table-cell whitespace-nowrap">
+                      <div className="text-sm text-secondary-900">
                         <div>{client.address.city}, {client.address.state}</div>
-                        <div className="text-gray-500">{client.address.zipCode}</div>
+                        <div className="text-secondary-500">{client.address.zipCode}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="table-cell whitespace-nowrap text-sm text-secondary-500">
                       {businessClientService.formatDate(client.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="table-cell whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <button 
                           onClick={() => handleViewClient(client._id)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                          className="text-primary-600 hover:text-primary-900 transition-colors"
                           title="View details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <HiEye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleEditClient(client._id)}
-                          className="text-gray-600 hover:text-gray-900 transition-colors"
+                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
                           title="Edit client"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <HiPencil className="w-4 h-4" />
                         </button>
                         {client.subscription.status === 'trial' && (
                           <button 
@@ -489,10 +492,10 @@ export default function BusinessClientsPage() {
                               'success',
                               () => handleActivateClient(client._id)
                             )}
-                            className="text-green-600 hover:text-green-900 transition-colors"
+                            className="text-success-600 hover:text-success-900 transition-colors"
                             title="Activate client"
                           >
-                            <CheckCircle className="w-4 h-4" />
+                            <HiCheckCircle className="w-4 h-4" />
                           </button>
                         )}
                         {client.subscription.status === 'active' && (
@@ -503,10 +506,10 @@ export default function BusinessClientsPage() {
                               'warning',
                               () => handleSuspendClient(client._id)
                             )}
-                            className="text-yellow-600 hover:text-yellow-900 transition-colors"
+                            className="text-warning-600 hover:text-warning-900 transition-colors"
                             title="Suspend client"
                           >
-                            <XCircle className="w-4 h-4" />
+                            <HiXCircle className="w-4 h-4" />
                           </button>
                         )}
                         <button 
@@ -516,10 +519,10 @@ export default function BusinessClientsPage() {
                             'danger',
                             () => handleDeleteClient(client._id)
                           )}
-                          className="text-red-600 hover:text-red-900 transition-colors"
+                          className="text-error-600 hover:text-error-900 transition-colors"
                           title="Delete client"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <HiTrash className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -532,9 +535,9 @@ export default function BusinessClientsPage() {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-secondary-200">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-secondary-700">
                 Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{' '}
                 {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)} of{' '}
                 {pagination.totalItems} results
@@ -543,17 +546,17 @@ export default function BusinessClientsPage() {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 text-sm border border-secondary-300 rounded-md hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
-                <span className="px-3 py-1 text-sm text-gray-700">
+                <span className="px-3 py-1 text-sm text-secondary-700">
                   Page {pagination.currentPage} of {pagination.totalPages}
                 </span>
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 text-sm border border-secondary-300 rounded-md hover:bg-secondary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
