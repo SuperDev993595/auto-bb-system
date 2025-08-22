@@ -15,10 +15,10 @@ import {
 } from '../redux/actions/email';
 import PageTitle from '../components/Shared/PageTitle';
 import { 
-  FaEnvelope, FaFileAlt, FaChartBar, FaPlus, FaEdit, FaTrash, 
-  FaPaperPlane, FaEye, FaUsers, FaCalendarAlt, FaCheckCircle,
-  FaTimesCircle, FaExclamationTriangle, FaArrowUp, FaArrowDown
-} from 'react-icons/fa';
+  HiEnvelope, HiDocumentText, HiChartBar, HiPlus, HiPencil, HiTrash, 
+  HiPaperAirplane, HiEye, HiUsers, HiCalendar, HiCheckCircle,
+  HiXCircle, HiExclamationTriangle, HiArrowUp, HiArrowDown, HiX
+} from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 
 const EmailManagementPage: React.FC = () => {
@@ -235,97 +235,83 @@ const EmailManagementPage: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <FaCheckCircle className="text-green-500" />;
+        return <HiCheckCircle className="text-success-600" />;
       case 'scheduled':
-        return <FaCalendarAlt className="text-blue-500" />;
+        return <HiCalendar className="text-info-600" />;
       case 'draft':
-        return <FaFileAlt className="text-gray-500" />;
+        return <HiDocumentText className="text-secondary-500" />;
       default:
-        return <FaExclamationTriangle className="text-yellow-500" />;
+        return <HiExclamationTriangle className="text-warning-600" />;
     }
   };
 
   return (
-    <div className="p-6">
-      <PageTitle title="Email Management" icon={FaEnvelope} />
+    <div className="page-container">
+      <PageTitle title="Email Management" icon={HiEnvelope} />
       
       {/* Tab Navigation */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('compose')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === 'compose'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaEnvelope className="w-4 h-4" />
-              <span>Compose Email</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === 'templates'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaFileAlt className="w-4 h-4" />
-              <span>Email Templates</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('campaigns')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === 'campaigns'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaUsers className="w-4 h-4" />
-              <span>Email Campaigns</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === 'analytics'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaChartBar className="w-4 h-4" />
-              <span>Analytics</span>
-            </button>
-          </nav>
+      <div className="card">
+        <div className="tab-container">
+          <div className="tab-header">
+            <div className="tab-buttons">
+              <button
+                onClick={() => setActiveTab('compose')}
+                className={`tab-button ${activeTab === 'compose' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiEnvelope className="w-4 h-4" />
+                <span>Compose Email</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('templates')}
+                className={`tab-button ${activeTab === 'templates' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiDocumentText className="w-4 h-4" />
+                <span>Email Templates</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('campaigns')}
+                className={`tab-button ${activeTab === 'campaigns' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiUsers className="w-4 h-4" />
+                <span>Email Campaigns</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`tab-button ${activeTab === 'analytics' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              >
+                <HiChartBar className="w-4 h-4" />
+                <span>Analytics</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Compose Email Tab */}
       {activeTab === 'compose' && (
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Compose New Email</h3>
+          <div className="card">
+            <h3 className="page-subtitle">Compose New Email</h3>
             <form onSubmit={handleSendEmail} className="space-y-4">
               {/* To Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
+                <label className="form-label">To</label>
                 {emailForm.to.map((email, index) => (
                   <div key={index} className="flex space-x-2 mb-2">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => updateEmailField('to', index, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="input-field flex-1"
                       placeholder="recipient@example.com"
                     />
                     {emailForm.to.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeEmailField('to', index)}
-                        className="px-3 py-2 text-red-600 hover:text-red-800"
+                        className="p-2 text-error-600 hover:text-error-800 transition-colors"
                       >
-                        <FaTimesCircle className="w-4 h-4" />
+                        <HiXCircle className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -333,7 +319,7 @@ const EmailManagementPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => addEmailField('to')}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="text-primary-600 hover:text-primary-800 text-sm transition-colors"
                 >
                   + Add recipient
                 </button>
@@ -341,29 +327,29 @@ const EmailManagementPage: React.FC = () => {
 
               {/* CC Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CC</label>
+                <label className="form-label">CC</label>
                 {emailForm.cc.map((email, index) => (
                   <div key={index} className="flex space-x-2 mb-2">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => updateEmailField('cc', index, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="input-field flex-1"
                       placeholder="cc@example.com"
                     />
                     <button
                       type="button"
                       onClick={() => removeEmailField('cc', index)}
-                      className="px-3 py-2 text-red-600 hover:text-red-800"
+                      className="p-2 text-error-600 hover:text-error-800 transition-colors"
                     >
-                      <FaTimesCircle className="w-4 h-4" />
+                      <HiXCircle className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
                 <button
                   type="button"
                   onClick={() => addEmailField('cc')}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="text-primary-600 hover:text-primary-800 text-sm transition-colors"
                 >
                   + Add CC
                 </button>
@@ -371,29 +357,29 @@ const EmailManagementPage: React.FC = () => {
 
               {/* BCC Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">BCC</label>
+                <label className="form-label">BCC</label>
                 {emailForm.bcc.map((email, index) => (
                   <div key={index} className="flex space-x-2 mb-2">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => updateEmailField('bcc', index, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="input-field flex-1"
                       placeholder="bcc@example.com"
                     />
                     <button
                       type="button"
                       onClick={() => removeEmailField('bcc', index)}
-                      className="px-3 py-2 text-red-600 hover:text-red-800"
+                      className="p-2 text-error-600 hover:text-error-800 transition-colors"
                     >
-                      <FaTimesCircle className="w-4 h-4" />
+                      <HiXCircle className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
                 <button
                   type="button"
                   onClick={() => addEmailField('bcc')}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="text-primary-600 hover:text-primary-800 text-sm transition-colors"
                 >
                   + Add BCC
                 </button>
@@ -401,12 +387,12 @@ const EmailManagementPage: React.FC = () => {
 
               {/* Subject */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <label className="form-label">Subject</label>
                 <input
                   type="text"
                   value={emailForm.subject}
                   onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                   placeholder="Email subject"
                   required
                 />
@@ -414,12 +400,12 @@ const EmailManagementPage: React.FC = () => {
 
               {/* Content */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                <label className="form-label">Content</label>
                 <textarea
                   value={emailForm.content}
                   onChange={(e) => setEmailForm({...emailForm, content: e.target.value})}
                   rows={8}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                   placeholder="Email content..."
                   required
                 />
@@ -432,18 +418,18 @@ const EmailManagementPage: React.FC = () => {
                     type="checkbox"
                     checked={emailForm.trackOpens}
                     onChange={(e) => setEmailForm({...emailForm, trackOpens: e.target.checked})}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Track opens</span>
+                  <span className="ml-2 text-sm text-secondary-700">Track opens</span>
                 </label>
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={emailForm.trackClicks}
                     onChange={(e) => setEmailForm({...emailForm, trackClicks: e.target.checked})}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Track clicks</span>
+                  <span className="ml-2 text-sm text-secondary-700">Track clicks</span>
                 </label>
               </div>
 
@@ -451,9 +437,9 @@ const EmailManagementPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={sendEmailLoading}
-                  className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center space-x-2"
+                  className="btn-primary flex items-center space-x-2"
                 >
-                  <FaPaperPlane className="w-4 h-4" />
+                  <HiPaperAirplane className="w-4 h-4" />
                   <span>{sendEmailLoading ? 'Sending...' : 'Send Email'}</span>
                 </button>
               </div>
@@ -466,27 +452,27 @@ const EmailManagementPage: React.FC = () => {
       {activeTab === 'templates' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Email Templates</h3>
+            <h3 className="page-subtitle">Email Templates</h3>
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"
+              className="btn-primary flex items-center space-x-2"
             >
-              <FaPlus className="w-4 h-4" />
+              <HiPlus className="w-4 h-4" />
               <span>Create Template</span>
             </button>
           </div>
 
           {templatesLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading templates...</p>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading templates...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid-responsive">
               {templates.map((template) => (
-                <div key={template.id} className="bg-white p-6 rounded-lg shadow">
+                <div key={template.id} className="card hover-lift">
                   <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-lg font-medium text-gray-900">{template.name}</h4>
+                    <h4 className="text-lg font-medium text-secondary-900">{template.name}</h4>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => {
@@ -500,30 +486,30 @@ const EmailManagementPage: React.FC = () => {
                           });
                           setShowTemplateModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-primary-600 hover:text-primary-800 transition-colors"
                       >
-                        <FaEdit className="w-4 h-4" />
+                        <HiPencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-error-600 hover:text-error-800 transition-colors"
                       >
-                        <FaTrash className="w-4 h-4" />
+                        <HiTrash className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{template.subject}</p>
-                  <div className="text-xs text-gray-500 mb-4">
-                    <span className={`inline-flex px-2 py-1 rounded-full ${
-                      template.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  <p className="text-sm text-secondary-600 mb-2">{template.subject}</p>
+                  <div className="text-xs text-secondary-500 mb-4">
+                    <span className={`status-badge ${
+                      template.isActive ? 'status-success' : 'status-error'
                     }`}>
                       {template.isActive ? 'Active' : 'Inactive'}
                     </span>
                     {template.category && (
-                      <span className="ml-2 text-gray-600">{template.category}</span>
+                      <span className="ml-2 text-secondary-600">{template.category}</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-700 line-clamp-3" dangerouslySetInnerHTML={{ __html: template.content }} />
+                  <div className="text-sm text-secondary-700 line-clamp-3" dangerouslySetInnerHTML={{ __html: template.content }} />
                 </div>
               ))}
             </div>
@@ -535,90 +521,76 @@ const EmailManagementPage: React.FC = () => {
       {activeTab === 'campaigns' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Email Campaigns</h3>
+            <h3 className="page-subtitle">Email Campaigns</h3>
             <button
               onClick={() => setShowCampaignModal(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"
+              className="btn-primary flex items-center space-x-2"
             >
-              <FaPlus className="w-4 h-4" />
+              <HiPlus className="w-4 h-4" />
               <span>Create Campaign</span>
             </button>
           </div>
 
           {campaignsLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading campaigns...</p>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading campaigns...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Campaign
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Recipients
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Performance
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+            <div className="table-container">
+              <table className="table">
+                <thead className="table-header">
+                  <tr>
+                    <th className="table-header-cell">Campaign</th>
+                    <th className="table-header-cell">Status</th>
+                    <th className="table-header-cell">Recipients</th>
+                    <th className="table-header-cell">Performance</th>
+                    <th className="table-header-cell">Created</th>
+                    <th className="table-header-cell text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="table-body">
+                  {campaigns.map((campaign) => (
+                    <tr key={campaign.id} className="table-row">
+                      <td className="table-cell">
+                        <div>
+                          <div className="text-sm font-medium text-secondary-900">{campaign.name}</div>
+                          <div className="text-sm text-secondary-500">{campaign.subject}</div>
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className="flex items-center">
+                          {getStatusIcon(campaign.status)}
+                          <span className="ml-2 text-sm text-secondary-900 capitalize">{campaign.status}</span>
+                        </div>
+                      </td>
+                      <td className="table-cell text-sm text-secondary-900">
+                        {campaign.recipients}
+                      </td>
+                      <td className="table-cell">
+                        <div className="text-sm text-secondary-900">
+                          <div>Sent: {campaign.sent}</div>
+                          <div>Opened: {campaign.opened}</div>
+                          <div>Clicked: {campaign.clicked}</div>
+                        </div>
+                      </td>
+                      <td className="table-cell text-sm text-secondary-500">
+                        {new Date(campaign.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="table-cell text-right text-sm font-medium">
+                        {campaign.status === 'draft' && (
+                          <button
+                            onClick={() => handleSendCampaign(campaign.id)}
+                            className="text-primary-600 hover:text-primary-900 transition-colors"
+                          >
+                            <HiPaperAirplane className="w-4 h-4" />
+                          </button>
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {campaigns.map((campaign) => (
-                      <tr key={campaign.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
-                            <div className="text-sm text-gray-500">{campaign.subject}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {getStatusIcon(campaign.status)}
-                            <span className="ml-2 text-sm text-gray-900 capitalize">{campaign.status}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {campaign.recipients}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            <div>Sent: {campaign.sent}</div>
-                            <div>Opened: {campaign.opened}</div>
-                            <div>Clicked: {campaign.clicked}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(campaign.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {campaign.status === 'draft' && (
-                            <button
-                              onClick={() => handleSendCampaign(campaign.id)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              <FaPaperPlane className="w-4 h-4" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -627,89 +599,89 @@ const EmailManagementPage: React.FC = () => {
       {/* Analytics Tab */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-900">Email Analytics</h3>
+          <h3 className="page-subtitle">Email Analytics</h3>
 
           {analyticsLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading analytics...</p>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading analytics...</p>
             </div>
           ) : analytics ? (
             <div className="space-y-6">
               {/* Overview Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow">
-                  <div className="flex items-center">
-                    <FaEnvelope className="text-blue-500 text-2xl mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">Total Emails</p>
-                      <p className="text-2xl font-bold">{analytics.overview.totalEmails}</p>
-                    </div>
+              <div className="grid-responsive">
+                <div className="stats-card">
+                  <div className="stats-icon bg-primary-100 text-primary-600">
+                    <HiEnvelope className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="stats-label">Total Emails</p>
+                    <p className="stats-value">{analytics.overview.totalEmails}</p>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                  <div className="flex items-center">
-                    <FaCheckCircle className="text-green-500 text-2xl mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">Delivered</p>
-                      <p className="text-2xl font-bold">{analytics.overview.delivered}</p>
-                    </div>
+                <div className="stats-card">
+                  <div className="stats-icon bg-success-100 text-success-600">
+                    <HiCheckCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="stats-label">Delivered</p>
+                    <p className="stats-value">{analytics.overview.delivered}</p>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                  <div className="flex items-center">
-                    <FaEye className="text-purple-500 text-2xl mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">Opened</p>
-                      <p className="text-2xl font-bold">{analytics.overview.opened}</p>
-                    </div>
+                <div className="stats-card">
+                  <div className="stats-icon bg-info-100 text-info-600">
+                    <HiEye className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="stats-label">Opened</p>
+                    <p className="stats-value">{analytics.overview.opened}</p>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow">
-                  <div className="flex items-center">
-                    <FaArrowUp className="text-orange-500 text-2xl mr-3" />
-                    <div>
-                      <p className="text-sm text-gray-600">Clicked</p>
-                      <p className="text-2xl font-bold">{analytics.overview.clicked}</p>
-                    </div>
+                <div className="stats-card">
+                  <div className="stats-icon bg-warning-100 text-warning-600">
+                    <HiArrowUp className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="stats-label">Clicked</p>
+                    <p className="stats-value">{analytics.overview.clicked}</p>
                   </div>
                 </div>
               </div>
 
               {/* Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Key Metrics</h4>
+                <div className="card">
+                  <h4 className="page-subtitle">Key Metrics</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Open Rate</span>
-                      <span className="text-sm font-medium">{analytics.metrics.openRate}%</span>
+                      <span className="text-sm text-secondary-600">Open Rate</span>
+                      <span className="text-sm font-medium text-secondary-900">{analytics.metrics.openRate}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Click Rate</span>
-                      <span className="text-sm font-medium">{analytics.metrics.clickRate}%</span>
+                      <span className="text-sm text-secondary-600">Click Rate</span>
+                      <span className="text-sm font-medium text-secondary-900">{analytics.metrics.clickRate}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Bounce Rate</span>
-                      <span className="text-sm font-medium">{analytics.metrics.bounceRate}%</span>
+                      <span className="text-sm text-secondary-600">Bounce Rate</span>
+                      <span className="text-sm font-medium text-secondary-900">{analytics.metrics.bounceRate}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Unsubscribe Rate</span>
-                      <span className="text-sm font-medium">{analytics.metrics.unsubscribeRate}%</span>
+                      <span className="text-sm text-secondary-600">Unsubscribe Rate</span>
+                      <span className="text-sm font-medium text-secondary-900">{analytics.metrics.unsubscribeRate}%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Top Templates</h4>
+                <div className="card">
+                  <h4 className="page-subtitle">Top Templates</h4>
                   <div className="space-y-3">
                     {analytics.topTemplates?.map((template, index) => (
                       <div key={index} className="flex justify-between items-center">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{template.name}</p>
-                          <p className="text-xs text-gray-500">{template.sent} sent</p>
+                          <p className="text-sm font-medium text-secondary-900">{template.name}</p>
+                          <p className="text-xs text-secondary-500">{template.sent} sent</p>
                         </div>
-                        <span className="text-sm font-medium text-green-600">{template.openRate}%</span>
+                        <span className="text-sm font-medium text-success-600">{template.openRate}%</span>
                       </div>
                     ))}
                   </div>
@@ -722,49 +694,60 @@ const EmailManagementPage: React.FC = () => {
 
       {/* Template Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">
                 {selectedTemplate ? 'Edit Template' : 'Create New Template'}
               </h3>
+              <button
+                onClick={() => {
+                  setShowTemplateModal(false);
+                  setSelectedTemplate(null);
+                }}
+                className="modal-close"
+              >
+                <HiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="modal-content">
               <form onSubmit={handleCreateTemplate} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Template Name</label>
+                  <label className="form-label">Template Name</label>
                   <input
                     type="text"
                     value={templateForm.name}
                     onChange={(e) => setTemplateForm({...templateForm, name: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Subject</label>
+                  <label className="form-label">Subject</label>
                   <input
                     type="text"
                     value={templateForm.subject}
                     onChange={(e) => setTemplateForm({...templateForm, subject: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Content</label>
+                  <label className="form-label">Content</label>
                   <textarea
                     value={templateForm.content}
                     onChange={(e) => setTemplateForm({...templateForm, content: e.target.value})}
                     rows={6}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
+                  <label className="form-label">Category</label>
                   <select
                     value={templateForm.category}
                     onChange={(e) => setTemplateForm({...templateForm, category: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="select-field"
                   >
                     <option value="general">General</option>
                     <option value="appointments">Appointments</option>
@@ -779,13 +762,13 @@ const EmailManagementPage: React.FC = () => {
                       setShowTemplateModal(false);
                       setSelectedTemplate(null);
                     }}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                    className="btn-secondary"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    className="btn-primary"
                   >
                     {selectedTemplate ? 'Update Template' : 'Create Template'}
                   </button>
@@ -798,89 +781,97 @@ const EmailManagementPage: React.FC = () => {
 
       {/* Campaign Modal */}
       {showCampaignModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Campaign</h3>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Create New Campaign</h3>
+              <button
+                onClick={() => setShowCampaignModal(false)}
+                className="modal-close"
+              >
+                <HiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="modal-content">
               <form onSubmit={handleCreateCampaign} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Campaign Name</label>
+                  <label className="form-label">Campaign Name</label>
                   <input
                     type="text"
                     value={campaignForm.name}
                     onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Subject</label>
+                  <label className="form-label">Subject</label>
                   <input
                     type="text"
                     value={campaignForm.subject}
                     onChange={(e) => setCampaignForm({...campaignForm, subject: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Content</label>
+                  <label className="form-label">Content</label>
                   <textarea
                     value={campaignForm.content}
                     onChange={(e) => setCampaignForm({...campaignForm, content: e.target.value})}
                     rows={6}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Recipients</label>
+                  <label className="form-label">Recipients</label>
                   {campaignForm.recipients.map((email, index) => (
                     <div key={index} className="flex space-x-2 mb-2">
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => updateCampaignRecipient(index, e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input-field flex-1"
                         placeholder="recipient@example.com"
                       />
                       <button
                         type="button"
                         onClick={() => removeCampaignRecipient(index)}
-                        className="px-3 py-2 text-red-600 hover:text-red-800"
+                        className="p-2 text-error-600 hover:text-error-800 transition-colors"
                       >
-                        <FaTimesCircle className="w-4 h-4" />
+                        <HiXCircle className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addCampaignRecipient}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    className="text-primary-600 hover:text-primary-800 text-sm transition-colors"
                   >
                     + Add recipient
                   </button>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Schedule (Optional)</label>
+                  <label className="form-label">Schedule (Optional)</label>
                   <input
                     type="datetime-local"
                     value={campaignForm.scheduledAt}
                     onChange={(e) => setCampaignForm({...campaignForm, scheduledAt: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="input-field"
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowCampaignModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                    className="btn-secondary"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    className="btn-primary"
                   >
                     Create Campaign
                   </button>
