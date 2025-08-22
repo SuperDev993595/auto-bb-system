@@ -1,14 +1,11 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { toast } from 'react-hot-toast';
 import { invoiceService } from '../../services/invoices';
-import { Invoice, InvoiceItem } from '../../utils/CustomerTypes';
 
-// Async thunks for Invoices
 export const fetchInvoices = createAsyncThunk(
   'invoices/fetchInvoices',
-  async (_, { rejectWithValue }) => {
+  async (filters: any = {}, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.getInvoices();
+      const response = await invoiceService.getInvoices(filters);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch invoices');
@@ -16,78 +13,8 @@ export const fetchInvoices = createAsyncThunk(
   }
 );
 
-export const createInvoice = createAsyncThunk(
-  'invoices/createInvoice',
-  async (invoiceData: any, { rejectWithValue }) => {
-    try {
-      const response = await invoiceService.createInvoice(invoiceData);
-      toast.success('Invoice created successfully');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create invoice');
-      return rejectWithValue(error.response?.data?.message || 'Failed to create invoice');
-    }
-  }
-);
-
-export const updateInvoice = createAsyncThunk(
-  'invoices/updateInvoice',
-  async ({ id, invoiceData }: { id: string; invoiceData: any }, { rejectWithValue }) => {
-    try {
-      const response = await invoiceService.updateInvoice(id, invoiceData);
-      toast.success('Invoice updated successfully');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update invoice');
-      return rejectWithValue(error.response?.data?.message || 'Failed to update invoice');
-    }
-  }
-);
-
-export const deleteInvoice = createAsyncThunk(
-  'invoices/deleteInvoice',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      await invoiceService.deleteInvoice(id);
-      toast.success('Invoice deleted successfully');
-      return id;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete invoice');
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete invoice');
-    }
-  }
-);
-
-export const sendInvoice = createAsyncThunk(
-  'invoices/sendInvoice',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const response = await invoiceService.sendInvoice(id);
-      toast.success('Invoice sent successfully');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send invoice');
-      return rejectWithValue(error.response?.data?.message || 'Failed to send invoice');
-    }
-  }
-);
-
-export const addPayment = createAsyncThunk(
-  'invoices/addPayment',
-  async ({ invoiceId, paymentData }: { invoiceId: string; paymentData: any }, { rejectWithValue }) => {
-    try {
-      const response = await invoiceService.addPayment(invoiceId, paymentData);
-      toast.success('Payment added successfully');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to add payment');
-      return rejectWithValue(error.response?.data?.message || 'Failed to add payment');
-    }
-  }
-);
-
 export const fetchInvoiceStats = createAsyncThunk(
-  'invoices/fetchStats',
+  'invoices/fetchInvoiceStats',
   async (_, { rejectWithValue }) => {
     try {
       const response = await invoiceService.getInvoiceStats();
@@ -102,7 +29,7 @@ export const fetchPaymentStats = createAsyncThunk(
   'invoices/fetchPaymentStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.getPaymentAnalytics();
+      const response = await invoiceService.getPaymentStats();
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch payment stats');
@@ -110,11 +37,8 @@ export const fetchPaymentStats = createAsyncThunk(
   }
 );
 
-
-
-// Async thunks for Invoice Templates
 export const fetchInvoiceTemplates = createAsyncThunk(
-  'invoices/fetchTemplates',
+  'invoices/fetchInvoiceTemplates',
   async (_, { rejectWithValue }) => {
     try {
       const response = await invoiceService.getInvoiceTemplates();
@@ -127,100 +51,96 @@ export const fetchInvoiceTemplates = createAsyncThunk(
 
 export const markAsOverdue = createAsyncThunk(
   'invoices/markAsOverdue',
-  async (_, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.markAsOverdue();
-      toast.success('Overdue invoices updated successfully');
+      const response = await invoiceService.markAsOverdue(id);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update overdue invoices');
-      return rejectWithValue(error.response?.data?.message || 'Failed to update overdue invoices');
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark invoice as overdue');
     }
   }
 );
 
 export const downloadInvoicePDF = createAsyncThunk(
-  'invoices/downloadPDF',
+  'invoices/downloadInvoicePDF',
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await invoiceService.downloadInvoicePDF(id);
-      
-      // Create a blob from the PDF data
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      
-      // Create a temporary link and trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice-${id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up the URL
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('PDF downloaded successfully');
-      return { success: true };
+      return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to download PDF');
-      return rejectWithValue(error.response?.data?.message || 'Failed to download PDF');
+      return rejectWithValue(error.response?.data?.message || 'Failed to download invoice PDF');
     }
   }
 );
 
 export const sendInvoiceEmail = createAsyncThunk(
-  'invoices/sendEmail',
-  async (id: string, { rejectWithValue }) => {
+  'invoices/sendInvoiceEmail',
+  async ({ id, emailData }: { id: string; emailData: any }, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.sendInvoiceEmail(id);
-      toast.success('Invoice sent successfully');
+      const response = await invoiceService.sendInvoiceEmail(id, emailData);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send invoice');
+      return rejectWithValue(error.response?.data?.message || 'Failed to send invoice email');
+    }
+  }
+);
+
+export const createInvoice = createAsyncThunk(
+  'invoices/createInvoice',
+  async (invoiceData: any, { rejectWithValue }) => {
+    try {
+      const response = await invoiceService.createInvoice(invoiceData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create invoice');
+    }
+  }
+);
+
+export const updateInvoice = createAsyncThunk(
+  'invoices/updateInvoice',
+  async ({ id, invoiceData }: { id: string; invoiceData: any }, { rejectWithValue }) => {
+    try {
+      const response = await invoiceService.updateInvoice(id, invoiceData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update invoice');
+    }
+  }
+);
+
+export const deleteInvoice = createAsyncThunk(
+  'invoices/deleteInvoice',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await invoiceService.deleteInvoice(id);
+      return id;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete invoice');
+    }
+  }
+);
+
+export const sendInvoice = createAsyncThunk(
+  'invoices/sendInvoice',
+  async ({ id, emailData }: { id: string; emailData: any }, { rejectWithValue }) => {
+    try {
+      const response = await invoiceService.sendInvoice(id, emailData);
+      return response.data;
+    } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to send invoice');
     }
   }
 );
 
-export const createInvoiceTemplate = createAsyncThunk(
-  'invoices/createTemplate',
-  async (templateData: any, { rejectWithValue }) => {
+export const addPayment = createAsyncThunk(
+  'invoices/addPayment',
+  async ({ id, paymentData }: { id: string; paymentData: any }, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.createInvoiceTemplate(templateData);
-      toast.success('Invoice template created successfully');
+      const response = await invoiceService.addPayment(id, paymentData);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create invoice template');
-      return rejectWithValue(error.response?.data?.message || 'Failed to create invoice template');
-    }
-  }
-);
-
-export const updateInvoiceTemplate = createAsyncThunk(
-  'invoices/updateTemplate',
-  async ({ id, templateData }: { id: string; templateData: any }, { rejectWithValue }) => {
-    try {
-      const response = await invoiceService.updateInvoiceTemplate(id, templateData);
-      toast.success('Invoice template updated successfully');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update invoice template');
-      return rejectWithValue(error.response?.data?.message || 'Failed to update invoice template');
-    }
-  }
-);
-
-export const deleteInvoiceTemplate = createAsyncThunk(
-  'invoices/deleteTemplate',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      await invoiceService.deleteInvoiceTemplate(id);
-      toast.success('Invoice template deleted successfully');
-      return id;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete invoice template');
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete invoice template');
+      return rejectWithValue(error.response?.data?.message || 'Failed to add payment');
     }
   }
 );

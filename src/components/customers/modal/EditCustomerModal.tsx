@@ -101,9 +101,9 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
       toast.success('Customer updated successfully!')
       onSuccess?.()
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Update customer error:', error)
-      toast.error('Failed to update customer. Please try again.')
+      toast.error(error.message || 'Failed to update customer. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -113,9 +113,9 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <User className="w-6 h-6 text-blue-600" />
@@ -131,7 +131,7 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8">
           {/* Basic Information */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">
@@ -299,26 +299,27 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
               <option value="prospect">Prospect</option>
             </select>
           </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-            >
-              <Save className="w-4 h-4" />
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
         </form>
+
+        {/* Actions - Fixed at bottom */}
+        <div className="flex justify-end gap-4 p-6 border-t border-gray-100 bg-white flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            onClick={handleSubmit}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+          >
+            <Save className="w-4 h-4" />
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -1,5 +1,4 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { toast } from 'react-hot-toast';
 import { 
   customerService, 
   Customer, 
@@ -30,7 +29,19 @@ export const fetchCustomer = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await customerService.getCustomer(id);
-      return response.data;
+      console.log('fetchCustomer response:', response);
+      
+      // Handle different response structures
+      if (response.data && response.data.customer) {
+        // If data is wrapped in a customer property
+        return response.data.customer;
+      } else if (response.data) {
+        // If data is the customer object directly
+        return response.data;
+      } else {
+        // Fallback to the entire response
+        return response;
+      }
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer');
     }
@@ -42,11 +53,9 @@ export const createCustomer = createAsyncThunk(
   async (customerData: CreateCustomerData, { rejectWithValue }) => {
     try {
       const response = await customerService.createCustomer(customerData);
-      toast.success('Customer created successfully!');
       return response.data.customer;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create customer';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -57,11 +66,9 @@ export const updateCustomer = createAsyncThunk(
   async ({ id, customerData }: { id: string; customerData: UpdateCustomerData }, { rejectWithValue }) => {
     try {
       const response = await customerService.updateCustomer(id, customerData);
-      toast.success('Customer updated successfully!');
       return response.data.customer;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update customer';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -72,11 +79,9 @@ export const deleteCustomer = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await customerService.deleteCustomer(id);
-      toast.success('Customer deleted successfully!');
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete customer';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }

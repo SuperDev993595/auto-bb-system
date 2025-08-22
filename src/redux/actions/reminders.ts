@@ -1,12 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { toast } from 'react-hot-toast';
-import {
-  reminderService,
-  Reminder,
-  ReminderTemplate,
-  NotificationSettings,
-  ReminderStats
-} from '../../services/reminders';
+import { reminderService } from '../../services/reminders';
 
 // Async thunks for Reminders
 export const fetchReminders = createAsyncThunk(
@@ -23,13 +16,11 @@ export const fetchReminders = createAsyncThunk(
 
 export const createReminder = createAsyncThunk(
   'reminders/createReminder',
-  async (reminderData: Partial<Reminder>, { rejectWithValue }) => {
+  async (reminderData: any, { rejectWithValue }) => {
     try {
       const response = await reminderService.createReminder(reminderData);
-      toast.success('Reminder created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create reminder');
       return rejectWithValue(error.response?.data?.message || 'Failed to create reminder');
     }
   }
@@ -37,13 +28,11 @@ export const createReminder = createAsyncThunk(
 
 export const updateReminder = createAsyncThunk(
   'reminders/updateReminder',
-  async ({ id, reminderData }: { id: string; reminderData: Partial<Reminder> }, { rejectWithValue }) => {
+  async ({ id, reminderData }: { id: string; reminderData: any }, { rejectWithValue }) => {
     try {
       const response = await reminderService.updateReminder(id, reminderData);
-      toast.success('Reminder updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update reminder');
       return rejectWithValue(error.response?.data?.message || 'Failed to update reminder');
     }
   }
@@ -54,10 +43,8 @@ export const deleteReminder = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await reminderService.deleteReminder(id);
-      toast.success('Reminder deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete reminder');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete reminder');
     }
   }
@@ -67,40 +54,10 @@ export const markReminderSent = createAsyncThunk(
   'reminders/markSent',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await reminderService.markReminderSent(id);
-      toast.success('Reminder marked as sent');
+      const response = await reminderService.markAsSent(id);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to mark reminder as sent');
       return rejectWithValue(error.response?.data?.message || 'Failed to mark reminder as sent');
-    }
-  }
-);
-
-export const markReminderAcknowledged = createAsyncThunk(
-  'reminders/markAcknowledged',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const response = await reminderService.markReminderAcknowledged(id);
-      toast.success('Reminder acknowledged');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to acknowledge reminder');
-      return rejectWithValue(error.response?.data?.message || 'Failed to acknowledge reminder');
-    }
-  }
-);
-
-export const markReminderCompleted = createAsyncThunk(
-  'reminders/markCompleted',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const response = await reminderService.markReminderCompleted(id);
-      toast.success('Reminder marked as completed');
-      return response.data;
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to mark reminder as completed');
-      return rejectWithValue(error.response?.data?.message || 'Failed to mark reminder as completed');
     }
   }
 );
@@ -110,10 +67,8 @@ export const cancelReminder = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await reminderService.cancelReminder(id);
-      toast.success('Reminder cancelled');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to cancel reminder');
       return rejectWithValue(error.response?.data?.message || 'Failed to cancel reminder');
     }
   }
@@ -170,13 +125,11 @@ export const fetchReminderTemplates = createAsyncThunk(
 
 export const createReminderTemplate = createAsyncThunk(
   'reminders/createTemplate',
-  async (templateData: Partial<ReminderTemplate>, { rejectWithValue }) => {
+  async (templateData: any, { rejectWithValue }) => {
     try {
       const response = await reminderService.createTemplate(templateData);
-      toast.success('Reminder template created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create reminder template');
       return rejectWithValue(error.response?.data?.message || 'Failed to create reminder template');
     }
   }
@@ -184,13 +137,11 @@ export const createReminderTemplate = createAsyncThunk(
 
 export const updateReminderTemplate = createAsyncThunk(
   'reminders/updateTemplate',
-  async ({ id, templateData }: { id: string; templateData: Partial<ReminderTemplate> }, { rejectWithValue }) => {
+  async ({ id, templateData }: { id: string; templateData: any }, { rejectWithValue }) => {
     try {
       const response = await reminderService.updateTemplate(id, templateData);
-      toast.success('Reminder template updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update reminder template');
       return rejectWithValue(error.response?.data?.message || 'Failed to update reminder template');
     }
   }
@@ -201,10 +152,8 @@ export const deleteReminderTemplate = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await reminderService.deleteTemplate(id);
-      toast.success('Reminder template deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete reminder template');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete reminder template');
     }
   }
@@ -225,25 +174,23 @@ export const fetchNotificationSettings = createAsyncThunk(
 
 export const updateNotificationSettings = createAsyncThunk(
   'reminders/updateNotificationSettings',
-  async (settingsData: Partial<NotificationSettings>, { rejectWithValue }) => {
+  async (settingsData: any, { rejectWithValue }) => {
     try {
       const response = await reminderService.updateNotificationSettings(settingsData);
-      toast.success('Notification settings updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update notification settings');
       return rejectWithValue(error.response?.data?.message || 'Failed to update notification settings');
     }
   }
 );
 
 interface RemindersState {
-  reminders: Reminder[];
-  templates: ReminderTemplate[];
-  notificationSettings: NotificationSettings | null;
-  upcomingReminders: Reminder[];
-  overdueReminders: Reminder[];
-  stats: ReminderStats | null;
+  reminders: any[];
+  templates: any[];
+  notificationSettings: any | null;
+  upcomingReminders: any[];
+  overdueReminders: any[];
+  stats: any | null;
   remindersLoading: boolean;
   templatesLoading: boolean;
   settingsLoading: boolean;

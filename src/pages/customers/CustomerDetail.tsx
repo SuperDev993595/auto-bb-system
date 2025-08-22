@@ -59,8 +59,9 @@ export default function CustomerDetail() {
   if (loading) {
     return (
       <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex justify-center items-center py-12">
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading customer information...</p>
         </div>
       </div>
     )
@@ -81,7 +82,41 @@ export default function CustomerDetail() {
   if (!customer) {
     return (
       <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="p-8 text-center text-red-600 font-medium">Customer not found.</div>
+        <div className="p-8 text-center text-red-600 font-medium">
+          Customer not found. Please check the URL or try refreshing the page.
+        </div>
+      </div>
+    )
+  }
+
+  // Debug: Log customer data for troubleshooting
+  console.log('Customer data loaded:', customer)
+
+  // Handle nested customer data structure (API might return {customer: {...}})
+  let actualCustomer = customer;
+  if (customer && typeof customer === 'object' && 'customer' in customer && customer.customer) {
+    console.log('Found nested customer structure, extracting customer data');
+    actualCustomer = customer.customer as any;
+  }
+
+  // Additional debugging for unexpected data structures
+  if (actualCustomer && typeof actualCustomer === 'object') {
+    console.log('Customer keys:', Object.keys(actualCustomer));
+    console.log('Customer _id:', actualCustomer._id);
+    console.log('Customer name:', actualCustomer.name);
+  }
+
+  // Validate required customer fields
+  if (!actualCustomer._id || !actualCustomer.name) {
+    console.error('Invalid customer data:', actualCustomer)
+    console.error('Original customer object:', customer)
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="p-8 text-center text-red-600 font-medium">
+          Invalid customer data. Some required information is missing.
+          <br />
+          <span className="text-sm">Please check the console for debugging information.</span>
+        </div>
       </div>
     )
   }
@@ -91,8 +126,17 @@ export default function CustomerDetail() {
       {/* Top Profile Header */}
       <div className="bg-white shadow-xl rounded-2xl p-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border border-gray-100">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
-          <p className="text-sm text-gray-500">Customer ID: {customer._id}</p>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {actualCustomer.name || actualCustomer.businessName || 'Unnamed Customer'}
+          </h1>
+          <div className="space-y-1 mt-2">
+            {actualCustomer.businessName && actualCustomer.name !== actualCustomer.businessName && (
+              <p className="text-sm text-gray-600">Contact: {actualCustomer.name}</p>
+            )}
+            <p className="text-sm text-gray-500">
+              Customer ID: {actualCustomer._id || 'N/A'}
+            </p>
+          </div>
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
           <button 
@@ -142,7 +186,7 @@ export default function CustomerDetail() {
       <div className="bg-white border border-gray-100 rounded-2xl shadow-xl p-8">
         {activeTab === 'Overview' && (
           <OverviewSection 
-            customer={customer} 
+            customer={actualCustomer} 
             onEditVehicle={(vehicle) => {
               setSelectedVehicle(vehicle)
               setShowEditVehicleModal(true)
@@ -153,18 +197,38 @@ export default function CustomerDetail() {
             }}
           />
         )}
-        {activeTab === 'Payments' && <PaymentsSection customer={customer} />}
-        {activeTab === 'Arrangements' && <ArrangementsSection customer={customer} />}
-        {activeTab === 'Appointments' && <AppointmentsSection customer={customer} />}
-        {activeTab === 'Towing' && <TowingSection customer={customer} />}
-        {activeTab === 'Call Logs' && <CallLogsSection customer={customer} />}
+        {activeTab === 'Payments' && (
+          <div className="min-h-[200px]">
+            <PaymentsSection customer={actualCustomer} />
+          </div>
+        )}
+        {activeTab === 'Arrangements' && (
+          <div className="min-h-[200px]">
+            <ArrangementsSection customer={actualCustomer} />
+          </div>
+        )}
+        {activeTab === 'Appointments' && (
+          <div className="min-h-[200px]">
+            <AppointmentsSection customer={actualCustomer} />
+          </div>
+        )}
+        {activeTab === 'Towing' && (
+          <div className="min-h-[200px]">
+            <TowingSection customer={actualCustomer} />
+          </div>
+        )}
+        {activeTab === 'Call Logs' && (
+          <div className="min-h-[200px]">
+            <CallLogsSection customer={actualCustomer} />
+          </div>
+        )}
       </div>
 
       {/* Modals */}
-      {customer && (
+      {actualCustomer && (
         <>
           <EditCustomerModal
-            customer={customer}
+            customer={actualCustomer}
             isOpen={showEditModal}
             onClose={() => setShowEditModal(false)}
             onSuccess={() => {
@@ -176,13 +240,13 @@ export default function CustomerDetail() {
           />
           
           <DeleteCustomerModal
-            customer={customer}
+            customer={actualCustomer}
             isOpen={showDeleteModal}
             onClose={() => setShowDeleteModal(false)}
           />
           
           <AddVehicleModal
-            customer={customer}
+            customer={actualCustomer}
             isOpen={showAddVehicleModal}
             onClose={() => setShowAddVehicleModal(false)}
             onSuccess={() => {
@@ -196,7 +260,7 @@ export default function CustomerDetail() {
           {selectedVehicle && (
             <>
               <EditVehicleModal
-                customer={customer}
+                customer={actualCustomer}
                 vehicle={selectedVehicle}
                 isOpen={showEditVehicleModal}
                 onClose={() => {
@@ -212,7 +276,7 @@ export default function CustomerDetail() {
               />
               
               <DeleteVehicleModal
-                customer={customer}
+                customer={actualCustomer}
                 vehicle={selectedVehicle}
                 isOpen={showDeleteVehicleModal}
                 onClose={() => {

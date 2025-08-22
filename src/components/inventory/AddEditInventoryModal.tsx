@@ -3,6 +3,7 @@ import { useAppSelector, useAppDispatch } from '../../redux';
 import { createInventoryItem, updateInventoryItem } from '../../redux/actions/inventory';
 import { InventoryItem, CreateInventoryItemData, UpdateInventoryItemData } from '../../services/inventory';
 import { X, Save, Plus } from '../../utils/icons';
+import { toast } from 'react-hot-toast';
 
 interface AddEditInventoryModalProps {
   isOpen: boolean;
@@ -114,13 +115,16 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     try {
       if (mode === 'add') {
         await dispatch(createInventoryItem(formData)).unwrap();
+        toast.success('Inventory item created successfully!');
       } else if (item) {
         const updateData: UpdateInventoryItemData = { ...formData };
         await dispatch(updateInventoryItem({ id: item._id, itemData: updateData })).unwrap();
+        toast.success('Inventory item updated successfully!');
       }
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving inventory item:', error);
+      toast.error(error.message || 'Failed to save inventory item');
     } finally {
       setIsSubmitting(false);
     }

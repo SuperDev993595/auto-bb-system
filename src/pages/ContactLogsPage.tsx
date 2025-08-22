@@ -69,7 +69,9 @@ export default function ContactLogsPage() {
   }
 
   const handleCreateLog = (data: any) => {
-    dispatch(createCommunicationLog(data)).then((result) => {
+    // Extract customerId from the data
+    const customerId = data.customerId
+    dispatch(createCommunicationLog({ customerId, logData: data })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setShowCreateModal(false)
         dispatch(fetchCommunicationLogs({}))
@@ -87,8 +89,9 @@ export default function ContactLogsPage() {
     
     // Use id if available, otherwise fall back to _id
     const logId = editingLog.id || (editingLog as any)._id
+    const customerId = editingLog.customerId
     
-    dispatch(updateCommunicationLog({ id: logId, logData: data })).then((result) => {
+    dispatch(updateCommunicationLog({ customerId, logId, logData: data })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setShowEditModal(false)
         setEditingLog(null)
@@ -98,7 +101,12 @@ export default function ContactLogsPage() {
   }
 
   const handleDeleteLog = (id: string) => {
-    dispatch(deleteCommunicationLog(id)).then((result) => {
+    // We need to find the log to get the customerId
+    const log = communicationLogs.find(log => log.id === id || (log as any)._id === id)
+    if (!log) return
+    
+    const customerId = log.customerId
+    dispatch(deleteCommunicationLog({ customerId, logId: id })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setDeleteLogId(null)
         dispatch(fetchCommunicationLogs({}))

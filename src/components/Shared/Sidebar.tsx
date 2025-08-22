@@ -34,8 +34,8 @@ const navItems: NavItem[] = [
     { to: "/admin/dashboard", label: "Dashboard", icon: <Home size={18} /> },
     
     // Core CRM Functions
-    { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
     { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
+    { to: "/admin/dashboard/appointments", label: "Appointments", icon: <CalendarCheck size={18} /> },
     { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/services", label: "Services", icon: <Wrench size={18} /> },
     

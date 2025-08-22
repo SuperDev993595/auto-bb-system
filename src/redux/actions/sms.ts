@@ -158,28 +158,24 @@ export const fetchSMSStats = createAsyncThunk(
 
 export const sendSMS = createAsyncThunk(
   'sms/sendSMS',
-  async (data: SendSMSData, { rejectWithValue }) => {
+  async (smsData: any, { rejectWithValue }) => {
     try {
-      const response = await api.post('/sms/send', data)
-      toast.success('SMS sent successfully')
-      return response.data
+      const response = await api.post('/sms/send', smsData);
+      return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send SMS')
-      return rejectWithValue(error.response?.data?.message || 'Failed to send SMS')
+      return rejectWithValue(error.response?.data?.message || 'Failed to send SMS');
     }
   }
 )
 
 export const sendBulkSMS = createAsyncThunk(
   'sms/sendBulkSMS',
-  async (data: BulkSMSData, { rejectWithValue }) => {
+  async (bulkSmsData: any, { rejectWithValue }) => {
     try {
-      const response = await api.post('/sms/bulk', data)
-      toast.success(`Bulk SMS sent: ${response.data.data.sentCount} successful, ${response.data.data.failedCount} failed`)
-      return response.data
+      const response = await api.post('/sms/bulk', bulkSmsData);
+      return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send bulk SMS')
-      return rejectWithValue(error.response?.data?.message || 'Failed to send bulk SMS')
+      return rejectWithValue(error.response?.data?.message || 'Failed to send bulk SMS');
     }
   }
 )
@@ -203,28 +199,24 @@ export const fetchSMSTemplates = createAsyncThunk(
 
 export const createSMSTemplate = createAsyncThunk(
   'sms/createTemplate',
-  async (data: CreateTemplateData, { rejectWithValue }) => {
+  async (templateData: any, { rejectWithValue }) => {
     try {
-      const response = await api.post('/sms/templates', data)
-      toast.success('SMS template created successfully')
-      return response.data
+      const response = await api.post('/sms/templates', templateData);
+      return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create SMS template')
-      return rejectWithValue(error.response?.data?.message || 'Failed to create SMS template')
+      return rejectWithValue(error.response?.data?.message || 'Failed to create SMS template');
     }
   }
 )
 
 export const useSMSTemplate = createAsyncThunk(
   'sms/useTemplate',
-  async (data: UseTemplateData, { rejectWithValue }) => {
+  async ({ templateId, recipients }: { templateId: string; recipients: string[] }, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/sms/templates/${data.templateId}/use`, data)
-      toast.success(`Template used: ${response.data.data.sentCount} SMS sent successfully`)
-      return response.data
+      const response = await api.post(`/sms/templates/${templateId}/use`, { recipients });
+      return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to use SMS template')
-      return rejectWithValue(error.response?.data?.message || 'Failed to use SMS template')
+      return rejectWithValue(error.response?.data?.message || 'Failed to use SMS template');
     }
   }
 )

@@ -1,35 +1,26 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { toast } from 'react-hot-toast';
-import appointmentService from '../../services/appointments';
-import { removeAppointment } from '../reducer/appointmentsReducer';
+import { appointmentService } from '../../services/appointments';
 
 export const deleteAppointment = createAsyncThunk(
   'appointments/deleteAppointment',
-  async (id: string, { dispatch, rejectWithValue }) => {
+  async (appointmentId: string, { rejectWithValue }) => {
     try {
-      // Check if this is a fake ID (for sample data or local storage)
-      if (id.startsWith('apt') && !id.match(/^[0-9a-fA-F]{24}$/)) {
-        // This is a fake ID - just remove from Redux store
-        dispatch(removeAppointment(id));
-        toast.success('Appointment deleted successfully!');
-        return id;
-      }
-      
-      // This is a real MongoDB ObjectId - try to delete from database
-      const response = await appointmentService.deleteAppointment(id);
-      
-      if (response.success) {
-        // Remove from Redux store
-        dispatch(removeAppointment(id));
-        toast.success('Appointment deleted successfully!');
-        return id;
-      } else {
-        toast.error(response.message || 'Failed to delete appointment');
-        return rejectWithValue(response.message || 'Failed to delete appointment');
-      }
+      const response = await appointmentService.deleteAppointment(appointmentId);
+      return response.data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to delete appointment';
-      toast.error(message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete appointment');
+    }
+  }
+);
+
+export const updateAppointment = createAsyncThunk(
+  'appointments/updateAppointment',
+  async ({ id, appointmentData }: { id: string; appointmentData: any }, { rejectWithValue }) => {
+    try {
+      const response = await appointmentService.updateAppointment(id, appointmentData);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update appointment';
       return rejectWithValue(message);
     }
   }

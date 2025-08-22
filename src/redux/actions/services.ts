@@ -46,13 +46,11 @@ export const fetchServiceCatalogItem = createAsyncThunk(
 
 export const createServiceCatalogItem = createAsyncThunk(
   'services/createServiceCatalogItem',
-  async (data: CreateServiceCatalogData, { rejectWithValue }) => {
+  async (serviceData: any, { rejectWithValue }) => {
     try {
-      const response = await serviceManagementService.createServiceCatalogItem(data);
-      toast.success('Service created successfully');
+      const response = await serviceManagementService.createServiceCatalogItem(serviceData);
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create service');
       return rejectWithValue(error.response?.data?.message || 'Failed to create service');
     }
   }
@@ -60,13 +58,11 @@ export const createServiceCatalogItem = createAsyncThunk(
 
 export const updateServiceCatalogItem = createAsyncThunk(
   'services/updateServiceCatalogItem',
-  async ({ id, data }: { id: string; data: UpdateServiceCatalogData }, { rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.updateServiceCatalogItem(id, data);
-      toast.success('Service updated successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update service');
       return rejectWithValue(error.response?.data?.message || 'Failed to update service');
     }
   }
@@ -77,10 +73,8 @@ export const deleteServiceCatalogItem = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await serviceManagementService.deleteServiceCatalogItem(id);
-      toast.success('Service deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete service');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete service');
     }
   }
@@ -128,10 +122,8 @@ export const createWorkOrder = createAsyncThunk(
   async (data: CreateWorkOrderData, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.createWorkOrder(data);
-      toast.success('Work order created successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create work order');
       return rejectWithValue(error.response?.data?.message || 'Failed to create work order');
     }
   }
@@ -142,10 +134,8 @@ export const updateWorkOrder = createAsyncThunk(
   async ({ id, data }: { id: string; data: UpdateWorkOrderData }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.updateWorkOrder(id, data);
-      toast.success('Work order updated successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update work order');
       return rejectWithValue(error.response?.data?.message || 'Failed to update work order');
     }
   }
@@ -156,10 +146,8 @@ export const deleteWorkOrder = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await serviceManagementService.deleteWorkOrder(id);
-      toast.success('Work order deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete work order');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete work order');
     }
   }
@@ -170,10 +158,8 @@ export const updateWorkOrderStatus = createAsyncThunk(
   async ({ id, status }: { id: string; status: WorkOrder['status'] }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.updateWorkOrderStatus(id, status);
-      toast.success('Work order status updated successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update work order status');
       return rejectWithValue(error.response?.data?.message || 'Failed to update work order status');
     }
   }
@@ -184,10 +170,8 @@ export const assignTechnician = createAsyncThunk(
   async ({ workOrderId, technicianId }: { workOrderId: string; technicianId: string }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.assignTechnician(workOrderId, technicianId);
-      toast.success('Technician assigned successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to assign technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to assign technician');
     }
   }
@@ -235,10 +219,8 @@ export const createTechnician = createAsyncThunk(
   async (data: CreateTechnicianData, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.createTechnician(data);
-      toast.success('Technician created successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to create technician');
     }
   }
@@ -249,10 +231,8 @@ export const updateTechnician = createAsyncThunk(
   async ({ id, data }: { id: string; data: UpdateTechnicianData }, { rejectWithValue }) => {
     try {
       const response = await serviceManagementService.updateTechnician(id, data);
-      toast.success('Technician updated successfully');
       return response;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to update technician');
     }
   }
@@ -263,10 +243,8 @@ export const deleteTechnician = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await serviceManagementService.deleteTechnician(id);
-      toast.success('Technician deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete technician');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete technician');
     }
   }

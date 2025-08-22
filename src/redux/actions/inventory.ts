@@ -34,42 +34,36 @@ export const fetchInventoryItems = createAsyncThunk(
 );
 
 export const createInventoryItem = createAsyncThunk(
-  'inventory/createItem',
-  async (itemData: CreateInventoryItemData, { rejectWithValue }) => {
+  'inventory/createInventoryItem',
+  async (itemData: any, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createInventoryItem(itemData);
-      toast.success('Inventory item created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create inventory item');
       return rejectWithValue(error.response?.data?.message || 'Failed to create inventory item');
     }
   }
 );
 
 export const updateInventoryItem = createAsyncThunk(
-  'inventory/updateItem',
-  async ({ id, itemData }: { id: string; itemData: UpdateInventoryItemData }, { rejectWithValue }) => {
+  'inventory/updateInventoryItem',
+  async ({ id, itemData }: { id: string; itemData: any }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.updateInventoryItem(id, itemData);
-      toast.success('Inventory item updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update inventory item');
       return rejectWithValue(error.response?.data?.message || 'Failed to update inventory item');
     }
   }
 );
 
 export const deleteInventoryItem = createAsyncThunk(
-  'inventory/deleteItem',
+  'inventory/deleteInventoryItem',
   async (id: string, { rejectWithValue }) => {
     try {
       await inventoryService.deleteInventoryItem(id);
-      toast.success('Inventory item deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete inventory item');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete inventory item');
     }
   }
@@ -77,13 +71,11 @@ export const deleteInventoryItem = createAsyncThunk(
 
 export const adjustStock = createAsyncThunk(
   'inventory/adjustStock',
-  async ({ itemId, quantity, reason, notes }: { itemId: string; quantity: number; reason: string; notes?: string }, { rejectWithValue }) => {
+  async ({ id, adjustmentData }: { id: string; adjustmentData: any }, { rejectWithValue }) => {
     try {
-      const response = await inventoryService.adjustStock(itemId, quantity, reason, notes);
-      toast.success('Stock adjusted successfully');
+      const response = await inventoryService.adjustStock(id, adjustmentData);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to adjust stock');
       return rejectWithValue(error.response?.data?.message || 'Failed to adjust stock');
     }
   }
@@ -119,10 +111,8 @@ export const createInventoryTransaction = createAsyncThunk(
   async (transactionData: any, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createTransaction(transactionData);
-      toast.success('Transaction created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create transaction');
       return rejectWithValue(error.response?.data?.message || 'Failed to create transaction');
     }
   }
@@ -158,10 +148,8 @@ export const createPurchaseOrder = createAsyncThunk(
   async (purchaseOrderData: CreatePurchaseOrderData, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createPurchaseOrder(purchaseOrderData);
-      toast.success('Purchase order created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create purchase order');
       return rejectWithValue(error.response?.data?.message || 'Failed to create purchase order');
     }
   }
@@ -172,10 +160,8 @@ export const updatePurchaseOrder = createAsyncThunk(
   async ({ id, purchaseOrderData }: { id: string; purchaseOrderData: UpdatePurchaseOrderData }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.updatePurchaseOrder(id, purchaseOrderData);
-      toast.success('Purchase order updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update purchase order');
       return rejectWithValue(error.response?.data?.message || 'Failed to update purchase order');
     }
   }
@@ -186,10 +172,8 @@ export const deletePurchaseOrder = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await inventoryService.deletePurchaseOrder(id);
-      toast.success('Purchase order deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete purchase order');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete purchase order');
     }
   }
@@ -200,10 +184,8 @@ export const receivePurchaseOrder = createAsyncThunk(
   async ({ id, receivedItems }: { id: string; receivedItems: { itemId: string; receivedQuantity: number }[] }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.receivePurchaseOrder(id, receivedItems);
-      toast.success('Purchase order received successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to receive purchase order');
       return rejectWithValue(error.response?.data?.message || 'Failed to receive purchase order');
     }
   }
@@ -239,10 +221,8 @@ export const createSupplier = createAsyncThunk(
   async (supplierData: CreateSupplierData, { rejectWithValue }) => {
     try {
       const response = await inventoryService.createSupplier(supplierData);
-      toast.success('Supplier created successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create supplier');
       return rejectWithValue(error.response?.data?.message || 'Failed to create supplier');
     }
   }
@@ -253,10 +233,8 @@ export const updateSupplier = createAsyncThunk(
   async ({ id, supplierData }: { id: string; supplierData: UpdateSupplierData }, { rejectWithValue }) => {
     try {
       const response = await inventoryService.updateSupplier(id, supplierData);
-      toast.success('Supplier updated successfully');
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update supplier');
       return rejectWithValue(error.response?.data?.message || 'Failed to update supplier');
     }
   }
@@ -267,10 +245,8 @@ export const deleteSupplier = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await inventoryService.deleteSupplier(id);
-      toast.success('Supplier deleted successfully');
       return id;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete supplier');
       return rejectWithValue(error.response?.data?.message || 'Failed to delete supplier');
     }
   }

@@ -40,11 +40,9 @@ export const createTask = createAsyncThunk(
   async (taskData: CreateTaskData, { rejectWithValue }) => {
     try {
       const response = await taskService.createTask(taskData);
-      toast.success('Task created successfully!');
       return response.data.task;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create task';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -55,11 +53,9 @@ export const updateTask = createAsyncThunk(
   async ({ id, taskData }: { id: string; taskData: UpdateTaskData }, { rejectWithValue }) => {
     try {
       const response = await taskService.updateTask(id, taskData);
-      toast.success('Task updated successfully!');
       return response.data.task;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update task';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -70,11 +66,9 @@ export const deleteTask = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       await taskService.deleteTask(id);
-      toast.success('Task deleted successfully!');
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete task';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -85,11 +79,9 @@ export const updateTaskStatus = createAsyncThunk(
   async ({ id, status }: { id: string; status: Task['status'] }, { rejectWithValue }) => {
     try {
       const response = await taskService.updateTaskStatus(id, status);
-      toast.success('Task status updated!');
       return response.data.task;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update task status';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -103,7 +95,6 @@ export const updateTaskProgress = createAsyncThunk(
       return response.data.task;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update task progress';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -114,11 +105,9 @@ export const addTaskNote = createAsyncThunk(
   async ({ id, note }: { id: string; note: string }, { rejectWithValue }) => {
     try {
       const response = await taskService.addTaskNote(id, note);
-      toast.success('Note added successfully!');
       return response.data.task;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to add note';
-      toast.error(message);
       return rejectWithValue(message);
     }
   }
@@ -138,7 +127,7 @@ export const fetchTaskStats = createAsyncThunk(
 
 export const fetchDailyProgress = createAsyncThunk(
   'tasks/fetchDailyProgress',
-  async (date?: string, { rejectWithValue }) => {
+  async (date: string | undefined, { rejectWithValue }) => {
     try {
       const response = await taskService.getDailyProgress(date);
       return response.data;

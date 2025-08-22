@@ -11,11 +11,17 @@ import {
 interface CommunicationLogsState {
   logs: CommunicationLog[]
   stats: {
-    totalContacts: number
-    phoneCalls: number
-    emails: number
-    followUpsNeeded: number
-    resolved: number
+    totalLogs: number
+    byType: {
+      phone: number
+      email: number
+      'in-person': number
+      sms: number
+    }
+    byDirection: {
+      inbound: number
+      outbound: number
+    }
   }
   loading: boolean
   error: string | null
@@ -31,11 +37,17 @@ interface CommunicationLogsState {
 const initialState: CommunicationLogsState = {
   logs: [],
   stats: {
-    totalContacts: 0,
-    phoneCalls: 0,
-    emails: 0,
-    followUpsNeeded: 0,
-    resolved: 0
+    totalLogs: 0,
+    byType: {
+      phone: 0,
+      email: 0,
+      'in-person': 0,
+      sms: 0
+    },
+    byDirection: {
+      inbound: 0,
+      outbound: 0
+    }
   },
   loading: false,
   error: null,
@@ -68,21 +80,18 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(fetchCommunicationLogs.fulfilled, (state, action) => {
         state.loading = false
-        console.log('communicationLogsReducer: fetchCommunicationLogs.fulfilled payload:', action.payload)
-        console.log('communicationLogsReducer: action.payload.data:', action.payload.data)
         
         // Map _id to id for consistency with frontend interface
-        const logsWithId = (action.payload.data || []).map((log: any) => ({
+        const logsWithId = (action.payload || []).map((log: any) => ({
           ...log,
           id: log._id || log.id
         }))
-        console.log('communicationLogsReducer: logsWithId:', logsWithId)
         
         state.logs = logsWithId
-        state.pagination = action.payload.pagination || {
+        state.pagination = {
           currentPage: 1,
           totalPages: 1,
-          totalItems: 0,
+          totalItems: logsWithId.length,
           hasNextPage: false,
           hasPrevPage: false
         }
@@ -100,14 +109,14 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(createCommunicationLog.fulfilled, (state, action) => {
         state.loading = false
-        if (action.payload.data) {
+        if (action.payload) {
           // Map _id to id for consistency with frontend interface
           const logWithId = {
-            ...action.payload.data,
-            id: action.payload.data._id || action.payload.data.id
+            ...action.payload,
+            id: action.payload._id || action.payload.id
           }
           state.logs.unshift(logWithId)
-          state.stats.totalContacts += 1
+          state.stats.totalLogs += 1
         }
       })
       .addCase(createCommunicationLog.rejected, (state, action) => {
@@ -123,11 +132,11 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(updateCommunicationLog.fulfilled, (state, action) => {
         state.loading = false
-        if (action.payload.data) {
+        if (action.payload) {
           // Map _id to id for consistency with frontend interface
           const logWithId = {
-            ...action.payload.data,
-            id: action.payload.data._id || action.payload.data.id
+            ...action.payload,
+            id: action.payload._id || action.payload.id
           }
           const index = state.logs.findIndex(log => log.id === logWithId.id || (log as any)._id === logWithId.id)
           if (index !== -1) {
@@ -148,8 +157,10 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(deleteCommunicationLog.fulfilled, (state, action) => {
         state.loading = false
-        state.logs = state.logs.filter(log => log.id !== action.payload && (log as any)._id !== action.payload)
-        state.stats.totalContacts = Math.max(0, state.stats.totalContacts - 1)
+        // action.payload is now { customerId, logId }
+        const logId = action.payload.logId
+        state.logs = state.logs.filter(log => log.id !== logId && (log as any)._id !== logId)
+        state.stats.totalLogs = Math.max(0, state.stats.totalLogs - 1)
       })
       .addCase(deleteCommunicationLog.rejected, (state, action) => {
         state.loading = false
@@ -164,7 +175,7 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(fetchCommunicationStats.fulfilled, (state, action) => {
         state.loading = false
-        state.stats = action.payload.data || state.stats
+        state.stats = action.payload || state.stats
       })
       .addCase(fetchCommunicationStats.rejected, (state, action) => {
         state.loading = false
