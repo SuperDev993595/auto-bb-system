@@ -772,91 +772,198 @@ export default function AppointmentsPage() {
 
             {/* Search Results Indicator */}
             {searchTerm && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-3xl p-6 shadow-lg">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Search className="w-5 h-5 text-blue-600" />
-                            <span className="text-sm text-blue-800">
-                                Search results for "<strong>{searchTerm}</strong>": 
-                                <strong className="ml-1">{filteredAppointments.length}</strong> appointment{filteredAppointments.length !== 1 ? 's' : ''} found
-                                {viewMode === 'calendar' && (
-                                    <span className="ml-2 text-blue-600">
-                                        (Calendar view will show filtered results)
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                                <Search className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-blue-700">Search Results</span>
+                                    <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                                    <span className="text-sm text-blue-600">
+                                        "{searchTerm}"
                                     </span>
-                                )}
-                            </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg font-bold text-blue-800">
+                                        {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
+                                    </span>
+                                    {viewMode === 'calendar' && (
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                            Calendar view
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <button
-                            onClick={() => setSearchTerm('')}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded-lg hover:bg-blue-100 transition-all duration-200"
-                        >
-                            Clear search
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setStatusFilter('all');
+                                    setTechnicianFilter('all');
+                                }}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg font-medium transition-all duration-200"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Clear All
+                            </button>
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                ✕
+                                Clear Search
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Main Content */}
             {viewMode === 'calendar' ? (
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                        <h3 className="text-base font-semibold text-gray-800">Calendar View</h3>
-                        <p className="text-xs text-gray-600 mt-0.5">View appointments in calendar format</p>
+                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-6 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                                    <Calendar className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800">Calendar View</h3>
+                                    <p className="text-sm text-gray-600">Interactive calendar for appointment scheduling</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                                    {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="p-6">
-                        <AppointmentCalendar appointments={filteredAppointments} />
+                    <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
+                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                            <AppointmentCalendar appointments={filteredAppointments} />
+                        </div>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-800">
-                                    Appointments ({filteredAppointments.length})
-                                </h3>
-                                <p className="text-xs text-gray-600 mt-0.5">Grid view of all appointments</p>
+                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-6 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <Grid3X3 className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800">
+                                        Appointments Grid
+                                    </h3>
+                                    <p className="text-sm text-gray-600">Card-based view of all appointments</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                    <span className="text-sm text-gray-600">Active</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                                    <span className="text-sm text-gray-600">Pending</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <span className="text-sm text-gray-600">Completed</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="p-6">
+                    <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
                         {loading ? (
-                            <div className="flex items-center justify-center py-20">
-                                <div className="relative">
-                                    <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                            <div className="flex items-center justify-center py-24">
+                                <div className="text-center">
+                                    <div className="relative mb-6">
+                                        <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Appointments</h3>
+                                    <p className="text-gray-500">Please wait while we fetch your data...</p>
                                 </div>
                             </div>
                         ) : filteredAppointments.length > 0 ? (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredAppointments.map((apt) => (
-                                    <AppointmentCard 
-                                        key={apt.id} 
-                                        appointment={apt}
-                                        onEdit={handleEditAppointment}
-                                        onView={handleViewAppointment}
-                                        onDelete={handleDeleteAppointment}
-                                    />
-                                ))}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                                            <span className="text-white text-sm font-bold">{filteredAppointments.length}</span>
+                                        </div>
+                                        <span className="text-lg font-semibold text-gray-800">
+                                            {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                        <span>Showing all results</span>
+                                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                        <span>Grid view</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {filteredAppointments.map((apt, index) => (
+                                        <div key={apt.id} className="group relative">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500"></div>
+                                            <div className="relative">
+                                                <AppointmentCard 
+                                                    appointment={apt}
+                                                    onEdit={handleEditAppointment}
+                                                    onView={handleViewAppointment}
+                                                    onDelete={handleDeleteAppointment}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ) : (
-                            <div className="text-center py-20">
-                                <Calendar className="w-20 h-20 text-gray-300 mx-auto mb-6" />
-                                <h3 className="text-xl font-semibold text-gray-500 mb-3">No appointments found</h3>
-                                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                            <div className="text-center py-24">
+                                <div className="relative mb-8">
+                                    <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto">
+                                        <Calendar className="w-12 h-12 text-gray-400" />
+                                    </div>
+                                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-xs font-bold">!</span>
+                                    </div>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-700 mb-4">No appointments found</h3>
+                                <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
                                     {searchTerm || statusFilter !== 'all' || technicianFilter !== 'all' 
                                         ? 'Try adjusting your filters or search terms to find appointments.' 
-                                        : 'Create a new appointment to get started with scheduling.'}
+                                        : 'Get started by creating your first appointment to begin scheduling.'}
                                 </p>
                                 {!searchTerm && statusFilter === 'all' && technicianFilter === 'all' && (
-                                    <button 
-                                        onClick={() => setShowNewAppointmentModal(true)}
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                        Create First Appointment
-                                    </button>
+                                    <div className="flex items-center justify-center gap-4">
+                                        <button 
+                                            onClick={() => setShowNewAppointmentModal(true)}
+                                            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+                                        >
+                                            <Plus className="w-6 h-6" />
+                                            Create First Appointment
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setStatusFilter('all');
+                                                setTechnicianFilter('all');
+                                            }}
+                                            className="inline-flex items-center gap-2 px-6 py-4 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl font-medium transition-all duration-200"
+                                        >
+                                            <RefreshCw className="w-5 h-5" />
+                                            Reset Filters
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         )}

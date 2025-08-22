@@ -21,23 +21,27 @@ import DeleteWorkOrderModal from "../components/services/DeleteWorkOrderModal"
 import AddTechnicianModal from "../components/services/AddTechnicianModal"
 import EditTechnicianModal from "../components/services/EditTechnicianModal"
 import DeleteTechnicianModal from "../components/services/DeleteTechnicianModal"
-import {
-  HiPlus,
-  HiPencil,
-  HiTrash,
-  HiClock,
-  HiUser,
-  HiCurrencyDollar,
-  HiSearch,
-  HiFilter,
-  HiEye,
-  HiCog,
-  HiClipboardList,
-  HiUsers,
-  HiExclamation,
-  HiCheckCircle,
-  HiXCircle
-} from "react-icons/hi"
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Grid3X3, 
+  List, 
+  RefreshCw, 
+  Wrench, 
+  Users, 
+  ClipboardList,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  DollarSign,
+  Settings,
+  Eye,
+  Edit,
+  Trash2,
+  Loader2
+} from "lucide-react"
 
 type TabType = 'catalog' | 'workorders' | 'technicians'
 
@@ -47,6 +51,7 @@ export default function ServicesPage() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showInactiveTechnicians, setShowInactiveTechnicians] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false)
@@ -83,25 +88,6 @@ export default function ServicesPage() {
     techniciansError
   } = useAppSelector(state => state.services)
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Services state:', {
-      catalog: catalog?.length || 0,
-      workOrders: workOrders?.length || 0,
-      technicians: technicians?.length || 0,
-      catalogLoading,
-      workOrdersLoading,
-      techniciansLoading,
-      catalogError,
-      workOrdersError,
-      techniciansError,
-      workOrdersType: typeof workOrders,
-      workOrdersIsArray: Array.isArray(workOrders),
-      workOrdersValue: workOrders,
-      catalogValue: catalog,
-      techniciansValue: technicians
-    })
-  }, [catalog, workOrders, technicians, catalogLoading, workOrdersLoading, techniciansLoading, catalogError, workOrdersError, techniciansError])
   const dispatch = useAppDispatch()
 
   // Load data on component mount
@@ -198,550 +184,554 @@ export default function ServicesPage() {
 
   // Statistics calculations with safety checks
   const totalServices = (Array.isArray(catalog) ? catalog.length : 0)
-  const activeServices = (Array.isArray(catalog) ? catalog.filter(s => s && s.isActive).length : 0)
+  const activeServices = (Array.isArray(catalog) ? catalog.filter(service => service.isActive).length : 0)
   const totalWorkOrders = (Array.isArray(workOrders) ? workOrders.length : 0)
-  const completedWorkOrders = (Array.isArray(workOrders) ? workOrders.filter(w => w && w.status === 'completed').length : 0)
+  const pendingWorkOrders = (Array.isArray(workOrders) ? workOrders.filter(order => order.status === 'pending').length : 0)
   const totalTechnicians = (Array.isArray(technicians) ? technicians.length : 0)
-  const activeTechnicians = (Array.isArray(technicians) ? technicians.filter(t => t && t.isActive).length : 0)
-  const inactiveTechnicians = (Array.isArray(technicians) ? technicians.filter(t => t && !t.isActive).length : 0)
+  const activeTechnicians = (Array.isArray(technicians) ? technicians.filter(tech => tech.isActive).length : 0)
 
-  const renderStatistics = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-      {/* Service Catalog Stats */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Service Catalog</p>
-            <p className="text-2xl font-bold text-gray-900">{totalServices}</p>
-            <p className="text-sm text-green-600">{activeServices} active</p>
-          </div>
-          <div className="p-3 bg-blue-100 rounded-full">
-            <HiCog className="w-6 h-6 text-blue-600" />
-          </div>
-        </div>
-      </div>
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+      case 'completed':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+      case 'pending':
+      case 'scheduled':
+        return 'bg-amber-100 text-amber-800 border-amber-200'
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'cancelled':
+      case 'inactive':
+        return 'bg-red-100 text-red-800 border-red-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
 
-      {/* Work Orders Stats */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Work Orders</p>
-            <p className="text-2xl font-bold text-gray-900">{totalWorkOrders}</p>
-            <p className="text-sm text-green-600">{completedWorkOrders} completed</p>
-          </div>
-          <div className="p-3 bg-green-100 rounded-full">
-            <HiClipboardList className="w-6 h-6 text-green-600" />
-          </div>
-        </div>
-      </div>
+  const getTabButtonStyle = (tab: TabType) => {
+    return activeTab === tab 
+      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
+      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+  }
 
-      {/* Technicians Stats */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">Technicians</p>
-            <p className="text-2xl font-bold text-gray-900">{totalTechnicians}</p>
-            <p className="text-sm text-green-600">{activeTechnicians} active</p>
-            {inactiveTechnicians > 0 && (
-              <p className="text-sm text-gray-500">{inactiveTechnicians} inactive</p>
-            )}
-          </div>
-          <div className="p-3 bg-purple-100 rounded-full">
-            <HiUsers className="w-6 h-6 text-purple-600" />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderServiceCatalog = () => (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Service Catalog</h2>
-          <p className="text-gray-600">Manage your service offerings and pricing</p>
-        </div>
-        <button 
-          onClick={handleAddService}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Add Service
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 relative">
-            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          >
-            <option value="all">All Categories</option>
-            {safeAvailableCategories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Service Grid */}
-      {catalogLoading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : filteredCatalog.length === 0 ? (
-        <div className="text-center py-12">
-          <HiExclamation className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No services found</h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm || categoryFilter !== 'all' 
-              ? 'Try adjusting your search or filter criteria'
-              : 'Get started by adding your first service'
-            }
-          </p>
-          {!searchTerm && categoryFilter === 'all' && (
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-              Add First Service
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCatalog.map(service => (
-          <div key={service._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">{service.name}</h3>
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mt-1">
-                  {service.category}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => handleEditService(service)}
-                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                  title="Edit service"
-                >
-                  <HiPencil className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => handleDeleteService(service)}
-                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                  title="Delete service"
-                >
-                  <HiTrash className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            
-            <p className="text-gray-600 text-sm mb-4">{service.description}</p>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-gray-500">
-                  <HiClock className="w-4 h-4" />
-                  Duration
-                </span>
-                <span className="font-medium">{service.estimatedDuration} min</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-gray-500">
-                  <HiCurrencyDollar className="w-4 h-4" />
-                  Labor Rate
-                </span>
-                <span className="font-medium">${service.laborRate}/hr</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">Parts</span>
-                <span className="font-medium">{(service.parts || []).length} items</span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-800">
-                  ${((service.estimatedDuration / 60) * service.laborRate + 
-                    (service.parts || []).reduce((sum, part) => sum + part.totalPrice, 0)).toFixed(2)}
-                </span>
-                <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors">
-                  View Details
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-        </div>
-      )}
-    </div>
-  )
-
-  const renderWorkOrders = () => (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Work Orders</h2>
-          <p className="text-gray-600">Track and manage ongoing service work</p>
-        </div>
-        <button 
-          onClick={handleAddWorkOrder}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Create Work Order
-        </button>
-      </div>
-
-      {/* Filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center gap-4">
-          <HiFilter className="w-5 h-5 text-gray-500" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="on_hold">On Hold</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Work Orders Table */}
-      {workOrdersLoading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : filteredWorkOrders.length === 0 ? (
-        <div className="text-center py-12">
-          <HiClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No work orders found</h3>
-          <p className="text-gray-600 mb-4">
-            {statusFilter !== 'all' 
-              ? 'No work orders match the selected status'
-              : 'Get started by creating your first work order'
-            }
-          </p>
-          {statusFilter === 'all' && (
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-              Create First Work Order
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Work Order
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehicle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Technician
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredWorkOrders.map(order => (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">#{order._id}</div>
-                        <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.customer?.name || 'N/A'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.vehicle?.make} {order.vehicle?.model}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.technician?.name || 'Unassigned'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'on_hold' ? 'bg-orange-100 text-orange-800' :
-                        order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status === 'completed' && <HiCheckCircle className="w-3 h-3 mr-1" />}
-                        {order.status === 'cancelled' && <HiXCircle className="w-3 h-3 mr-1" />}
-                        {order.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">${order.totalCost.toFixed(2)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button 
-                        onClick={() => handleEditWorkOrder(order)}
-                        className="text-blue-600 hover:text-blue-900 mr-3 transition-colors"
-                        title="Edit work order"
-                      >
-                        <HiPencil className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteWorkOrder(order)}
-                        className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Delete work order"
-                      >
-                        <HiTrash className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-
-  const renderTechnicians = () => (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Technicians</h2>
-          <p className="text-gray-600">Manage your service technicians</p>
-        </div>
-        <button 
-          onClick={() => setShowAddTechnicianModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-        >
-          <HiPlus className="w-4 h-4" />
-          Add Technician
-        </button>
-      </div>
-
-      {/* Filter Toggle */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={showInactiveTechnicians}
-                onChange={(e) => setShowInactiveTechnicians(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Show inactive technicians</span>
-            </label>
-            {inactiveTechnicians > 0 && (
-              <span className="text-sm text-gray-500">({inactiveTechnicians} inactive)</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-            {/* Technicians Grid */}
-      {techniciansLoading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (() => {
-        const filteredTechnicians = (technicians || []).filter(tech => 
-          tech && (showInactiveTechnicians ? true : tech.isActive)
-        )
-        
-        if (filteredTechnicians.length === 0) {
-          return (
-            <div className="text-center py-12">
-              <HiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {showInactiveTechnicians ? 'No technicians found' : 'No active technicians found'}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {showInactiveTechnicians 
-                  ? 'Get started by adding your first technician'
-                  : 'All technicians are currently inactive'
-                }
-              </p>
-              <button 
-                onClick={() => setShowAddTechnicianModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
-                Add First Technician
-              </button>
-            </div>
-          )
-        }
-        
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTechnicians.map(technician => (
-              <div key={technician._id} className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${!technician.isActive ? 'opacity-60' : ''}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <HiUser className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">{technician.name || 'Unknown'}</h3>
-                      <p className="text-gray-600 text-sm">{technician.email || 'No email'}</p>
-                      {!technician.isActive && (
-                        <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full mt-1">
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => {
-                        setSelectedTechnician(technician)
-                        setShowEditTechnicianModal(true)
-                      }}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      title="Edit technician"
-                    >
-                      <HiPencil className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setSelectedTechnician(technician)
-                        setShowDeleteTechnicianModal(true)
-                      }}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      title="Delete technician"
-                    >
-                      <HiTrash className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Phone</span>
-                    <span className="font-medium">{technician.phone || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Hourly Rate</span>
-                    <span className="font-medium">${technician.hourlyRate || 0}/hr</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Specializations</span>
-                    <span className="font-medium">{(technician.specialization || []).length} areas</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-1">
-                    {(technician.specialization || []).slice(0, 3).map((spec: string) => (
-                      <span key={spec} className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                        {spec}
-                      </span>
-                    ))}
-                    {(technician.specialization || []).length > 3 && (
-                      <span className="inline-block text-gray-500 text-xs px-2 py-1">
-                        +{(technician.specialization || []).length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      })()}
-    </div>
-  )
+  const handleRefresh = () => {
+    dispatch(fetchServiceCatalog({}))
+    dispatch(fetchWorkOrders({}))
+    dispatch(fetchTechnicians({}))
+    dispatch(fetchServiceCatalogStats())
+    dispatch(fetchWorkOrderStats({}))
+    dispatch(fetchTechnicianStats())
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <PageTitle title="Service Management" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl shadow-xl p-6 text-white">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+          <div className="mb-4 lg:mb-0">
+            <h1 className="text-3xl font-bold mb-1">Service Management</h1>
+            <p className="text-emerald-100 text-base">Manage services, work orders, and technicians</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleRefresh}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-medium transition-all duration-200"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+            <button 
+              onClick={() => {
+                if (activeTab === 'catalog') handleAddService()
+                else if (activeTab === 'workorders') handleAddWorkOrder()
+                else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+            >
+              <Plus className="w-5 h-5" />
+              {activeTab === 'catalog' ? 'Add Service' : 
+               activeTab === 'workorders' ? 'Add Work Order' : 'Add Technician'}
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Error Display */}
-      {(catalogError || workOrdersError || techniciansError) && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <HiXCircle className="h-5 w-5 text-red-400" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                <Wrench className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-gray-900">{totalServices}</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">API Errors</h3>
-              <div className="mt-2 text-sm text-red-700">
-                {catalogError && <p>Service Catalog: {catalogError}</p>}
-                {workOrdersError && <p>Work Orders: {workOrdersError}</p>}
-                {techniciansError && <p>Technicians: {techniciansError}</p>}
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-gray-600">Active Services</p>
+            <p className="text-lg font-semibold text-emerald-600">{activeServices}</p>
+          </div>
+        </div>
+
+        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                <ClipboardList className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-gray-900">{totalWorkOrders}</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-gray-600">Pending Orders</p>
+            <p className="text-lg font-semibold text-blue-600">{pendingWorkOrders}</p>
+          </div>
+        </div>
+
+        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-gray-900">{totalTechnicians}</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-gray-600">Active Technicians</p>
+            <p className="text-lg font-semibold text-purple-600">{activeTechnicians}</p>
+          </div>
+        </div>
+
+        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ${catalogStats?.totalRevenue?.toLocaleString() || '0'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-gray-600">This Month</p>
+            <p className="text-lg font-semibold text-amber-600">
+              +{catalogStats?.monthlyGrowth || 0}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="w-4 h-4 text-gray-600" />
+              <h3 className="text-base font-semibold text-gray-800">Service Management</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Grid View"
+                >
+                  <Grid3X3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-md transition-all duration-200 ${
+                    viewMode === 'list' 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="List View"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Statistics Cards */}
-      {renderStatistics()}
-
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-                         {[
-               { key: 'catalog', label: 'Service Catalog', count: (catalog || []).filter(s => s && s.isActive).length },
-               { key: 'workorders', label: 'Work Orders', count: (workOrders || []).length },
-               { key: 'technicians', label: 'Technicians', count: (technicians || []).filter(t => t && t.isActive).length }
-             ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as TabType)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </nav>
-        </div>
-
+        
         <div className="p-6">
-          {activeTab === 'catalog' && renderServiceCatalog()}
-          {activeTab === 'workorders' && renderWorkOrders()}
-          {activeTab === 'technicians' && renderTechnicians()}
+          {/* Tab Buttons */}
+          <div className="flex space-x-2 mb-6">
+            <button
+              onClick={() => setActiveTab('catalog')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('catalog')}`}
+            >
+              <div className="flex items-center gap-2">
+                <Wrench className="w-4 h-4" />
+                Service Catalog
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('workorders')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('workorders')}`}
+            >
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-4 h-4" />
+                Work Orders
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('technicians')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border ${getTabButtonStyle('technicians')}`}
+            >
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Technicians
+              </div>
+            </button>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1 relative">
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={`Search ${activeTab}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                />
+              </div>
+              
+              {activeTab === 'catalog' && (
+                <div className="lg:w-64">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="all">All Categories</option>
+                    {safeAvailableCategories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {activeTab === 'workorders' && (
+                <div className="lg:w-64">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {activeTab === 'catalog' && (
+              <div className="p-6">
+                {catalogLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-600">Loading service catalog...</p>
+                    </div>
+                  </div>
+                ) : filteredCatalog.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {filteredCatalog.length} service{filteredCatalog.length !== 1 ? 's' : ''} found
+                      </h3>
+                    </div>
+                    
+                    {viewMode === 'grid' ? (
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCatalog.map((service) => (
+                          <div key={service._id} className="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden">
+                            <div className="p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                  <h4 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h4>
+                                  <p className="text-sm text-gray-600 mb-3">{service.description}</p>
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
+                                      {service.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                      {service.category}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                                    <div className="flex items-center gap-1">
+                                      <DollarSign className="w-4 h-4" />
+                                      <span>${service.price}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-4 h-4" />
+                                      <span>{service.duration} min</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
+                                <button
+                                  onClick={() => handleEditService(service)}
+                                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                  title="Edit Service"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteService(service)}
+                                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                  title="Delete Service"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filteredCatalog.map((service) => (
+                          <div key={service._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+                                <Wrench className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{service.name}</h4>
+                                <p className="text-sm text-gray-600">{service.category}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm font-medium text-gray-900">${service.price}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
+                                {service.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditService(service)}
+                                  className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteService(service)}
+                                  className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Wrench className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No services found</h3>
+                    <p className="text-gray-500 mb-4">Get started by adding your first service</p>
+                    <button
+                      onClick={handleAddService}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-semibold transition-all duration-200"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add Service
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'workorders' && (
+              <div className="p-6">
+                {workOrdersLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-600">Loading work orders...</p>
+                    </div>
+                  </div>
+                ) : filteredWorkOrders.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {filteredWorkOrders.length} work order{filteredWorkOrders.length !== 1 ? 's' : ''} found
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {filteredWorkOrders.map((workOrder) => (
+                        <div key={workOrder._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                              <ClipboardList className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{workOrder.title}</h4>
+                              <p className="text-sm text-gray-600">{workOrder.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(workOrder.status)}`}>
+                              {workOrder.status}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditWorkOrder(workOrder)}
+                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteWorkOrder(workOrder)}
+                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <ClipboardList className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No work orders found</h3>
+                    <p className="text-gray-500 mb-4">Get started by creating your first work order</p>
+                    <button
+                      onClick={handleAddWorkOrder}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add Work Order
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'technicians' && (
+              <div className="p-6">
+                {techniciansLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-600">Loading technicians...</p>
+                    </div>
+                  </div>
+                ) : (Array.isArray(technicians) ? technicians : []).length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {(Array.isArray(technicians) ? technicians : []).length} technician{(Array.isArray(technicians) ? technicians : []).length !== 1 ? 's' : ''} found
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {(Array.isArray(technicians) ? technicians : []).map((technician) => (
+                        <div key={technician._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                              <Users className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{technician.name}</h4>
+                              <p className="text-sm text-gray-600">{technician.specialization}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(technician.isActive ? 'active' : 'inactive')}`}>
+                              {technician.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedTechnician(technician)
+                                  setShowEditTechnicianModal(true)
+                                }}
+                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedTechnician(technician)
+                                  setShowDeleteTechnicianModal(true)
+                                }}
+                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No technicians found</h3>
+                    <p className="text-gray-500 mb-4">Get started by adding your first technician</p>
+                    <button
+                      onClick={() => setShowAddTechnicianModal(true)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-200"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add Technician
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Service Modals */}
+      {/* Modals */}
       {showAddModal && (
         <AddServiceModal
           onClose={() => setShowAddModal(false)}
@@ -749,7 +739,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showEditModal && (
+      {showEditModal && selectedService && (
         <EditServiceModal
           service={selectedService}
           onClose={() => {
@@ -760,7 +750,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showDeleteModal && (
+      {showDeleteModal && selectedService && (
         <DeleteServiceModal
           service={selectedService}
           onClose={() => {
@@ -771,7 +761,6 @@ export default function ServicesPage() {
         />
       )}
 
-      {/* Work Order Modals */}
       {showAddWorkOrderModal && (
         <AddWorkOrderModal
           onClose={() => setShowAddWorkOrderModal(false)}
@@ -779,7 +768,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showEditWorkOrderModal && (
+      {showEditWorkOrderModal && selectedWorkOrder && (
         <EditWorkOrderModal
           workOrder={selectedWorkOrder}
           onClose={() => {
@@ -790,7 +779,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showDeleteWorkOrderModal && (
+      {showDeleteWorkOrderModal && selectedWorkOrder && (
         <DeleteWorkOrderModal
           workOrder={selectedWorkOrder}
           onClose={() => {
@@ -801,7 +790,6 @@ export default function ServicesPage() {
         />
       )}
 
-      {/* Technician Modals */}
       {showAddTechnicianModal && (
         <AddTechnicianModal
           onClose={() => setShowAddTechnicianModal(false)}
@@ -809,7 +797,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showEditTechnicianModal && (
+      {showEditTechnicianModal && selectedTechnician && (
         <EditTechnicianModal
           technician={selectedTechnician}
           onClose={() => {
@@ -820,7 +808,7 @@ export default function ServicesPage() {
         />
       )}
 
-      {showDeleteTechnicianModal && (
+      {showDeleteTechnicianModal && selectedTechnician && (
         <DeleteTechnicianModal
           technician={selectedTechnician}
           onClose={() => {
