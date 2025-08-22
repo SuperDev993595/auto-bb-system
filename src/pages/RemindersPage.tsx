@@ -34,7 +34,8 @@ import {
   HiPause,
   HiPlus,
   HiRefresh,
-  HiPencil
+  HiPencil,
+  HiUser
 } from 'react-icons/hi'
 
 type TabType = 'reminders' | 'templates' | 'settings'
@@ -491,37 +492,28 @@ export default function RemindersPage() {
         </div>
       </div>
 
-      {/* Reminders List */}
-      <div className="table-container">
-        <table className="table">
-          <thead className="table-header">
-            <tr>
-              <th className="table-header-cell">
-                Type & Customer
-              </th>
-              <th className="table-header-cell">
-                Message
-              </th>
-              <th className="table-header-cell">
-                Scheduled
-              </th>
-              <th className="table-header-cell">
-                Method
-              </th>
-              <th className="table-header-cell">
-                Status
-              </th>
-              <th className="table-header-cell">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="table-body">
+      {/* Reminders Table */}
+      <div className="card">
+        <div className="table-container">
+          <table className="table">
+            <thead className="table-header">
+              <tr>
+                <th className="table-header-cell">Customer</th>
+                <th className="table-header-cell">Title</th>
+                <th className="table-header-cell">Due Date</th>
+                <th className="table-header-cell">Method</th>
+                <th className="table-header-cell">Status</th>
+                <th className="table-header-cell">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="table-body">
               {filteredReminders.map(reminder => (
                 <tr key={(reminder as any)._id || reminder.id} className="table-row">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
-                      {getTypeIcon(reminder.type)}
+                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <HiUser className="w-4 h-4 text-primary-600" />
+                      </div>
                       <div>
                         <div className="text-sm font-medium text-secondary-900">
                           {(reminder as any).customer?.name || reminder.customerName || 'Unknown Customer'}
@@ -545,52 +537,52 @@ export default function RemindersPage() {
                       {new Date((reminder as any).dueDate || reminder.scheduledDate).toLocaleTimeString()}
                     </div>
                   </td>
-                                     <td className="table-cell">
-                     <div className="flex items-center gap-2">
-                       {(() => {
-                         const methods = (reminder as any).notificationMethods || [reminder.method];
-                         const hasEmail = methods.includes('email');
-                         const hasSms = methods.includes('sms');
-                         
-                         if (hasEmail && hasSms) {
-                           return (
-                             <>
-                               <HiMail className="w-4 h-4 text-info-500" />
-                               <HiPhone className="w-4 h-4 text-success-500" />
-                               <span className="text-sm text-secondary-900">Email, SMS</span>
-                             </>
-                           );
-                         } else if (hasEmail) {
-                           return (
-                             <>
-                               <HiMail className="w-4 h-4 text-info-500" />
-                               <span className="text-sm text-secondary-900">Email</span>
-                             </>
-                           );
-                         } else if (hasSms) {
-                           return (
-                             <>
-                               <HiPhone className="w-4 h-4 text-success-500" />
-                               <span className="text-sm text-secondary-900">SMS</span>
-                             </>
-                           );
-                         } else {
-                           // Fallback for old data structure
-                           const method = reminder.method || 'email';
-                           return (
-                             <>
-                               {method === 'email' ? (
-                                 <HiMail className="w-4 h-4 text-info-500" />
-                               ) : (
-                                 <HiPhone className="w-4 h-4 text-success-500" />
-                               )}
-                               <span className="text-sm text-secondary-900 capitalize">{method}</span>
-                             </>
-                           );
-                         }
-                       })()}
-                     </div>
-                   </td>
+                  <td className="table-cell">
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const methods = (reminder as any).notificationMethods || [reminder.method];
+                        const hasEmail = methods.includes('email');
+                        const hasSms = methods.includes('sms');
+                        
+                        if (hasEmail && hasSms) {
+                          return (
+                            <>
+                              <HiMail className="w-4 h-4 text-info-500" />
+                              <HiPhone className="w-4 h-4 text-success-500" />
+                              <span className="text-sm text-secondary-900">Email, SMS</span>
+                            </>
+                          );
+                        } else if (hasEmail) {
+                          return (
+                            <>
+                              <HiMail className="w-4 h-4 text-info-500" />
+                              <span className="text-sm text-secondary-900">Email</span>
+                            </>
+                          );
+                        } else if (hasSms) {
+                          return (
+                            <>
+                              <HiPhone className="w-4 h-4 text-success-500" />
+                              <span className="text-sm text-secondary-900">SMS</span>
+                            </>
+                          );
+                        } else {
+                          // Fallback for old data structure
+                          const method = reminder.method || 'email';
+                          return (
+                            <>
+                              {method === 'email' ? (
+                                <HiMail className="w-4 h-4 text-info-500" />
+                              ) : (
+                                <HiPhone className="w-4 h-4 text-success-500" />
+                              )}
+                              <span className="text-sm text-secondary-900 capitalize">{method}</span>
+                            </>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </td>
                   <td className="table-cell">
                     <span className={`status-badge ${getStatusColor(reminder.status)}`}>
                       {reminder.status}
