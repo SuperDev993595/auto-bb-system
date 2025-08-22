@@ -17,7 +17,7 @@ import {
     HiUsers, 
     HiTrendingUp,
     HiTrash,
-    HiLoader
+    HiCog
 } from "react-icons/hi"
 import { addAppointment, setAppointments, setLoading } from "../redux/reducer/appointmentsReducer"
 import { toast } from "react-hot-toast"
@@ -541,7 +541,7 @@ export default function AppointmentsPage() {
         return (
             <div className="loading-container">
                 <div className="text-center">
-                    <Loader2 className="loading-spinner" />
+                    <div className="loading-spinner"></div>
                     <p className="loading-text">Loading appointments...</p>
                 </div>
             </div>
@@ -562,7 +562,7 @@ export default function AppointmentsPage() {
                             onClick={() => setShowNewAppointmentModal(true)}
                             className="btn-primary-outline"
                         >
-                            <Plus className="w-5 h-5" />
+                            <HiPlus className="w-5 h-5" />
                             New Appointment
                         </button>
                     </div>
@@ -682,7 +682,7 @@ export default function AppointmentsPage() {
                     {/* Search Bar */}
                     <div className="relative">
                         <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            <Search className="w-5 h-5" />
+                            <HiSearch className="w-5 h-5" />
                         </div>
                         <input
                             type="text"
@@ -771,7 +771,7 @@ export default function AppointmentsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                                <Search className="w-5 h-5 text-white" />
+                                <HiSearch className="w-5 h-5 text-white" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -802,7 +802,7 @@ export default function AppointmentsPage() {
                                 }}
                                 className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg font-medium transition-all duration-200"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <HiRefresh className="w-4 h-4" />
                                 Clear All
                             </button>
                             <button
@@ -824,7 +824,7 @@ export default function AppointmentsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                                    <Calendar className="w-5 h-5 text-white" />
+                                    <HiCalendar className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold text-gray-800">Calendar View</h3>
@@ -850,7 +850,7 @@ export default function AppointmentsPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                                    <Grid3X3 className="w-5 h-5 text-white" />
+                                    <HiViewGrid className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold text-gray-800">
@@ -926,7 +926,7 @@ export default function AppointmentsPage() {
                             <div className="text-center py-24">
                                 <div className="relative mb-8">
                                     <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto">
-                                        <Calendar className="w-12 h-12 text-gray-400" />
+                                        <HiCalendar className="w-12 h-12 text-gray-400" />
                                     </div>
                                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
                                         <span className="text-white text-xs font-bold">!</span>
@@ -944,7 +944,7 @@ export default function AppointmentsPage() {
                                             onClick={() => setShowNewAppointmentModal(true)}
                                             className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
                                         >
-                                            <Plus className="w-6 h-6" />
+                                            <HiPlus className="w-6 h-6" />
                                             Create First Appointment
                                         </button>
                                         <button 
@@ -955,7 +955,7 @@ export default function AppointmentsPage() {
                                             }}
                                             className="inline-flex items-center gap-2 px-6 py-4 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl font-medium transition-all duration-200"
                                         >
-                                            <RefreshCw className="w-5 h-5" />
+                                            <HiRefresh className="w-5 h-5" />
                                             Reset Filters
                                         </button>
                                     </div>
@@ -1131,7 +1131,7 @@ export default function AppointmentsPage() {
                             >
                                 {isDeletingAppointment ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <div className="w-5 h-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
                                         Deleting...
                                     </>
                                 ) : (
