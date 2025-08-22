@@ -8,7 +8,7 @@ const connectDB = require('./config/database');
 
 // Import enhanced middleware
 const { securityHeaders, corsOptions, sanitizeRequest } = require('./middleware/security');
-const { apiLimiter, authLimiter, passwordResetLimiter } = require('./middleware/rateLimit');
+const { apiLimiter, authLimiter, passwordResetLimiter, devLimiter } = require('./middleware/rateLimit');
 const { requestLogger, errorLogger, performanceMonitor } = require('./middleware/logging');
 const { cacheRoutes } = require('./middleware/cache');
 
@@ -63,7 +63,7 @@ const io = socketIo(server, {
 // Enhanced middleware stack
 app.use(securityHeaders);
 app.use(cors(corsOptions));
-app.use(apiLimiter);
+app.use(devLimiter); // Development-friendly rate limiter
 app.use(sanitizeRequest);
 app.use(requestLogger);
 app.use(performanceMonitor);
@@ -158,9 +158,9 @@ io.on('connection', (socket) => {
 // Make io available to routes
 app.set('io', io);
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/customers', authenticateToken, customerRoutes);
+// Routes with specific rate limiting
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/customers', apiLimiter, authenticateToken, customerRoutes);
 app.use('/api/business-clients', authenticateToken, businessClientRoutes);
 app.use('/api/appointments', authenticateToken, appointmentRoutes);
 app.use('/api/marketing', authenticateToken, marketingRoutes);

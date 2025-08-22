@@ -63,6 +63,49 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   return response.json();
 };
 
+// Exponential backoff retry function
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Don't retry on rate limit errors - show user-friendly message instead
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter || '15 minutes';
+        toast.error(`Rate limit exceeded. Please try again in ${retryAfter}.`);
+        throw error;
+      }
+      
+      // Don't retry on client errors (4xx) except for 408 (Request Timeout)
+      if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 408) {
+        throw error;
+      }
+      
+      // Don't retry on the last attempt
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Calculate delay with exponential backoff
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.warn(`API request failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -98,6 +141,16 @@ api.interceptors.response.use(
     console.log('API Response Interceptor - Error URL:', error.config?.url);
     console.log('API Response Interceptor - Error Message:', message);
     
+    // Handle rate limiting errors
+    if (error.response?.status === 429) {
+      const retryAfter = error.response?.data?.retryAfter || '15 minutes';
+      const path = error.response?.data?.path || error.config?.url;
+      console.warn(`Rate limit exceeded for ${path}. Retry after: ${retryAfter}`);
+      
+      toast.error(`Too many requests. Please try again in ${retryAfter}.`);
+      return Promise.reject(error);
+    }
+    
     // Handle authentication errors - only clear token for specific auth endpoints
     if (error.response?.status === 401) {
       const url = error.config?.url || '';
@@ -128,10 +181,10 @@ api.interceptors.response.use(
   }
 );
 
-// API response wrapper
+// API response wrapper with retry logic
 export const apiResponse = async <T>(promise: Promise<AxiosResponse<T>>): Promise<T> => {
   try {
-    const response = await promise;
+    const response = await retryWithBackoff(() => promise);
     return response.data;
   } catch (error) {
     throw error;

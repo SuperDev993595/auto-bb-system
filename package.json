@@ -17,7 +17,8 @@
     "test:server:coverage": "jest --config server/jest.config.js --coverage",
     "test:all": "npm run test:server && npm run test:client",
     "docs:generate": "node scripts/generate-api-docs.js",
-    "docs:serve": "npx http-server docs -p 8080 -o"
+    "docs:serve": "npx http-server docs -p 8080 -o",
+    "reset-limits": "node scripts/reset-rate-limits.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
