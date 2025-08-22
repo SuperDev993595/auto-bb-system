@@ -4,7 +4,7 @@ import AppointmentCard from "../components/Appointments/AppointmentCard"
 import AppointmentCalendar from "../components/Appointments/AppointmentCalendar"
 import AppointmentModal from "../components/Appointments/AppointmentModal"
 import PageTitle from "../components/Shared/PageTitle"
-import { Grid3X3, Calendar, Filter, Search, Plus, Loader2 } from "lucide-react"
+import { Grid3X3, Calendar, Filter, Search, Plus, Loader2, RefreshCw, Clock, CheckCircle, AlertCircle, Users, TrendingUp } from "lucide-react"
 import { HiTrash } from "react-icons/hi"
 import { addAppointment, setAppointments, setLoading } from "../redux/reducer/appointmentsReducer"
 import { toast } from "react-hot-toast"
@@ -536,153 +536,235 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <PageTitle title="Appointments" />
-                
-                <div className="flex items-center gap-4">
-                    {/* Search */}
-                    <form onSubmit={handleSearch} className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search by customer, vehicle, service, technician, or notes..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80"
-                                autoComplete="off"
-                            />
-                            {searchTerm && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSearchTerm('')}
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
-                        <button
-                            type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                        >
-                            Search
-                        </button>
-                    </form>
-
-                    {/* Filters */}
-                    <div className="flex items-center gap-2">
-                        <Filter className="w-5 h-5 text-gray-500" />
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Status</option>
-                            {(statuses && Array.isArray(statuses) ? statuses : []).map(status => (
-                                <option key={status} value={status} className="capitalize">
-                                    {status.replace('-', ' ')}
-                                </option>
-                            ))}
-                        </select>
-                        
-                        <select
-                            value={technicianFilter}
-                            onChange={(e) => setTechnicianFilter(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                        >
-                            <option value="all">All Technicians</option>
-                            {(technicians && Array.isArray(technicians) ? technicians : []).map(tech => (
-                                <option key={(tech as any).id || (tech as any)._id} value={(tech as any).id || (tech as any)._id}>
-                                    {tech.name}
-                                </option>
-                            ))}
-                        </select>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+            {/* Header Section */}
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+                    <div className="mb-6 lg:mb-0">
+                        <h1 className="text-4xl font-bold mb-2">Appointment Management</h1>
+                        <p className="text-blue-100 text-lg">Schedule and manage customer appointments</p>
                     </div>
-                    
-                    {/* View Toggle */}
-                    <div className="flex bg-gray-100 rounded-lg p-1">
-                        <button
-                            onClick={() => setViewMode('calendar')}
-                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-medium ${
-                                viewMode === 'calendar' 
-                                    ? 'bg-white text-gray-900 shadow-sm' 
-                                    : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                        >
-                            <Calendar className="w-4 h-4" />
-                            Calendar
-                        </button>
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-medium ${
-                                viewMode === 'grid' 
-                                    ? 'bg-white text-gray-900 shadow-sm' 
-                                    : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                        >
-                            <Grid3X3 className="w-4 h-4" />
-                            Grid
-                        </button>
-                    </div>
+                    <button 
+                        onClick={() => setShowNewAppointmentModal(true)}
+                        className="inline-flex items-center gap-3 px-8 py-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+                    >
+                        <Plus className="w-6 h-6" />
+                        New Appointment
+                    </button>
                 </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Today's Appointments</p>
-                            <p className="text-2xl font-bold text-gray-900">
-                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
-                            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                                <Calendar className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-gray-600">Today</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
+                                </p>
+                            </div>
                         </div>
-                        <div className="bg-blue-100 p-3 rounded-full">
-                            <Calendar className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="p-4">
+                        <p className="text-sm text-gray-600">Today's Appointments</p>
+                    </div>
+                </div>
+
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                <CheckCircle className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-gray-600">Confirmed</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-sm text-gray-600">Confirmed Appointments</p>
+                    </div>
+                </div>
+
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                                <Clock className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-sm text-gray-600">In Progress</p>
+                    </div>
+                </div>
+
+                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-slate-500 rounded-xl flex items-center justify-center">
+                                <TrendingUp className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-gray-600">Completed</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                    {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-sm text-gray-600">Completed Today</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Unified Search and Filters */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Search className="w-5 h-5 text-blue-600" />
+                            <h3 className="text-lg font-semibold text-gray-800">Search & Filters</h3>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {/* View Toggle */}
+                            <div className="flex bg-white rounded-xl p-1 shadow-sm">
+                                <button
+                                    onClick={() => setViewMode('calendar')}
+                                    className={`p-2 rounded-lg transition-all duration-200 ${
+                                        viewMode === 'calendar' 
+                                            ? 'bg-blue-100 text-blue-600' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                    title="Calendar View"
+                                >
+                                    <Calendar className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-lg transition-all duration-200 ${
+                                        viewMode === 'grid' 
+                                            ? 'bg-blue-100 text-blue-600' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                    title="Grid View"
+                                >
+                                    <Grid3X3 className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Refresh Button */}
+                            <button
+                                onClick={() => {
+                                    fetchAppointments();
+                                    fetchTechnicians();
+                                }}
+                                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                title="Refresh data"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Confirmed</p>
-                            <p className="text-2xl font-bold text-green-600">
-                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
-                            </p>
+                <div className="p-6 space-y-6">
+                    {/* Search Bar */}
+                    <div className="relative">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <Search className="w-5 h-5" />
                         </div>
-                        <div className="bg-green-100 p-3 rounded-full">
-                            <div className="w-6 h-6 bg-green-600 rounded-full"></div>
+                        <input
+                            type="text"
+                            placeholder="Search by customer, vehicle, service, technician, or notes..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white text-gray-700"
+                            autoComplete="off"
+                        />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filters Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                            >
+                                <option value="all">All Status</option>
+                                {(statuses && Array.isArray(statuses) ? statuses : []).map(status => (
+                                    <option key={status} value={status} className="capitalize">
+                                        {status.replace('-', ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
+                            <select
+                                value={technicianFilter}
+                                onChange={(e) => setTechnicianFilter(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                            >
+                                <option value="all">All Technicians</option>
+                                {(technicians && Array.isArray(technicians) ? technicians : []).map(tech => (
+                                    <option key={(tech as any).id || (tech as any)._id} value={(tech as any).id || (tech as any)._id}>
+                                        {tech.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">In Progress</p>
-                            <p className="text-2xl font-bold text-yellow-600">
-                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
-                            </p>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div className="text-sm text-gray-500">
+                            {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
                         </div>
-                        <div className="bg-yellow-100 p-3 rounded-full">
-                            <div className="w-6 h-6 bg-yellow-600 rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Completed</p>
-                            <p className="text-2xl font-bold text-gray-600">
-                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
-                            </p>
-                        </div>
-                        <div className="bg-gray-100 p-3 rounded-full">
-                            <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setStatusFilter('all');
+                                    setTechnicianFilter('all');
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm font-medium"
+                            >
+                                Clear All
+                            </button>
+                            <button
+                                onClick={handleSearch}
+                                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl"
+                            >
+                                Apply Filters
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -690,10 +772,10 @@ export default function AppointmentsPage() {
 
             {/* Search Results Indicator */}
             {searchTerm && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Search className="w-4 h-4 text-blue-600" />
+                        <div className="flex items-center gap-3">
+                            <Search className="w-5 h-5 text-blue-600" />
                             <span className="text-sm text-blue-800">
                                 Search results for "<strong>{searchTerm}</strong>": 
                                 <strong className="ml-1">{filteredAppointments.length}</strong> appointment{filteredAppointments.length !== 1 ? 's' : ''} found
@@ -706,7 +788,7 @@ export default function AppointmentsPage() {
                         </div>
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1 rounded-lg hover:bg-blue-100 transition-all duration-200"
                         >
                             Clear search
                         </button>
@@ -716,50 +798,69 @@ export default function AppointmentsPage() {
 
             {/* Main Content */}
             {viewMode === 'calendar' ? (
-                <AppointmentCalendar appointments={filteredAppointments} />
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-800">Calendar View</h3>
+                        <p className="text-sm text-gray-600 mt-1">View appointments in calendar format</p>
+                    </div>
+                    <div className="p-6">
+                        <AppointmentCalendar appointments={filteredAppointments} />
+                    </div>
+                </div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                            Appointments ({filteredAppointments.length})
-                        </h3>
-                        <button 
-                            onClick={() => setShowNewAppointmentModal(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            New Appointment
-                        </button>
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-800">
+                                    Appointments ({filteredAppointments.length})
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">Grid view of all appointments</p>
+                            </div>
+                        </div>
                     </div>
                     
-                    {loading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                            <span className="ml-2 text-gray-600">Loading...</span>
-                        </div>
-                    ) : filteredAppointments.length > 0 ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredAppointments.map((apt) => (
-                                <AppointmentCard 
-                                    key={apt.id} 
-                                    appointment={apt}
-                                    onEdit={handleEditAppointment}
-                                    onView={handleViewAppointment}
-                                    onDelete={handleDeleteAppointment}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-500 mb-2">No appointments found</h3>
-                            <p className="text-gray-400">
-                                {searchTerm || statusFilter !== 'all' || technicianFilter !== 'all' 
-                                    ? 'Try adjusting your filters or search terms.' 
-                                    : 'Create a new appointment to get started.'}
-                            </p>
-                        </div>
-                    )}
+                    <div className="p-6">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="relative">
+                                    <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                                </div>
+                            </div>
+                        ) : filteredAppointments.length > 0 ? (
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredAppointments.map((apt) => (
+                                    <AppointmentCard 
+                                        key={apt.id} 
+                                        appointment={apt}
+                                        onEdit={handleEditAppointment}
+                                        onView={handleViewAppointment}
+                                        onDelete={handleDeleteAppointment}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20">
+                                <Calendar className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+                                <h3 className="text-xl font-semibold text-gray-500 mb-3">No appointments found</h3>
+                                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                                    {searchTerm || statusFilter !== 'all' || technicianFilter !== 'all' 
+                                        ? 'Try adjusting your filters or search terms to find appointments.' 
+                                        : 'Create a new appointment to get started with scheduling.'}
+                                </p>
+                                {!searchTerm && statusFilter === 'all' && technicianFilter === 'all' && (
+                                    <button 
+                                        onClick={() => setShowNewAppointmentModal(true)}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Create First Appointment
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -785,88 +886,101 @@ export default function AppointmentsPage() {
 
             {/* View Appointment Modal */}
             {showViewAppointmentModal && selectedAppointment && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold text-gray-900">Appointment Details</h2>
-                            <button
-                                onClick={handleCloseViewModal}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                ✕
-                            </button>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-3xl">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl font-bold text-white">Appointment Details</h2>
+                                <button
+                                    onClick={handleCloseViewModal}
+                                    className="text-white/80 hover:text-white p-2 rounded-xl hover:bg-white/20 transition-all duration-200"
+                                >
+                                    ✕
+                                </button>
+                            </div>
                         </div>
                         
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Customer</label>
-                                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.customerName}</p>
+                        <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Customer</label>
+                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.customerName}</p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Vehicle</label>
-                                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.vehicleInfo}</p>
+                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Vehicle</label>
+                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.vehicleInfo}</p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Date & Time</label>
-                                    <p className="mt-1 text-sm text-gray-900">
+                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
+                                    <p className="text-lg font-semibold text-gray-900">
                                         {selectedAppointment.scheduledDate} at {selectedAppointment.scheduledTime}
                                     </p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Service</label>
-                                    <p className="mt-1 text-sm text-gray-900">
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Service</label>
+                                    <p className="text-lg font-semibold text-gray-900">
                                         {typeof selectedAppointment.serviceType === 'string' 
                                             ? selectedAppointment.serviceType 
                                             : selectedAppointment.serviceType?.name || 'Unknown Service'
                                         }
                                     </p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                                    <p className="mt-1 text-sm text-gray-900 capitalize">
+                                <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                                        selectedAppointment.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                        selectedAppointment.status === 'in-progress' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                        selectedAppointment.status === 'completed' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                        'bg-gray-100 text-gray-800 border border-gray-200'
+                                    }`}>
                                         {selectedAppointment.status?.replace('-', ' ')}
-                                    </p>
+                                    </span>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Priority</label>
-                                    <p className="mt-1 text-sm text-gray-900 capitalize">{selectedAppointment.priority}</p>
+                                <div className="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                                        selectedAppointment.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                        selectedAppointment.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                        'bg-green-100 text-green-800 border border-green-200'
+                                    }`}>
+                                        {selectedAppointment.priority}
+                                    </span>
                                 </div>
                                 {selectedAppointment.technicianName && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Technician</label>
-                                        <p className="mt-1 text-sm text-gray-900">{selectedAppointment.technicianName}</p>
-                                </div>
+                                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Technician</label>
+                                        <p className="text-lg font-semibold text-gray-900">{selectedAppointment.technicianName}</p>
+                                    </div>
                                 )}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Duration</label>
-                                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.estimatedDuration} min</p>
+                                <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
+                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.estimatedDuration} min</p>
                                 </div>
                             </div>
                             
                             {selectedAppointment.notes && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Notes</label>
-                                    <p className="mt-1 text-sm text-gray-900">{selectedAppointment.notes}</p>
+                                <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3">Notes</label>
+                                    <p className="text-gray-900 leading-relaxed">{selectedAppointment.notes}</p>
                                 </div>
                             )}
                         </div>
                         
-                        <div className="flex justify-end gap-3 mt-6">
+                        <div className="flex justify-end gap-4 p-6 bg-gray-50 rounded-b-3xl">
+                            <button
+                                onClick={handleCloseViewModal}
+                                className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition-all duration-200"
+                            >
+                                Close
+                            </button>
                             <button
                                 onClick={() => {
                                     setShowViewAppointmentModal(false)
                                     handleEditAppointment(selectedAppointment)
                                 }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                             >
                                 Edit Appointment
-                            </button>
-                            <button
-                                onClick={handleCloseViewModal}
-                                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium"
-                            >
-                                Close
                             </button>
                         </div>
                     </div>
@@ -875,45 +989,47 @@ export default function AppointmentsPage() {
 
             {/* Delete Appointment Confirmation Modal */}
             {showDeleteAppointmentModal && selectedAppointment && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <div className="flex items-center mb-4">
-                            <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                                <HiTrash className="h-6 w-6 text-red-600" />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
+                        <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-3xl">
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                    <HiTrash className="h-8 w-8 text-white" />
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div className="text-center mb-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            <h3 className="text-xl font-bold text-white text-center">
                                 Delete Appointment
                             </h3>
-                            <p className="text-sm text-gray-500">
+                        </div>
+                        
+                        <div className="p-8 text-center">
+                            <p className="text-gray-700 mb-4">
                                 Are you sure you want to delete the appointment for{' '}
-                                <span className="font-medium text-gray-900">
+                                <span className="font-semibold text-gray-900">
                                     {selectedAppointment.customerName}
                                 </span>?
                             </p>
-                            <p className="text-xs text-gray-400 mt-2">
-                                This action cannot be undone.
+                            <p className="text-sm text-gray-500 mb-6">
+                                This action cannot be undone and will permanently remove the appointment from the system.
                             </p>
                         </div>
                         
-                        <div className="flex justify-center gap-3">
+                        <div className="flex gap-4 p-6 bg-gray-50 rounded-b-3xl">
                             <button
                                 onClick={handleCloseDeleteModal}
                                 disabled={isDeletingAppointment}
-                                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50"
+                                className="flex-1 px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium disabled:opacity-50 transition-all duration-200"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
                                 disabled={isDeletingAppointment}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl font-medium disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                             >
                                 {isDeletingAppointment ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <Loader2 className="w-5 h-5 animate-spin" />
                                         Deleting...
                                     </>
                                 ) : (
