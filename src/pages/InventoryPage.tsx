@@ -449,14 +449,14 @@ export default function InventoryPage() {
             onClick={handleExport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiDownload className="w-4 h-4" />
+            <Download className="w-4 h-4" />
             Export
           </button>
           <button 
             onClick={handleAddItem}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiPlus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             Add Item
           </button>
         </div>
@@ -471,7 +471,7 @@ export default function InventoryPage() {
               <p className="text-2xl font-bold text-gray-900">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <HiCube className="w-6 h-6 text-blue-600" />
+              <Package className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -483,7 +483,7 @@ export default function InventoryPage() {
               <p className="text-2xl font-bold text-yellow-600">{lowStockItems.length}</p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
-              <HiExclamation className="w-6 h-6 text-yellow-600" />
+              <AlertTriangle className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
@@ -495,7 +495,7 @@ export default function InventoryPage() {
               <p className="text-2xl font-bold text-red-600">{outOfStockItems.length}</p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <HiTrendingDown className="w-6 h-6 text-red-600" />
+              <TrendingDown className="w-6 h-6 text-red-600" />
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ export default function InventoryPage() {
               <p className="text-2xl font-bold text-green-600">${totalValue.toLocaleString()}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <HiTrendingUp className="w-6 h-6 text-green-600" />
+              <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
@@ -518,7 +518,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="flex-1">
             <div className="relative">
-              <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search parts..."
@@ -578,7 +578,7 @@ export default function InventoryPage() {
               }}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
             >
-              <HiRefresh className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4" />
               Reset
             </button>
           </div>
@@ -631,11 +631,11 @@ export default function InventoryPage() {
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1 text-sm text-gray-900">
-                            <HiTag className="w-3 h-3" />
+                            <Tag className="w-3 h-3" />
                             {item.category || 'N/A'}
                           </div>
                           <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <HiLocationMarker className="w-3 h-3" />
+                            <MapPin className="w-3 h-3" />
                             {typeof item.location === 'object' && item.location 
                               ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
                               : item.location || 'N/A'
@@ -690,21 +690,21 @@ export default function InventoryPage() {
                       <td className="px-6 py-4 text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <button className="text-blue-600 hover:text-blue-900" title="View details">
-                            <HiEye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleEditItem(item)}
                             className="text-gray-600 hover:text-gray-900" 
                             title="Edit"
                           >
-                            <HiPencil className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleDeleteItem(item)}
                             className="text-red-600 hover:text-red-900" 
                             title="Delete"
                           >
-                            <HiTrash className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -730,7 +730,7 @@ export default function InventoryPage() {
           onClick={handleExport}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
         >
-          <HiDownload className="w-4 h-4" />
+          <Download className="w-4 h-4" />
           Export
         </button>
       </div>
@@ -838,14 +838,14 @@ export default function InventoryPage() {
             onClick={handleExport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiDownload className="w-4 h-4" />
+            <Download className="w-4 h-4" />
             Export
           </button>
           <button 
             onClick={handleAddSupplier}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiPlus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             Add Supplier
           </button>
         </div>
@@ -935,14 +935,14 @@ export default function InventoryPage() {
             onClick={handleExport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiDownload className="w-4 h-4" />
+            <Download className="w-4 h-4" />
             Export
           </button>
           <button 
             onClick={handleAddPurchaseOrder}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
           >
-            <HiPlus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             Create PO
           </button>
         </div>
@@ -1027,14 +1027,14 @@ export default function InventoryPage() {
                          className="text-blue-600 hover:text-blue-900" 
                          title="Edit"
                        >
-                         <HiPencil className="w-4 h-4" />
+                         <Edit className="w-4 h-4" />
                        </button>
                        <button 
                          onClick={() => handleDeletePurchaseOrder(po)}
                          className="text-red-600 hover:text-red-900" 
                          title="Delete"
                        >
-                         <HiTrash className="w-4 h-4" />
+                         <Trash2 className="w-4 h-4" />
                        </button>
                      </div>
                    </td>

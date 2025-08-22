@@ -214,17 +214,17 @@ export default function TasksPage() {
 
   const getCategoryIcon = (type: string) => {
     switch (type) {
-      case 'maintenance': return <HiClock className="w-4 h-4" />
-      case 'repair': return <HiExclamation className="w-4 h-4" />
-      case 'inspection': return <HiCheck className="w-4 h-4" />
-      case 'follow_up': return <HiUser className="w-4 h-4" />
-      case 'marketing': return <HiCalendar className="w-4 h-4" />
-      case 'sales': return <HiCalendar className="w-4 h-4" />
-      case 'collections': return <HiCalendar className="w-4 h-4" />
-      case 'appointments': return <HiCalendar className="w-4 h-4" />
-      case 'research': return <HiExclamation className="w-4 h-4" />
-      case 'other': return <HiClock className="w-4 h-4" />
-      default: return <HiCalendar className="w-4 h-4" />
+      case 'maintenance': return <Clock className="w-4 h-4" />
+      case 'repair': return <AlertTriangle className="w-4 h-4" />
+      case 'inspection': return <CheckCircle className="w-4 h-4" />
+      case 'follow_up': return <User className="w-4 h-4" />
+      case 'marketing': return <Calendar className="w-4 h-4" />
+      case 'sales': return <Calendar className="w-4 h-4" />
+      case 'collections': return <Calendar className="w-4 h-4" />
+      case 'appointments': return <Calendar className="w-4 h-4" />
+      case 'research': return <AlertTriangle className="w-4 h-4" />
+      case 'other': return <Clock className="w-4 h-4" />
+      default: return <Calendar className="w-4 h-4" />
     }
   }
 
