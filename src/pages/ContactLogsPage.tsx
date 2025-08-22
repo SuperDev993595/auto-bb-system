@@ -331,8 +331,8 @@ export default function ContactLogsPage() {
         </div>
       </div>
 
-      {/* Modal for viewing details */}
-      {selectedLog && (
+    {/* Modal for viewing details */}
+    {selectedLog && (
         <div className="modal-overlay">
           <div className="modal-container">
             <div className="modal-header">
@@ -382,8 +382,8 @@ export default function ContactLogsPage() {
         </div>
       )}
 
-             {/* Create Modal */}
-       {showCreateModal && (
+    {/* Create Modal */}
+    {showCreateModal && (
          <CreateCommunicationLogModal
            onClose={() => setShowCreateModal(false)}
            onSave={handleCreateLog}
@@ -391,8 +391,8 @@ export default function ContactLogsPage() {
          />
        )}
 
-       {/* Edit Modal */}
-       {showEditModal && editingLog && (
+    {/* Edit Modal */}
+    {showEditModal && editingLog && (
          <EditCommunicationLogModal
            onClose={() => {
              setShowEditModal(false)
@@ -404,8 +404,8 @@ export default function ContactLogsPage() {
          />
        )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteLogId && (
+    {/* Delete Confirmation Modal */}
+    {deleteLogId && (
         <div className="modal-overlay">
           <div className="modal-container">
             <div className="modal-header">
