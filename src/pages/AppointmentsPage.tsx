@@ -538,17 +538,17 @@ export default function AppointmentsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
             {/* Header Section */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-                    <div className="mb-6 lg:mb-0">
-                        <h1 className="text-4xl font-bold mb-2">Appointment Management</h1>
-                        <p className="text-blue-100 text-lg">Schedule and manage customer appointments</p>
+                    <div className="mb-4 lg:mb-0">
+                        <h1 className="text-3xl font-bold mb-1">Appointment Management</h1>
+                        <p className="text-blue-100 text-base">Schedule and manage customer appointments</p>
                     </div>
                     <button 
                         onClick={() => setShowNewAppointmentModal(true)}
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
                     >
-                        <Plus className="w-6 h-6" />
+                        <Plus className="w-5 h-5" />
                         New Appointment
                     </button>
                 </div>
@@ -635,36 +635,36 @@ export default function AppointmentsPage() {
 
             {/* Unified Search and Filters */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Search className="w-5 h-5 text-blue-600" />
-                            <h3 className="text-lg font-semibold text-gray-800">Search & Filters</h3>
+                        <div className="flex items-center gap-2">
+                            <Search className="w-4 h-4 text-blue-600" />
+                            <h3 className="text-base font-semibold text-gray-800">Search & Filters</h3>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             {/* View Toggle */}
-                            <div className="flex bg-white rounded-xl p-1 shadow-sm">
+                            <div className="flex bg-white rounded-lg p-1 shadow-sm">
                                 <button
                                     onClick={() => setViewMode('calendar')}
-                                    className={`p-2 rounded-lg transition-all duration-200 ${
+                                    className={`p-1.5 rounded-md transition-all duration-200 ${
                                         viewMode === 'calendar' 
                                             ? 'bg-blue-100 text-blue-600' 
                                             : 'text-gray-600 hover:text-gray-900'
                                     }`}
                                     title="Calendar View"
                                 >
-                                    <Calendar className="w-4 h-4" />
+                                    <Calendar className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-all duration-200 ${
+                                    className={`p-1.5 rounded-md transition-all duration-200 ${
                                         viewMode === 'grid' 
                                             ? 'bg-blue-100 text-blue-600' 
                                             : 'text-gray-600 hover:text-gray-900'
                                     }`}
                                     title="Grid View"
                                 >
-                                    <Grid3X3 className="w-4 h-4" />
+                                    <Grid3X3 className="w-3.5 h-3.5" />
                                 </button>
                             </div>
 
@@ -674,10 +674,10 @@ export default function AppointmentsPage() {
                                     fetchAppointments();
                                     fetchTechnicians();
                                 }}
-                                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                                 title="Refresh data"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
@@ -799,9 +799,9 @@ export default function AppointmentsPage() {
             {/* Main Content */}
             {viewMode === 'calendar' ? (
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-800">Calendar View</h3>
-                        <p className="text-sm text-gray-600 mt-1">View appointments in calendar format</p>
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+                        <h3 className="text-base font-semibold text-gray-800">Calendar View</h3>
+                        <p className="text-xs text-gray-600 mt-0.5">View appointments in calendar format</p>
                     </div>
                     <div className="p-6">
                         <AppointmentCalendar appointments={filteredAppointments} />
@@ -809,13 +809,13 @@ export default function AppointmentsPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-800">
+                                <h3 className="text-base font-semibold text-gray-800">
                                     Appointments ({filteredAppointments.length})
                                 </h3>
-                                <p className="text-sm text-gray-600 mt-1">Grid view of all appointments</p>
+                                <p className="text-xs text-gray-600 mt-0.5">Grid view of all appointments</p>
                             </div>
                         </div>
                     </div>
