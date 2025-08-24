@@ -97,7 +97,12 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
         phone: formData.phone ? formData.phone.replace(/\D/g, '') : ''
       }
 
-      await dispatch(updateCustomer({ id: customer._id, customerData: cleanedFormData })).unwrap()
+      const customerId = customer._id || customer.id
+      if (!customerId) {
+        toast.error('Customer ID is required')
+        return
+      }
+      await dispatch(updateCustomer({ id: customerId, customerData: cleanedFormData })).unwrap()
       toast.success('Customer updated successfully!')
       onSuccess?.()
       onClose()

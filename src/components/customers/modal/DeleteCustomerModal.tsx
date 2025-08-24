@@ -27,7 +27,12 @@ export default function DeleteCustomerModal({ customer, isOpen, onClose }: Delet
     setLoading(true)
 
     try {
-      await dispatch(deleteCustomer(customer._id)).unwrap()
+      const customerId = customer._id || customer.id
+      if (!customerId) {
+        toast.error('Customer ID is required')
+        return
+      }
+      await dispatch(deleteCustomer(customerId)).unwrap()
       toast.success('Customer deleted successfully!')
       onClose()
       // Navigate back to customer list
