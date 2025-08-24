@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Tag, Users, Filter, Plus, Edit, Trash2, Target, DollarSign } from '../../../utils/icons'
+import { Tag, Users, Filter, Plus, Edit, Trash2, Flag, DollarSign } from '../../utils/icons'
 
 interface CustomerSegment {
   id: string

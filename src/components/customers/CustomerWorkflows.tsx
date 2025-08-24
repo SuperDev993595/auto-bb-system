@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, Calendar, Bell, CheckCircle, AlertCircle, Play, Pause, Settings, Plus } from 'lucide-react'
+import { Clock, Calendar, Bell, CheckCircle, AlertCircle, Play, Pause, Settings, Plus } from '../../utils/icons'
 
 interface WorkflowRule {
   id: string

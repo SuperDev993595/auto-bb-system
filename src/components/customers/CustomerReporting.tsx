@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, FileText, BarChart3, PieChart, TrendingUp, Filter, Calendar, Users, DollarSign, Car } from 'lucide-react'
+import { Download, FileText, BarChart3, PieChart, TrendingUp, Filter, Calendar, Users, DollarSign, Car } from '../../utils/icons'
 
 interface ReportTemplate {
   id: string
