@@ -244,132 +244,108 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
       {/* Header Section */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h1 className="page-title">Task Management</h1>
-            <p className="page-subtitle">Organize and track your team's tasks and projects</p>
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={() => {
-                dispatch(fetchTasks({}))
-                dispatch(fetchTaskStats())
-              }}
-              className="btn-secondary"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-            <button 
-              onClick={handleAddTask}
-              className="btn-primary-outline"
-            >
-              <Plus className="w-5 h-5" />
-              Add Task
-            </button>
-          </div>
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Task Management</h1>
+          <p className="text-secondary-600">Organize and track your team's tasks and projects</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              dispatch(fetchTasks({}))
+              dispatch(fetchTaskStats())
+            }}
+            className="btn-secondary"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+          <button 
+            onClick={handleAddTask}
+            className="btn-primary"
+          >
+            <Plus className="w-5 h-5" />
+            Add Task
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
-                <CheckSquare className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.overview?.totalTasks || tasks?.length || 0}</p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Tasks</p>
+              <p className="text-3xl font-bold text-primary-600">{stats?.overview?.totalTasks || tasks?.length || 0}</p>
+              <p className="text-sm text-secondary-500">Active</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">All Tasks</p>
-            <p className="text-lg font-semibold text-indigo-600">Active</p>
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <CheckSquare className="w-6 h-6 text-primary-600" />
+            </div>
           </div>
         </div>
         
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats?.overview?.pendingTasks || filteredTasks.filter(t => t.status === 'pending').length}
-                </p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Pending Tasks</p>
+              <p className="text-3xl font-bold text-warning-600">
+                {stats?.overview?.pendingTasks || filteredTasks.filter(t => t.status === 'pending').length}
+              </p>
+              <p className="text-sm text-secondary-500">Needs Attention</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Awaiting Action</p>
-            <p className="text-lg font-semibold text-amber-600">Needs Attention</p>
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
         
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats?.overview?.inProgressTasks || filteredTasks.filter(t => t.status === 'in_progress').length}
-                </p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">In Progress</p>
+              <p className="text-3xl font-bold text-info-600">
+                {stats?.overview?.inProgressTasks || filteredTasks.filter(t => t.status === 'in_progress').length}
+              </p>
+              <p className="text-sm text-secondary-500">Ongoing</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Active Work</p>
-            <p className="text-lg font-semibold text-blue-600">Ongoing</p>
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
         
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats?.overview?.completedTasks || filteredTasks.filter(t => t.status === 'completed').length}
-                </p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Completed</p>
+              <p className="text-3xl font-bold text-success-600">
+                {stats?.overview?.completedTasks || filteredTasks.filter(t => t.status === 'completed').length}
+              </p>
+              <p className="text-sm text-secondary-500">Success</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Finished</p>
-            <p className="text-lg font-semibold text-emerald-600">Success</p>
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-gray-600" />
-              <h3 className="text-base font-semibold text-gray-800">Search & Filters</h3>
-            </div>
+      <div className="card">
+        <div className="p-6 border-b border-secondary-200">
+          <div className="flex items-center gap-2">
+            <Settings className="w-4 h-4 text-primary-600" />
+            <h3 className="text-base font-semibold text-secondary-900">Search & Filters</h3>
           </div>
         </div>
         
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400">
                 <Search className="w-5 h-5" />
               </div>
               <input
@@ -377,14 +353,14 @@ export default function TasksPage() {
                 placeholder="Search tasks by title, description, or customer..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white"
+                className="form-input w-full pl-12 pr-4 py-3"
               />
             </div>
             
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="lg:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white"
+              className="form-input lg:w-48"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -396,7 +372,7 @@ export default function TasksPage() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="lg:w-48 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white"
+              className="form-input lg:w-48"
             >
               <option value="all">All Priority</option>
               <option value="urgent">Urgent</option>
@@ -409,12 +385,11 @@ export default function TasksPage() {
       </div>
 
       {/* Tasks List */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-gray-600" />
-              <h3 className="text-base font-semibold text-gray-800">Task List</h3>
+      <div className="card">
+        <div className="p-6 border-b border-secondary-200">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="w-4 h-4 text-primary-600" />
+            <h3 className="text-base font-semibold text-secondary-900">Task List</h3>
             </div>
             <div className="text-sm text-gray-500">
               {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
