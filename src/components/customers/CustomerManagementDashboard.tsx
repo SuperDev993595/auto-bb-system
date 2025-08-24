@@ -85,10 +85,10 @@ export default function CustomerManagementDashboard({ initialView = 'list' }: Pr
         return selectedCustomerId ? (
           <CustomerDetail customerId={selectedCustomerId} />
         ) : (
-          <div className="text-center py-20">
-            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Customer Selected</h3>
-            <p className="text-gray-500">Please select a customer from the list to view details</p>
+          <div className="centered py-20">
+            <Users className="w-16 h-16 text-secondary-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-secondary-900 mb-2">No Customer Selected</h3>
+            <p className="text-secondary-500">Please select a customer from the list to view details</p>
           </div>
         )
       case 'analytics':
@@ -133,38 +133,38 @@ export default function CustomerManagementDashboard({ initialView = 'list' }: Pr
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="centered py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
     <CustomerErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-secondary-50">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-sm border-b border-secondary-200">
+          <div className="max-w-7xl mx-auto container-padding">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center">
-                <Users className="w-8 h-8 text-blue-600 mr-3" />
-                <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+                <Users className="w-8 h-8 text-primary-600 mr-3" />
+                <h1 className="text-2xl font-bold text-secondary-900">Customer Management</h1>
               </div>
               
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                  <Search className="w-5 h-5 text-secondary-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search customers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input pl-10 pr-4"
                   />
                 </div>
                 
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200">
-                  <Plus className="w-4 h-4" />
+                <button className="btn-primary">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Customer
                 </button>
               </div>
@@ -173,40 +173,40 @@ export default function CustomerManagementDashboard({ initialView = 'list' }: Pr
         </div>
 
         {/* Stats Overview */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white border-b border-secondary-200">
+          <div className="max-w-7xl mx-auto container-padding py-6">
             <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{stats.totalCustomers.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Total Customers</p>
+                <p className="text-2xl font-bold text-primary-600">{stats.totalCustomers.toLocaleString()}</p>
+                <p className="text-sm text-secondary-600">Total Customers</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{stats.activeCustomers.toLocaleString()}</p>
-                <p className="text-sm text-gray-600">Active Customers</p>
+                <p className="text-2xl font-bold text-success-600">{stats.activeCustomers.toLocaleString()}</p>
+                <p className="text-sm text-secondary-600">Active Customers</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-purple-600">{stats.newCustomersThisMonth}</p>
-                <p className="text-sm text-gray-600">New This Month</p>
+                <p className="text-2xl font-bold text-info-600">{stats.newCustomersThisMonth}</p>
+                <p className="text-sm text-secondary-600">New This Month</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">${(stats.totalRevenue / 1000).toFixed(0)}k</p>
-                <p className="text-sm text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-warning-600">${(stats.totalRevenue / 1000).toFixed(0)}k</p>
+                <p className="text-sm text-secondary-600">Total Revenue</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-indigo-600">${stats.averageCustomerValue.toFixed(0)}</p>
-                <p className="text-sm text-gray-600">Avg Customer Value</p>
+                <p className="text-2xl font-bold text-secondary-600">${stats.averageCustomerValue.toFixed(0)}</p>
+                <p className="text-sm text-secondary-600">Avg Customer Value</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-pink-600">{stats.customerSatisfaction}</p>
-                <p className="text-sm text-gray-600">Satisfaction Score</p>
+                <p className="text-2xl font-bold text-primary-500">{stats.customerSatisfaction}</p>
+                <p className="text-sm text-secondary-600">Satisfaction Score</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white border-b border-secondary-200">
+          <div className="max-w-7xl mx-auto container-padding">
             <nav className="flex space-x-8">
               {(['list', 'analytics', 'segmentation', 'workflows', 'reporting', 'performance'] as const).map((view) => (
                 <button
@@ -214,8 +214,8 @@ export default function CustomerManagementDashboard({ initialView = 'list' }: Pr
                   onClick={() => handleViewChange(view)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                     activeView === view
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -229,33 +229,33 @@ export default function CustomerManagementDashboard({ initialView = 'list' }: Pr
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto container-padding py-8">
           {renderView()}
         </div>
 
         {/* Quick Actions Floating Button */}
         <div className="fixed bottom-8 right-8">
           <div className="relative group">
-            <button className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center">
+            <button className="w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-all duration-200 flex items-center justify-center hover-lift">
               <Plus className="w-6 h-6" />
             </button>
             
             {/* Quick Actions Menu */}
-            <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl border border-gray-200 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl border border-secondary-200 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
               <div className="space-y-1">
-                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2">
+                <button className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-100 rounded flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   Add Customer
                 </button>
-                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2">
+                <button className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-100 rounded flex items-center gap-2">
                   <Tag className="w-4 h-4" />
                   Create Segment
                 </button>
-                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2">
+                <button className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-100 rounded flex items-center gap-2">
                   <Bell className="w-4 h-4" />
                   New Workflow
                 </button>
-                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-2">
+                <button className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-100 rounded flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Generate Report
                 </button>

@@ -90,19 +90,19 @@ function CustomerList() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 space-y-8">
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
+      <div className="card bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 rounded-2xl shadow-xl p-6 text-white">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
           <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold mb-1">Customer Management</h1>
-            <p className="text-blue-100 text-base">Manage and organize your customer database</p>
+            <h1 className="text-3xl font-bold mb-2">Customer Management</h1>
+            <p className="text-primary-100 text-base opacity-90">Manage and organize your customer database</p>
           </div>
           <Link
             to="/admin/dashboard/customers/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50"
+            className="btn bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50 hover-lift"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5 mr-2" />
             Add New Customer
           </Link>
         </div>
@@ -110,71 +110,51 @@ function CustomerList() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
-              </div>
-            </div>
+        {/* Total Customers */}
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
+            <Users className="w-6 h-6 text-primary-600" />
           </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Total Customers</p>
+          <p className="text-sm font-medium text-secondary-600">Total</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats?.totalCustomers || 0}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Total Customers</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.activeCustomers || 0}</p>
-              </div>
-            </div>
+        {/* Active Customers */}
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
+            <Users className="w-6 h-6 text-success-600" />
           </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Active Customers</p>
+          <p className="text-sm font-medium text-secondary-600">Active</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats?.activeCustomers || 0}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Active Customers</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.customersThisMonth || 0}</p>
-              </div>
-            </div>
+        {/* New This Month */}
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
+            <Users className="w-6 h-6 text-info-600" />
           </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">New This Month</p>
+          <p className="text-sm font-medium text-secondary-600">This Month</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats?.customersThisMonth || 0}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">New This Month</p>
           </div>
         </div>
 
-        <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                <CarSide className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-600">Vehicles</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalVehicles || 0}</p>
-              </div>
-            </div>
+        {/* Total Vehicles */}
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-xl mx-auto mb-4">
+            <Users className="w-6 h-6 text-warning-600" />
           </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-600">Total Vehicles</p>
+          <p className="text-sm font-medium text-secondary-600">Vehicles</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats?.totalVehicles || 0}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Total Vehicles</p>
           </div>
         </div>
       </div>
@@ -205,8 +185,8 @@ function CustomerList() {
                   onClick={() => setView('list')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     view === 'list' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-primary-100 text-primary-600' 
+                      : 'text-secondary-600 hover:text-secondary-900'
                   }`}
                   title="List View"
                 >
@@ -220,7 +200,7 @@ function CustomerList() {
                   dispatch(fetchCustomers({ page: currentPage, limit: 8, ...filters }));
                   dispatch(fetchCustomerStats());
                 }}
-                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                className="p-1.5 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
                 title="Refresh data"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -232,7 +212,7 @@ function CustomerList() {
         <div className="p-6 space-y-6">
           {/* Search Bar */}
           <div className="relative">
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400">
               <Search className="w-5 h-5" />
             </div>
             <input
@@ -241,18 +221,18 @@ function CustomerList() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white text-gray-700"
+              className="form-input pl-12 pr-4"
             />
           </div>
 
           {/* Filters Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="form-label">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                className="form-input"
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -262,33 +242,33 @@ function CustomerList() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+              <label className="form-label">City</label>
               <input
                 type="text"
                 placeholder="Filter by city"
                 value={filters.city}
                 onChange={(e) => handleFilterChange('city', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                className="form-input"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+              <label className="form-label">State</label>
               <input
                 type="text"
                 placeholder="Filter by state"
                 value={filters.state}
                 onChange={(e) => handleFilterChange('state', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                className="form-input"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="form-label">Sort By</label>
               <select
                 value={filters.sortBy}
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                className="form-input"
               >
                 <option value="createdAt">Date Created</option>
                 <option value="name">Name</option>
@@ -476,7 +456,7 @@ function CustomerList() {
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
-                              onClick={() => handleDeleteCustomer(customer._id, customer.name)}
+                              onClick={() => handleDeleteCustomer(customer._id || customer.id || '', customer.name)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                               title="Delete Customer"
                             >
@@ -499,7 +479,7 @@ function CustomerList() {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-6 py-3 text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+                  className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -510,8 +490,8 @@ function CustomerList() {
                     onClick={() => handlePageChange(page)}
                     className={`px-6 py-3 rounded-xl transition-all duration-200 shadow-lg ${
                       page === currentPage
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                        : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
+                        : 'text-secondary-700 bg-white border border-secondary-200 hover:bg-secondary-50'
                     }`}
                   >
                     {page}
@@ -521,7 +501,7 @@ function CustomerList() {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === pagination.totalPages}
-                  className="px-6 py-3 text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+                  className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -535,7 +515,7 @@ function CustomerList() {
       <div className="md:hidden fixed bottom-6 right-6">
         <Link
           to="/admin/dashboard/customers/new"
-          className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-200"
+          className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-200 hover-lift"
         >
           <Plus className="w-7 h-7" />
         </Link>
