@@ -387,7 +387,7 @@ export default function ServicesPage() {
           <div className="bg-gradient-to-r from-secondary-50 to-secondary-100 rounded-xl p-6 mb-6">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 relative">
-                <div className="input-icon">
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400">
                   <Search className="w-5 h-5" />
                 </div>
                 <input
@@ -395,7 +395,7 @@ export default function ServicesPage() {
                   placeholder={`Search ${activeTab}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-field-with-icon"
+                  className="form-input w-full pl-12 pr-4 py-3"
                 />
               </div>
               
@@ -404,7 +404,7 @@ export default function ServicesPage() {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="select-field"
+                    className="form-select w-full"
                   >
                     <option value="all">All Categories</option>
                     {safeAvailableCategories.map(category => (
@@ -419,7 +419,7 @@ export default function ServicesPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="select-field"
+                    className="form-select w-full"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
