@@ -426,15 +426,9 @@ export default function InventoryPage() {
 
   // Purchase Order modal handlers
   const handleAddPurchaseOrder = () => {
-    console.log('handleAddPurchaseOrder called');
-    alert('Add Purchase Order button clicked!'); // Temporary debug alert
-    console.log('Setting modal mode to add');
     setPurchaseOrderModalMode('add')
-    console.log('Setting selectedPurchaseOrder to null');
     setSelectedPurchaseOrder(null)
-    console.log('Setting modal open to true');
     setIsAddEditPurchaseOrderModalOpen(true)
-    console.log('Modal state after setting:', { mode: 'add', selected: null, isOpen: true });
   }
 
   const handleEditPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
@@ -1105,7 +1099,7 @@ export default function InventoryPage() {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button 
+          {activeTab !== 'transactions' && <button 
             onClick={() => {
               console.log('Button clicked, activeTab:', activeTab);
               if (activeTab === 'inventory') {
@@ -1124,7 +1118,7 @@ export default function InventoryPage() {
             <Plus className="w-5 h-5" />
             {activeTab === 'inventory' ? 'Add Item' : 
              activeTab === 'suppliers' ? 'Add Supplier' : 'Add Purchase Order'}
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -1280,13 +1274,6 @@ export default function InventoryPage() {
         purchaseOrder={selectedPurchaseOrder}
         mode={purchaseOrderModalMode}
       />
-      
-      {/* Debug info - remove after testing */}
-      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999 }}>
-        Modal State: {isAddEditPurchaseOrderModalOpen ? 'OPEN' : 'CLOSED'} | 
-        Mode: {purchaseOrderModalMode} | 
-        Selected: {selectedPurchaseOrder ? 'YES' : 'NO'}
-      </div>
 
       {selectedPurchaseOrder && (
         <DeletePurchaseOrderModal
