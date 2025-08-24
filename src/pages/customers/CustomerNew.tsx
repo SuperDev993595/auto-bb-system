@@ -105,24 +105,33 @@ export default function CustomerNew() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/admin/dashboard/customers')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Customers
-        </button>
-        <PageTitle title="Add New Customer" />
-      </div>
+    <div className="min-h-screen bg-secondary-50 p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="space-y-4">
+          {/* Back Navigation */}
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate('/admin/dashboard/customers')}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Customers
+            </button>
+          </div>
+          
+          {/* Page Title */}
+          <div className="border-b border-secondary-200 pb-4">
+            <PageTitle title="Add New Customer" />
+          </div>
+        </div>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        {/* Form Container */}
+        <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+              <h3 className="text-xl font-bold text-secondary-900 flex items-center gap-3 border-b border-secondary-200 pb-2">
                 <div className="p-1.5 bg-blue-100 rounded-lg">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>
@@ -131,7 +140,7 @@ export default function CustomerNew() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Full Name *
                   </label>
                   <input
@@ -140,13 +149,13 @@ export default function CustomerNew() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                    className="form-input"
                     placeholder="Enter customer's full name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Business Name
                   </label>
                   <input
@@ -154,7 +163,7 @@ export default function CustomerNew() {
                     name="businessName"
                     value={formData.businessName}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter business name (optional)"
                   />
                 </div>
@@ -163,7 +172,7 @@ export default function CustomerNew() {
 
             {/* Contact Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+              <h3 className="text-xl font-bold text-secondary-900 flex items-center gap-3 border-b border-secondary-200 pb-2">
                 <div className="p-1.5 bg-green-100 rounded-lg">
                   <Mail className="w-5 h-5 text-green-600" />
                 </div>
@@ -172,7 +181,7 @@ export default function CustomerNew() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Email Address *
                   </label>
                   <input
@@ -181,13 +190,13 @@ export default function CustomerNew() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter email address"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Phone Number *
                   </label>
                   <input
@@ -196,7 +205,7 @@ export default function CustomerNew() {
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -205,7 +214,7 @@ export default function CustomerNew() {
 
             {/* Address Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+              <h3 className="text-xl font-bold text-secondary-900 flex items-center gap-3 border-b border-secondary-200 pb-2">
                 <div className="p-1.5 bg-red-100 rounded-lg">
                   <MapPin className="w-5 h-5 text-red-600" />
                 </div>
@@ -214,7 +223,7 @@ export default function CustomerNew() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Street Address
                   </label>
                   <input
@@ -222,13 +231,13 @@ export default function CustomerNew() {
                     name="address.street"
                     value={formData.address.street}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter street address"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     City
                   </label>
                   <input
@@ -236,13 +245,13 @@ export default function CustomerNew() {
                     name="address.city"
                     value={formData.address.city}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter city"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     State
                   </label>
                   <input
@@ -250,13 +259,13 @@ export default function CustomerNew() {
                     name="address.state"
                     value={formData.address.state}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter state"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     ZIP Code
                   </label>
                   <input
@@ -264,7 +273,7 @@ export default function CustomerNew() {
                     name="address.zipCode"
                     value={formData.address.zipCode}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                     placeholder="Enter ZIP code"
                   />
                 </div>
@@ -273,7 +282,7 @@ export default function CustomerNew() {
 
             {/* Additional Information */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-100 pb-2">
+              <h3 className="text-xl font-bold text-secondary-900 flex items-center gap-3 border-b border-secondary-200 pb-2">
                 <div className="p-1.5 bg-purple-100 rounded-lg">
                   <Building2 className="w-5 h-5 text-purple-600" />
                 </div>
@@ -282,14 +291,14 @@ export default function CustomerNew() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Status
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-select"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -298,7 +307,7 @@ export default function CustomerNew() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Notes
                   </label>
                   <textarea
@@ -306,7 +315,7 @@ export default function CustomerNew() {
                     value={formData.notes}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="form-textarea"
                     placeholder="Enter any additional notes about this customer"
                   />
                 </div>
@@ -314,18 +323,18 @@ export default function CustomerNew() {
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-4 pt-8 border-t border-gray-100">
+            <div className="flex justify-end gap-4 pt-8 border-t border-secondary-200">
               <button
                 type="button"
                 onClick={() => navigate('/admin/dashboard/customers')}
-                className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+                className="btn-secondary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl flex items-center gap-2 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary flex items-center gap-2"
               >
                 {isLoading ? (
                   <>
