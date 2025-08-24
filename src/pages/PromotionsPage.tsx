@@ -207,81 +207,89 @@ export default function PromotionsPage() {
 
   if (isLoading) {
     return (
-      <div className="page-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading promotions...</p>
+      <div className="min-h-screen bg-secondary-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 animate-spin mx-auto mb-4 text-primary-600 border-2 border-primary-600 border-t-transparent rounded-full"></div>
+          <p className="text-secondary-600">Loading promotions...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <PageTitle title="Marketing & Promotions" />
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={handleAddPromotion}
-              className="btn-primary-outline"
-            >
-              <HiPlus className="w-4 h-4" />
-              Create Promotion
-            </button>
-          </div>
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Marketing & Promotions</h1>
+          <p className="text-secondary-600">Manage marketing campaigns and promotional offers</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleAddPromotion}
+            className="btn-primary"
+          >
+            <HiPlus className="w-4 h-4" />
+            Create Promotion
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Active Promotions</div>
-            <div className="stats-card-value text-success-600">
-              {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Active Promotions</p>
+              <p className="text-3xl font-bold text-success-600">
+                {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-success-500">
-            <HiSpeakerphone className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <HiSpeakerphone className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Total Usage</div>
-            <div className="stats-card-value text-info-600">
-              {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Usage</p>
+              <p className="text-3xl font-bold text-info-600">
+                {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-info-500">
-            <HiUsers className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <HiUsers className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Scheduled</div>
-            <div className="stats-card-value text-warning-600">
-              {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Scheduled</p>
+              <p className="text-3xl font-bold text-warning-600">
+                {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-warning-500">
-            <HiCalendar className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <HiCalendar className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Avg Savings</div>
-            <div className="stats-card-value text-primary-600">
-              ${Math.round(stats?.overview?.avgDiscountValue || 0)}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Avg Savings</p>
+              <p className="text-3xl font-bold text-primary-600">
+                ${Math.round(stats?.overview?.avgDiscountValue || 0)}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-primary-500">
-            <HiCurrencyDollar className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <HiCurrencyDollar className="w-6 h-6 text-primary-600" />
+            </div>
           </div>
         </div>
       </div>
@@ -290,20 +298,20 @@ export default function PromotionsPage() {
       <div className="card">
         <div className="flex gap-4 items-center">
           <div className="flex-1 relative">
-            <HiSearch className="input-icon" />
+            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search promotions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field-with-icon"
+              className="form-input w-full pl-10 pr-4 py-2"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="select-field"
+            className="form-input"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -315,7 +323,7 @@ export default function PromotionsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="select-field"
+            className="form-input"
           >
             <option value="all">All Types</option>
             <option value="discount">Discount</option>
