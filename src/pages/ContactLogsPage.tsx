@@ -155,39 +155,39 @@ export default function ContactLogsPage() {
 
   return (
     <>
-      <div className="page-container">
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <PageTitle title="Customer Communication Logs" />
+      <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+        {/* Page Header */}
+        <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+          <div className="mb-4 lg:mb-0">
+            <h1 className="text-3xl font-bold text-secondary-900 mb-2">Customer Communication Logs</h1>
+            <p className="text-secondary-600">Track and manage all customer interactions</p>
           </div>
-          <div className="page-header-actions">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => setShowCreateModal(true)}
-              className="btn-primary-outline"
+              className="btn-primary"
             >
               <HiPlus className="w-4 h-4" />
               Log Communication
             </button>
           </div>
         </div>
-      </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card">
           <div className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm font-medium text-secondary-600 mb-1">Total Contacts</p>
-              <p className="text-3xl font-bold text-secondary-900">{communicationLogs.length}</p>
+              <p className="text-3xl font-bold text-primary-600">{communicationLogs.length}</p>
             </div>
-            <div className="stats-card-icon bg-info-500">
-              <HiChatAlt className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <HiChatAlt className="w-6 h-6 text-primary-600" />
             </div>
           </div>
         </div>
         
-        <div className="stats-card">
+        <div className="card">
           <div className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm font-medium text-secondary-600 mb-1">Phone Calls</p>
@@ -195,13 +195,13 @@ export default function ContactLogsPage() {
                 {communicationLogs.filter(log => log.type === 'phone').length}
               </p>
             </div>
-            <div className="stats-card-icon bg-success-500">
-              <HiPhone className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <HiPhone className="w-6 h-6 text-success-600" />
             </div>
           </div>
         </div>
         
-        <div className="stats-card">
+        <div className="card">
           <div className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm font-medium text-secondary-600 mb-1">Emails</p>
@@ -209,13 +209,13 @@ export default function ContactLogsPage() {
                 {communicationLogs.filter(log => log.type === 'email').length}
               </p>
             </div>
-            <div className="stats-card-icon bg-info-500">
-              <HiMail className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <HiMail className="w-6 h-6 text-info-600" />
             </div>
           </div>
         </div>
         
-        <div className="stats-card">
+        <div className="card">
           <div className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm font-medium text-secondary-600 mb-1">In-Person</p>
@@ -223,8 +223,8 @@ export default function ContactLogsPage() {
                 {communicationLogs.filter(log => log.type === 'in-person').length}
               </p>
             </div>
-            <div className="stats-card-icon bg-warning-500">
-              <HiUser className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <HiUser className="w-6 h-6 text-warning-600" />
             </div>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function ContactLogsPage() {
                 placeholder="Search communications..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white"
+                className="form-input w-full pl-12 pr-4 py-3"
               />
             </div>
             
@@ -250,7 +250,7 @@ export default function ContactLogsPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white min-w-[160px]"
+                className="form-input pl-10 pr-8 py-3 min-w-[160px]"
               >
                 <option value="all">All Types</option>
                 <option value="phone">Phone</option>
@@ -266,9 +266,11 @@ export default function ContactLogsPage() {
       {/* Communication Logs */}
       <div className="card">
         {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Loading communication logs...</p>
+          <div className="flex items-center justify-center p-12">
+            <div className="text-center">
+              <div className="w-8 h-8 animate-spin mx-auto mb-4 text-primary-600 border-2 border-primary-600 border-t-transparent rounded-full"></div>
+              <p className="text-secondary-600">Loading communication logs...</p>
+            </div>
           </div>
         ) : (
           <div className="overflow-hidden">
@@ -315,7 +317,7 @@ export default function ContactLogsPage() {
                         {log.direction === 'inbound' ? (
                           <HiArrowDown className="w-4 h-4 text-success-600" />
                         ) : (
-                          <HiArrowUp className="w-4 h-4 text-info-600" />
+                          <HiArrowUp className="w-4 h-6 text-info-600" />
                         )}
                         <span className="text-sm text-secondary-700 capitalize">{log.direction}</span>
                       </div>
@@ -351,10 +353,12 @@ export default function ContactLogsPage() {
             </table>
             
             {filteredLogs.length === 0 && (
-              <div className="empty-state">
-                <HiChatAlt className="empty-state-icon" />
-                <h3 className="empty-state-title">No communication logs found</h3>
-                <p className="empty-state-description">Try adjusting your filters or log a new communication.</p>
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mb-4">
+                  <HiChatAlt className="w-8 h-8 text-secondary-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-secondary-900 mb-2">No communication logs found</h3>
+                <p className="text-secondary-600">Try adjusting your filters or log a new communication.</p>
               </div>
             )}
           </div>
@@ -364,34 +368,34 @@ export default function ContactLogsPage() {
 
     {/* Modal for viewing details */}
     {selectedLog && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Communication Details</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h3 className="text-xl font-semibold text-secondary-900">Communication Details</h3>
               <button 
                 onClick={() => setSelectedLog(null)}
-                className="modal-close"
+                className="text-secondary-400 hover:text-secondary-600 text-2xl font-bold hover:bg-secondary-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
               </button>
             </div>
             
-            <div className="modal-content">
+            <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Customer</label>
-                  <p className="form-value">{getCustomerName(selectedLog.customerId)}</p>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Customer</label>
+                  <p className="text-secondary-900">{getCustomerName(selectedLog.customerId)}</p>
                 </div>
                 <div>
-                  <label className="form-label">Employee</label>
-                  <p className="form-value">{selectedLog.employeeName}</p>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Employee</label>
+                  <p className="text-secondary-900">{selectedLog.employeeName}</p>
                 </div>
                 <div>
-                  <label className="form-label">Date</label>
-                  <p className="form-value">{selectedLog.date}</p>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Date</label>
+                  <p className="text-secondary-900">{selectedLog.date}</p>
                 </div>
                 <div>
-                  <label className="form-label">Type</label>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Type</label>
                   <div className="flex items-center gap-2 mt-1">
                     {getTypeIcon(selectedLog.type)}
                     <span className="text-sm text-secondary-900 capitalize">{selectedLog.type}</span>
@@ -400,13 +404,13 @@ export default function ContactLogsPage() {
               </div>
               
               <div>
-                <label className="form-label">Subject</label>
-                <p className="form-value">{selectedLog.subject || 'No Subject'}</p>
+                <label className="block text-sm font-medium text-secondary-700 mb-1">Subject</label>
+                <p className="text-secondary-900">{selectedLog.subject || 'No Subject'}</p>
               </div>
               
               <div>
-                <label className="form-label">Content</label>
-                <p className="form-value bg-secondary-50 p-3 rounded">{selectedLog.content}</p>
+                <label className="block text-sm font-medium text-secondary-700 mb-1">Content</label>
+                <p className="text-secondary-900 bg-secondary-50 p-3 rounded-lg">{selectedLog.content}</p>
               </div>
             </div>
           </div>
@@ -437,12 +441,12 @@ export default function ContactLogsPage() {
 
     {/* Delete Confirmation Modal */}
     {deleteLogId && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Confirm Delete</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="p-6 border-b border-secondary-200">
+              <h3 className="text-xl font-semibold text-secondary-900">Confirm Delete</h3>
             </div>
-            <div className="modal-content">
+            <div className="p-6">
               <p className="text-secondary-600 mb-6">Are you sure you want to delete this communication log? This action cannot be undone.</p>
               <div className="flex justify-end gap-3">
                 <button
