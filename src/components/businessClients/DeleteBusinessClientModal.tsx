@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { Technician } from '../../services/services'
+import { BusinessClient } from '../../services/businessClients'
 import {
   HiExclamation,
   HiTrash
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeleteTechnicianModalProps {
-  technician: Technician
+interface DeleteBusinessClientModalProps {
+  businessClient: BusinessClient
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeleteTechnicianModal: React.FC<DeleteTechnicianModalProps> = ({
-  technician,
+const DeleteBusinessClientModal: React.FC<DeleteBusinessClientModalProps> = ({
+  businessClient,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeleteTechnicianModal: React.FC<DeleteTechnicianModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(technician.id)
+      await onDelete(businessClient.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete technician')
+      setError(err instanceof Error ? err.message : 'Failed to delete business client')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeleteTechnicianModal: React.FC<DeleteTechnicianModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Technician"
-      submitText="Delete Technician"
+      title="Delete Business Client"
+      submitText="Delete Business Client"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeleteTechnicianModal: React.FC<DeleteTechnicianModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the technician.
+              This action cannot be undone. This will permanently delete the business client.
             </p>
           </div>
         </div>
@@ -67,38 +67,56 @@ const DeleteTechnicianModal: React.FC<DeleteTechnicianModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Name:</span>
+              <span className="text-sm text-secondary-600">Business Name:</span>
+              <span className="text-sm font-medium text-secondary-900">{businessClient.businessName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Contact Person:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {technician.firstName} {technician.lastName}
+                {businessClient.contactPerson?.firstName} {businessClient.contactPerson?.lastName}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Email:</span>
-              <span className="text-sm font-medium text-secondary-900">{technician.email}</span>
+              <span className="text-sm font-medium text-secondary-900">{businessClient.email}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Phone:</span>
-              <span className="text-sm font-medium text-secondary-900">{technician.phone}</span>
+              <span className="text-sm font-medium text-secondary-900">{businessClient.phone}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Specialization:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{technician.specialization}</span>
+              <span className="text-sm text-secondary-600">Industry:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{businessClient.industry}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Hourly Rate:</span>
-              <span className="text-sm font-medium text-secondary-900">${technician.hourlyRate}/hr</span>
+              <span className="text-sm text-secondary-600">Address:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {businessClient.address?.street}, {businessClient.address?.city}, {businessClient.address?.state} {businessClient.address?.zipCode}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
               <span className="text-sm font-medium text-secondary-900 capitalize">
-                {technician.isActive ? 'Active' : 'Inactive'}
+                {businessClient.isActive ? 'Active' : 'Inactive'}
               </span>
             </div>
           </div>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <p className="font-medium mb-1">⚠️ Warning:</p>
+          <p>Deleting this business client will also remove:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>All contact information</li>
+            <li>Service history</li>
+            <li>Contract details</li>
+            <li>Communication logs</li>
+            <li>Billing records</li>
+          </ul>
         </div>
       </div>
     </ModalWrapper>
   )
 }
 
-export default DeleteTechnicianModal
+export default DeleteBusinessClientModal

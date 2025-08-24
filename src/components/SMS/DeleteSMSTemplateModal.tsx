@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { Customer } from '../../../services/customers'
+import { SMSTemplate } from '../../services/sms'
 import {
   HiExclamation,
-  HiTrash
+  HiChat
 } from 'react-icons/hi'
-import ModalWrapper from '../../../utils/ModalWrapper'
+import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeleteCustomerModalProps {
-  customer: Customer
+interface DeleteSMSTemplateModalProps {
+  template: SMSTemplate
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
-  customer,
+const DeleteSMSTemplateModal: React.FC<DeleteSMSTemplateModalProps> = ({
+  template,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(customer.id)
+      await onDelete(template._id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete customer')
+      setError(err instanceof Error ? err.message : 'Failed to delete SMS template')
     } finally {
       setLoading(false)
     }
@@ -39,11 +39,10 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Customer"
-      submitText="Delete Customer"
+      title="Delete SMS Template"
+      submitText="Delete Template"
       onSubmit={handleDelete}
-      isLoading={loading}
-      submitButtonVariant="error"
+      submitColor="bg-red-600"
     >
       <div className="p-4 space-y-4">
         {error && (
@@ -59,7 +58,7 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the customer and all associated data.
+              This action cannot be undone. This will permanently delete the SMS template.
             </p>
           </div>
         </div>
@@ -67,35 +66,33 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Customer Name:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {customer.firstName} {customer.lastName}
-              </span>
+              <span className="text-sm text-secondary-600">Name:</span>
+              <span className="text-sm font-medium text-secondary-900">{template.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Email:</span>
-              <span className="text-sm font-medium text-secondary-900">{customer.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Phone:</span>
-              <span className="text-sm font-medium text-secondary-900">{customer.phone}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Address:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {customer.address?.street}, {customer.address?.city}, {customer.address?.state} {customer.address?.zipCode}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Vehicles:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {customer.vehicles?.length || 0} vehicle(s)
-              </span>
+              <span className="text-sm text-secondary-600">Category:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{template.category}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
               <span className="text-sm font-medium text-secondary-900 capitalize">
-                {customer.isActive ? 'Active' : 'Inactive'}
+                {template.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Usage Count:</span>
+              <span className="text-sm font-medium text-secondary-900">{template.usageCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {template.createdAt ? new Date(template.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Message Preview:</span>
+              <span className="text-sm font-medium text-secondary-900 max-w-xs truncate">
+                {template.message ? template.message.substring(0, 50) + '...' : 'N/A'}
               </span>
             </div>
           </div>
@@ -103,13 +100,13 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this customer will also remove:</p>
+          <p>Deleting this SMS template will also affect:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>All vehicle records</li>
-            <li>Service history</li>
-            <li>Appointment records</li>
-            <li>Payment history</li>
-            <li>Communication logs</li>
+            <li>Active SMS campaigns</li>
+            <li>Automated messaging</li>
+            <li>Customer communication</li>
+            <li>Template library</li>
+            <li>Message consistency</li>
           </ul>
         </div>
       </div>
@@ -117,4 +114,4 @@ const DeleteCustomerModal: React.FC<DeleteCustomerModalProps> = ({
   )
 }
 
-export default DeleteCustomerModal
+export default DeleteSMSTemplateModal

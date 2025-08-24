@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { PurchaseOrder } from '../../services/inventory'
+import { Backup } from '../../services/backup'
 import {
   HiExclamation,
-  HiTrash
+  HiDatabase
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeletePurchaseOrderModalProps {
-  purchaseOrder: PurchaseOrder
+interface DeleteBackupModalProps {
+  backup: Backup
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
-  purchaseOrder,
+const DeleteBackupModal: React.FC<DeleteBackupModalProps> = ({
+  backup,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(purchaseOrder.id)
+      await onDelete(backup.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete purchase order')
+      setError(err instanceof Error ? err.message : 'Failed to delete backup')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Purchase Order"
-      submitText="Delete Purchase Order"
+      title="Delete Backup"
+      submitText="Delete Backup"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the purchase order.
+              This action cannot be undone. This will permanently delete the backup file.
             </p>
           </div>
         </div>
@@ -67,37 +67,37 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">PO Number:</span>
-              <span className="text-sm font-medium text-secondary-900">#{purchaseOrder.poNumber}</span>
+              <span className="text-sm text-secondary-600">Name:</span>
+              <span className="text-sm font-medium text-secondary-900">{backup.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name}</span>
+              <span className="text-sm text-secondary-600">Type:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{backup.type}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Order Date:</span>
+              <span className="text-sm text-secondary-600">Size:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.orderDate ? new Date(purchaseOrder.orderDate).toLocaleDateString() : 'N/A'}
+                {backup.size ? `${(backup.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
               </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Expected Delivery:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.expectedDelivery ? new Date(purchaseOrder.expectedDelivery).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Total Amount:</span>
-              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{purchaseOrder.status}</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{backup.status}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Items:</span>
+              <span className="text-sm text-secondary-600">Location:</span>
+              <span className="text-sm font-medium text-secondary-900">{backup.location}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.items?.length || 0} item(s)
+                {backup.createdAt ? new Date(backup.createdAt).toLocaleString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Description:</span>
+              <span className="text-sm font-medium text-secondary-900 max-w-xs truncate">
+                {backup.description || 'N/A'}
               </span>
             </div>
           </div>
@@ -105,12 +105,13 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this purchase order will also remove:</p>
+          <p>Deleting this backup will also affect:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>All line items</li>
-            <li>Delivery tracking</li>
-            <li>Payment records</li>
-            <li>Inventory adjustments</li>
+            <li>Data recovery options</li>
+            <li>System restore points</li>
+            <li>Backup retention policy</li>
+            <li>Disaster recovery plans</li>
+            <li>Compliance requirements</li>
           </ul>
         </div>
       </div>
@@ -118,4 +119,4 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
   )
 }
 
-export default DeletePurchaseOrderModal
+export default DeleteBackupModal

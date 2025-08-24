@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { PurchaseOrder } from '../../services/inventory'
+import { User } from '../../services/users'
 import {
   HiExclamation,
   HiTrash
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeletePurchaseOrderModalProps {
-  purchaseOrder: PurchaseOrder
+interface DeleteUserModalProps {
+  user: User
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
-  purchaseOrder,
+const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
+  user,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(purchaseOrder.id)
+      await onDelete(user.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete purchase order')
+      setError(err instanceof Error ? err.message : 'Failed to delete user')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Purchase Order"
-      submitText="Delete Purchase Order"
+      title="Delete User"
+      submitText="Delete User"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the purchase order.
+              This action cannot be undone. This will permanently delete the user account.
             </p>
           </div>
         </div>
@@ -67,37 +67,43 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">PO Number:</span>
-              <span className="text-sm font-medium text-secondary-900">#{purchaseOrder.poNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Order Date:</span>
+              <span className="text-sm text-secondary-600">User Name:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.orderDate ? new Date(purchaseOrder.orderDate).toLocaleDateString() : 'N/A'}
+                {user.firstName} {user.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Expected Delivery:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.expectedDelivery ? new Date(purchaseOrder.expectedDelivery).toLocaleDateString() : 'N/A'}
-              </span>
+              <span className="text-sm text-secondary-600">Email:</span>
+              <span className="text-sm font-medium text-secondary-900">{user.email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Total Amount:</span>
-              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2)}</span>
+              <span className="text-sm text-secondary-600">Username:</span>
+              <span className="text-sm font-medium text-secondary-900">{user.username}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Role:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{user.role}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Department:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{user.department || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{purchaseOrder.status}</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">
+                {user.isActive ? 'Active' : 'Inactive'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Items:</span>
+              <span className="text-sm text-secondary-600">Last Login:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.items?.length || 0} item(s)
+                {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
               </span>
             </div>
           </div>
@@ -105,12 +111,13 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this purchase order will also remove:</p>
+          <p>Deleting this user will also affect:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>All line items</li>
-            <li>Delivery tracking</li>
-            <li>Payment records</li>
-            <li>Inventory adjustments</li>
+            <li>All assigned tasks and appointments</li>
+            <li>Work order assignments</li>
+            <li>System access and permissions</li>
+            <li>Performance tracking data</li>
+            <li>User activity logs</li>
           </ul>
         </div>
       </div>
@@ -118,4 +125,4 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
   )
 }
 
-export default DeletePurchaseOrderModal
+export default DeleteUserModal

@@ -1,65 +1,146 @@
-import React from 'react';
+import React, { useState } from 'react'
+import { Promotion } from '../../services/promotions'
+import {
+  HiExclamation,
+  HiGift
+} from 'react-icons/hi'
+import ModalWrapper from '../../utils/ModalWrapper'
 
 interface DeletePromotionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  promotionTitle: string;
-  isLoading?: boolean;
+  promotion: Promotion
+  isOpen: boolean
+  onClose: () => void
+  onDelete: (id: string) => Promise<void>
 }
 
-export default function DeletePromotionModal({
+const DeletePromotionModal: React.FC<DeletePromotionModalProps> = ({
+  promotion,
   isOpen,
   onClose,
-  onConfirm,
-  promotionTitle,
-  isLoading = false
-}: DeletePromotionModalProps) {
-  if (!isOpen) return null;
+  onDelete
+}) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      await onDelete(promotion._id)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete promotion')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex items-center mb-4">
-          <div className="bg-red-100 p-3 rounded-full mr-4">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Promotion"
+      submitText="Delete Promotion"
+      onSubmit={handleDelete}
+      submitColor="bg-red-600"
+    >
+      <div className="p-4 space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-100 rounded-full">
+            <HiExclamation className="w-6 h-6 text-red-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Delete Promotion</h3>
-            <p className="text-sm text-gray-500">This action cannot be undone.</p>
+            <h4 className="font-medium text-secondary-900">Are you sure?</h4>
+            <p className="text-sm text-secondary-600">
+              This action cannot be undone. This will permanently delete the promotion.
+            </p>
           </div>
         </div>
 
-        <div className="mb-6">
-          <p className="text-gray-700">
-            Are you sure you want to delete the promotion <strong>"{promotionTitle}"</strong>?
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            This will permanently remove the promotion from the system.
-          </p>
+        <div className="bg-secondary-50 p-4 rounded-lg">
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Title:</span>
+              <span className="text-sm font-medium text-secondary-900">{promotion.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Type:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{promotion.type}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Discount:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {promotion.discountType === 'percentage' 
+                  ? `${promotion.discountValue}%` 
+                  : `$${promotion.discountValue}`
+                }
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Status:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{promotion.status}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Start Date:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {promotion.startDate ? new Date(promotion.startDate).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">End Date:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Target Audience:</span>
+              <span className="text-sm font-medium text-secondary-900">{promotion.targetAudience}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Usage Count:</span>
+              <span className="text-sm font-medium text-secondary-900">{promotion.usageCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Max Usage:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {promotion.maxUsage ? promotion.maxUsage : 'Unlimited'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {promotion.createdAt ? new Date(promotion.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Description:</span>
+              <span className="text-sm font-medium text-secondary-900 max-w-xs truncate">
+                {promotion.description || 'N/A'}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Deleting...' : 'Delete Promotion'}
-          </button>
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <p className="font-medium mb-1">⚠️ Warning:</p>
+          <p>Deleting this promotion will also affect:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>Active customer discounts</li>
+            <li>Promotion tracking data</li>
+            <li>Sales analytics</li>
+            <li>Customer loyalty programs</li>
+            <li>Marketing campaign effectiveness</li>
+          </ul>
         </div>
       </div>
-    </div>
-  );
+    </ModalWrapper>
+  )
 }
+
+export default DeletePromotionModal

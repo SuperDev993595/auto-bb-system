@@ -1,110 +1,115 @@
-import React, { useState } from 'react';
-import { useAppDispatch } from '../../redux';
-import { deleteSupplier } from '../../redux/actions/inventory';
-import type { Supplier } from '../../redux/reducer/inventoryReducer';
-import { X, Trash2, AlertTriangle } from '../../utils/icons';
+import React, { useState } from 'react'
+import { Supplier } from '../../services/inventory'
+import {
+  HiExclamation,
+  HiTrash
+} from 'react-icons/hi'
+import ModalWrapper from '../../utils/ModalWrapper'
 
 interface DeleteSupplierModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  supplier: Supplier | null;
+  supplier: Supplier
+  isOpen: boolean
+  onClose: () => void
+  onDelete: (id: string) => Promise<void>
 }
 
-export default function DeleteSupplierModal({ isOpen, onClose, supplier }: DeleteSupplierModalProps) {
-  const dispatch = useAppDispatch();
-  const [isDeleting, setIsDeleting] = useState(false);
+const DeleteSupplierModal: React.FC<DeleteSupplierModalProps> = ({
+  supplier,
+  isOpen,
+  onClose,
+  onDelete
+}) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
-    if (!supplier) return;
-
-    setIsDeleting(true);
     try {
-      await dispatch(deleteSupplier(supplier._id)).unwrap();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting supplier:', error);
+      setLoading(true)
+      setError(null)
+      await onDelete(supplier.id)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete supplier')
     } finally {
-      setIsDeleting(false);
+      setLoading(false)
     }
-  };
-
-  if (!isOpen || !supplier) return null;
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-red-50 to-pink-50">
-          <h2 className="text-xl font-semibold text-gray-900">Delete Supplier</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Supplier"
+      submitText="Delete Supplier"
+      onSubmit={handleDelete}
+      isLoading={loading}
+      submitButtonVariant="error"
+    >
+      <div className="p-4 space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-100 rounded-full">
+            <HiExclamation className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-secondary-900">Are you sure?</h4>
+            <p className="text-sm text-secondary-600">
+              This action cannot be undone. This will permanently delete the supplier.
+            </p>
+          </div>
         </div>
 
-        <div className="p-6">
-          <div className="flex items-center mb-6">
-            <div className="flex-shrink-0">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              </div>
+        <div className="bg-secondary-50 p-4 rounded-lg">
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Supplier Name:</span>
+              <span className="text-sm font-medium text-secondary-900">{supplier.name}</span>
             </div>
-            <div className="ml-3">
-              <h3 className="text-lg font-medium text-gray-900">Are you sure?</h3>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Contact Person:</span>
+              <span className="text-sm font-medium text-secondary-900">{supplier.contactPerson}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Email:</span>
+              <span className="text-sm font-medium text-secondary-900">{supplier.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Phone:</span>
+              <span className="text-sm font-medium text-secondary-900">{supplier.phone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Address:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {supplier.address?.street}, {supplier.address?.city}, {supplier.address?.state} {supplier.address?.zipCode}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Status:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">
+                {supplier.isActive ? 'Active' : 'Inactive'}
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="mb-6">
-            <p className="text-sm text-gray-600">
-              You are about to delete the supplier <strong>"{supplier.name}"</strong>.
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              This action cannot be undone. All associated data will be permanently removed.
-            </p>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Supplier Details:</h4>
-            <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>Name:</strong> {supplier.name}</p>
-              <p><strong>Contact:</strong> {supplier.contactPerson?.name || 'N/A'}</p>
-              <p><strong>Email:</strong> {supplier.email}</p>
-              <p><strong>Phone:</strong> {supplier.phone}</p>
-              <p><strong>Rating:</strong> {supplier.rating}/5</p>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isDeleting}
-              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-            >
-              {isDeleting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Deleting...</span>
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete Supplier</span>
-                </>
-              )}
-            </button>
-          </div>
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <p className="font-medium mb-1">⚠️ Warning:</p>
+          <p>Deleting this supplier will also affect:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>Associated inventory items</li>
+            <li>Purchase order history</li>
+            <li>Cost tracking data</li>
+            <li>Supplier performance metrics</li>
+          </ul>
         </div>
       </div>
-    </div>
-  );
+    </ModalWrapper>
+  )
 }
+
+export default DeleteSupplierModal

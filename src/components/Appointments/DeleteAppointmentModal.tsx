@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { PurchaseOrder } from '../../services/inventory'
+import { Appointment } from '../../services/appointments'
 import {
   HiExclamation,
   HiTrash
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeletePurchaseOrderModalProps {
-  purchaseOrder: PurchaseOrder
+interface DeleteAppointmentModalProps {
+  appointment: Appointment
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
-  purchaseOrder,
+const DeleteAppointmentModal: React.FC<DeleteAppointmentModalProps> = ({
+  appointment,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(purchaseOrder.id)
+      await onDelete(appointment.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete purchase order')
+      setError(err instanceof Error ? err.message : 'Failed to delete appointment')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Purchase Order"
-      submitText="Delete Purchase Order"
+      title="Delete Appointment"
+      submitText="Delete Appointment"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the purchase order.
+              This action cannot be undone. This will permanently delete the appointment.
             </p>
           </div>
         </div>
@@ -67,37 +67,41 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">PO Number:</span>
-              <span className="text-sm font-medium text-secondary-900">#{purchaseOrder.poNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Order Date:</span>
+              <span className="text-sm text-secondary-600">Customer:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.orderDate ? new Date(purchaseOrder.orderDate).toLocaleDateString() : 'N/A'}
+                {appointment.customer?.firstName} {appointment.customer?.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Expected Delivery:</span>
+              <span className="text-sm text-secondary-600">Vehicle:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.expectedDelivery ? new Date(purchaseOrder.expectedDelivery).toLocaleDateString() : 'N/A'}
+                {appointment.vehicle?.year} {appointment.vehicle?.make} {appointment.vehicle?.model}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Total Amount:</span>
-              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2)}</span>
+              <span className="text-sm text-secondary-600">Service:</span>
+              <span className="text-sm font-medium text-secondary-900">{appointment.service?.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Date:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {appointment.appointmentDate ? new Date(appointment.appointmentDate).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Time:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {appointment.appointmentTime || 'N/A'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{purchaseOrder.status}</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{appointment.status}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Items:</span>
+              <span className="text-sm text-secondary-600">Technician:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.items?.length || 0} item(s)
+                {appointment.technician?.firstName} {appointment.technician?.lastName} || 'Unassigned'}
               </span>
             </div>
           </div>
@@ -105,12 +109,12 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this purchase order will also remove:</p>
+          <p>Deleting this appointment will also remove:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>All line items</li>
-            <li>Delivery tracking</li>
-            <li>Payment records</li>
-            <li>Inventory adjustments</li>
+            <li>Service records</li>
+            <li>Time slot reservation</li>
+            <li>Customer notification history</li>
+            <li>Technician assignment</li>
           </ul>
         </div>
       </div>
@@ -118,4 +122,4 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
   )
 }
 
-export default DeletePurchaseOrderModal
+export default DeleteAppointmentModal

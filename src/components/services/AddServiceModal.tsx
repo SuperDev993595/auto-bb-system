@@ -1,157 +1,186 @@
-import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import React, { useState } from 'react'
+import { Service } from '../../services/services'
 import ModalWrapper from '../../utils/ModalWrapper'
-import { Settings } from '../../utils/icons'
-import { createServiceCatalogItem } from '../../redux/actions/services'
-import { useAppDispatch } from '../../redux'
-import { CreateServiceCatalogData } from '../../services/services'
 
-interface Props {
+interface AddServiceModalProps {
+  isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSubmit: (service: Partial<Service>) => Promise<void>
 }
 
-export default function AddServiceModal({ onClose, onSuccess }: Props) {
-  const dispatch = useAppDispatch()
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<CreateServiceCatalogData>({
+const AddServiceModal: React.FC<AddServiceModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit
+}) => {
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'maintenance',
-    estimatedDuration: 60,
-    laborRate: 120,
-    parts: [],
+    laborRate: 0,
+    estimatedTime: '',
+    category: '',
     isActive: true
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleInputChange = (field: keyof CreateServiceCatalogData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.description) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    setLoading(true)
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
-      await dispatch(createServiceCatalogItem(formData)).unwrap()
-      toast.success('Service created successfully')
-      onSuccess()
+      setLoading(true)
+      setError(null)
+      await onSubmit(formData)
       onClose()
-    } catch (error: any) {
-      console.error('Failed to create service:', error)
-      toast.error(error.message || 'Failed to create service')
+      setFormData({
+        name: '',
+        description: '',
+        laborRate: 0,
+        estimatedTime: '',
+        category: '',
+        isActive: true
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create service')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
+    }))
+  }
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.checked
+    }))
+  }
+
   return (
     <ModalWrapper
-      isOpen={true}
-      title="Add New Service"
-      icon={<Settings className="w-5 h-5" />}
+      isOpen={isOpen}
       onClose={onClose}
+      title="Add New Service"
+      submitText="Create Service"
       onSubmit={handleSubmit}
-      submitText={loading ? 'Creating...' : 'Create Service'}
-      submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
+      isLoading={loading}
     >
-      <div className="space-y-6 p-4">
-        <div className="space-y-2">
-          <label className="form-label">
-            Service Name *
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            className="form-input"
-            placeholder="e.g., Oil Change, Brake Inspection"
-            required
-          />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="name" className="form-label">
+              Service Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="form-input"
+              placeholder="Enter service name"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="category" className="form-label">
+              Category
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Select category</option>
+              <option value="diagnostic">Diagnostic</option>
+              <option value="repair">Repair</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="inspection">Inspection</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="form-label">
-            Description *
+        <div>
+          <label htmlFor="description" className="form-label">
+            Description
           </label>
           <textarea
+            id="description"
+            name="description"
             value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            className="form-textarea"
+            onChange={handleChange}
             rows={3}
-            placeholder="Describe the service in detail"
-            required
+            className="form-textarea"
+            placeholder="Enter service description"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="form-label">
-            Category *
-          </label>
-          <select
-            value={formData.category}
-            onChange={(e) => handleInputChange('category', e.target.value)}
-            className="form-select"
-            required
-          >
-            <option value="maintenance">Maintenance</option>
-            <option value="repair">Repair</option>
-            <option value="diagnostic">Diagnostic</option>
-            <option value="inspection">Inspection</option>
-            <option value="emergency">Emergency</option>
-            <option value="preventive">Preventive</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="form-label">
-              Estimated Duration (minutes) *
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="laborRate" className="form-label">
+              Labor Rate ($/hr) *
             </label>
             <input
               type="number"
-              value={formData.estimatedDuration}
-              onChange={(e) => handleInputChange('estimatedDuration', parseInt(e.target.value))}
-              className="form-input"
-              min="15"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="form-label">
-              Labor Rate ($/hour) *
-            </label>
-            <input
-              type="number"
+              id="laborRate"
+              name="laborRate"
               value={formData.laborRate}
-              onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="form-input"
+              onChange={handleChange}
+              required
               min="0"
               step="0.01"
-              required
+              className="form-input"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="estimatedTime" className="form-label">
+              Estimated Time
+            </label>
+            <input
+              type="text"
+              id="estimatedTime"
+              name="estimatedTime"
+              value={formData.estimatedTime}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="e.g., 2 hours"
             />
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 pt-2">
+        <div className="flex items-center">
           <input
             type="checkbox"
             id="isActive"
+            name="isActive"
             checked={formData.isActive}
-            onChange={(e) => handleInputChange('isActive', e.target.checked)}
-            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md"
+            onChange={handleCheckboxChange}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="isActive" className="text-sm text-gray-700">
-            Service is active and available
+          <label htmlFor="isActive" className="ml-2 block text-sm text-secondary-700">
+            Service is active and available for booking
           </label>
         </div>
-      </div>
+      </form>
     </ModalWrapper>
   )
 }
+
+export default AddServiceModal

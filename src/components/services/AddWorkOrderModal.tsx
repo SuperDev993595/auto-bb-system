@@ -1,315 +1,235 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'react-hot-toast'
+import React, { useState } from 'react'
+import { WorkOrder } from '../../services/services'
 import ModalWrapper from '../../utils/ModalWrapper'
-import { ClipboardList } from '../../utils/icons'
-import { createWorkOrder } from '../../redux/actions/services'
-import { fetchCustomers } from '../../redux/actions/customers'
-import { useAppDispatch, useAppSelector } from '../../redux'
-import { WorkOrderFormData, CreateWorkOrderData, ServiceCatalogItem, Technician } from '../../services/services'
 
-interface Props {
+interface AddWorkOrderModalProps {
+  isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSubmit: (workOrder: Partial<WorkOrder>) => Promise<void>
 }
 
-export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
-  const dispatch = useAppDispatch()
-  const { catalog, technicians } = useAppSelector(state => state.services)
-  const { list: customers, loading: customersLoading } = useAppSelector(state => state.customers)
-  
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<WorkOrderFormData>({
-    customerId: '',
-    serviceId: '',
-    vehicleId: '',
-    technicianId: '',
+const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit
+}) => {
+  const [formData, setFormData] = useState({
+    workOrderNumber: '',
+    customerName: '',
+    vehicleInfo: '',
+    description: '',
+    estimatedHours: 0,
     priority: 'medium',
-    estimatedStartDate: '',
-    estimatedEndDate: '',
-    laborHours: 1,
-    laborRate: 120,
-    partsCost: 0,
-    notes: ''
+    status: 'pending',
+    assignedTechnician: '',
+    dueDate: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Load customers when modal opens
-  useEffect(() => {
-    console.log('AddWorkOrderModal: customers.length =', customers.length)
-    console.log('AddWorkOrderModal: customersLoading =', customersLoading)
-    if (customers.length === 0) {
-      console.log('AddWorkOrderModal: Dispatching fetchCustomers')
-      dispatch(fetchCustomers({ limit: 100 }))
-    }
-  }, [dispatch, customers.length])
-
-  // Add a timeout to show error if customers don't load
-  useEffect(() => {
-    if (customersLoading) {
-      const timeout = setTimeout(() => {
-        if (customers.length === 0) {
-          console.error('AddWorkOrderModal: Customers failed to load after timeout')
-        }
-      }, 5000)
-      return () => clearTimeout(timeout)
-    }
-  }, [customersLoading, customers.length])
-
-  // Get selected customer's vehicles
-  const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
-  const customerVehicles = selectedCustomer?.vehicles || []
-
-  const handleInputChange = (field: keyof WorkOrderFormData, value: any) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      [field]: value,
-      // Reset vehicleId when customer changes
-      ...(field === 'customerId' && { vehicleId: '' })
-    }))
-  }
-
-  const handleSubmit = async () => {
-    if (!formData.customerId || !formData.serviceId || !formData.vehicleId) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    // Get the selected customer, service, and vehicle data
-    const selectedCustomer = customers?.find(customer => customer._id === formData.customerId)
-    const selectedService = catalog?.find(service => service._id === formData.serviceId)
-    const selectedVehicle = selectedCustomer?.vehicles?.find(vehicle => vehicle._id === formData.vehicleId)
-
-    if (!selectedCustomer || !selectedService || !selectedVehicle) {
-      toast.error('Invalid selection. Please try again.')
-      return
-    }
-
-    setLoading(true)
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
-      // Transform data to match backend expectations
-      const workOrderData = {
-        customer: formData.customerId,
-        vehicle: {
-          make: selectedVehicle.make,
-          model: selectedVehicle.model,
-          year: selectedVehicle.year,
-          vin: selectedVehicle.vin,
-          licensePlate: selectedVehicle.licensePlate,
-          mileage: selectedVehicle.mileage
-        },
-        services: [{
-          service: formData.serviceId,
-          laborHours: formData.laborHours,
-          laborRate: formData.laborRate,
-          partsCost: formData.partsCost
-        }],
-        technician: formData.technicianId,
-        priority: formData.priority,
-        estimatedStartDate: formData.estimatedStartDate,
-        estimatedEndDate: formData.estimatedEndDate,
-        notes: formData.notes
-      }
-
-      await dispatch(createWorkOrder(workOrderData)).unwrap()
-      toast.success('Work order created successfully')
-      onSuccess()
+      setLoading(true)
+      setError(null)
+      await onSubmit(formData)
       onClose()
-    } catch (error: any) {
-      console.error('Failed to create work order:', error)
-      toast.error(error.message || 'Failed to create work order')
+      setFormData({
+        workOrderNumber: '',
+        customerName: '',
+        vehicleInfo: '',
+        description: '',
+        estimatedHours: 0,
+        priority: 'medium',
+        status: 'pending',
+        assignedTechnician: '',
+        dueDate: ''
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create work order')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
+    }))
+  }
+
   return (
     <ModalWrapper
-      isOpen={true}
-      title="Create Work Order"
-      icon={<ClipboardList className="w-5 h-5" />}
+      isOpen={isOpen}
       onClose={onClose}
+      title="Add New Work Order"
+      submitText="Create Work Order"
       onSubmit={handleSubmit}
-      submitText={loading ? 'Creating...' : 'Create Work Order'}
-      submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
+      isLoading={loading}
     >
-      <div className="space-y-6 p-4">
-        <div className="space-y-2">
-          <label className="form-label">
-            Customer *
-          </label>
-          <select
-            value={formData.customerId}
-            onChange={(e) => handleInputChange('customerId', e.target.value)}
-            className="form-select"
-            required
-          >
-            <option value="">Select a customer</option>
-            {customers?.map(customer => (
-              <option key={customer._id} value={customer._id}>
-                {customer.firstName} {customer.lastName} - {customer.phone}
-              </option>
-            ))}
-          </select>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
-        <div className="space-y-2">
-          <label className="form-label">
-            Vehicle *
-          </label>
-          <select
-            value={formData.vehicleId}
-            onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-            className="form-select"
-            required
-            disabled={!formData.customerId}
-          >
-            <option value="">Select a vehicle</option>
-            {customerVehicles?.map(vehicle => (
-              <option key={vehicle._id} value={vehicle._id}>
-                {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="form-label">
-            Service *
-          </label>
-          <select
-            value={formData.serviceId}
-            onChange={(e) => handleInputChange('serviceId', e.target.value)}
-            className="form-select"
-            required
-          >
-            <option value="">Select a service</option>
-            {catalog?.map(service => (
-              <option key={service._id} value={service._id}>
-                {service.name} - ${service.laborRate}/hr
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="form-label">
-            Technician
-          </label>
-          <select
-            value={formData.technicianId}
-            onChange={(e) => handleInputChange('technicianId', e.target.value)}
-            className="form-select"
-          >
-            <option value="">Select a technician</option>
-            {technicians?.map(technician => (
-              <option key={technician._id} value={technician._id}>
-                {technician.firstName} {technician.lastName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="form-label">
-            Priority
-          </label>
-          <select
-            value={formData.priority}
-            onChange={(e) => handleInputChange('priority', e.target.value)}
-            className="form-select"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="form-label">
-              Estimated Start Date *
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="workOrderNumber" className="form-label">
+              Work Order Number *
             </label>
             <input
-              type="datetime-local"
-              value={formData.estimatedStartDate}
-              onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
-              className="form-input"
+              type="text"
+              id="workOrderNumber"
+              name="workOrderNumber"
+              value={formData.workOrderNumber}
+              onChange={handleChange}
               required
+              className="form-input"
+              placeholder="Enter work order number"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="form-label">
-              Estimated End Date *
+          <div>
+            <label htmlFor="customerName" className="form-label">
+              Customer Name *
             </label>
             <input
-              type="datetime-local"
-              value={formData.estimatedEndDate}
-              onChange={(e) => handleInputChange('estimatedEndDate', e.target.value)}
-              className="form-input"
+              type="text"
+              id="customerName"
+              name="customerName"
+              value={formData.customerName}
+              onChange={handleChange}
               required
+              className="form-input"
+              placeholder="Enter customer name"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <label className="form-label">
-              Labor Hours
-            </label>
-            <input
-              type="number"
-              value={formData.laborHours}
-              onChange={(e) => handleInputChange('laborHours', parseFloat(e.target.value))}
-              className="form-input"
-              min="0.5"
-              step="0.5"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="form-label">
-              Labor Rate ($/hr)
-            </label>
-            <input
-              type="number"
-              value={formData.laborRate}
-              onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="form-input"
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="form-label">
-              Parts Cost ($)
-            </label>
-            <input
-              type="number"
-              value={formData.partsCost}
-              onChange={(e) => handleInputChange('partsCost', parseFloat(e.target.value))}
-              className="form-input"
-              min="0"
-              step="0.01"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="form-label">
-            Notes
+        <div>
+          <label htmlFor="vehicleInfo" className="form-label">
+            Vehicle Information *
           </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
-            className="form-textarea"
-            rows={3}
-            placeholder="Additional notes about the work order"
+          <input
+            type="text"
+            id="vehicleInfo"
+            name="vehicleInfo"
+            value={formData.vehicleInfo}
+            onChange={handleChange}
+            required
+            className="form-input"
+            placeholder="Enter vehicle make, model, year"
           />
         </div>
-      </div>
+
+        <div>
+          <label htmlFor="description" className="form-label">
+            Work Description *
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            className="form-textarea"
+            placeholder="Describe the work to be performed"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label htmlFor="estimatedHours" className="form-label">
+              Estimated Hours
+            </label>
+            <input
+              type="number"
+              id="estimatedHours"
+              name="estimatedHours"
+              value={formData.estimatedHours}
+              onChange={handleChange}
+              min="0"
+              step="0.5"
+              className="form-input"
+              placeholder="0.0"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="priority" className="form-label">
+              Priority
+            </label>
+            <select
+              id="priority"
+              name="priority"
+              value={formData.priority}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="status" className="form-label">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="assignedTechnician" className="form-label">
+              Assigned Technician
+            </label>
+            <input
+              type="text"
+              id="assignedTechnician"
+              name="assignedTechnician"
+              value={formData.assignedTechnician}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Enter technician name"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="dueDate" className="form-label">
+              Due Date
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              name="dueDate"
+              value={formData.dueDate}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+        </div>
+      </form>
     </ModalWrapper>
   )
 }
+
+export default AddWorkOrderModal

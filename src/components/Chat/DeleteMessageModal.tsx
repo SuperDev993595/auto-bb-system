@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { InventoryItem } from '../../services/inventory'
+import { Message } from '../../services/chat'
 import {
   HiExclamation,
-  HiTrash
+  HiChat
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeleteInventoryModalProps {
-  item: InventoryItem
+interface DeleteMessageModalProps {
+  message: Message
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
-  item,
+const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
+  message,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(item.id)
+      await onDelete(message.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete inventory item')
+      setError(err instanceof Error ? err.message : 'Failed to delete message')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Inventory Item"
-      submitText="Delete Item"
+      title="Delete Message"
+      submitText="Delete Message"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the inventory item.
+              This action cannot be undone. This will permanently delete the message.
             </p>
           </div>
         </div>
@@ -67,40 +67,47 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Item Name:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.name}</span>
+              <span className="text-sm text-secondary-600">Sender:</span>
+              <span className="text-sm font-medium text-secondary-900">{message.senderName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">SKU:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.sku}</span>
+              <span className="text-sm text-secondary-600">Type:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{message.type}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Category:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{item.category}</span>
+              <span className="text-sm text-secondary-600">Status:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{message.status}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Current Stock:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.quantity}</span>
+              <span className="text-sm text-secondary-600">Sent:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {message.sentAt ? new Date(message.sentAt).toLocaleDateString() : 'N/A'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Unit Price:</span>
-              <span className="text-sm font-medium text-secondary-900">${item.unitPrice?.toFixed(2)}</span>
+              <span className="text-sm text-secondary-600">Read:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {message.readAt ? new Date(message.readAt).toLocaleDateString() : 'Not read'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.supplier?.name || 'N/A'}</span>
+              <span className="text-sm text-secondary-600">Content Preview:</span>
+              <span className="text-sm font-medium text-secondary-900 max-w-xs truncate">
+                {message.content ? message.content.substring(0, 50) + '...' : 'N/A'}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this inventory item will also remove:</p>
+          <p>Deleting this message will also affect:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>Stock history</li>
-            <li>Purchase order references</li>
-            <li>Usage records</li>
-            <li>Cost tracking data</li>
+            <li>Chat conversation history</li>
+            <li>Message threading</li>
+            <li>Communication logs</li>
+            <li>Customer service records</li>
+            <li>Chat analytics data</li>
           </ul>
         </div>
       </div>
@@ -108,4 +115,4 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
   )
 }
 
-export default DeleteInventoryModal
+export default DeleteMessageModal

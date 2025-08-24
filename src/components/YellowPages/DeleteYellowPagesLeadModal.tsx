@@ -1,20 +1,20 @@
 import React, { useState } from 'react'
-import { PurchaseOrder } from '../../services/inventory'
+import { YellowPagesLead } from '../../services/yellowpages'
 import {
   HiExclamation,
   HiTrash
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
-interface DeletePurchaseOrderModalProps {
-  purchaseOrder: PurchaseOrder
+interface DeleteYellowPagesLeadModalProps {
+  lead: YellowPagesLead
   isOpen: boolean
   onClose: () => void
   onDelete: (id: string) => Promise<void>
 }
 
-const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
-  purchaseOrder,
+const DeleteYellowPagesLeadModal: React.FC<DeleteYellowPagesLeadModalProps> = ({
+  lead,
   isOpen,
   onClose,
   onDelete
@@ -26,10 +26,10 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(purchaseOrder.id)
+      await onDelete(lead.id)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete purchase order')
+      setError(err instanceof Error ? err.message : 'Failed to delete YellowPages lead')
     } finally {
       setLoading(false)
     }
@@ -39,8 +39,8 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Purchase Order"
-      submitText="Delete Purchase Order"
+      title="Delete YellowPages Lead"
+      submitText="Delete Lead"
       onSubmit={handleDelete}
       isLoading={loading}
       submitButtonVariant="error"
@@ -59,7 +59,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
           <div>
             <h4 className="font-medium text-secondary-900">Are you sure?</h4>
             <p className="text-sm text-secondary-600">
-              This action cannot be undone. This will permanently delete the purchase order.
+              This action cannot be undone. This will permanently delete the YellowPages lead.
             </p>
           </div>
         </div>
@@ -67,37 +67,41 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">PO Number:</span>
-              <span className="text-sm font-medium text-secondary-900">#{purchaseOrder.poNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Order Date:</span>
+              <span className="text-sm text-secondary-600">Lead Name:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.orderDate ? new Date(purchaseOrder.orderDate).toLocaleDateString() : 'N/A'}
+                {lead.firstName} {lead.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Expected Delivery:</span>
-              <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.expectedDelivery ? new Date(purchaseOrder.expectedDelivery).toLocaleDateString() : 'N/A'}
-              </span>
+              <span className="text-sm text-secondary-600">Phone:</span>
+              <span className="text-sm font-medium text-secondary-900">{lead.phone}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Total Amount:</span>
-              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2)}</span>
+              <span className="text-sm text-secondary-600">Email:</span>
+              <span className="text-sm font-medium text-secondary-900">{lead.email || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Service Interest:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{lead.serviceInterest}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Source:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{lead.source}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Date Received:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {lead.dateReceived ? new Date(lead.dateReceived).toLocaleDateString() : 'N/A'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
-              <span className="text-sm font-medium text-secondary-900 capitalize">{purchaseOrder.status}</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{lead.status}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Items:</span>
+              <span className="text-sm text-secondary-600">Notes:</span>
               <span className="text-sm font-medium text-secondary-900">
-                {purchaseOrder.items?.length || 0} item(s)
+                {lead.notes ? lead.notes.substring(0, 50) + '...' : 'No notes'}
               </span>
             </div>
           </div>
@@ -105,12 +109,12 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
 
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
           <p className="font-medium mb-1">⚠️ Warning:</p>
-          <p>Deleting this purchase order will also remove:</p>
+          <p>Deleting this lead will also remove:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>All line items</li>
-            <li>Delivery tracking</li>
-            <li>Payment records</li>
-            <li>Inventory adjustments</li>
+            <li>Lead tracking information</li>
+            <li>Follow-up history</li>
+            <li>Conversion data</li>
+            <li>Marketing attribution</li>
           </ul>
         </div>
       </div>
@@ -118,4 +122,4 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
   )
 }
 
-export default DeletePurchaseOrderModal
+export default DeleteYellowPagesLeadModal
