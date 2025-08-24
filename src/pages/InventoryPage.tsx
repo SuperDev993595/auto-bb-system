@@ -1048,104 +1048,106 @@ export default function InventoryPage() {
   )
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
       {/* Header Section */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h1 className="page-title">Inventory Management</h1>
-            <p className="page-subtitle">Manage inventory, suppliers, and purchase orders</p>
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={() => {
-                const timestamp = new Date().toISOString().split('T')[0]
-                if (activeTab === 'inventory') exportInventory(timestamp)
-                else if (activeTab === 'transactions') exportTransactions(timestamp)
-                else if (activeTab === 'suppliers') exportSuppliers(timestamp)
-                else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
-              }}
-              className="btn-secondary"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
-            <button 
-              onClick={() => {
-                if (activeTab === 'inventory') handleAddItem()
-                else if (activeTab === 'suppliers') handleAddSupplier()
-                else if (activeTab === 'purchase-orders') handleAddPurchaseOrder()
-              }}
-              className="btn-primary-outline"
-            >
-              <Plus className="w-5 h-5" />
-              {activeTab === 'inventory' ? 'Add Item' : 
-               activeTab === 'suppliers' ? 'Add Supplier' : 'Add Purchase Order'}
-            </button>
-          </div>
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Inventory Management</h1>
+          <p className="text-secondary-600">Manage inventory, suppliers, and purchase orders</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              const timestamp = new Date().toISOString().split('T')[0]
+              if (activeTab === 'inventory') exportInventory(timestamp)
+              else if (activeTab === 'transactions') exportTransactions(timestamp)
+              else if (activeTab === 'suppliers') exportSuppliers(timestamp)
+              else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
+            }}
+            className="btn-secondary"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+          <button 
+            onClick={() => {
+              if (activeTab === 'inventory') handleAddItem()
+              else if (activeTab === 'suppliers') handleAddSupplier()
+              else if (activeTab === 'purchase-orders') handleAddPurchaseOrder()
+            }}
+            className="btn-primary"
+          >
+            <Plus className="w-5 h-5" />
+            {activeTab === 'inventory' ? 'Add Item' : 
+             activeTab === 'suppliers' ? 'Add Supplier' : 'Add Purchase Order'}
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-primary-500">
-              <Package className="w-6 h-6 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Items</p>
+              <p className="text-3xl font-bold text-primary-600">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
+              <p className="text-sm text-secondary-500">
+                ${(items && Array.isArray(items) ? items : []).reduce((sum, item) => sum + (item.totalValue || 0), 0).toLocaleString()}
+              </p>
             </div>
-            <div className="stats-card-label">Total</div>
-            <div className="stats-card-value">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</div>
-            <div className="stats-card-subtitle">Active Items</div>
-            <div className="stats-card-subvalue">
-              ${(items && Array.isArray(items) ? items : []).reduce((sum, item) => sum + (item.totalValue || 0), 0).toLocaleString()}
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <Package className="w-6 h-6 text-primary-600" />
             </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-info-500">
-              <ClipboardList className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Transactions</p>
+              <p className="text-3xl font-bold text-info-600">{(transactions && Array.isArray(transactions) ? transactions : []).length}</p>
+              <p className="text-sm text-secondary-500">This Month</p>
             </div>
-            <div className="stats-card-label">Total</div>
-            <div className="stats-card-value">{(transactions && Array.isArray(transactions) ? transactions : []).length}</div>
-            <div className="stats-card-subtitle">Transactions</div>
-            <div className="stats-card-subvalue">This Month</div>
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <ClipboardList className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-success-500">
-              <Users className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Active Suppliers</p>
+              <p className="text-3xl font-bold text-success-600">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</p>
+              <p className="text-sm text-secondary-500">Partners</p>
             </div>
-            <div className="stats-card-label">Total</div>
-            <div className="stats-card-value">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</div>
-            <div className="stats-card-subtitle">Active Suppliers</div>
-            <div className="stats-card-subvalue">Partners</div>
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-warning-500">
-              <ShoppingCart className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Purchase Orders</p>
+              <p className="text-3xl font-bold text-warning-600">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</p>
+              <p className="text-sm text-secondary-500">Pending: {pendingOrders.length}</p>
             </div>
-            <div className="stats-card-label">Total</div>
-            <div className="stats-card-value">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</div>
-            <div className="stats-card-subtitle">Purchase Orders</div>
-            <div className="stats-card-subvalue">Pending: {pendingOrders.length}</div>
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <ShoppingCart className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
+      <div className="card">
+        <div className="p-6 border-b border-secondary-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-gray-600" />
-              <h3 className="text-base font-semibold text-gray-800">Inventory Management</h3>
+              <Settings className="w-4 h-4 text-primary-600" />
+              <h3 className="text-base font-semibold text-secondary-900">Inventory Management</h3>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1155,7 +1157,7 @@ export default function InventoryPage() {
                   dispatch(fetchSuppliers({}))
                   dispatch(fetchPurchaseOrders({}))
                 }}
-                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                className="p-1.5 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
                 title="Refresh data"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -1178,8 +1180,8 @@ export default function InventoryPage() {
                 onClick={() => setActiveTab(tab.key as TabType)}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border flex items-center gap-2 ${
                   activeTab === tab.key
-                    ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+                    ? 'bg-primary-600 text-white shadow-lg border-primary-600' 
+                    : 'bg-white text-secondary-700 hover:bg-secondary-50 border-secondary-200'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -1189,7 +1191,7 @@ export default function InventoryPage() {
           </div>
 
           {/* Content Area */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-secondary-200 overflow-hidden">
             {activeTab === 'inventory' && renderInventory()}
             {activeTab === 'transactions' && renderTransactions()}
             {activeTab === 'suppliers' && renderSuppliers()}

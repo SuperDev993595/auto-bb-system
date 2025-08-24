@@ -220,134 +220,110 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="page-container">
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
       {/* Header Section */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h1 className="page-title">Service Management</h1>
-            <p className="page-subtitle">Manage services, work orders, and technicians</p>
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={handleRefresh}
-              className="btn-secondary"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-            <button 
-              onClick={() => {
-                if (activeTab === 'catalog') handleAddService()
-                else if (activeTab === 'workorders') handleAddWorkOrder()
-                else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
-              }}
-              className="btn-primary-outline"
-            >
-              <Plus className="w-5 h-5" />
-              {activeTab === 'catalog' ? 'Add Service' : 
-               activeTab === 'workorders' ? 'Add Work Order' : 'Add Technician'}
-            </button>
-          </div>
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Service Management</h1>
+          <p className="text-secondary-600">Manage services, work orders, and technicians</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleRefresh}
+            className="btn-secondary"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+          <button 
+            onClick={() => {
+              if (activeTab === 'catalog') handleAddService()
+              else if (activeTab === 'workorders') handleAddWorkOrder()
+              else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
+            }}
+            className="btn-primary"
+          >
+            <Plus className="w-5 h-5" />
+            {activeTab === 'catalog' ? 'Add Service' : 
+             activeTab === 'workorders' ? 'Add Work Order' : 'Add Technician'}
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="flex items-center justify-between">
-              <div className="stats-card-icon">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="stats-card-label">Total</p>
-                <p className="stats-card-value">{totalServices}</p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Services</p>
+              <p className="text-3xl font-bold text-primary-600">{totalServices}</p>
+              <p className="text-sm text-secondary-500">Active: {activeServices}</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="stats-card-subtitle">Active Services</p>
-            <p className="stats-card-subvalue">{activeServices}</p>
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <Wrench className="w-6 h-6 text-primary-600" />
+            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="flex items-center justify-between">
-              <div className="stats-card-icon">
-                <ClipboardList className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="stats-card-label">Total</p>
-                <p className="stats-card-value">{totalWorkOrders}</p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Work Orders</p>
+              <p className="text-3xl font-bold text-success-600">{totalWorkOrders}</p>
+              <p className="text-sm text-secondary-500">Pending: {pendingWorkOrders}</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="stats-card-subtitle">Pending Orders</p>
-            <p className="stats-card-subvalue">{pendingWorkOrders}</p>
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <ClipboardList className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="flex items-center justify-between">
-              <div className="stats-card-icon">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="stats-card-label">Total</p>
-                <p className="stats-card-value">{totalTechnicians}</p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Technicians</p>
+              <p className="text-3xl font-bold text-info-600">{totalTechnicians}</p>
+              <p className="text-sm text-secondary-500">Active: {activeTechnicians}</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="stats-card-subtitle">Active Technicians</p>
-            <p className="stats-card-subvalue">{activeTechnicians}</p>
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="flex items-center justify-between">
-              <div className="stats-card-icon">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-right">
-                <p className="stats-card-label">Revenue</p>
-                <p className="stats-card-value">
-                  ${catalogStats?.totalRevenue?.toLocaleString() || '0'}
-                </p>
-              </div>
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Revenue</p>
+              <p className="text-3xl font-bold text-warning-600">
+                ${catalogStats?.totalRevenue?.toLocaleString() || '0'}
+              </p>
+              <p className="text-sm text-secondary-500">+{catalogStats?.monthlyGrowth || 0}% this month</p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="stats-card-subtitle">This Month</p>
-            <p className="stats-card-subvalue">
-              +{catalogStats?.monthlyGrowth || 0}%
-            </p>
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="tab-container">
-        <div className="tab-header">
+      <div className="card">
+        <div className="p-6 border-b border-secondary-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-secondary-600" />
-              <h3 className="text-base font-semibold text-secondary-800">Service Management</h3>
+              <Settings className="w-4 h-4 text-primary-600" />
+              <h3 className="text-base font-semibold text-secondary-900">Service Management</h3>
             </div>
             <div className="flex items-center gap-2">
               {/* View Toggle */}
-              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+              <div className="flex bg-secondary-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'grid' 
-                      ? 'bg-primary-100 text-primary-600' 
-                      : 'text-secondary-600 hover:text-secondary-900'
+                      ? 'bg-primary-600 text-white' 
+                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                   }`}
                   title="Grid View"
                 >
@@ -357,8 +333,8 @@ export default function ServicesPage() {
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'list' 
-                      ? 'bg-primary-100 text-primary-600' 
-                      : 'text-secondary-600 hover:text-secondary-900'
+                      ? 'bg-primary-600 text-white' 
+                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                   }`}
                   title="List View"
                 >
@@ -371,33 +347,39 @@ export default function ServicesPage() {
         
         <div className="p-6">
           {/* Tab Buttons */}
-          <div className="tab-buttons">
+          <div className="flex space-x-1">
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`tab-button ${activeTab === 'catalog' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'catalog' 
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <Wrench className="w-4 h-4" />
-                Service Catalog
-              </div>
+              <Wrench className="w-4 h-4" />
+              Service Catalog
             </button>
             <button
               onClick={() => setActiveTab('workorders')}
-              className={`tab-button ${activeTab === 'workorders' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'workorders' 
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4" />
-                Work Orders
-              </div>
+              <ClipboardList className="w-4 h-4" />
+              Work Orders
             </button>
             <button
               onClick={() => setActiveTab('technicians')}
-              className={`tab-button ${activeTab === 'technicians' ? 'tab-button-active' : 'tab-button-inactive'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'technicians' 
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
+              }`}
             >
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Technicians
-              </div>
+              <Users className="w-4 h-4" />
+              Technicians
             </button>
           </div>
 
