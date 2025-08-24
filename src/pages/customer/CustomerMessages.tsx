@@ -186,7 +186,7 @@ export default function CustomerMessages() {
               ))}
             </div>
           </div>
-          <div className="overflow-y-auto h-80">
+          <div className="overflow-y-auto h-80 custom-scrollbar">
             {filteredMessages.map((message) => (
               <div
                 key={message.id}
@@ -264,7 +264,7 @@ export default function CustomerMessages() {
               </div>
 
               {/* Message Content */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-gray-900 whitespace-pre-wrap">{selectedMessage.message}</p>
                 </div>

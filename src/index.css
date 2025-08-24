@@ -518,4 +518,63 @@
   .mobile-tablet-only {
     @apply block lg:hidden;
   }
+  
+  /* Scrollbar Styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary-300) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-secondary-300);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary-400);
+  }
+  
+  /* Alternative scrollbar styles for different contexts */
+  .scrollbar-minimal {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-minimal::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-primary {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-300) transparent;
+  }
+  
+  .scrollbar-primary::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-primary::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-primary::-webkit-scrollbar-thumb {
+    background: var(--color-primary-300);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .scrollbar-primary::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-400);
+  }
 }

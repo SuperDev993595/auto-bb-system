@@ -64,7 +64,7 @@ export default function ModalWrapper({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {children}
         </div>
 

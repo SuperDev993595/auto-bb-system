@@ -136,7 +136,7 @@ export default function EditCustomerModal({ customer, isOpen, onClose, onSuccess
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
           {/* Basic Information */}
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">

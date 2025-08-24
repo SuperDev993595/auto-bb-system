@@ -406,7 +406,7 @@ export default function LiveChatPage() {
               </div>
             </div>
 
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-96 overflow-y-auto custom-scrollbar">
               {loading ? (
                 <div className="p-4 text-center text-secondary-500">Loading chats...</div>
               ) : chats.length === 0 ? (
@@ -525,7 +525,7 @@ export default function LiveChatPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="h-96 overflow-y-auto p-4 space-y-4">
+              <div className="h-96 overflow-y-auto custom-scrollbar p-4 space-y-4">
                 {selectedChat.messages.map((message, index) => (
                   <div
                     key={message._id || index}
