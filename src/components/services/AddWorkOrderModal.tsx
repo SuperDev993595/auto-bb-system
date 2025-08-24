@@ -27,8 +27,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -65,18 +64,18 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Add New Work Order"
-      submitText="Create Work Order"
+      submitText={loading ? "Creating..." : "Create Work Order"}
       onSubmit={handleSubmit}
-      isLoading={loading}
+      submitColor="bg-blue-600"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="p-6 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="workOrderNumber" className="form-label">
               Work Order Number *
@@ -142,7 +141,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="estimatedHours" className="form-label">
               Estimated Hours
@@ -197,7 +196,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="assignedTechnician" className="form-label">
               Assigned Technician
@@ -213,21 +212,21 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
             />
           </div>
 
-          <div>
-            <label htmlFor="dueDate" className="form-label">
-              Due Date
-            </label>
-            <input
-              type="date"
-              id="dueDate"
-              name="dueDate"
-              value={formData.dueDate}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </div>
+                      <div>
+              <label htmlFor="dueDate" className="form-label">
+                Due Date
+              </label>
+              <input
+                type="date"
+                id="dueDate"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
         </div>
-      </form>
+      </div>
     </ModalWrapper>
   )
 }

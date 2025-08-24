@@ -270,7 +270,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
     // Auto-set serviceTypeId when serviceType changes and we have service types loaded
     useEffect(() => {
-        if (isEditing && form.serviceType && !form.serviceTypeId && serviceTypes.length > 0) {
+        if (isEditing && form.serviceType && !form.serviceTypeId && Array.isArray(serviceTypes) && serviceTypes.length > 0) {
             const matchingService = serviceTypes.find((service: any) => 
                 service.name === form.serviceType
             );
@@ -347,11 +347,14 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 }
                 
                 console.log('Loaded technicians:', allTechnicians);
-                setTechnicians(allTechnicians);
+                const techniciansData = Array.isArray(allTechnicians) ? allTechnicians : [];
+                setTechnicians(techniciansData);
                 
             } catch (error) {
                 console.error('Error loading technicians:', error);
                 setTechnicians([]);
+            } finally {
+                setTechnicians(prev => Array.isArray(prev) ? prev : []);
             }
         };
 
@@ -367,11 +370,15 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    setAvailableVehicles(data.data.vehicles || []);
+                    const vehiclesData = Array.isArray(data.data?.vehicles) ? data.data.vehicles : [];
+                    setAvailableVehicles(vehiclesData);
                 }
             }
         } catch (error) {
             console.warn('Failed to load vehicles:', error);
+            setAvailableVehicles([]);
+        } finally {
+            setAvailableVehicles(prev => Array.isArray(prev) ? prev : []);
         }
     };
 
@@ -383,11 +390,15 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    setAvailableCustomers(data.data.customers || []);
+                    const customersData = Array.isArray(data.data?.customers) ? data.data.customers : [];
+                    setAvailableCustomers(customersData);
                 }
             }
         } catch (error) {
             console.warn('Failed to load customers:', error);
+            setAvailableCustomers([]);
+        } finally {
+            setAvailableCustomers(prev => Array.isArray(prev) ? prev : []);
         }
     };
 
@@ -400,11 +411,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 const data = await response.json();
                 if (data.success) {
                     console.log('Loaded service types:', data.data);
-                    setServiceTypes(data.data || []);
+                    const serviceTypesData = Array.isArray(data.data) ? data.data : [];
+                    setServiceTypes(serviceTypesData);
                     
                     // If we're editing and have a serviceType name but no ID, try to find the matching service
                     if (isEditing && form.serviceType && !form.serviceTypeId) {
-                        const matchingService = data.data.find((service: any) => 
+                        const matchingService = serviceTypesData.find((service: any) => 
                             service.name === form.serviceType
                         );
                         if (matchingService) {
@@ -423,6 +435,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             console.warn('Failed to load service types:', error);
             // Fallback to empty array
             setServiceTypes([]);
+        } finally {
+            // Ensure serviceTypes is always an array
+            setServiceTypes(prev => Array.isArray(prev) ? prev : []);
         }
     };
 
@@ -434,13 +449,16 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    setVehicleMakes(data.data || []);
+                    const makesData = Array.isArray(data.data) ? data.data : [];
+                    setVehicleMakes(makesData);
                 }
             }
         } catch (error) {
             console.warn('Failed to load vehicle makes:', error);
             // Fallback to empty array
             setVehicleMakes([]);
+        } finally {
+            setVehicleMakes(prev => Array.isArray(prev) ? prev : []);
         }
     };
 
@@ -452,12 +470,15 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                    setSelectedCustomerVehicles(data.data.vehicles || []);
+                    const vehiclesData = Array.isArray(data.data?.vehicles) ? data.data.vehicles : [];
+                    setSelectedCustomerVehicles(vehiclesData);
                 }
             }
         } catch (error) {
             console.warn('Failed to load customer vehicles:', error);
             setSelectedCustomerVehicles([]);
+        } finally {
+            setSelectedCustomerVehicles(prev => Array.isArray(prev) ? prev : []);
         }
     };
 
@@ -469,8 +490,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             });
             if (response.ok) {
                 const data = await response.json();
-                if (data.success && data.data.vehicles) {
-                    const vehicle = data.data.vehicles.find((v: any) => v.id === vehicleId);
+                if (data.success && data.data?.vehicles) {
+                    const vehiclesData = Array.isArray(data.data.vehicles) ? data.data.vehicles : [];
+                    const vehicle = vehiclesData.find((v: any) => v.id === vehicleId);
                     if (vehicle) {
                         setForm(prev => ({
                             ...prev,
@@ -488,8 +510,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             });
             if (directResponse.ok) {
                 const directData = await directResponse.json();
-                if (directData.success && directData.data.vehicles) {
-                    const vehicle = directData.data.vehicles.find((v: any) => v.id === vehicleId);
+                if (directData.success && directData.data?.vehicles) {
+                    const vehiclesData = Array.isArray(directData.data.vehicles) ? directData.data.vehicles : [];
+                    const vehicle = vehiclesData.find((v: any) => v.id === vehicleId);
                     if (vehicle) {
                         setForm(prev => ({
                             ...prev,
@@ -511,7 +534,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             });
             if (response.ok) {
                 const data = await response.json();
-                if (data.success && data.data.customer) {
+                if (data.success && data.data?.customer) {
                     const customer = data.data.customer;
                     setForm(prev => ({
                         ...prev,
@@ -546,7 +569,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             const input = form.vehicle.toLowerCase().trim();
             
             // First, filter makes that match the input
-            const matchingMakes = vehicleMakes.filter((make: string) =>
+            const matchingMakes = (vehicleMakes || []).filter((make: string) =>
                 make.toLowerCase().includes(input)
             );
             
@@ -1280,7 +1303,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                     const customerId = e.target.value;
                                     setForm(prev => ({ ...prev, existingCustomerId: customerId }));
                                     if (customerId) {
-                                        const customer = availableCustomers.find(c => c.id === customerId);
+                                        const customer = (availableCustomers || []).find(c => c.id === customerId);
                                         if (customer) {
                                             setForm(prev => ({
                                                 ...prev,
@@ -1294,7 +1317,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 className="form-select"
                             >
                                 <option value="">Select a customer</option>
-                                {availableCustomers.map(customer => (
+                                {(availableCustomers || []).map(customer => (
                                     <option key={customer.id} value={customer.id}>
                                         {customer.name} - {customer.email}
                                     </option>
@@ -1456,7 +1479,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 required
                             >
                                 <option value="">Select service type</option>
-                                {serviceTypes.map(service => (
+                                {(serviceTypes || []).map(service => (
                                     <option key={service._id || service.id} value={service._id || service.id}>
                                         {service.name}
                                     </option>

@@ -25,8 +25,7 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -68,18 +67,18 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Add New Technician"
-      submitText="Create Technician"
+      submitText={loading ? "Creating..." : "Create Technician"}
       onSubmit={handleSubmit}
-      isLoading={loading}
+      submitColor="bg-blue-600"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="p-6 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="firstName" className="form-label">
               First Name *
@@ -113,7 +112,7 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="email" className="form-label">
               Email *
@@ -122,11 +121,11 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
               type="email"
               id="email"
               name="email"
+              placeholder="Enter email address"
               value={formData.email}
               onChange={handleChange}
               required
               className="form-input"
-              placeholder="Enter email address"
             />
           </div>
 
@@ -147,7 +146,7 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="specialization" className="form-label">
               Specialization
@@ -202,7 +201,7 @@ const AddTechnicianModal: React.FC<AddTechnicianModalProps> = ({
             Technician is active and available for work
           </label>
         </div>
-      </form>
+      </div>
     </ModalWrapper>
   )
 }
