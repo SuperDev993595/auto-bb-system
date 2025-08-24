@@ -793,7 +793,7 @@ export default function ServicesPage() {
                                 <Users className="w-5 h-5 text-purple-600" />
                               </div>
                               <div>
-                                <h4 className="font-semibold text-secondary-900">{technician.name}</h4>
+                                <h6 className="font-normal text-secondary-900">{technician.name}</h6>
                                 <p className="text-sm text-secondary-600">{technician.specialization}</p>
                               </div>
                             </div>

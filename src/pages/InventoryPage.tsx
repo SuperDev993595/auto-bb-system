@@ -426,9 +426,14 @@ export default function InventoryPage() {
 
   // Purchase Order modal handlers
   const handleAddPurchaseOrder = () => {
+    console.log('handleAddPurchaseOrder called');
+    console.log('Setting modal mode to add');
     setPurchaseOrderModalMode('add')
+    console.log('Setting selectedPurchaseOrder to null');
     setSelectedPurchaseOrder(null)
+    console.log('Setting modal open to true');
     setIsAddEditPurchaseOrderModalOpen(true)
+    console.log('Modal state after setting:', { mode: 'add', selected: null, isOpen: true });
   }
 
   const handleEditPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
@@ -1101,9 +1106,17 @@ export default function InventoryPage() {
           </button>
           <button 
             onClick={() => {
-              if (activeTab === 'inventory') handleAddItem()
-              else if (activeTab === 'suppliers') handleAddSupplier()
-              else if (activeTab === 'purchase-orders') handleAddPurchaseOrder()
+              console.log('Button clicked, activeTab:', activeTab);
+              if (activeTab === 'inventory') {
+                console.log('Calling handleAddItem');
+                handleAddItem();
+              } else if (activeTab === 'suppliers') {
+                console.log('Calling handleAddSupplier');
+                handleAddSupplier();
+              } else if (activeTab === 'purchase-orders') {
+                console.log('Calling handleAddPurchaseOrder');
+                handleAddPurchaseOrder();
+              }
             }}
             className="btn-primary"
           >
