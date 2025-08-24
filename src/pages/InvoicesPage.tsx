@@ -190,107 +190,112 @@ export default function InvoicesPage() {
   const renderInvoices = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h2 className="page-title">Invoices</h2>
-            <p className="page-subtitle">Manage customer invoices and payments</p>
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={() => dispatch(markAsOverdue())}
-              className="btn-secondary"
-            >
-              <HiRefresh className="w-4 h-4" />
-              Update Overdue
-            </button>
-            <button 
-              onClick={() => setShowAddInvoiceModal(true)}
-              className="btn-primary-outline"
-            >
-              <HiPlus className="w-4 h-4" />
-              Create Invoice
-            </button>
-          </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+        <div className="mb-4 lg:mb-0">
+          <h2 className="text-2xl font-bold text-secondary-900 mb-2">Invoices</h2>
+          <p className="text-secondary-600">Manage customer invoices and payments</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => dispatch(markAsOverdue())}
+            className="btn-secondary"
+          >
+            <HiRefresh className="w-4 h-4" />
+            Update Overdue
+          </button>
+          <button 
+            onClick={() => setShowAddInvoiceModal(true)}
+            className="btn-primary"
+          >
+            <HiPlus className="w-4 h-4" />
+            Create Invoice
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-primary-500">
-              <HiDocumentText className="w-6 h-6 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Invoices</p>
+              <p className="text-3xl font-bold text-primary-600">{totalInvoices}</p>
             </div>
-            <div className="stats-card-label">Total</div>
-            <div className="stats-card-value">{totalInvoices}</div>
-            <div className="stats-card-subtitle">Invoices</div>
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <HiDocumentText className="w-6 h-6 text-primary-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-success-500">
-              <HiCheck className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Paid Invoices</p>
+              <p className="text-3xl font-bold text-success-600">{paidInvoices}</p>
             </div>
-            <div className="stats-card-label">Paid</div>
-            <div className="stats-card-value">{paidInvoices}</div>
-            <div className="stats-card-subtitle">Invoices</div>
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <HiCheck className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-error-500">
-              <HiExclamation className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Overdue Invoices</p>
+              <p className="text-3xl font-bold text-error-600">{overdueInvoices}</p>
             </div>
-            <div className="stats-card-label">Overdue</div>
-            <div className="stats-card-value">{overdueInvoices}</div>
-            <div className="stats-card-subtitle">Invoices</div>
+            <div className="w-12 h-12 bg-error-100 rounded-xl flex items-center justify-center">
+              <HiExclamation className="w-6 h-6 text-error-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-info-500">
-              <HiCurrencyDollar className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Revenue</p>
+              <p className="text-3xl font-bold text-info-600">${totalRevenue.toLocaleString()}</p>
+              <p className="text-sm text-secondary-500">Collected</p>
             </div>
-            <div className="stats-card-label">Total Revenue</div>
-            <div className="stats-card-value">${totalRevenue.toLocaleString()}</div>
-            <div className="stats-card-subtitle">Collected</div>
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <HiCurrencyDollar className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon bg-warning-500">
-              <HiClock className="w-6 h-6 text-white" />
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Outstanding</p>
+              <p className="text-3xl font-bold text-warning-600">${outstandingAmount.toLocaleString()}</p>
+              <p className="text-sm text-secondary-500">Pending</p>
             </div>
-            <div className="stats-card-label">Outstanding</div>
-            <div className="stats-card-value">${outstandingAmount.toLocaleString()}</div>
-            <div className="stats-card-subtitle">Pending</div>
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <HiClock className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="card">
         <div className="flex gap-4 items-center">
           <div className="flex-1 relative">
-            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <HiSearch className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400" />
             <input
               type="text"
               placeholder="Search invoices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+              className="form-input w-full pl-10 pr-4 py-2"
             />
           </div>
           
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            className="form-input"
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
@@ -757,16 +762,22 @@ export default function InvoicesPage() {
   )
 
   return (
-    <div className="page-container">
-      <PageTitle title="Invoices & Billing" />
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Invoices & Billing</h1>
+          <p className="text-secondary-600">Manage customer invoices and payments</p>
+        </div>
+      </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
+      <div className="card">
+        <div className="border-b border-secondary-200">
           <nav className="flex space-x-8 px-6">
             {[
-                      { key: 'invoices', label: 'Invoices', count: (invoices || []).length },
-        { key: 'payments', label: 'Payments', count: (invoices || []).filter(i => i.status === 'paid').length },
+              { key: 'invoices', label: 'Invoices', count: (invoices || []).length },
+              { key: 'payments', label: 'Payments', count: (invoices || []).filter(i => i.status === 'paid').length },
               { key: 'settings', label: 'Settings', count: 0 }
             ].map(tab => (
               <button
@@ -774,8 +785,8 @@ export default function InvoicesPage() {
                 onClick={() => setActiveTab(tab.key as TabType)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
                 }`}
               >
                 {tab.label} {tab.count > 0 && `(${tab.count})`}
