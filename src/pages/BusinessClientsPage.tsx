@@ -224,69 +224,82 @@ export default function BusinessClientsPage() {
 
   if (loading && businessClients.length === 0) {
     return (
-      <div className="page-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading business clients...</p>
+      <div className="min-h-screen bg-secondary-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 animate-spin mx-auto mb-4 text-primary-600 border-2 border-primary-600 border-t-transparent rounded-full"></div>
+          <p className="text-secondary-600">Loading business clients...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <PageTitle title="Business Clients" />
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Business Clients</h1>
+          <p className="text-secondary-600">Manage business partnerships and corporate accounts</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="btn-primary"
+          >
+            <HiPlus className="w-5 h-5 mr-2" />
+            Add Business Client
+          </button>
+        </div>
       </div>
       
       {/* Stats Overview */}
-      <div className="grid-responsive mb-8">
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-primary-100">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Total Clients</p>
+              <p className="text-3xl font-bold text-primary-600">{stats.totalClients}</p>
+            </div>
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
               <HiOfficeBuilding className="w-6 h-6 text-primary-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Total Clients</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.totalClients}</p>
-            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-success-100">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Active Clients</p>
+              <p className="text-3xl font-bold text-success-600">{stats.activeClients}</p>
+            </div>
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
               <HiCheckCircle className="w-6 h-6 text-success-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Active Clients</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.activeClients}</p>
-            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-warning-100">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Trial Clients</p>
+              <p className="text-3xl font-bold text-warning-600">{stats.trialClients}</p>
+            </div>
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
               <HiClock className="w-6 h-6 text-warning-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Trial Clients</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.trialClients}</p>
-            </div>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-info-100">
-              <HiCurrencyDollar className="w-6 h-6 text-info-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-secondary-900">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Monthly Revenue</p>
+              <p className="text-3xl font-bold text-info-600">
                 {businessClientService.formatCurrency(stats.monthlyRecurringRevenue)}
               </p>
+            </div>
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <HiCurrencyDollar className="w-6 h-6 text-info-600" />
             </div>
           </div>
         </div>
