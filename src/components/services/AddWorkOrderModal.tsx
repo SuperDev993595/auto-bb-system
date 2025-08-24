@@ -132,15 +132,15 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
       submitText={loading ? 'Creating...' : 'Create Work Order'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="space-y-6 p-4">
+        <div className="space-y-2">
+          <label className="form-label">
             Customer *
           </label>
           <select
             value={formData.customerId}
             onChange={(e) => handleInputChange('customerId', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
             required
           >
             <option value="">Select a customer</option>
@@ -152,14 +152,14 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Vehicle *
           </label>
           <select
             value={formData.vehicleId}
             onChange={(e) => handleInputChange('vehicleId', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
             required
             disabled={!formData.customerId}
           >
@@ -172,14 +172,14 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Service *
           </label>
           <select
             value={formData.serviceId}
             onChange={(e) => handleInputChange('serviceId', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
             required
           >
             <option value="">Select a service</option>
@@ -191,14 +191,14 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Technician
           </label>
           <select
             value={formData.technicianId}
             onChange={(e) => handleInputChange('technicianId', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
           >
             <option value="">Select a technician</option>
             {technicians?.map(technician => (
@@ -209,14 +209,14 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Priority
           </label>
           <select
             value={formData.priority}
             onChange={(e) => handleInputChange('priority', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -226,85 +226,85 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Estimated Start Date *
             </label>
             <input
               type="datetime-local"
               value={formData.estimatedStartDate}
               onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Estimated End Date *
             </label>
             <input
               type="datetime-local"
               value={formData.estimatedEndDate}
               onChange={(e) => handleInputChange('estimatedEndDate', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               required
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Labor Hours
             </label>
             <input
               type="number"
               value={formData.laborHours}
               onChange={(e) => handleInputChange('laborHours', parseFloat(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               min="0.5"
               step="0.5"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Labor Rate ($/hr)
             </label>
             <input
               type="number"
               value={formData.laborRate}
               onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               min="0"
               step="0.01"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Parts Cost ($)
             </label>
             <input
               type="number"
               value={formData.partsCost}
               onChange={(e) => handleInputChange('partsCost', parseFloat(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               min="0"
               step="0.01"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Notes
           </label>
           <textarea
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-textarea"
             rows={3}
             placeholder="Additional notes about the work order"
           />

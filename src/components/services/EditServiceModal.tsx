@@ -79,43 +79,43 @@ export default function EditServiceModal({ service, onClose, onSuccess }: Props)
       submitText={loading ? 'Updating...' : 'Update Service'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="space-y-6 p-4">
+        <div className="space-y-2">
+          <label className="form-label">
             Service Name *
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-input"
             placeholder="e.g., Oil Change, Brake Inspection"
             required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Description *
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-textarea"
             rows={3}
             placeholder="Describe the service in detail"
             required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Category *
           </label>
           <select
             value={formData.category}
             onChange={(e) => handleInputChange('category', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-select"
             required
           >
             <option value="maintenance">Maintenance</option>
@@ -129,29 +129,29 @@ export default function EditServiceModal({ service, onClose, onSuccess }: Props)
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Estimated Duration (minutes) *
             </label>
             <input
               type="number"
               value={formData.estimatedDuration}
               onChange={(e) => handleInputChange('estimatedDuration', parseInt(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               min="15"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="form-label">
               Labor Rate ($/hour) *
             </label>
             <input
               type="number"
               value={formData.laborRate}
               onChange={(e) => handleInputChange('laborRate', parseFloat(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+              className="form-input"
               min="0"
               step="0.01"
               required
@@ -159,7 +159,7 @@ export default function EditServiceModal({ service, onClose, onSuccess }: Props)
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-3 pt-2">
           <input
             type="checkbox"
             id="isActive"
@@ -167,7 +167,7 @@ export default function EditServiceModal({ service, onClose, onSuccess }: Props)
             onChange={(e) => handleInputChange('isActive', e.target.checked)}
             className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md"
           />
-          <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="isActive" className="text-sm text-gray-700">
             Service is active and available
           </label>
         </div>

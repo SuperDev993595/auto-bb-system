@@ -55,7 +55,7 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
       submitText={loading ? 'Deleting...' : 'Delete Service'}
       submitColor="bg-gradient-to-r from-red-600 to-pink-600"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 p-4">
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex">
             <div className="p-2 bg-red-100 rounded-lg">
@@ -73,8 +73,8 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Service Details
           </label>
           <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-200">
@@ -85,23 +85,23 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-2">
+          <label className="form-label">
             Type the service name to confirm deletion
           </label>
           <input
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            className="form-input"
             placeholder={`Type "${service.name}" to confirm`}
             required
           />
         </div>
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 space-y-2">
           <p>⚠️ This action will:</p>
-          <ul className="list-disc list-inside mt-2 space-y-1">
+          <ul className="list-disc list-inside space-y-1">
             <li>Permanently delete the service from the catalog</li>
             <li>Remove it from all future work orders</li>
             <li>Cannot be undone</li>
