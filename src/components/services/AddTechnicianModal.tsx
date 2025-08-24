@@ -141,56 +141,56 @@ export default function AddTechnicianModal({ onClose, onSuccess }: AddTechnician
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="form-label">
                   Full Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  className="form-input"
                   placeholder="Enter full name"
                   required
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="form-label">
                   Email *
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  className="form-input"
                   placeholder="Enter email address"
                   required
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="form-label">
                   Phone Number
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  className="form-input"
                   placeholder="Enter phone number"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="form-label">
                   Hourly Rate ($)
                 </label>
                 <input
                   type="number"
                   value={formData.hourlyRate}
                   onChange={(e) => handleInputChange('hourlyRate', parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  className="form-input"
                   placeholder="0.00"
                   min="0"
                   step="0.01"
@@ -211,7 +211,7 @@ export default function AddTechnicianModal({ onClose, onSuccess }: AddTechnician
                 type="text"
                 value={newSpecialization}
                 onChange={(e) => setNewSpecialization(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                className="form-input flex-1"
                 placeholder="Add specialization"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSpecialization())}
               />
@@ -259,28 +259,28 @@ export default function AddTechnicianModal({ onClose, onSuccess }: AddTechnician
                   type="text"
                   value={newCertification.name}
                   onChange={(e) => setNewCertification(prev => ({ ...prev, name: e.target.value }))}
-                  className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
+                  className="form-input"
                   placeholder="Certification name"
                 />
                 <input
                   type="text"
                   value={newCertification.issuingAuthority}
                   onChange={(e) => setNewCertification(prev => ({ ...prev, issuingAuthority: e.target.value }))}
-                  className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
+                  className="form-input"
                   placeholder="Issuing authority"
                 />
                 <input
                   type="date"
                   value={newCertification.issueDate}
                   onChange={(e) => setNewCertification(prev => ({ ...prev, issueDate: e.target.value }))}
-                  className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
+                  className="form-input"
                   placeholder="Issue date"
                 />
                 <input
                   type="date"
                   value={newCertification.expiryDate}
                   onChange={(e) => setNewCertification(prev => ({ ...prev, expiryDate: e.target.value }))}
-                  className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50"
+                  className="form-input"
                   placeholder="Expiry date"
                 />
               </div>
