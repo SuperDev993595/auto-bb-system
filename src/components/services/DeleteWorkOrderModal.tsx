@@ -47,11 +47,12 @@ export default function DeleteWorkOrderModal({ workOrder, onClose, onSuccess }: 
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Delete Work Order"
       icon={<Trash2 className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Deleting...' : 'Delete Work Order'}
+      submitText={loading ? 'Deleting...' : 'Delete Work Order'}
       submitColor="bg-gradient-to-r from-red-600 to-pink-600"
     >
       <div className="space-y-6">

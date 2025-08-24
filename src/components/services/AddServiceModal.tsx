@@ -51,11 +51,12 @@ export default function AddServiceModal({ onClose, onSuccess }: Props) {
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Add New Service"
       icon={<Settings className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Creating...' : 'Create Service'}
+      submitText={loading ? 'Creating...' : 'Create Service'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
       <div className="space-y-6">

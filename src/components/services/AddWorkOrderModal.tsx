@@ -124,11 +124,12 @@ export default function AddWorkOrderModal({ onClose, onSuccess }: Props) {
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Create Work Order"
       icon={<ClipboardList className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Creating...' : 'Create Work Order'}
+      submitText={loading ? 'Creating...' : 'Create Work Order'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
       <div className="space-y-6">

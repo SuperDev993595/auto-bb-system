@@ -296,9 +296,9 @@ export default function ServicesPage() {
             <div>
               <p className="text-sm font-medium text-secondary-600 mb-1">Revenue</p>
               <p className="text-3xl font-bold text-warning-600">
-                ${catalogStats?.totalRevenue?.toLocaleString() || '0'}
+                ${(catalogStats as any)?.totalRevenue?.toLocaleString() || '0'}
               </p>
-              <p className="text-sm text-secondary-500">+{catalogStats?.monthlyGrowth || 0}% this month</p>
+              <p className="text-sm text-secondary-500">+{(catalogStats as any)?.monthlyGrowth || 0}% this month</p>
             </div>
             <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-warning-600" />
@@ -433,20 +433,20 @@ export default function ServicesPage() {
           </div>
 
           {/* Content Area */}
-          <div className="table-container">
+          <div className="space-y-6">
             {activeTab === 'catalog' && (
-              <div className="p-6">
+              <div className="space-y-6">
                 {catalogLoading ? (
-                  <div className="loading-container">
+                  <div className="flex items-center justify-center py-12">
                     <div className="text-center">
-                      <Loader2 className="loading-spinner" />
-                      <p className="loading-text">Loading service catalog...</p>
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-600">Loading service catalog...</p>
                     </div>
                   </div>
                 ) : filteredCatalog.length > 0 ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-secondary-800">
                         {filteredCatalog.length} service{filteredCatalog.length !== 1 ? 's' : ''} found
                       </h3>
                     </div>
@@ -454,49 +454,49 @@ export default function ServicesPage() {
                     {viewMode === 'grid' ? (
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredCatalog.map((service) => (
-                          <div key={service._id} className="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden">
-                            <div className="p-6">
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                  <h4 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h4>
-                                  <p className="text-sm text-gray-600 mb-3">{service.description}</p>
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
-                                      {service.isActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                      {service.category}
-                                    </span>
+                          <div key={service._id} className="card p-6 hover:shadow-md transition-all duration-200">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <h4 className="text-lg font-semibold text-secondary-900 mb-2">{service.name}</h4>
+                                <p className="text-sm text-secondary-600 mb-3">{service.description}</p>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className={`status-badge ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
+                                    {service.isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                    {service.category}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-secondary-600">
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="w-4 h-4" />
+                                    <span>${service.laborRate || 'N/A'}</span>
                                   </div>
-                                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                                    <div className="flex items-center gap-1">
-                                      <DollarSign className="w-4 h-4" />
-                                      <span>${service.price}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="w-4 h-4" />
-                                      <span>{service.duration} min</span>
-                                    </div>
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{service.estimatedDuration || 'N/A'} min</span>
                                   </div>
                                 </div>
                               </div>
-                              
-                              <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
-                                <button
-                                  onClick={() => handleEditService(service)}
-                                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                                  title="Edit Service"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteService(service)}
-                                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                                  title="Delete Service"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-end gap-2 pt-4 border-t border-secondary-100">
+                              <button
+                                onClick={() => handleEditService(service)}
+                                className="btn-secondary btn-sm"
+                                title="Edit Service"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteService(service)}
+                                className="btn-error btn-sm"
+                                title="Delete Service"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -504,34 +504,38 @@ export default function ServicesPage() {
                     ) : (
                       <div className="space-y-3">
                         {filteredCatalog.map((service) => (
-                          <div key={service._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                                <Wrench className="w-5 h-5 text-white" />
+                          <div key={service._id} className="card p-4 hover:bg-secondary-50 transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <Wrench className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-secondary-900">{service.name}</h4>
+                                  <p className="text-sm text-secondary-600">{service.category}</p>
+                                </div>
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-gray-900">{service.name}</h4>
-                                <p className="text-sm text-gray-600">{service.category}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <span className="text-sm font-medium text-gray-900">${service.price}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
-                                {service.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditService(service)}
-                                  className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteService(service)}
-                                  className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium text-secondary-900">${service.laborRate || 'N/A'}</span>
+                                <span className={`status-badge ${getStatusColor(service.isActive ? 'active' : 'inactive')}`}>
+                                  {service.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleEditService(service)}
+                                    className="btn-secondary btn-sm"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteService(service)}
+                                    className="btn-error btn-sm"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -540,15 +544,15 @@ export default function ServicesPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Wrench className="w-8 h-8 text-gray-400" />
+                  <div className="empty-state">
+                    <div className="empty-state-icon">
+                      <Wrench className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No services found</h3>
-                    <p className="text-gray-500 mb-4">Get started by adding your first service</p>
+                    <h3 className="empty-state-title">No services found</h3>
+                    <p className="empty-state-description">Get started by adding your first service</p>
                     <button
                       onClick={handleAddService}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-semibold transition-all duration-200"
+                      className="btn-primary"
                     >
                       <Plus className="w-5 h-5" />
                       Add Service
@@ -559,51 +563,55 @@ export default function ServicesPage() {
             )}
 
             {activeTab === 'workorders' && (
-              <div className="p-6">
+              <div className="space-y-6">
                 {workOrdersLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                      <p className="text-gray-600">Loading work orders...</p>
+                      <p className="text-secondary-600">Loading work orders...</p>
                     </div>
                   </div>
                 ) : filteredWorkOrders.length > 0 ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-secondary-800">
                         {filteredWorkOrders.length} work order{filteredWorkOrders.length !== 1 ? 's' : ''} found
                       </h3>
                     </div>
                     
                     <div className="space-y-3">
                       {filteredWorkOrders.map((workOrder) => (
-                        <div key={workOrder._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                              <ClipboardList className="w-5 h-5 text-white" />
+                        <div key={workOrder._id} className="card p-4 hover:bg-secondary-50 transition-all duration-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <ClipboardList className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-secondary-900">{workOrder.workOrderNumber || 'Untitled'}</h4>
+                                <p className="text-sm text-secondary-600">{workOrder.notes || 'No description'}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{workOrder.title}</h4>
-                              <p className="text-sm text-gray-600">{workOrder.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(workOrder.status)}`}>
-                              {workOrder.status}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditWorkOrder(workOrder)}
-                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteWorkOrder(workOrder)}
-                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            <div className="flex items-center gap-4">
+                              <span className={`status-badge ${getStatusColor(workOrder.status)}`}>
+                                {workOrder.status}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditWorkOrder(workOrder)}
+                                  className="btn-secondary btn-sm"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteWorkOrder(workOrder)}
+                                  className="btn-error btn-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -611,15 +619,15 @@ export default function ServicesPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <ClipboardList className="w-8 h-8 text-gray-400" />
+                  <div className="empty-state">
+                    <div className="empty-state-icon">
+                      <ClipboardList className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No work orders found</h3>
-                    <p className="text-gray-500 mb-4">Get started by creating your first work order</p>
+                    <h3 className="empty-state-title">No work orders found</h3>
+                    <p className="empty-state-description">Get started by creating your first work order</p>
                     <button
                       onClick={handleAddWorkOrder}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200"
+                      className="btn-primary"
                     >
                       <Plus className="w-5 h-5" />
                       Add Work Order
@@ -630,57 +638,61 @@ export default function ServicesPage() {
             )}
 
             {activeTab === 'technicians' && (
-              <div className="p-6">
+              <div className="space-y-6">
                 {techniciansLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                      <p className="text-gray-600">Loading technicians...</p>
+                      <p className="text-secondary-600">Loading technicians...</p>
                     </div>
                   </div>
                 ) : (Array.isArray(technicians) ? technicians : []).length > 0 ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-secondary-800">
                         {(Array.isArray(technicians) ? technicians : []).length} technician{(Array.isArray(technicians) ? technicians : []).length !== 1 ? 's' : ''} found
                       </h3>
                     </div>
                     
                     <div className="space-y-3">
                       {(Array.isArray(technicians) ? technicians : []).map((technician) => (
-                        <div key={technician._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-200">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                              <Users className="w-5 h-5 text-white" />
+                        <div key={technician._id} className="card p-4 hover:bg-secondary-50 transition-all duration-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <Users className="w-5 h-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-secondary-900">{technician.name}</h4>
+                                <p className="text-sm text-secondary-600">{technician.specialization}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{technician.name}</h4>
-                              <p className="text-sm text-gray-600">{technician.specialization}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(technician.isActive ? 'active' : 'inactive')}`}>
-                              {technician.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => {
-                                  setSelectedTechnician(technician)
-                                  setShowEditTechnicianModal(true)
-                                }}
-                                className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedTechnician(technician)
-                                  setShowDeleteTechnicianModal(true)
-                                }}
-                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            <div className="flex items-center gap-4">
+                              <span className={`status-badge ${getStatusColor(technician.isActive ? 'active' : 'inactive')}`}>
+                                {technician.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedTechnician(technician)
+                                    setShowEditTechnicianModal(true)
+                                  }}
+                                  className="btn-secondary btn-sm"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedTechnician(technician)
+                                    setShowDeleteTechnicianModal(true)
+                                  }}
+                                  className="btn-error btn-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -688,15 +700,15 @@ export default function ServicesPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-gray-400" />
+                  <div className="empty-state">
+                    <div className="empty-state-icon">
+                      <Users className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No technicians found</h3>
-                    <p className="text-gray-500 mb-4">Get started by adding your first technician</p>
+                    <h3 className="empty-state-title">No technicians found</h3>
+                    <p className="empty-state-description">Get started by adding your first technician</p>
                     <button
                       onClick={() => setShowAddTechnicianModal(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-200"
+                      className="btn-primary"
                     >
                       <Plus className="w-5 h-5" />
                       Add Technician

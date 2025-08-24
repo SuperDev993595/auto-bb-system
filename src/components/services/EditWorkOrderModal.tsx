@@ -117,11 +117,12 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Edit Work Order"
       icon={<Edit className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Updating...' : 'Update Work Order'}
+      submitText={loading ? 'Updating...' : 'Update Work Order'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
       <div className="space-y-6">

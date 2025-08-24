@@ -47,11 +47,12 @@ export default function DeleteServiceModal({ service, onClose, onSuccess }: Prop
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Delete Service"
       icon={<Trash2 className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Deleting...' : 'Delete Service'}
+      submitText={loading ? 'Deleting...' : 'Delete Service'}
       submitColor="bg-gradient-to-r from-red-600 to-pink-600"
     >
       <div className="space-y-6">

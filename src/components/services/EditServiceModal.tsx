@@ -71,11 +71,12 @@ export default function EditServiceModal({ service, onClose, onSuccess }: Props)
 
   return (
     <ModalWrapper
+      isOpen={true}
       title="Edit Service"
       icon={<Edit className="w-5 h-5" />}
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Updating...' : 'Update Service'}
+      submitText={loading ? 'Updating...' : 'Update Service'}
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
       <div className="space-y-6">
