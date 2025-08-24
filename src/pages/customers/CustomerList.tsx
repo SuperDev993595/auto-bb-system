@@ -92,20 +92,18 @@ function CustomerList() {
   return (
     <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
       {/* Header Section */}
-      <div className="card bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 rounded-2xl shadow-xl p-6 text-white">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold mb-2">Customer Management</h1>
-            <p className="text-primary-100 text-base opacity-90">Manage and organize your customer database</p>
-          </div>
-          <Link
-            to="/admin/dashboard/customers/new"
-            className="btn bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30 hover:border-white/50 hover-lift"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add New Customer
-          </Link>
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Customer Management</h1>
+          <p className="text-secondary-600">Manage and organize your customer database</p>
         </div>
+        <Link
+          to="/admin/dashboard/customers/new"
+          className="btn-primary"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Add New Customer
+        </Link>
       </div>
 
       {/* Stats Cards */}

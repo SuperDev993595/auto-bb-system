@@ -182,56 +182,48 @@ export default function CustomerDetail() {
 
       {/* Hero Profile Header */}
       <div className="px-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-32 translate-x-32"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full translate-y-16 -translate-x-16"></div>
+        <div className="min-h-48 flex flex-col lg:flex-row justify-between items-start lg:items-center p-8">
+          <div className="flex items-center space-x-6 mb-6 lg:mb-0">
+            <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center border border-secondary-200">
+              <User className="w-12 h-12 text-secondary-600" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-secondary-900 mb-3">
+                {actualCustomer.name || actualCustomer.businessName || 'Unnamed Customer'}
+              </h1>
+              <div className="space-y-2">
+                {actualCustomer.businessName && actualCustomer.name !== actualCustomer.businessName && (
+                  <p className="text-secondary-600 text-lg">Contact: {actualCustomer.name}</p>
+                )}
+                <p className="text-secondary-500 text-sm">
+                  Customer ID: {actualCustomer._id || 'N/A'}
+                </p>
+              </div>
+            </div>
           </div>
           
-          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center">
-            <div className="flex items-center space-x-6 mb-6 lg:mb-0">
-              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-                <User className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold mb-2">
-                  {actualCustomer.name || actualCustomer.businessName || 'Unnamed Customer'}
-                </h1>
-                <div className="space-y-1">
-                  {actualCustomer.businessName && actualCustomer.name !== actualCustomer.businessName && (
-                    <p className="text-blue-100 text-lg">Contact: {actualCustomer.name}</p>
-                  )}
-                  <p className="text-blue-100 text-sm">
-                    Customer ID: {actualCustomer._id || 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button 
-                onClick={() => setShowEditModal(true)}
-                className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-white/30 hover:border-white/50"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Customer
-              </button>
-              <button 
-                onClick={() => setShowAddVehicleModal(true)}
-                className="px-6 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-sm text-emerald-100 rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-emerald-400/30 hover:border-emerald-400/50"
-              >
-                <Car className="w-4 h-4" />
-                Add Vehicle
-              </button>
-              <button 
-                onClick={() => setShowDeleteModal(true)}
-                className="px-6 py-3 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-red-100 rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 transition-all duration-200 font-medium border border-red-400/30 hover:border-red-400/50"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Customer
-              </button>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="btn-primary px-6 py-3"
+            >
+              <Edit className="w-4 h-4" />
+              Edit Customer
+            </button>
+            <button 
+              onClick={() => setShowAddVehicleModal(true)}
+              className="btn-success px-6 py-3"
+            >
+              <Car className="w-4 h-4" />
+              Add Vehicle
+            </button>
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              className="btn-error px-6 py-3"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Customer
+            </button>
           </div>
         </div>
       </div>
