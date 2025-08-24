@@ -390,25 +390,23 @@ export default function RemindersPage() {
   const renderReminders = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h2 className="page-title">Active Reminders</h2>
-            <p className="page-subtitle">Manage and track customer notifications</p>
-          </div>
-          <div className="page-header-actions">
-            <button className="btn-secondary">
-              <HiRefresh className="w-4 h-4" />
-              Process Queue
-            </button>
-            <button 
-              onClick={() => setShowCreateReminderModal(true)}
-              className="btn-primary-outline"
-            >
-              <HiPlus className="w-4 h-4" />
-              Create Reminder
-            </button>
-          </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+        <div className="mb-4 lg:mb-0">
+          <h2 className="text-2xl font-bold text-secondary-900 mb-2">Active Reminders</h2>
+          <p className="text-secondary-600">Manage and track customer notifications</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="btn-secondary">
+            <HiRefresh className="w-4 h-4" />
+            Process Queue
+          </button>
+          <button 
+            onClick={() => setShowCreateReminderModal(true)}
+            className="btn-primary"
+          >
+            <HiPlus className="w-4 h-4" />
+            Create Reminder
+          </button>
         </div>
       </div>
 
@@ -418,7 +416,7 @@ export default function RemindersPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="select-field"
+            className="form-input"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -430,7 +428,7 @@ export default function RemindersPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="select-field"
+            className="form-input"
           >
             <option value="all">All Types</option>
             <option value="appointment">Appointment</option>
@@ -442,52 +440,60 @@ export default function RemindersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Pending</div>
-            <div className="stats-card-value text-warning-600">
-              {reminders.filter(r => r.status === 'pending').length}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Pending</p>
+              <p className="text-3xl font-bold text-warning-600">
+                {reminders.filter(r => r.status === 'pending').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-warning-500">
-            <HiClock className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <HiClock className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Sent Today</div>
-            <div className="stats-card-value text-success-600">
-              {reminders.filter(r => r.status === 'sent').length}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Sent Today</p>
+              <p className="text-3xl font-bold text-success-600">
+                {reminders.filter(r => r.status === 'sent').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-success-500">
-            <HiCheck className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+              <HiCheck className="w-6 h-6 text-success-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Failed</div>
-            <div className="stats-card-value text-error-600">
-              {reminders.filter(r => r.status === 'failed').length}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Failed</p>
+              <p className="text-3xl font-bold text-error-600">
+                {reminders.filter(r => r.status === 'failed').length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-error-500">
-            <HiX className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-error-100 rounded-xl flex items-center justify-center">
+              <HiX className="w-6 h-6 text-error-600" />
+            </div>
           </div>
         </div>
         
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Active Templates</div>
-            <div className="stats-card-value text-info-600">
-              {templates.filter(t => t.isActive).length}
+        <div className="card">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <p className="text-sm font-medium text-secondary-600 mb-1">Active Templates</p>
+              <p className="text-3xl font-bold text-info-600">
+                {templates.filter(t => t.isActive).length}
+              </p>
             </div>
-          </div>
-          <div className="stats-card-icon bg-info-500">
-            <HiTemplate className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+              <HiTemplate className="w-6 h-6 text-info-600" />
+            </div>
           </div>
         </div>
       </div>
@@ -953,45 +959,43 @@ export default function RemindersPage() {
 
   return (
     <>
-      <div className="page-container">
-        <div className="page-header">
-          <div className="page-header-content">
-            <div className="page-header-text">
-              <PageTitle title="Reminders & Notifications" />
-            </div>
+      <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+        {/* Page Header */}
+        <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+          <div className="mb-4 lg:mb-0">
+            <h1 className="text-3xl font-bold text-secondary-900 mb-2">Reminders & Notifications</h1>
+            <p className="text-secondary-600">Manage automated reminders and notification settings</p>
           </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="card">
-          <div className="tab-container">
-            <div className="tab-header">
-              <nav className="tab-buttons">
-                {[
-                  { key: 'reminders', label: 'Active Reminders', count: reminders.length },
-                  { key: 'templates', label: 'Templates', count: templates.length },
-                  { key: 'settings', label: 'Settings', count: 0 }
-                ].map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key as TabType)}
-                    className={`tab-button ${
-                      activeTab === tab.key
-                        ? 'tab-button-active'
-                        : 'tab-button-inactive'
-                    }`}
-                  >
-                    {tab.label} {tab.count > 0 && `(${tab.count})`}
-                  </button>
-                ))}
-              </nav>
-            </div>
+          <div className="border-b border-secondary-200">
+            <nav className="flex space-x-8 px-6">
+              {[
+                { key: 'reminders', label: 'Active Reminders', count: reminders.length },
+                { key: 'templates', label: 'Templates', count: templates.length },
+                { key: 'settings', label: 'Settings', count: 0 }
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as TabType)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.key
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                  }`}
+                >
+                  {tab.label} {tab.count > 0 && `(${tab.count})`}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-            <div className="tab-content">
-              {activeTab === 'reminders' && renderReminders()}
-              {activeTab === 'templates' && renderTemplates()}
-              {activeTab === 'settings' && renderSettings()}
-            </div>
+          <div className="p-6">
+            {activeTab === 'reminders' && renderReminders()}
+            {activeTab === 'templates' && renderTemplates()}
+            {activeTab === 'settings' && renderSettings()}
           </div>
         </div>
       </div>
