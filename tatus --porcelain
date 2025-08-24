@@ -3,3 +3,34 @@
 [33m78d623e[m \Add debugging and error handling to ServicesPage - Add console logging to track API calls and state changes - Add error display UI to show API errors - Add error state tracking for catalog, work orders, and technicians - Improve debugging to identify why database data is not loading"
 [33m230702e[m Fix technician data null safety issues in ServicesPage - Add null checks for technician.specialization array to prevent undefined errors - Add fallback values for technician name, email, phone, and hourlyRate fields - Ensure all technician data fields have proper fallback values to prevent runtime errors
 [33m4f0bfec[m Add work order management functionality to ServicesPage - Create AddWorkOrderModal for creating new work orders - Create EditWorkOrderModal for editing existing work orders - Create DeleteWorkOrderModal for confirming work order deletion - Integrate modals with Redux actions and backend API - Add proper form validation and error handling - Include customer, service, vehicle, technician, priority, dates, and cost fields - Add edit and delete buttons to work order table actions
+
+                   SSUUMMMMAARRYY OOFF LLEESSSS CCOOMMMMAANNDDSS
+
+      Commands marked with * may be preceded by a number, _N.
+      Notes in parentheses indicate the behavior if _N is given.
+      A key preceded by a caret indicates the Ctrl key; thus ^K is ctrl-K.
+
+  h  H                 Display this help.
+  q  :q  Q  :Q  ZZ     Exit.
+ ---------------------------------------------------------------------------
+
+                           MMOOVVIINNGG
+
+  e  ^E  j  ^N  CR  *  Forward  one line   (or _N lines).
+  y  ^Y  k  ^K  ^P  *  Backward one line   (or _N lines).
+  f  ^F  ^V  SPACE  *  Forward  one window (or _N lines).
+  b  ^B  ESC-v      *  Backward one window (or _N lines).
+  z                 *  Forward  one window (and set window to _N).
+  w                 *  Backward one window (and set window to _N).
+  ESC-SPACE         *  Forward  one window, but don't stop at end-of-file.
+  d  ^D             *  Forward  one half-window (and set half-window to _N).
+  u  ^U             *  Backward one half-window (and set half-window to _N).
+  ESC-)  RightArrow *  Right one half screen width (or _N positions).
+  ESC-(  LeftArrow  *  Left  one half screen width (or _N positions).
+  ESC-}  ^RightArrow   Right to last column displayed.
+  ESC-{  ^LeftArrow    Left  to first column.
+  F                    Forward forever; like "tail -f".
+  ESC-F                Like F but stop when search pattern is found.
+  r  ^R  ^L            Repaint screen.
+  R                    Repaint screen, discarding buffered input.
+        ---------------------------------------------------

@@ -8,6 +8,11 @@ type Props = {
 }
 
 export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle }: Props) {
+    // Helper function to get the best available date
+    const getCustomerDate = (customer: Customer, field: 'createdAt' | 'updatedAt' | 'dateCreated') => {
+        return customer[field] || customer.createdAt || customer.updatedAt || new Date().toISOString()
+    }
+
     return (
         <div className="space-y-8">
             {/* Contact & Basic Info Cards */}
@@ -76,14 +81,14 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                             <Calendar className="w-5 h-5 text-emerald-500" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Customer Since</p>
-                                <p className="font-semibold text-gray-800">{new Date(customer.createdAt).toLocaleDateString()}</p>
+                                <p className="font-semibold text-gray-800">{new Date(getCustomerDate(customer, 'dateCreated')).toLocaleDateString()}</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
                             <Calendar className="w-5 h-5 text-emerald-500" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Last Updated</p>
-                                <p className="font-semibold text-gray-800">{new Date(customer.updatedAt).toLocaleDateString()}</p>
+                                <p className="font-semibold text-gray-800">{new Date(getCustomerDate(customer, 'updatedAt')).toLocaleDateString()}</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
@@ -149,7 +154,7 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                     {customer.vehicles && customer.vehicles.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {customer.vehicles.map((vehicle) => (
-                                <div key={vehicle._id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-blue-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
+                                <div key={vehicle._id || vehicle.id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-blue-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-800 text-lg mb-2">
@@ -242,14 +247,14 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                     {customer.serviceHistory && customer.serviceHistory.length > 0 ? (
                         <div className="space-y-4">
                             {customer.serviceHistory.slice(0, 3).map((service) => (
-                                <div key={service._id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-emerald-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
+                                <div key={service._id || service.id} className="group bg-gray-50 hover:bg-white border border-gray-200 hover:border-emerald-300 rounded-xl p-5 transition-all duration-300 hover:shadow-lg">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-800 text-lg mb-1">{service.serviceType}</h4>
                                             <p className="text-gray-600">{service.description}</p>
                                         </div>
                                         <div className="text-right ml-4">
-                                            <p className="text-xl font-bold text-emerald-600">${service.cost.toFixed(2)}</p>
+                                            <p className="text-xl font-bold text-emerald-600">${service.totalCost.toFixed(2)}</p>
                                             <p className="text-sm text-gray-500">{new Date(service.date).toLocaleDateString()}</p>
                                         </div>
                                     </div>

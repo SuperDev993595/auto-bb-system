@@ -11,105 +11,117 @@ import {
 // Async thunks
 export const fetchCustomers = createAsyncThunk(
   'customers/fetchCustomers',
-  async (filters: CustomerFilters = {}, { rejectWithValue }) => {
+  async (params: { page?: number; limit?: number; search?: string; status?: string } = {}, { rejectWithValue }) => {
     try {
-      console.log('fetchCustomers: Calling customerService.getCustomers with filters:', filters)
-      const response = await customerService.getCustomers(filters);
-      console.log('fetchCustomers: Response from API:', response)
-      return response.data; // This returns { customers: Customer[], pagination: {...} }
+      const response = await customerService.getCustomers(params)
+      return response.data
     } catch (error: any) {
       console.error('fetchCustomers: Error:', error)
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customers');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customers')
     }
   }
-);
+)
 
+// Fetch single customer by ID
 export const fetchCustomer = createAsyncThunk(
   'customers/fetchCustomer',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await customerService.getCustomer(id);
-      console.log('fetchCustomer response:', response);
+      const response = await customerService.getCustomer(id)
+      console.log('fetchCustomer response:', response)
       
       // Handle different response structures
-      if (response.data && response.data.customer) {
+      if (response.data && typeof response.data === 'object' && 'customer' in response.data) {
         // If data is wrapped in a customer property
-        return response.data.customer;
+        return response.data.customer
       } else if (response.data) {
         // If data is the customer object directly
-        return response.data;
+        return response.data
       } else {
         // Fallback to the entire response
-        return response;
+        return response
       }
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer')
     }
   }
-);
+)
 
+// Create new customer
 export const createCustomer = createAsyncThunk(
   'customers/createCustomer',
   async (customerData: CreateCustomerData, { rejectWithValue }) => {
     try {
-      const response = await customerService.createCustomer(customerData);
-      return response.data.customer;
+      const response = await customerService.createCustomer(customerData)
+      // Handle response structure properly
+      if (response.data && typeof response.data === 'object' && 'customer' in response.data) {
+        return response.data.customer
+      }
+      return response.data || response
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to create customer';
-      return rejectWithValue(message);
+      const message = error.response?.data?.message || 'Failed to create customer'
+      return rejectWithValue(message)
     }
   }
-);
+)
 
+// Update existing customer
 export const updateCustomer = createAsyncThunk(
   'customers/updateCustomer',
   async ({ id, customerData }: { id: string; customerData: UpdateCustomerData }, { rejectWithValue }) => {
     try {
-      const response = await customerService.updateCustomer(id, customerData);
-      return response.data.customer;
+      const response = await customerService.updateCustomer(id, customerData)
+      // Handle response structure properly
+      if (response.data && typeof response.data === 'object' && 'customer' in response.data) {
+        return response.data.customer
+      }
+      return response.data || response
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to update customer';
-      return rejectWithValue(message);
+      const message = error.response?.data?.message || 'Failed to update customer'
+      return rejectWithValue(message)
     }
   }
-);
+)
 
+// Delete customer
 export const deleteCustomer = createAsyncThunk(
   'customers/deleteCustomer',
   async (id: string, { rejectWithValue }) => {
     try {
-      await customerService.deleteCustomer(id);
-      return id;
+      await customerService.deleteCustomer(id)
+      return id
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to delete customer';
-      return rejectWithValue(message);
+      const message = error.response?.data?.message || 'Failed to delete customer'
+      return rejectWithValue(message)
     }
   }
-);
+)
 
+// Fetch customer statistics
 export const fetchCustomerStats = createAsyncThunk(
   'customers/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await customerService.getCustomerStats();
-      return response.data;
+      const response = await customerService.getCustomerStats()
+      return response.data
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer stats');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer stats')
     }
   }
-);
+)
 
+// Search customers
 export const searchCustomers = createAsyncThunk(
   'customers/searchCustomers',
   async (query: string, { rejectWithValue }) => {
     try {
-      const response = await customerService.searchCustomers(query);
-      return response.data.customers;
+      const response = await customerService.searchCustomers(query)
+      return response.data?.customers || response.data || []
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to search customers');
+      return rejectWithValue(error.response?.data?.message || 'Failed to search customers')
     }
   }
-);
+)
 
 // Customer slice
 interface CustomerState {

@@ -109,19 +109,30 @@ const communicationLogsSlice = createSlice({
       })
       .addCase(createCommunicationLog.fulfilled, (state, action) => {
         state.loading = false
-        if (action.payload) {
-          // Map _id to id for consistency with frontend interface
+        const newLog = action.payload as any
+        
+        // Ensure the log has both id and _id for consistency
+        if (newLog) {
+          newLog.id = newLog._id || newLog.id
+        }
+        
+        // Handle customer data properly
+        if (newLog && newLog.customer) {
           const logWithId = {
-            ...action.payload,
-            id: action.payload._id || action.payload.id
+            ...newLog,
+            id: newLog._id || newLog.id,
+            customerId: newLog.customer._id || newLog.customer.id || newLog.customer
           }
           state.logs.unshift(logWithId)
-          state.stats.totalLogs += 1
+        } else {
+          state.logs.unshift(newLog)
         }
+        
+        state.error = null
       })
       .addCase(createCommunicationLog.rejected, (state, action) => {
         state.loading = false
-        state.error = action.payload as string || 'Failed to create communication log'
+        state.error = action.payload as string
       })
 
     // Update Communication Log

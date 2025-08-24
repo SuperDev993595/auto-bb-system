@@ -1,94 +1,9 @@
 import api, { apiResponse } from './api';
 import { rateLimitManager } from '../utils/rateLimitHelper';
+import { Customer as CustomerType } from '../utils/CustomerTypes';
 
-export interface Customer {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  businessName?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-  };
-  vehicles?: Array<{
-    _id: string;
-    make: string;
-    model: string;
-    year: number;
-    vin: string;
-    licensePlate: string;
-    mileage: number;
-    color: string;
-    status?: 'active' | 'inactive' | 'maintenance';
-  }>;
-  serviceHistory?: Array<{
-    _id: string;
-    date: string;
-    serviceType: string;
-    description: string;
-    cost: number;
-    vehicleId: string;
-    technician: string;
-  }>;
-  communicationLog?: Array<{
-    _id: string;
-    date: string;
-    type: 'phone' | 'email' | 'in-person';
-    summary: string;
-    notes: string;
-    followUpDate?: string;
-  }>;
-  payments?: Array<{
-    _id: string;
-    amount: number;
-    date: string;
-    method: 'cash' | 'card' | 'check' | 'bank_transfer' | 'online' | 'other';
-    reference?: string;
-    notes?: string;
-    status: 'pending' | 'completed' | 'failed' | 'refunded';
-    createdAt: string;
-  }>;
-  arrangements?: Array<{
-    _id: string;
-    date: string;
-    amount: number;
-    notes?: string;
-    status: 'pending' | 'active' | 'completed' | 'cancelled';
-    type: 'installment' | 'payment_plan' | 'deferred' | 'other';
-    dueDate: string;
-    createdAt: string;
-  }>;
-  towingRecords?: Array<{
-    _id: string;
-    date: string;
-    location: string;
-    destination?: string;
-    status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-    notes?: string;
-    cost: number;
-    vehicle?: string;
-    createdAt: string;
-  }>;
-  callLogs?: Array<{
-    _id: string;
-    date: string;
-    type: 'inbound' | 'outbound' | 'missed' | 'voicemail';
-    duration: number;
-    notes?: string;
-    summary?: string;
-    followUpDate?: string;
-    followUpRequired: boolean;
-    phoneNumber?: string;
-    createdAt: string;
-  }>;
-  notes?: string;
-  status: 'active' | 'inactive' | 'prospect';
-  createdAt: string;
-  updatedAt: string;
-}
+// Use the unified Customer interface
+export type Customer = CustomerType;
 
 export interface CreateCustomerData {
   name: string;

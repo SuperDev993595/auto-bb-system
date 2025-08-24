@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { Customer, CustomerStats } from '../../services/customers'
 import {
   fetchCustomers,
   fetchCustomer,
@@ -9,6 +8,7 @@ import {
   fetchCustomerStats,
   searchCustomers
 } from '../actions/customers'
+import { Customer, CustomerStats } from '../../services/customers'
 
 interface CustomersState {
   list: Customer[]
@@ -23,6 +23,8 @@ interface CustomersState {
     hasPrevPage: boolean
   } | null
   stats: CustomerStats | null
+  searchResults: Customer[]
+  searchLoading: boolean
 }
 
 const initialState: CustomersState = {
@@ -31,7 +33,9 @@ const initialState: CustomersState = {
   error: null,
   selectedCustomer: null,
   pagination: null,
-  stats: null
+  stats: null,
+  searchResults: [],
+  searchLoading: false
 }
 
 const customersSlice = createSlice({
@@ -43,6 +47,13 @@ const customersSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null
+    },
+    clearSelectedCustomer: (state) => {
+      state.selectedCustomer = null
+    },
+    clearSearchResults: (state) => {
+      state.searchResults = []
+      state.searchLoading = false
     }
   },
   extraReducers: (builder) => {
@@ -84,7 +95,12 @@ const customersSlice = createSlice({
       })
       .addCase(fetchCustomer.fulfilled, (state, action) => {
         state.loading = false
-        state.selectedCustomer = action.payload
+        // Ensure the customer has both id and _id for consistency
+        const customer = action.payload as any
+        if (customer) {
+          customer.id = customer._id || customer.id
+        }
+        state.selectedCustomer = customer
         state.error = null
       })
       .addCase(fetchCustomer.rejected, (state, action) => {
@@ -100,7 +116,11 @@ const customersSlice = createSlice({
       })
       .addCase(createCustomer.fulfilled, (state, action) => {
         state.loading = false
-        state.list.unshift(action.payload)
+        const customer = action.payload as any
+        if (customer) {
+          customer.id = customer._id || customer.id
+        }
+        state.list.unshift(customer)
         state.error = null
       })
       .addCase(createCustomer.rejected, (state, action) => {
@@ -116,12 +136,17 @@ const customersSlice = createSlice({
       })
       .addCase(updateCustomer.fulfilled, (state, action) => {
         state.loading = false
-        const index = state.list.findIndex(c => c._id === action.payload._id)
-        if (index !== -1) {
-          state.list[index] = action.payload
+        const updatedCustomer = action.payload as any
+        if (updatedCustomer) {
+          updatedCustomer.id = updatedCustomer._id || updatedCustomer.id
         }
-        if (state.selectedCustomer?._id === action.payload._id) {
-          state.selectedCustomer = action.payload
+        
+        const index = state.list.findIndex(c => c._id === updatedCustomer._id || c.id === updatedCustomer.id)
+        if (index !== -1) {
+          state.list[index] = updatedCustomer
+        }
+        if (state.selectedCustomer && (state.selectedCustomer._id === updatedCustomer._id || state.selectedCustomer.id === updatedCustomer.id)) {
+          state.selectedCustomer = updatedCustomer
         }
         state.error = null
       })
@@ -138,8 +163,9 @@ const customersSlice = createSlice({
       })
       .addCase(deleteCustomer.fulfilled, (state, action) => {
         state.loading = false
-        state.list = state.list.filter(c => c._id !== action.payload)
-        if (state.selectedCustomer?._id === action.payload) {
+        const deletedId = action.payload as string
+        state.list = state.list.filter(c => c._id !== deletedId && c.id !== deletedId)
+        if (state.selectedCustomer && (state.selectedCustomer._id === deletedId || state.selectedCustomer.id === deletedId)) {
           state.selectedCustomer = null
         }
         state.error = null
@@ -152,37 +178,42 @@ const customersSlice = createSlice({
     // fetchCustomerStats
     builder
       .addCase(fetchCustomerStats.pending, (state) => {
+        state.loading = true
         state.error = null
       })
       .addCase(fetchCustomerStats.fulfilled, (state, action) => {
-        state.stats = action.payload
+        state.loading = false
+        state.stats = action.payload as CustomerStats
         state.error = null
       })
       .addCase(fetchCustomerStats.rejected, (state, action) => {
+        state.loading = false
         state.error = action.payload as string
       })
 
     // searchCustomers
     builder
       .addCase(searchCustomers.pending, (state) => {
-        state.loading = true
+        state.searchLoading = true
         state.error = null
       })
       .addCase(searchCustomers.fulfilled, (state, action) => {
-        state.loading = false
-        state.list = action.payload
+        state.searchLoading = false
+        const customers = action.payload as any[] || []
+        // Map _id to id for consistency
+        const customersWithId = customers.map((customer: any) => ({
+          ...customer,
+          id: customer._id || customer.id
+        }))
+        state.searchResults = customersWithId
         state.error = null
       })
       .addCase(searchCustomers.rejected, (state, action) => {
-        state.loading = false
+        state.searchLoading = false
         state.error = action.payload as string
       })
   }
 })
 
-export const {
-  setSelectedCustomer,
-  clearError
-} = customersSlice.actions
-
+export const { setSelectedCustomer, clearError, clearSelectedCustomer, clearSearchResults } = customersSlice.actions
 export default customersSlice.reducer

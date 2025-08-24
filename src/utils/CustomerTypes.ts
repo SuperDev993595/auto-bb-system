@@ -1,6 +1,7 @@
 // Vehicle Information
 export interface Vehicle {
     id: string
+    _id?: string
     make: string
     model: string
     year: number
@@ -8,34 +9,49 @@ export interface Vehicle {
     licensePlate: string
     mileage: number
     color?: string
-    customerId: string
+    customerId?: string
+    customer?: string
+    status?: 'active' | 'inactive' | 'maintenance'
+    engineType?: string
+    transmission?: 'automatic' | 'manual' | 'cvt' | 'other'
+    fuelType?: 'gasoline' | 'diesel' | 'hybrid' | 'electric' | 'other'
+    lastServiceDate?: string
+    nextServiceDate?: string
+    lastServiceMileage?: number
+    nextServiceMileage?: number
+    notes?: string
+    createdAt?: string
+    updatedAt?: string
 }
 
 // Service Record
 export interface ServiceRecord {
     id: string
-    vehicleId: string
-    customerId: string
-    date: string
+    _id?: string
     serviceType: string
-    description: string
-    partsUsed: ServicePart[]
-    laborHours: number
-    laborRate: number
+    description?: string
+    date: string
+    mileage?: number
+    parts?: ServicePart[]
+    laborHours?: number
+    laborRate?: number
     totalCost: number
-    technicianId: string
-    technicianName: string
-    status: 'completed' | 'in-progress' | 'cancelled'
+    technician?: string
     notes?: string
     nextServiceDue?: string
     nextServiceMileage?: number
+    vehicleId?: string
+    customerId?: string
+    createdAt?: string
+    updatedAt?: string
 }
 
-// Parts used in service
+// Service Part
 export interface ServicePart {
-    id: string
+    id?: string
+    _id?: string
     name: string
-    partNumber: string
+    partNumber?: string
     quantity: number
     unitPrice: number
     totalPrice: number
@@ -44,41 +60,148 @@ export interface ServicePart {
 // Communication Log
 export interface CommunicationLog {
     id: string
+    _id?: string
     customerId: string | { id: string; _id: string; name: string; fullAddress?: string; [key: string]: any }
     date: string
+    time?: string
     type: 'phone' | 'email' | 'in-person' | 'sms'
     direction: 'inbound' | 'outbound'
     subject?: string
     content: string
+    summary?: string
+    notes?: string
+    followUpDate?: string
+    outcome?: 'resolved' | 'follow-up-needed' | 'appointment-scheduled' | 'no-answer' | 'callback-requested'
+    priority?: 'low' | 'medium' | 'high'
+    relatedService?: string
     employeeId: string
     employeeName: string
+    createdAt?: string
+    updatedAt?: string
 }
 
-// Customer Profile
+// Customer Profile - Unified interface matching backend structure
 export interface Customer {
+    // Core identification
     id: string
+    _id?: string
+    
+    // Basic information
     name: string
-    phone: string
     email: string
-    address: string
-    dateCreated: string
+    phone: string
+    businessName?: string
+    
+    // Address information
+    address?: {
+        street?: string
+        city?: string
+        state?: string
+        zipCode?: string
+    }
+    
+    // Customer data
+    dateCreated?: string
+    createdAt?: string
+    updatedAt?: string
     lastVisit?: string
-    vehicles: Vehicle[]
-    serviceHistory: ServiceRecord[]
-    communicationLog: CommunicationLog[]
-    notes: string
-    preferences: {
-        preferredContactMethod: 'phone' | 'email' | 'sms'
-        reminderPreferences: {
-            appointmentReminders: boolean
-            serviceReminders: boolean
-            followUpReminders: boolean
+    lastContact?: string
+    nextFollowUp?: string
+    
+    // Relationships
+    vehicles?: Vehicle[]
+    serviceHistory?: ServiceRecord[]
+    communicationLog?: CommunicationLog[]
+    
+    // Financial information
+    payments?: Array<{
+        _id?: string
+        id?: string
+        amount: number
+        date: string
+        method: 'cash' | 'card' | 'check' | 'bank_transfer' | 'online' | 'other'
+        reference?: string
+        notes?: string
+        status: 'pending' | 'completed' | 'failed' | 'refunded'
+        createdAt?: string
+    }>
+    
+    arrangements?: Array<{
+        _id?: string
+        id?: string
+        date: string
+        amount: number
+        notes?: string
+        status: 'pending' | 'active' | 'completed' | 'cancelled'
+        type: 'installment' | 'payment_plan' | 'deferred' | 'other'
+        dueDate: string
+        createdAt?: string
+    }>
+    
+    towingRecords?: Array<{
+        _id?: string
+        id?: string
+        date: string
+        location: string
+        destination?: string
+        status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+        notes?: string
+        cost: number
+        vehicle?: string
+        createdAt?: string
+    }>
+    
+    callLogs?: Array<{
+        _id?: string
+        id?: string
+        date: string
+        type: 'inbound' | 'outbound' | 'missed' | 'voicemail'
+        duration: number
+        notes?: string
+        summary?: string
+        followUpDate?: string
+        followUpRequired: boolean
+        phoneNumber?: string
+        createdAt?: string
+    }>
+    
+    // Notes and preferences
+    notes?: string
+    preferences?: {
+        notifications?: {
+            email?: boolean
+            sms?: boolean
+            push?: boolean
+        }
+        reminders?: {
+            appointments?: boolean
+            maintenance?: boolean
+            payments?: boolean
+        }
+        privacy?: {
+            shareData?: boolean
+            marketing?: boolean
+        }
+        preferredContactMethod?: 'phone' | 'email' | 'sms'
+        reminderPreferences?: {
+            appointmentReminders?: boolean
+            serviceReminders?: boolean
+            followUpReminders?: boolean
         }
     }
-    // Keep existing debt-related fields for backward compatibility
+    
+    // Status and metadata
+    status?: 'active' | 'inactive' | 'prospect'
+    
+    // Legacy fields for backward compatibility
     accountNumber?: string
     originalDebt?: number
     currentDebt?: number
+    
+    // User account reference
+    userId?: string
+    assignedTo?: string
+    createdBy?: string
 }
 
 // Appointment types

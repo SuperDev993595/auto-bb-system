@@ -47,7 +47,11 @@ export default function AddVehicleModal({ customer, isOpen, onClose, onSuccess }
 
     try {
       // Call the customer service to add vehicle
-      const result = await customerService.addVehicle(customer._id, formData)
+      const customerId = customer._id || customer.id
+      if (!customerId) {
+        throw new Error('Customer ID is required')
+      }
+      const result = await customerService.addVehicle(customerId, formData)
       
       if (result.success) {
         toast.success('Vehicle added successfully!')
