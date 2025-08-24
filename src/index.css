@@ -144,28 +144,41 @@
     @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
+  /* Alternative button with better contrast */
+  .btn-primary-alt {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:ring-blue-500 shadow-sm hover:shadow-md;
+  }
+  
+  /* Ensure primary button text is always visible */
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm hover:shadow-md;
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 hover:text-white focus:ring-primary-500 shadow-sm hover:shadow-md;
+    /* Force text color for better contrast */
+    color: #ffffff !important;
+  }
+  
+  .btn-primary:hover {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   
   .btn-secondary {
-    @apply btn bg-secondary-100 text-secondary-700 hover:bg-secondary-200 focus:ring-secondary-500;
+    @apply btn bg-secondary-100 text-secondary-700 hover:bg-secondary-200 hover:text-secondary-900 focus:ring-secondary-500;
   }
   
   .btn-success {
-    @apply btn bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-sm hover:shadow-md;
+    @apply btn bg-success-600 text-white hover:bg-success-700 hover:text-white focus:ring-success-500 shadow-sm hover:shadow-md;
   }
   
   .btn-warning {
-    @apply btn bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500 shadow-sm hover:shadow-md;
+    @apply btn bg-warning-600 text-white hover:bg-warning-700 hover:text-white focus:ring-warning-500 shadow-sm hover:shadow-md;
   }
   
   .btn-error {
-    @apply btn bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 shadow-sm hover:shadow-md;
+    @apply btn bg-error-600 text-white hover:bg-error-700 hover:text-white focus:ring-error-500 shadow-sm hover:shadow-md;
   }
   
   .btn-info {
-    @apply btn bg-info-600 text-white hover:bg-info-700 focus:ring-info-500 shadow-sm hover:shadow-md;
+    @apply btn bg-info-600 text-white hover:bg-info-700 hover:text-white focus:ring-info-500 shadow-sm hover:shadow-md;
   }
   
   .btn-outline {
