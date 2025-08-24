@@ -65,15 +65,17 @@ export default function Sidebar() {
     const { user } = useAuth();
 
     return (
-        <aside className="bg-white text-secondary-900 w-64 flex flex-col h-screen shadow-lg border-r border-secondary-200">
+        <aside className="bg-gradient-to-b from-white via-secondary-50 to-secondary-100 text-secondary-900 w-64 flex flex-col h-screen shadow-xl border-r border-secondary-200">
             {/* Fixed Header */}
-            <div className="p-6 border-b border-secondary-200 bg-secondary-50">
+            <div className="p-6 border-b border-secondary-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50">
                 <Link to="/" className="block">
-                    <div className="text-xl font-bold text-primary-600 hover:text-primary-700 transition-colors cursor-pointer flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                            <HiCog className="w-5 h-5 text-white" />
+                    <div className="text-xl font-bold text-blue-800 hover:text-blue-900 transition-colors cursor-pointer flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <HiCog className="w-6 h-6 text-white" />
                         </div>
-                        AutoCRM Pro
+                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            AutoCRM Pro
+                        </span>
                     </div>
                 </Link>
             </div>
@@ -88,8 +90,8 @@ export default function Sidebar() {
                             to={item.to}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
                                 location.pathname === item.to 
-                                    ? "bg-primary-50 text-primary-700 border border-primary-200" 
-                                    : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
+                                    ? "bg-blue-50 text-blue-700 border-2 border-blue-300 shadow-sm" 
+                                    : "text-secondary-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:border-2 hover:border-blue-200 hover:shadow-md"
                             }`}
                         >
                             {item.icon}
@@ -99,8 +101,8 @@ export default function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-secondary-200 bg-secondary-50">
-                <div className="text-xs text-secondary-500 text-center">
+            <div className="p-4 border-t border-secondary-200 bg-gradient-to-r from-secondary-50 to-secondary-100">
+                <div className="text-xs text-secondary-600 text-center">
                     v2.0.0 • AutoCRM Pro
                 </div>
             </div>
