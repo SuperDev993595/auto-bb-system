@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { HiPlus, HiMail, HiUsers, HiChartBar, HiEye, HiPencil, HiTrash, HiPaperAirplane, HiX } from 'react-icons/hi';
 import PageTitle from '../components/Shared/PageTitle';
+import MailChimpCampaignModal from '../components/Marketing/MailChimpCampaignModal';
+import ModalWrapper from '../utils/ModalWrapper';
 import api from '../services/api';
 
 interface MailChimpCampaign {
@@ -230,7 +232,7 @@ export default function MailChimpPage() {
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof CampaignFormData],
+          ...(prev as any)[parent],
           [child]: value
         }
       }));
@@ -365,317 +367,49 @@ export default function MailChimpPage() {
 
       {/* Create Campaign Modal */}
       {showCreateModal && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Create New Campaign</h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="modal-close"
-              >
-                <HiX className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateCampaign} className="modal-content space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">Campaign Name *</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Subject Line *</label>
-                  <input
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) => handleInputChange('subject', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="form-label">From Name *</label>
-                  <input
-                    type="text"
-                    value={formData.settings.fromName}
-                    onChange={(e) => handleInputChange('settings.fromName', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">From Email *</label>
-                  <input
-                    type="email"
-                    value={formData.settings.fromEmail}
-                    onChange={(e) => handleInputChange('settings.fromEmail', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Reply To</label>
-                  <input
-                    type="email"
-                    value={formData.settings.replyTo}
-                    onChange={(e) => handleInputChange('settings.replyTo', e.target.value)}
-                    className="input-field"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="form-label">HTML Content</label>
-                <textarea
-                  value={formData.content.html}
-                  onChange={(e) => handleInputChange('content.html', e.target.value)}
-                  rows={6}
-                  className="input-field"
-                  placeholder="<h1>Hello World</h1>"
-                />
-              </div>
-
-              <div>
-                <label className="form-label">Plain Text Content</label>
-                <textarea
-                  value={formData.content.plainText}
-                  onChange={(e) => handleInputChange('content.plainText', e.target.value)}
-                  rows={4}
-                  className="input-field"
-                  placeholder="Hello World"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">List ID *</label>
-                  <input
-                    type="text"
-                    value={formData.recipients.listId}
-                    onChange={(e) => handleInputChange('recipients.listId', e.target.value)}
-                    className="input-field"
-                    placeholder="e.g., list123456"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">List Name</label>
-                  <input
-                    type="text"
-                    value={formData.recipients.listName}
-                    onChange={(e) => handleInputChange('recipients.listName', e.target.value)}
-                    className="input-field"
-                    placeholder="e.g., Newsletter Subscribers"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary"
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Campaign'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <MailChimpCampaignModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateCampaign}
+          isSubmitting={isSubmitting}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          isEditing={false}
+        />
       )}
 
       {/* Edit Campaign Modal */}
       {showEditModal && selectedCampaign && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Edit Campaign</h3>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="modal-close"
-              >
-                <HiX className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleEditCampaign} className="modal-content space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">Campaign Name *</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Subject Line *</label>
-                  <input
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) => handleInputChange('subject', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="form-label">From Name *</label>
-                  <input
-                    type="text"
-                    value={formData.settings.fromName}
-                    onChange={(e) => handleInputChange('settings.fromName', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">From Email *</label>
-                  <input
-                    type="email"
-                    value={formData.settings.fromEmail}
-                    onChange={(e) => handleInputChange('settings.fromEmail', e.target.value)}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Reply To</label>
-                  <input
-                    type="email"
-                    value={formData.settings.replyTo}
-                    onChange={(e) => handleInputChange('settings.replyTo', e.target.value)}
-                    className="input-field"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="form-label">HTML Content</label>
-                <textarea
-                  value={formData.content.html}
-                  onChange={(e) => handleInputChange('content.html', e.target.value)}
-                  rows={6}
-                  className="input-field"
-                />
-              </div>
-
-              <div>
-                <label className="form-label">Plain Text Content</label>
-                <textarea
-                  value={formData.content.plainText}
-                  onChange={(e) => handleInputChange('content.plainText', e.target.value)}
-                  rows={4}
-                  className="input-field"
-                  placeholder="Hello World"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">List ID *</label>
-                  <input
-                    type="text"
-                    value={formData.recipients.listId}
-                    onChange={(e) => handleInputChange('recipients.listId', e.target.value)}
-                    className="input-field"
-                    placeholder="e.g., list123456"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">List Name</label>
-                  <input
-                    type="text"
-                    value={formData.recipients.listName}
-                    onChange={(e) => handleInputChange('recipients.listName', e.target.value)}
-                    className="input-field"
-                    placeholder="e.g., Newsletter Subscribers"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary"
-                >
-                  {isSubmitting ? 'Updating...' : 'Update Campaign'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <MailChimpCampaignModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditCampaign}
+          isSubmitting={isSubmitting}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          isEditing={true}
+        />
       )}
 
       {/* Delete Campaign Modal */}
       {showDeleteModal && selectedCampaign && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Delete Campaign</h3>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="modal-close"
-              >
-                <HiX className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <div className="modal-content mb-6">
-              <p className="text-secondary-600">
-                Are you sure you want to delete the campaign <strong>"{selectedCampaign.name}"</strong>?
-              </p>
-              <p className="text-sm text-secondary-500 mt-2">
-                This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteCampaign}
-                disabled={isSubmitting}
-                className="btn-error"
-              >
-                {isSubmitting ? 'Deleting...' : 'Delete Campaign'}
-              </button>
-            </div>
+        <ModalWrapper
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onSubmit={handleDeleteCampaign}
+          title="Delete Campaign"
+          icon={<HiTrash className="w-5 h-5" />}
+          submitText={isSubmitting ? 'Deleting...' : 'Delete Campaign'}
+        >
+          <div className="p-6">
+            <p className="text-secondary-600 mb-4">
+              Are you sure you want to delete the campaign <strong>"{selectedCampaign.name}"</strong>?
+            </p>
+            <p className="text-sm text-secondary-500">
+              This action cannot be undone.
+            </p>
           </div>
-        </div>
+        </ModalWrapper>
       )}
     </div>
   );

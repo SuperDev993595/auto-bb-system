@@ -90,52 +90,59 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
   }
 
   return (
-    <ModalWrapper onClose={onClose} title="Edit Communication Log" onSubmit={handleSubmit}>
-      <div className="space-y-6">
+    <ModalWrapper 
+      isOpen={true}
+      onClose={onClose} 
+      title="Edit Communication Log" 
+      onSubmit={handleSubmit}
+      submitText={isLoading ? 'Updating...' : 'Update Communication Log'}
+    >
+      <div className="p-4 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Customer *</label>
+          <label className="form-label">Customer *</label>
           <select
             value={formData.customerId}
             onChange={(e) => handleCustomerChange(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+            className="form-select"
           >
             <option value="">Select a customer</option>
             {customers.map(customer => (
-              <option key={(customer as any)._id} value={(customer as any)._id}>{(customer as any).name}</option>
+              <option key={(customer as any)._id} value={(customer as any)._id}>
+                {(customer as any).name}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+            <label className="form-label">Date *</label>
             <input
               type="date"
               value={formData.date}
               onChange={(e) => handleChange('date', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+            <label className="form-label">Time</label>
             <input
               type="time"
               value={formData.time}
               onChange={(e) => handleChange('time', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+            <label className="form-label">Type *</label>
             <select
               value={formData.type}
               onChange={(e) => handleChange('type', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-select"
               required
             >
               <option value="phone">Phone</option>
@@ -145,11 +152,11 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Direction *</label>
+            <label className="form-label">Direction *</label>
             <select
               value={formData.direction}
               onChange={(e) => handleChange('direction', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-select"
               required
             >
               <option value="inbound">Inbound</option>
@@ -159,35 +166,35 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+          <label className="form-label">Subject</label>
           <input
             type="text"
             value={formData.subject}
             onChange={(e) => handleChange('subject', e.target.value)}
             placeholder="Enter subject"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="form-input"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Content *</label>
+          <label className="form-label">Content *</label>
           <textarea
             value={formData.content}
             onChange={(e) => handleChange('content', e.target.value)}
             placeholder="Enter communication content"
             rows={4}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="form-textarea"
             required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Outcome</label>
+            <label className="form-label">Outcome</label>
             <select
               value={formData.outcome}
               onChange={(e) => handleChange('outcome', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-select"
             >
               <option value="resolved">Resolved</option>
               <option value="follow-up-needed">Follow-up Needed</option>
@@ -197,11 +204,11 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+            <label className="form-label">Priority</label>
             <select
               value={formData.priority}
               onChange={(e) => handleChange('priority', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-select"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -212,24 +219,24 @@ export default function EditCommunicationLogModal({ onClose, onSave, isLoading =
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Employee Name *</label>
+            <label className="form-label">Employee Name *</label>
             <input
               type="text"
               value={formData.employeeName}
               onChange={(e) => handleChange('employeeName', e.target.value)}
               placeholder="Enter employee name"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Related Service</label>
+            <label className="form-label">Related Service</label>
             <input
               type="text"
               value={formData.relatedService}
               onChange={(e) => handleChange('relatedService', e.target.value)}
               placeholder="Enter related service"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-input"
             />
           </div>
         </div>

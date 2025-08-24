@@ -89,7 +89,14 @@ export default function ContactLogsPage() {
     
     // Use id if available, otherwise fall back to _id
     const logId = editingLog.id || (editingLog as any)._id
-    const customerId = editingLog.customerId
+    
+    // Extract customerId as string - handle both object and string cases
+    let customerId: string
+    if (typeof editingLog.customerId === 'object' && editingLog.customerId !== null) {
+      customerId = (editingLog.customerId as any)._id || (editingLog.customerId as any).id
+    } else {
+      customerId = editingLog.customerId as string
+    }
     
     dispatch(updateCommunicationLog({ customerId, logId, logData: data })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
@@ -105,7 +112,14 @@ export default function ContactLogsPage() {
     const log = communicationLogs.find(log => log.id === id || (log as any)._id === id)
     if (!log) return
     
-    const customerId = log.customerId
+    // Extract customerId as string - handle both object and string cases
+    let customerId: string
+    if (typeof log.customerId === 'object' && log.customerId !== null) {
+      customerId = (log.customerId as any)._id || (log.customerId as any).id
+    } else {
+      customerId = log.customerId as string
+    }
+    
     dispatch(deleteCommunicationLog({ customerId, logId: id })).then((result) => {
       if (result.meta.requestStatus === 'fulfilled') {
         setDeleteLogId(null)

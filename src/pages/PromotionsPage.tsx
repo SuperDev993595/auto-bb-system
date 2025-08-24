@@ -295,43 +295,41 @@ export default function PromotionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 relative">
-            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search promotions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input w-full pl-10 pr-4 py-2"
-            />
-          </div>
-          
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="form-input"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="ended">Ended</option>
-            <option value="paused">Paused</option>
-          </select>
-          
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="form-input"
-          >
-            <option value="all">All Types</option>
-            <option value="discount">Discount</option>
-            <option value="service">Service</option>
-            <option value="referral">Referral</option>
-            <option value="seasonal">Seasonal</option>
-          </select>
+      <div className="flex gap-4 items-center">
+        <div className="flex-1 relative">
+          <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search promotions..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="form-input w-full pl-10 pr-4 py-2"
+          />
         </div>
+        
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="form-input"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="ended">Ended</option>
+          <option value="paused">Paused</option>
+        </select>
+        
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="form-input"
+        >
+          <option value="all">All Types</option>
+          <option value="discount">Discount</option>
+          <option value="service">Service</option>
+          <option value="referral">Referral</option>
+          <option value="seasonal">Seasonal</option>
+        </select>
       </div>
 
       {/* Promotions Grid */}
