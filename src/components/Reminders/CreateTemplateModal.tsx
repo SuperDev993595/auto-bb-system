@@ -110,30 +110,31 @@ export default function CreateTemplateModal({
 
   return (
     <ModalWrapper 
+      isOpen={true}
       onClose={onClose}
       onSubmit={handleSubmit}
       title={isEditing ? 'Edit Template' : 'Create New Template'}
       icon={<HiTemplate className="w-5 h-5" />}
-      submitLabel={isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Template' : 'Create Template')}
+      submitText={isLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Template' : 'Create Template')}
     >
-      <div className="space-y-6">
+      <div className="p-4 space-y-6">
           {/* Template Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Template Name *
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               placeholder="e.g., Appointment Reminder - 24 Hours"
             />
           </div>
 
           {/* Template Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Template Type *
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -149,8 +150,8 @@ export default function CreateTemplateModal({
                   onClick={() => handleChange('type', type.value)}
                   className={`p-3 border rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
                     formData.type === type.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-secondary-300 text-secondary-700 hover:border-secondary-400'
                   }`}
                 >
                   {type.icon}
@@ -161,25 +162,25 @@ export default function CreateTemplateModal({
           </div>
 
           {/* Timing Configuration */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Timing Configuration</h3>
+          <div className="bg-secondary-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-secondary-700 mb-3">Timing Configuration</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Value</label>
+                <label className="block text-xs font-medium text-secondary-600 mb-1">Value</label>
                 <input
                   type="number"
                   value={formData.timing.value}
                   onChange={(e) => handleTimingChange('value', parseInt(e.target.value))}
                   min="1"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                <label className="block text-xs font-medium text-secondary-600 mb-1">Unit</label>
                 <select
                   value={formData.timing.unit}
                   onChange={(e) => handleTimingChange('unit', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="form-select"
                 >
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
@@ -188,25 +189,25 @@ export default function CreateTemplateModal({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">When</label>
+                <label className="block text-xs font-medium text-secondary-600 mb-1">When</label>
                 <select
                   value={formData.timing.when}
                   onChange={(e) => handleTimingChange('when', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="form-select"
                 >
                   <option value="before">Before</option>
                   <option value="after">After</option>
                 </select>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-secondary-500 mt-2">
               Example: {formData.timing.value} {formData.timing.unit} {formData.timing.when} the event
             </p>
           </div>
 
           {/* Notification Methods */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Notification Methods *
             </label>
             <div className="flex gap-3">
@@ -215,8 +216,8 @@ export default function CreateTemplateModal({
                 onClick={() => handleMethodToggle('email')}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   formData.methods.includes('email')
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-secondary-300 text-secondary-700 hover:border-secondary-400'
                 }`}
               >
                 <HiMail className="w-4 h-4" />
@@ -227,8 +228,8 @@ export default function CreateTemplateModal({
                 onClick={() => handleMethodToggle('sms')}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   formData.methods.includes('sms')
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-secondary-300 text-secondary-700 hover:border-secondary-400'
                 }`}
               >
                 <HiPhone className="w-4 h-4" />
@@ -239,55 +240,55 @@ export default function CreateTemplateModal({
 
           {/* Subject */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Subject *
             </label>
             <input
               type="text"
               value={formData.subject}
               onChange={(e) => handleChange('subject', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Appointment Reminder - {'{{businessName}}'}"
+              className="form-input"
+              placeholder="e.g., Appointment Reminder - {{businessName}}"
             />
           </div>
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Message Template *
             </label>
             <textarea
               value={formData.message}
               onChange={(e) => handleChange('message', e.target.value)}
               rows={8}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter the message template with placeholders like {'{{customerName}}'}, {'{{appointmentDate}}'}, etc."
+              className="form-textarea"
+              placeholder="Enter the message template with placeholders like {{customerName}}, {{appointmentDate}}, etc."
             />
-            <div className="mt-2 text-xs text-gray-500">
-              <p className="font-medium mb-1">Available placeholders:</p>
-              <div className="grid grid-cols-2 gap-1">
-                <span>• {'{{customerName}}'} - Customer's full name</span>
-                <span>• {'{{businessName}}'} - Your business name</span>
-                <span>• {'{{appointmentDate}}'} - Appointment date</span>
-                <span>• {'{{appointmentTime}}'} - Appointment time</span>
-                <span>• {'{{serviceType}}'} - Type of service</span>
-                <span>• {'{{businessPhone}}'} - Business phone</span>
-                <span>• {'{{vehicleInfo}}'} - Vehicle details</span>
-                <span>• {'{{technicianName}}'} - Technician name</span>
+                          <div className="mt-2 text-xs text-secondary-500">
+                <p className="font-medium mb-1">Available placeholders:</p>
+                <div className="grid grid-cols-2 gap-1">
+                  <span>• {'{{customerName}}'} - Customer's full name</span>
+                  <span>• {'{{businessName}}'} - Your business name</span>
+                  <span>• {'{{appointmentDate}}'} - Appointment date</span>
+                  <span>• {'{{appointmentTime}}'} - Appointment time</span>
+                  <span>• {'{{serviceType}}'} - Type of service</span>
+                  <span>• {'{{businessPhone}}'} - Business phone</span>
+                  <span>• {'{{vehicleInfo}}'} - Vehicle details</span>
+                  <span>• {'{{technicianName}}'} - Technician name</span>
+                </div>
               </div>
-            </div>
           </div>
 
           {/* Active Status */}
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium text-gray-700">Active Status</span>
-              <p className="text-xs text-gray-500">Enable this template for automatic reminders</p>
+              <span className="text-sm font-medium text-secondary-700">Active Status</span>
+              <p className="text-xs text-secondary-500">Enable this template for automatic reminders</p>
             </div>
             <button
               onClick={() => handleChange('isActive', !formData.isActive)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                formData.isActive ? 'bg-blue-600' : 'bg-gray-200'
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                formData.isActive ? 'bg-primary-600' : 'bg-secondary-200'
               }`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${

@@ -117,22 +117,23 @@ export default function EditReminderModal({ onClose, onSave, isLoading = false, 
 
   return (
     <ModalWrapper 
+      isOpen={true}
       onClose={onClose}
       onSubmit={handleSubmit}
       title="Edit Reminder"
       icon={<HiClock className="w-5 h-5" />}
-      submitLabel={isLoading ? 'Updating...' : 'Update Reminder'}
+      submitText={isLoading ? 'Updating...' : 'Update Reminder'}
     >
-      <div className="space-y-6">
+      <div className="p-4 space-y-6">
           {/* Customer Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Customer *
             </label>
             <select
               value={formData.customerId}
               onChange={(e) => handleCustomerChange(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-select"
             >
               <option value="">Select a customer</option>
               {customers && customers.length > 0 ? (
@@ -149,7 +150,7 @@ export default function EditReminderModal({ onClose, onSave, isLoading = false, 
 
           {/* Reminder Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Reminder Type *
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -165,8 +166,8 @@ export default function EditReminderModal({ onClose, onSave, isLoading = false, 
                   onClick={() => handleChange('type', type.value)}
                   className={`p-3 border rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
                     formData.type === type.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-secondary-300 text-secondary-700 hover:border-secondary-400'
                   }`}
                 >
                   {type.icon}
@@ -178,28 +179,28 @@ export default function EditReminderModal({ onClose, onSave, isLoading = false, 
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Title *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               placeholder="Enter reminder title..."
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Description
             </label>
             <textarea
               value={formData.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-textarea"
               placeholder="Enter reminder description..."
             />
           </div>

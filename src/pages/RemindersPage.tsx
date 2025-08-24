@@ -639,28 +639,26 @@ export default function RemindersPage() {
   const renderTemplates = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h2 className="page-title">Reminder Templates</h2>
-            <p className="page-subtitle">Manage automated reminder templates</p>
-          </div>
-          <div className="page-header-actions">
-            <button 
-              onClick={() => setShowCreateTemplateModal(true)}
-              className="btn-primary-outline"
-            >
-              <HiPlus className="w-4 h-4" />
-              Create Template
-            </button>
-          </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+        <div className="mb-4 lg:mb-0">
+          <h2 className="text-2xl font-bold text-secondary-900 mb-2">Reminder Templates</h2>
+          <p className="text-secondary-600">Manage automated reminder templates</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowCreateTemplateModal(true)}
+            className="btn-primary"
+          >
+            <HiPlus className="w-4 h-4" />
+            Create Template
+          </button>
         </div>
       </div>
 
       {/* Templates Grid */}
-      <div className="grid-responsive">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {templates.map(template => (
-          <div key={template.id} className="card">
+          <div key={template.id} className="card p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
                 {getTypeIcon(template.type)}
@@ -729,14 +727,14 @@ export default function RemindersPage() {
               <div className="flex gap-2">
                 <button 
                   onClick={() => handleEditTemplate(template)}
-                  className="text-primary-600 hover:text-primary-900 text-sm flex items-center gap-1 transition-colors"
+                  className="btn-ghost btn-sm"
                 >
                   <HiPencil className="w-3 h-3" />
                   Edit
                 </button>
                 <button 
                   onClick={() => handleDeleteTemplate(template.id, template.name || 'Unknown Template')}
-                  className="text-error-600 hover:text-error-900 text-sm flex items-center gap-1 transition-colors"
+                  className="btn-ghost btn-sm text-error-600 hover:text-error-900"
                 >
                   <HiTrash className="w-3 h-3" />
                   Delete
@@ -752,19 +750,17 @@ export default function RemindersPage() {
   const renderSettings = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <h2 className="page-title">Notification Settings</h2>
-            <p className="page-subtitle">Configure email and SMS notification providers</p>
-          </div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+        <div className="mb-4 lg:mb-0">
+          <h2 className="text-2xl font-bold text-secondary-900 mb-2">Notification Settings</h2>
+          <p className="text-secondary-600">Configure email and SMS notification providers</p>
         </div>
       </div>
 
-      <div className="grid-responsive">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Email Settings */}
-        <div className="card">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="card p-6">
+          <div className="flex items-center gap-3 mb-6">
             <HiMail className="w-6 h-6 text-info-600" />
             <div>
               <h3 className="text-lg font-semibold text-secondary-900">Email Configuration</h3>
@@ -793,7 +789,7 @@ export default function RemindersPage() {
                 type="text"
                 value={settingsForm.emailProvider.smtp}
                 onChange={(e) => handleEmailProviderChange('smtp', e.target.value)}
-                className="input-field"
+                className="form-input"
                 placeholder="smtp.gmail.com"
               />
             </div>
@@ -804,7 +800,7 @@ export default function RemindersPage() {
                 type="number"
                 value={settingsForm.emailProvider.port}
                 onChange={(e) => handleEmailProviderChange('port', e.target.value)}
-                className="input-field"
+                className="form-input"
                 placeholder="587"
               />
             </div>
@@ -815,7 +811,7 @@ export default function RemindersPage() {
                 type="email"
                 value={settingsForm.emailProvider.username}
                 onChange={(e) => handleEmailProviderChange('username', e.target.value)}
-                className="input-field"
+                className="form-input"
                 placeholder="your-email@gmail.com"
               />
             </div>
@@ -826,7 +822,7 @@ export default function RemindersPage() {
                 type="password"
                 value={settingsForm.emailProvider.password}
                 onChange={(e) => handleEmailProviderChange('password', e.target.value)}
-                className="input-field"
+                className="form-input"
                 placeholder="••••••••"
               />
             </div>
@@ -834,8 +830,8 @@ export default function RemindersPage() {
         </div>
 
         {/* SMS Settings */}
-        <div className="card">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="card p-6">
+          <div className="flex items-center gap-3 mb-6">
             <HiPhone className="w-6 h-6 text-success-600" />
             <div>
               <h3 className="text-lg font-semibold text-secondary-900">SMS Configuration</h3>
@@ -860,7 +856,7 @@ export default function RemindersPage() {
             
             <div>
               <label className="form-label">Service Provider</label>
-              <select className="select-field">
+              <select className="form-select">
                 <option value="twilio">Twilio</option>
                 <option value="nexmo">Nexmo</option>
                 <option value="aws-sns">AWS SNS</option>
@@ -873,7 +869,7 @@ export default function RemindersPage() {
                 type="password"
                 value={settingsForm.smsProvider.apiKey}
                 onChange={(e) => handleSmsProviderChange('apiKey', e.target.value)}
-                className="input-field"
+                className="form-input"
                 placeholder="••••••••••••••••"
               />
             </div>
@@ -889,9 +885,9 @@ export default function RemindersPage() {
       </div>
 
       {/* Business Information */}
-      <div className="card">
+      <div className="card p-6">
         <h3 className="text-lg font-semibold text-secondary-900 mb-4">Business Information</h3>
-        <p className="text-sm text-secondary-600 mb-4">This information will be used in reminder templates</p>
+        <p className="text-sm text-secondary-600 mb-6">This information will be used in reminder templates</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -900,7 +896,7 @@ export default function RemindersPage() {
               type="text"
               value={settingsForm.businessInfo.name}
               onChange={(e) => handleBusinessInfoChange('name', e.target.value)}
-              className="input-field"
+              className="form-input"
             />
           </div>
           
@@ -910,7 +906,7 @@ export default function RemindersPage() {
               type="tel"
               value={settingsForm.businessInfo.phone}
               onChange={(e) => handleBusinessInfoChange('phone', e.target.value)}
-              className="input-field"
+              className="form-input"
             />
           </div>
           
@@ -920,7 +916,7 @@ export default function RemindersPage() {
               type="email"
               value={settingsForm.businessInfo.email}
               onChange={(e) => handleBusinessInfoChange('email', e.target.value)}
-              className="input-field"
+              className="form-input"
             />
           </div>
           
@@ -930,7 +926,7 @@ export default function RemindersPage() {
               type="url"
               value={settingsForm.businessInfo.website || ''}
               onChange={(e) => handleBusinessInfoChange('website', e.target.value)}
-              className="input-field"
+              className="form-input"
             />
           </div>
           
@@ -939,7 +935,7 @@ export default function RemindersPage() {
             <textarea
               value={settingsForm.businessInfo.address}
               onChange={(e) => handleBusinessInfoChange('address', e.target.value)}
-              className="input-field"
+              className="form-textarea"
               rows={2}
             />
           </div>
