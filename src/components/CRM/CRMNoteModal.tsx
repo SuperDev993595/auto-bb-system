@@ -1,23 +1,66 @@
+import React, { useState } from 'react';
+import ModalWrapper from '../../utils/ModalWrapper';
+
 type Props = {
     onClose: () => void;
 };
 
 export default function CRMNoteModal({ onClose }: Props) {
+    const [note, setNote] = useState('');
+    const [followUpRequired, setFollowUpRequired] = useState(false);
+    const [followUpDate, setFollowUpDate] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Handle save logic here
+        onClose();
+    };
+
     return (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
-                <h3 className="text-lg font-semibold mb-4">CRM Notes</h3>
-                <textarea className="w-full h-24 border p-2 mb-4" placeholder="Enter note here..."></textarea>
-                <label className="block mb-2">
-                    <input type="checkbox" className="mr-2" />
-                    Follow-Up Required
-                </label>
-                <input type="datetime-local" className="w-full border p-2 mb-4" />
-                <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded">Save</button>
+        <ModalWrapper
+            isOpen={true}
+            onClose={onClose}
+            title="CRM Notes"
+            submitText="Save"
+            onSubmit={handleSubmit}
+        >
+            <div className="p-4 space-y-4">
+                <div>
+                    <label className="form-label">Note</label>
+                    <textarea 
+                        className="form-textarea" 
+                        placeholder="Enter note here..."
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={4}
+                    />
                 </div>
+                
+                <div className="flex items-center space-x-3 pt-2">
+                    <input 
+                        type="checkbox" 
+                        id="followUp"
+                        checked={followUpRequired}
+                        onChange={(e) => setFollowUpRequired(e.target.checked)}
+                        className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="followUp" className="text-sm text-secondary-700">
+                        Follow-Up Required
+                    </label>
+                </div>
+                
+                {followUpRequired && (
+                    <div>
+                        <label className="form-label">Follow-Up Date</label>
+                        <input 
+                            type="datetime-local" 
+                            className="form-input"
+                            value={followUpDate}
+                            onChange={(e) => setFollowUpDate(e.target.value)}
+                        />
+                    </div>
+                )}
             </div>
-        </div>
+        </ModalWrapper>
     );
 }
