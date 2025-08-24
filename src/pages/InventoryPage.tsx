@@ -1187,7 +1187,7 @@ export default function InventoryPage() {
           </div>
 
           {/* Content Area */}
-          <div className="bg-white rounded-xl border border-secondary-200 overflow-hidden">
+          <div className="bg-white overflow-hidden">
             {activeTab === 'inventory' && renderInventory()}
             {activeTab === 'transactions' && renderTransactions()}
             {activeTab === 'suppliers' && renderSuppliers()}
