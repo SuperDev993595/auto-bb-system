@@ -3,7 +3,13 @@ import ModalWrapper from '../../../utils/ModalWrapper'
 import { Calendar, Clock, User, Truck } from '../../../utils/icons'
 import { API_ENDPOINTS, getAuthHeaders } from '../../../services/api'
 
-export default function NewAppointmentModal({ onClose }: { onClose: () => void }) {
+interface Props {
+    customerId: string
+    onClose: () => void
+    onSuccess?: () => void
+}
+
+export default function NewAppointmentModal({ customerId, onClose, onSuccess }: Props) {
     const [date, setDate] = useState('')
     const [time, setTime] = useState('')
     const [serviceType, setServiceType] = useState('')
@@ -58,11 +64,12 @@ export default function NewAppointmentModal({ onClose }: { onClose: () => void }
 
     return (
         <ModalWrapper
-            title="Schedule New Appointment"
-            icon={<Calendar className="text-indigo-500 w-5 h-5" />}
-            submitLabel="Schedule"
-            submitColor="bg-gradient-to-r from-indigo-600 to-purple-600"
+            isOpen={true}
             onClose={onClose}
+            title="New Appointment"
+            icon={<Calendar className="w-5 h-5" />}
+            submitText="Create Appointment"
+            submitColor="bg-blue-600"
             onSubmit={handleSubmit}
         >
             <div className="grid gap-6">

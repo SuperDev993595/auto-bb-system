@@ -35,9 +35,15 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
 
     // Fetch call logs
     const fetchCallLogs = async () => {
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         setLoading(true)
         try {
-            const response = await customerService.getCustomerCallLogs(customer._id, {
+            const response = await customerService.getCustomerCallLogs(customerId, {
                 page: currentPage,
                 limit: itemsPerPage,
                 sortBy: 'date',
@@ -55,7 +61,7 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
 
     useEffect(() => {
         fetchCallLogs()
-    }, [customer._id, currentPage])
+    }, [customer._id, customer.id, currentPage])
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page)
@@ -70,8 +76,14 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
             return
         }
 
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         try {
-            await customerService.deleteCallLog(customer._id, callLogId)
+            await customerService.deleteCallLog(customerId, callLogId)
             toast.success('Call log deleted successfully')
             fetchCallLogs()
         } catch (error: any) {
@@ -115,7 +127,7 @@ export default function CallLogsSection({ customer }: { customer: Customer }) {
         <div>
             {open && (
                 <NewCallLogModal 
-                    customerId={customer._id}
+                    customerId={customer._id || customer.id || ''}
                     onClose={() => setOpen(false)} 
                     onSuccess={handleCallLogSuccess}
                 />

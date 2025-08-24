@@ -48,13 +48,13 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
 
     return (
         <ModalWrapper
-            title="Create New Payment Arrangement"
-            icon={<FileText className="text-purple-600 w-5 h-5" />}
-            submitLabel={loading ? "Saving..." : "Save Arrangement"}
-            submitColor="bg-gradient-to-r from-purple-600 to-violet-600"
+            isOpen={true}
             onClose={onClose}
+            title="New Payment Arrangement"
+            icon={<FileText className="w-5 h-5" />}
+            submitText="Create Arrangement"
+            submitColor="bg-green-600"
             onSubmit={handleSubmit}
-            disabled={loading}
         >
             <div className="grid gap-6">
                 <label className="block">

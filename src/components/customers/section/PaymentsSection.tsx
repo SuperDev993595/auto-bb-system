@@ -33,9 +33,15 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
 
     // Fetch payments
     const fetchPayments = async () => {
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         setLoading(true)
         try {
-            const response = await customerService.getCustomerPayments(customer._id, {
+            const response = await customerService.getCustomerPayments(customerId, {
                 page: currentPage,
                 limit: itemsPerPage,
                 sortBy: 'date',
@@ -53,7 +59,7 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
 
     useEffect(() => {
         fetchPayments()
-    }, [customer._id, currentPage])
+    }, [customer._id, customer.id, currentPage])
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page)
@@ -68,8 +74,14 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
             return
         }
 
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         try {
-            await customerService.deletePayment(customer._id, paymentId)
+            await customerService.deletePayment(customerId, paymentId)
             toast.success('Payment deleted successfully')
             fetchPayments()
         } catch (error: any) {
@@ -109,7 +121,7 @@ export default function PaymentsSection({ customer }: { customer: Customer }) {
         <div>
             {open && (
                 <PostPaymentModal 
-                    customerId={customer._id}
+                    customerId={customer._id || customer.id || ''}
                     onClose={() => setOpen(false)} 
                     onSuccess={handlePaymentSuccess}
                 />

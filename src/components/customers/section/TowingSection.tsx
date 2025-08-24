@@ -34,9 +34,15 @@ export default function TowingSection({ customer }: { customer: Customer }) {
 
     // Fetch towing records
     const fetchTowingRecords = async () => {
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         setLoading(true)
         try {
-            const response = await customerService.getCustomerTowing(customer._id, {
+            const response = await customerService.getCustomerTowing(customerId, {
                 page: currentPage,
                 limit: itemsPerPage,
                 sortBy: 'date',
@@ -54,7 +60,7 @@ export default function TowingSection({ customer }: { customer: Customer }) {
 
     useEffect(() => {
         fetchTowingRecords()
-    }, [customer._id, currentPage])
+    }, [customer._id, customer.id, currentPage])
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page)
@@ -69,8 +75,14 @@ export default function TowingSection({ customer }: { customer: Customer }) {
             return
         }
 
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         try {
-            await customerService.deleteTowing(customer._id, towingId)
+            await customerService.deleteTowing(customerId, towingId)
             toast.success('Towing record deleted successfully')
             fetchTowingRecords()
         } catch (error: any) {
@@ -98,7 +110,7 @@ export default function TowingSection({ customer }: { customer: Customer }) {
         <div>
             {open && (
                 <NewTowingModal 
-                    customerId={customer._id}
+                    customerId={customer._id || customer.id || ''}
                     onClose={() => setOpen(false)} 
                     onSuccess={handleTowingSuccess}
                 />

@@ -134,7 +134,7 @@ export default function AppointmentsSection({ customer }: { customer: Customer }
         <div>
             {open && (
                 <NewAppointmentModal 
-                    customerId={customer._id}
+                    customerId={customer._id || customer.id || ''}
                     onClose={() => setOpen(false)} 
                     onSuccess={handleAppointmentSuccess}
                 />

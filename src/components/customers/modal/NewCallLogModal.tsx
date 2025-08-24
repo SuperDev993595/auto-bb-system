@@ -65,13 +65,13 @@ export default function NewCallLogModal({ customerId, onClose, onSuccess }: Prop
 
     return (
         <ModalWrapper
-            title="Log a Call"
-            icon={<Phone className="text-teal-600 w-5 h-5" />}
-            submitLabel={loading ? "Saving..." : "Save Log"}
-            submitColor="bg-gradient-to-r from-teal-600 to-cyan-600"
+            isOpen={true}
             onClose={onClose}
+            title="New Call Log"
+            icon={<Phone className="w-5 h-5" />}
+            submitText="Log Call"
+            submitColor="bg-blue-600"
             onSubmit={handleSubmit}
-            disabled={loading}
         >
             <div className="grid gap-6">
                 <label className="block">

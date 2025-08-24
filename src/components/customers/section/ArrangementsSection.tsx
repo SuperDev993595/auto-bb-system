@@ -33,9 +33,15 @@ export default function ArrangementsSection({ customer }: { customer: Customer }
 
     // Fetch arrangements
     const fetchArrangements = async () => {
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         setLoading(true)
         try {
-            const response = await customerService.getCustomerArrangements(customer._id, {
+            const response = await customerService.getCustomerArrangements(customerId, {
                 page: currentPage,
                 limit: itemsPerPage,
                 sortBy: 'date',
@@ -53,7 +59,7 @@ export default function ArrangementsSection({ customer }: { customer: Customer }
 
     useEffect(() => {
         fetchArrangements()
-    }, [customer._id, currentPage])
+    }, [customer._id, customer.id, currentPage])
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page)
@@ -68,8 +74,14 @@ export default function ArrangementsSection({ customer }: { customer: Customer }
             return
         }
 
+        const customerId = customer._id || customer.id
+        if (!customerId) {
+            toast.error('Customer ID is required')
+            return
+        }
+        
         try {
-            await customerService.deleteArrangement(customer._id, arrangementId)
+            await customerService.deleteArrangement(customerId, arrangementId)
             toast.success('Arrangement deleted successfully')
             fetchArrangements()
         } catch (error: any) {
@@ -107,7 +119,7 @@ export default function ArrangementsSection({ customer }: { customer: Customer }
         <div>
             {open && (
                 <NewArrangementModal 
-                    customerId={customer._id}
+                    customerId={customer._id || customer.id || ''}
                     onClose={() => setOpen(false)} 
                     onSuccess={handleArrangementSuccess}
                 />

@@ -46,13 +46,13 @@ export default function PostPaymentModal({ customerId, onClose, onSuccess }: Pro
 
     return (
         <ModalWrapper
-            title="Post New Payment"
-            icon={<CreditCard className="text-blue-600 w-5 h-5" />}
-            submitLabel={loading ? "Saving..." : "Save Payment"}
-            submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
+            isOpen={true}
             onClose={onClose}
+            title="Post Payment"
+            icon={<CreditCard className="w-5 h-5" />}
+            submitText="Post Payment"
+            submitColor="bg-green-600"
             onSubmit={handleSubmit}
-            disabled={loading}
         >
             <div className="grid gap-6">
                 <label className="block">

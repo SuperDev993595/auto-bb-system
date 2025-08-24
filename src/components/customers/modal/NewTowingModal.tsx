@@ -52,13 +52,13 @@ export default function NewTowingModal({ customerId, onClose, onSuccess }: Props
 
     return (
         <ModalWrapper
-            title="Record New Towing Service"
-            icon={<Truck className="text-orange-500 w-5 h-5" />}
-            submitLabel={loading ? "Saving..." : "Save Tow"}
-            submitColor="bg-gradient-to-r from-orange-600 to-red-600"
+            isOpen={true}
             onClose={onClose}
+            title="New Towing Service"
+            icon={<Truck className="w-5 h-5" />}
+            submitText="Schedule Towing"
+            submitColor="bg-orange-600"
             onSubmit={handleSubmit}
-            disabled={loading}
         >
             <div className="grid gap-6">
                 <label className="block">
