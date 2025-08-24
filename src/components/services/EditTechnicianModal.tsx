@@ -3,7 +3,7 @@ import { Technician } from '../../services/services'
 import ModalWrapper from '../../utils/ModalWrapper'
 
 interface EditTechnicianModalProps {
-  technician: Technician
+  technician: Technician | null
   isOpen: boolean
   onClose: () => void
   onSubmit: (id: string, technician: Partial<Technician>) => Promise<void>
@@ -16,11 +16,10 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
   onSubmit
 }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
-    specialization: '',
+    specialization: [] as string[],
     hourlyRate: 0,
     isActive: true
   })
@@ -30,23 +29,23 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
   useEffect(() => {
     if (technician) {
       setFormData({
-        firstName: technician.firstName || '',
-        lastName: technician.lastName || '',
+        name: technician.name || '',
         email: technician.email || '',
         phone: technician.phone || '',
-        specialization: technician.specialization || '',
+        specialization: technician.specialization || [],
         hourlyRate: technician.hourlyRate || 0,
         isActive: technician.isActive !== undefined ? technician.isActive : true
       })
     }
   }, [technician])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
+    if (!technician) return
+    
     try {
       setLoading(true)
       setError(null)
-      await onSubmit(technician.id, formData)
+      await onSubmit(technician._id, formData)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update technician')
@@ -63,12 +62,23 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
     }))
   }
 
+  const handleSpecializationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setFormData(prev => ({
+      ...prev,
+      specialization: value ? value.split(',').map(s => s.trim()).filter(s => s.length > 0) : []
+    }))
+  }
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.checked
     }))
   }
+
+  // Don't render if technician is null - moved after all hooks
+  if (!technician) return null
 
   return (
     <ModalWrapper
@@ -77,51 +87,33 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
       title="Edit Technician"
       submitText="Update Technician"
       onSubmit={handleSubmit}
-      isLoading={loading}
+      submitColor="bg-blue-600"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="p-8 space-y-8">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="firstName" className="form-label">
-              First Name *
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label htmlFor="name" className="form-label">
+              Name *
             </label>
             <input
               type="text"
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               required
               className="form-input"
-              placeholder="Enter first name"
+              placeholder="Enter name"
             />
           </div>
 
-          <div>
-            <label htmlFor="lastName" className="form-label">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-              className="form-input"
-              placeholder="Enter last name"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="space-y-3">
             <label htmlFor="email" className="form-label">
               Email *
             </label>
@@ -136,8 +128,10 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
               placeholder="Enter email address"
             />
           </div>
+        </div>
 
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <label htmlFor="phone" className="form-label">
               Phone *
             </label>
@@ -152,32 +146,25 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
               placeholder="Enter phone number"
             />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="space-y-3">
             <label htmlFor="specialization" className="form-label">
               Specialization
             </label>
-            <select
+            <input
+              type="text"
               id="specialization"
               name="specialization"
-              value={formData.specialization}
-              onChange={handleChange}
-              className="form-select"
-            >
-              <option value="">Select specialization</option>
-              <option value="engine">Engine</option>
-              <option value="transmission">Transmission</option>
-              <option value="electrical">Electrical</option>
-              <option value="brakes">Brakes</option>
-              <option value="suspension">Suspension</option>
-              <option value="diagnostic">Diagnostic</option>
-              <option value="general">General</option>
-            </select>
+              value={formData.specialization.join(', ')}
+              onChange={handleSpecializationChange}
+              className="form-input"
+              placeholder="Enter specializations (comma-separated)"
+            />
           </div>
+        </div>
 
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <label htmlFor="hourlyRate" className="form-label">
               Hourly Rate ($/hr) *
             </label>
@@ -194,22 +181,27 @@ const EditTechnicianModal: React.FC<EditTechnicianModalProps> = ({
               placeholder="0.00"
             />
           </div>
-        </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isActive"
-            name="isActive"
-            checked={formData.isActive}
-            onChange={handleCheckboxChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="isActive" className="ml-2 block text-sm text-secondary-700">
-            Technician is active and available for work
-          </label>
+          <div className="space-y-3">
+            <label htmlFor="isActive" className="form-label">
+              Status
+            </label>
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="isActive"
+                name="isActive"
+                checked={formData.isActive}
+                onChange={handleCheckboxChange}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="isActive" className="text-sm text-secondary-700">
+                Technician is active and available for work
+              </label>
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
     </ModalWrapper>
   )
 }

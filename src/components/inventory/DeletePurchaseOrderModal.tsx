@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { PurchaseOrder } from '../../services/inventory'
 import {
   HiExclamation,
-  HiTrash
+  HiShoppingCart
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
@@ -26,13 +26,18 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(purchaseOrder.id)
+      await onDelete(purchaseOrder._id)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete purchase order')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render if no purchase order is provided
+  if (!purchaseOrder) {
+    return null
   }
 
   return (
@@ -42,8 +47,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
       title="Delete Purchase Order"
       submitText="Delete Purchase Order"
       onSubmit={handleDelete}
-      isLoading={loading}
-      submitButtonVariant="error"
+      submitColor="bg-red-600"
     >
       <div className="p-4 space-y-4">
         {error && (
@@ -72,7 +76,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name}</span>
+              <span className="text-sm font-medium text-secondary-900">{purchaseOrder.supplier?.name || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Order Date:</span>
@@ -88,7 +92,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Total Amount:</span>
-              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2)}</span>
+              <span className="text-sm font-medium text-secondary-900">${purchaseOrder.totalAmount?.toFixed(2) || '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Status:</span>
@@ -98,6 +102,12 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
               <span className="text-sm text-secondary-600">Items:</span>
               <span className="text-sm font-medium text-secondary-900">
                 {purchaseOrder.items?.length || 0} item(s)
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {purchaseOrder.createdAt ? new Date(purchaseOrder.createdAt).toLocaleDateString() : 'N/A'}
               </span>
             </div>
           </div>
@@ -111,6 +121,7 @@ const DeletePurchaseOrderModal: React.FC<DeletePurchaseOrderModalProps> = ({
             <li>Delivery tracking</li>
             <li>Payment records</li>
             <li>Inventory adjustments</li>
+            <li>Supplier order history</li>
           </ul>
         </div>
       </div>

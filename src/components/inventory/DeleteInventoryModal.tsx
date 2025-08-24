@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { InventoryItem } from '../../services/inventory'
 import {
   HiExclamation,
-  HiTrash
+  HiCube
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
@@ -26,13 +26,18 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(item.id)
+      await onDelete(item._id)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete inventory item')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render if no item is provided
+  if (!item) {
+    return null
   }
 
   return (
@@ -42,8 +47,7 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
       title="Delete Inventory Item"
       submitText="Delete Item"
       onSubmit={handleDelete}
-      isLoading={loading}
-      submitButtonVariant="error"
+      submitColor="bg-red-600"
     >
       <div className="p-4 space-y-4">
         {error && (
@@ -84,11 +88,21 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Unit Price:</span>
-              <span className="text-sm font-medium text-secondary-900">${item.unitPrice?.toFixed(2)}</span>
+              <span className="text-sm font-medium text-secondary-900">${item.unitPrice?.toFixed(2) || '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Supplier:</span>
               <span className="text-sm font-medium text-secondary-900">{item.supplier?.name || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Location:</span>
+              <span className="text-sm font-medium text-secondary-900">{item.location || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
             </div>
           </div>
         </div>
@@ -101,6 +115,7 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
             <li>Purchase order references</li>
             <li>Usage records</li>
             <li>Cost tracking data</li>
+            <li>Inventory adjustments</li>
           </ul>
         </div>
       </div>

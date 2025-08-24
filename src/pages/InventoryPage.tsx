@@ -10,7 +10,9 @@ import {
   fetchPurchaseOrderStats,
   fetchInventoryCategories,
   fetchInventoryLocations,
-  adjustStock
+  adjustStock,
+  deleteInventoryItem,
+  deletePurchaseOrder
 } from '../redux/actions/inventory'
 import { InventoryItem } from '../utils/CustomerTypes'
 import type { InventoryTransaction, Supplier, PurchaseOrder } from '../redux/reducer/inventoryReducer'
@@ -380,6 +382,20 @@ export default function InventoryPage() {
     setSelectedItem(null)
   }
 
+  // Handle inventory item deletion
+  const handleDeleteInventoryItem = async (itemId: string) => {
+    try {
+      await dispatch(deleteInventoryItem(itemId))
+      // Refresh inventory items
+      dispatch(fetchInventoryItems({}))
+      dispatch(fetchInventoryStats())
+      setIsDeleteModalOpen(false)
+      setSelectedItem(null)
+    } catch (error) {
+      console.error('Error deleting inventory item:', error)
+    }
+  }
+
   // Supplier modal handlers
   const handleAddSupplier = () => {
     setSupplierModalMode('add')
@@ -434,6 +450,20 @@ export default function InventoryPage() {
   const handleCloseDeletePurchaseOrderModal = () => {
     setIsDeletePurchaseOrderModalOpen(false)
     setSelectedPurchaseOrder(null)
+  }
+
+  // Handle purchase order deletion
+  const handleDeletePurchaseOrderItem = async (poId: string) => {
+    try {
+      await dispatch(deletePurchaseOrder(poId))
+      // Refresh purchase orders
+      dispatch(fetchPurchaseOrders({}))
+      dispatch(fetchPurchaseOrderStats({}))
+      setIsDeletePurchaseOrderModalOpen(false)
+      setSelectedPurchaseOrder(null)
+    } catch (error) {
+      console.error('Error deleting purchase order:', error)
+    }
   }
 
   const renderInventory = () => (
@@ -1204,39 +1234,47 @@ export default function InventoryPage() {
         mode={modalMode}
       />
 
-             <DeleteInventoryModal
-         isOpen={isDeleteModalOpen}
-         onClose={handleCloseDeleteModal}
-         item={selectedItem}
-       />
+      {selectedItem && (
+        <DeleteInventoryModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          onDelete={handleDeleteInventoryItem}
+          item={selectedItem}
+        />
+      )}
 
-       {/* Supplier Modals */}
-       <AddEditSupplierModal
-         isOpen={isAddEditSupplierModalOpen}
-         onClose={handleCloseAddEditSupplierModal}
-         supplier={selectedSupplier}
-         mode={supplierModalMode}
-       />
+      {/* Supplier Modals */}
+      <AddEditSupplierModal
+        isOpen={isAddEditSupplierModalOpen}
+        onClose={handleCloseAddEditSupplierModal}
+        supplier={selectedSupplier}
+        mode={supplierModalMode}
+      />
 
-       <DeleteSupplierModal
-         isOpen={isDeleteSupplierModalOpen}
-         onClose={handleCloseDeleteSupplierModal}
-         supplier={selectedSupplier}
-       />
+      {selectedSupplier && (
+        <DeleteSupplierModal
+          isOpen={isDeleteSupplierModalOpen}
+          onClose={handleCloseDeleteSupplierModal}
+          supplier={selectedSupplier}
+        />
+      )}
 
-       {/* Purchase Order Modals */}
-       <AddEditPurchaseOrderModal
-         isOpen={isAddEditPurchaseOrderModalOpen}
-         onClose={handleCloseAddEditPurchaseOrderModal}
-         purchaseOrder={selectedPurchaseOrder}
-         mode={purchaseOrderModalMode}
-       />
+      {/* Purchase Order Modals */}
+      <AddEditPurchaseOrderModal
+        isOpen={isAddEditPurchaseOrderModalOpen}
+        onClose={handleCloseAddEditPurchaseOrderModal}
+        purchaseOrder={selectedPurchaseOrder}
+        mode={purchaseOrderModalMode}
+      />
 
-       <DeletePurchaseOrderModal
-         isOpen={isDeletePurchaseOrderModalOpen}
-         onClose={handleCloseDeletePurchaseOrderModal}
-         purchaseOrder={selectedPurchaseOrder}
-       />
+      {selectedPurchaseOrder && (
+        <DeletePurchaseOrderModal
+          isOpen={isDeletePurchaseOrderModalOpen}
+          onClose={handleCloseDeletePurchaseOrderModal}
+          onDelete={handleDeletePurchaseOrderItem}
+          purchaseOrder={selectedPurchaseOrder}
+        />
+      )}
      </div>
    )
  }

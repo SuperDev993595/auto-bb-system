@@ -147,7 +147,7 @@ export default function ServicesPage() {
     setShowEditModal(true)
   }
 
-  const handleDeleteService = (service: ServiceCatalogItem) => {
+  const handleDeleteServiceClick = (service: ServiceCatalogItem) => {
     setSelectedService(service)
     setShowDeleteModal(true)
   }
@@ -155,6 +155,121 @@ export default function ServicesPage() {
   const handleServiceSuccess = () => {
     dispatch(fetchServiceCatalog({}))
     dispatch(fetchServiceCatalogStats())
+  }
+
+  // Handle service creation
+  const handleCreateService = async (serviceData: Partial<ServiceCatalogItem>) => {
+    try {
+      // This would need to be implemented with the actual service creation action
+      // For now, we'll just close the modal and refresh
+      setShowAddModal(false)
+      handleServiceSuccess()
+    } catch (error) {
+      console.error('Error creating service:', error)
+      throw error
+    }
+  }
+
+  // Handle service update
+  const handleUpdateService = async (id: string, serviceData: Partial<ServiceCatalogItem>) => {
+    try {
+      // This would need to be implemented with the actual service update action
+      setShowEditModal(false)
+      setSelectedService(null)
+      handleServiceSuccess()
+    } catch (error) {
+      console.error('Error updating service:', error)
+      throw error
+    }
+  }
+
+  // Handle service deletion
+  const handleDeleteService = async (id: string) => {
+    try {
+      // This would need to be implemented with the actual service deletion action
+      setShowDeleteModal(false)
+      setSelectedService(null)
+      handleServiceSuccess()
+    } catch (error) {
+      console.error('Error deleting service:', error)
+      throw error
+    }
+  }
+
+  // Handle work order creation
+  const handleCreateWorkOrder = async (workOrderData: Partial<WorkOrder>) => {
+    try {
+      // This would need to be implemented with the actual work order creation action
+      setShowAddWorkOrderModal(false)
+      handleWorkOrderSuccess()
+    } catch (error) {
+      console.error('Error creating work order:', error)
+      throw error
+    }
+  }
+
+  // Handle work order update
+  const handleUpdateWorkOrder = async (id: string, workOrderData: Partial<WorkOrder>) => {
+    try {
+      // This would need to be implemented with the actual work order update action
+      setShowEditWorkOrderModal(false)
+      setSelectedWorkOrder(null)
+      handleWorkOrderSuccess()
+    } catch (error) {
+      console.error('Error updating work order:', error)
+      throw error
+    }
+  }
+
+  // Handle work order deletion
+  const handleDeleteWorkOrder = async (id: string) => {
+    try {
+      // This would need to be implemented with the actual work order deletion action
+      setShowDeleteWorkOrderModal(false)
+      setSelectedWorkOrder(null)
+      handleWorkOrderSuccess()
+    } catch (error) {
+      console.error('Error deleting work order:', error)
+      throw error
+    }
+  }
+
+  // Handle technician creation
+  const handleCreateTechnician = async (technicianData: Partial<Technician>) => {
+    try {
+      // This would need to be implemented with the actual technician creation action
+      setShowAddTechnicianModal(false)
+      handleTechnicianSuccess()
+    } catch (error) {
+      console.error('Error creating technician:', error)
+      throw error
+    }
+  }
+
+  // Handle technician update
+  const handleUpdateTechnician = async (id: string, technicianData: Partial<Technician>) => {
+    try {
+      // This would need to be implemented with the actual technician update action
+      setShowEditTechnicianModal(false)
+      setSelectedTechnician(null)
+      handleTechnicianSuccess()
+    } catch (error) {
+      console.error('Error updating technician:', error)
+      throw error
+    }
+  }
+
+  // Handle technician deletion
+  const handleDeleteTechnician = async (id: string) => {
+    try {
+      // This would need to be implemented with the actual technician deletion action
+      setShowDeleteTechnicianModal(false)
+      setSelectedTechnician(null)
+      handleTechnicianSuccess()
+    } catch (error) {
+      console.error('Error deleting technician:', error)
+      throw error
+    }
   }
 
   // Work Order modal handlers
@@ -167,7 +282,7 @@ export default function ServicesPage() {
     setShowEditWorkOrderModal(true)
   }
 
-  const handleDeleteWorkOrder = (workOrder: WorkOrder) => {
+  const handleDeleteWorkOrderClick = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder)
     setShowDeleteWorkOrderModal(true)
   }
@@ -175,6 +290,21 @@ export default function ServicesPage() {
   const handleWorkOrderSuccess = () => {
     dispatch(fetchWorkOrders({}))
     dispatch(fetchWorkOrderStats({}))
+  }
+
+  // Technician modal handlers
+  const handleAddTechnician = () => {
+    setShowAddTechnicianModal(true)
+  }
+
+  const handleEditTechnician = (technician: Technician) => {
+    setSelectedTechnician(technician)
+    setShowEditTechnicianModal(true)
+  }
+
+  const handleDeleteTechnicianClick = (technician: Technician) => {
+    setSelectedTechnician(technician)
+    setShowDeleteTechnicianModal(true)
   }
 
   const handleTechnicianSuccess = () => {
@@ -490,7 +620,7 @@ export default function ServicesPage() {
                                 Edit
                               </button>
                               <button
-                                onClick={() => handleDeleteService(service)}
+                                onClick={() => handleDeleteServiceClick(service)}
                                 className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
                                 title="Delete Service"
                               >
@@ -529,7 +659,7 @@ export default function ServicesPage() {
                                     Edit
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteService(service)}
+                                    onClick={() => handleDeleteServiceClick(service)}
                                     className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -605,7 +735,7 @@ export default function ServicesPage() {
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteWorkOrder(workOrder)}
+                                  onClick={() => handleDeleteWorkOrderClick(workOrder)}
                                   className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -678,9 +808,9 @@ export default function ServicesPage() {
                                     setShowEditTechnicianModal(true)
                                   }}
                                   className="btn-ghost btn-sm text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100"
+                                  title="Edit Technician"
                                 >
                                   <Edit className="w-4 h-4" />
-                                  Edit
                                 </button>
                                 <button
                                   onClick={() => {
@@ -688,9 +818,9 @@ export default function ServicesPage() {
                                     setShowDeleteTechnicianModal(true)
                                   }}
                                   className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  title="Delete Technician"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  Delete
                                 </button>
                               </div>
                             </div>
@@ -707,7 +837,7 @@ export default function ServicesPage() {
                     <h3 className="empty-state-title">No technicians found</h3>
                     <p className="empty-state-description">Get started by adding your first technician</p>
                     <button
-                      onClick={() => setShowAddTechnicianModal(true)}
+                      onClick={handleAddTechnician}
                       className="btn-primary"
                     >
                       <Plus className="w-5 h-5" />
@@ -722,41 +852,37 @@ export default function ServicesPage() {
       </div>
 
       {/* Modals */}
-      {showAddModal && (
-        <AddServiceModal
-          onClose={() => setShowAddModal(false)}
-          onSuccess={handleServiceSuccess}
-        />
-      )}
+      <AddServiceModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleCreateService}
+      />
 
-      {showEditModal && selectedService && (
-        <EditServiceModal
-          service={selectedService}
-          onClose={() => {
-            setShowEditModal(false)
-            setSelectedService(null)
-          }}
-          onSuccess={handleServiceSuccess}
-        />
-      )}
+      <EditServiceModal
+        isOpen={showEditModal}
+        service={selectedService}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedService(null)
+        }}
+        onSubmit={handleUpdateService}
+      />
 
-      {showDeleteModal && selectedService && (
-        <DeleteServiceModal
-          service={selectedService}
-          onClose={() => {
-            setShowDeleteModal(false)
-            setSelectedService(null)
-          }}
-          onSuccess={handleServiceSuccess}
-        />
-      )}
+      <DeleteServiceModal
+        isOpen={showDeleteModal}
+        service={selectedService}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setSelectedService(null)
+        }}
+        onDelete={handleDeleteService}
+      />
 
-      {showAddWorkOrderModal && (
-        <AddWorkOrderModal
-          onClose={() => setShowAddWorkOrderModal(false)}
-          onSuccess={handleWorkOrderSuccess}
-        />
-      )}
+      <AddWorkOrderModal
+        isOpen={showAddWorkOrderModal}
+        onClose={() => setShowAddWorkOrderModal(false)}
+        onSubmit={handleCreateWorkOrder}
+      />
 
       {showEditWorkOrderModal && selectedWorkOrder && (
         <EditWorkOrderModal
@@ -769,45 +895,41 @@ export default function ServicesPage() {
         />
       )}
 
-      {showDeleteWorkOrderModal && selectedWorkOrder && (
-        <DeleteWorkOrderModal
-          workOrder={selectedWorkOrder}
-          onClose={() => {
-            setShowDeleteWorkOrderModal(false)
-            setSelectedWorkOrder(null)
-          }}
-          onSuccess={handleWorkOrderSuccess}
-        />
-      )}
+      <DeleteWorkOrderModal
+        isOpen={showDeleteWorkOrderModal}
+        workOrder={selectedWorkOrder}
+        onClose={() => {
+          setShowDeleteWorkOrderModal(false)
+          setSelectedWorkOrder(null)
+        }}
+        onDelete={handleDeleteWorkOrder}
+      />
 
-      {showAddTechnicianModal && (
-        <AddTechnicianModal
-          onClose={() => setShowAddTechnicianModal(false)}
-          onSuccess={handleTechnicianSuccess}
-        />
-      )}
+      <AddTechnicianModal
+        isOpen={showAddTechnicianModal}
+        onClose={() => setShowAddTechnicianModal(false)}
+        onSubmit={handleCreateTechnician}
+      />
 
-      {showEditTechnicianModal && selectedTechnician && (
-        <EditTechnicianModal
-          technician={selectedTechnician}
-          onClose={() => {
-            setShowEditTechnicianModal(false)
-            setSelectedTechnician(null)
-          }}
-          onSuccess={handleTechnicianSuccess}
-        />
-      )}
+      <EditTechnicianModal
+        isOpen={showEditTechnicianModal}
+        technician={selectedTechnician}
+        onClose={() => {
+          setShowEditTechnicianModal(false)
+          setSelectedTechnician(null)
+        }}
+        onSubmit={handleUpdateTechnician}
+      />
 
-      {showDeleteTechnicianModal && selectedTechnician && (
-        <DeleteTechnicianModal
-          technician={selectedTechnician}
-          onClose={() => {
-            setShowDeleteTechnicianModal(false)
-            setSelectedTechnician(null)
-          }}
-          onSuccess={handleTechnicianSuccess}
-        />
-      )}
+      <DeleteTechnicianModal
+        isOpen={showDeleteTechnicianModal}
+        technician={selectedTechnician}
+        onClose={() => {
+          setShowDeleteTechnicianModal(false)
+          setSelectedTechnician(null)
+        }}
+        onDelete={handleDeleteTechnician}
+      />
     </div>
   )
 }

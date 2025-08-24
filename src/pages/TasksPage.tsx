@@ -127,12 +127,10 @@ export default function TasksPage() {
   }
 
   // Handle task deletion
-  const handleDeleteTask = async () => {
-    if (!selectedTask) return
-    
+  const handleDeleteTask = async (taskId: string) => {
     try {
       setIsSubmitting(true)
-      await dispatch(deleteTask(selectedTask._id))
+      await dispatch(deleteTask(taskId))
       toast.success('Task deleted successfully!')
       
       setShowDeleteModal(false)
@@ -509,16 +507,17 @@ export default function TasksPage() {
         />
 
         {/* Delete Confirmation Modal */}
-        <DeleteTaskModal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false)
-            setSelectedTask(null)
-          }}
-          onConfirm={handleDeleteTask}
-          taskTitle={selectedTask?.title || ''}
-          isLoading={isSubmitting}
-        />
+        {selectedTask && (
+          <DeleteTaskModal
+            isOpen={showDeleteModal}
+            onClose={() => {
+              setShowDeleteModal(false)
+              setSelectedTask(null)
+            }}
+            onDelete={handleDeleteTask}
+            task={selectedTask}
+          />
+        )}
       </div>
 
       

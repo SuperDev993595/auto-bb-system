@@ -5,9 +5,10 @@ type Props = {
     customer: Customer
     onEditVehicle?: (vehicle: any) => void
     onDeleteVehicle?: (vehicle: any) => void
+    onAddVehicle?: () => void
 }
 
-export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle }: Props) {
+export default function OverviewSection({ customer, onEditVehicle, onDeleteVehicle, onAddVehicle }: Props) {
     // Helper function to get the best available date
     const getCustomerDate = (customer: Customer, field: 'createdAt' | 'updatedAt' | 'dateCreated') => {
         return customer[field] || customer.createdAt || customer.updatedAt || new Date().toISOString()
@@ -145,7 +146,10 @@ export default function OverviewSection({ customer, onEditVehicle, onDeleteVehic
                             </div>
                             <h3 className="text-2xl font-bold text-gray-800">Vehicles</h3>
                         </div>
-                        <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <button 
+                            onClick={onAddVehicle}
+                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        >
                             + Add Vehicle
                         </button>
                     </div>

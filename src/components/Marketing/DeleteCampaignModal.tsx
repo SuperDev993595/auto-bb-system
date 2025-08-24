@@ -1,73 +1,135 @@
-import React from 'react';
-import { HiX, HiExclamation } from 'react-icons/hi';
+import React, { useState } from 'react'
+import { MarketingCampaign } from '../../services/marketing'
+import {
+  HiExclamation,
+  HiMail
+} from 'react-icons/hi'
+import ModalWrapper from '../../utils/ModalWrapper'
 
 interface DeleteCampaignModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  campaignName?: string;
-  isLoading?: boolean;
+  campaign: MarketingCampaign
+  isOpen: boolean
+  onClose: () => void
+  onDelete: (id: string) => Promise<void>
 }
 
-export default function DeleteCampaignModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  campaignName = 'this campaign',
-  isLoading = false 
-}: DeleteCampaignModalProps) {
-  if (!isOpen) return null;
+const DeleteCampaignModal: React.FC<DeleteCampaignModalProps> = ({
+  campaign,
+  isOpen,
+  onClose,
+  onDelete
+}) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      await onDelete(campaign._id)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete marketing campaign')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Delete Campaign
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-            disabled={isLoading}
-          >
-            <HiX className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="flex items-center mb-4">
-          <div className="flex-shrink-0">
-            <HiExclamation className="w-8 h-8 text-red-500" />
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Marketing Campaign"
+      submitText="Delete Campaign"
+      onSubmit={handleDelete}
+      submitColor="bg-red-600"
+    >
+      <div className="p-4 space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
           </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-medium text-gray-900">
-              Are you sure?
-            </h3>
-            <p className="text-sm text-gray-500">
-              This action cannot be undone. This will permanently delete{' '}
-              <span className="font-medium text-gray-900">"{campaignName}"</span>.
+        )}
+
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-100 rounded-full">
+            <HiExclamation className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-secondary-900">Are you sure?</h4>
+            <p className="text-sm text-secondary-600">
+              This action cannot be undone. This will permanently delete the marketing campaign.
             </p>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-            disabled={isLoading}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Deleting...' : 'Delete Campaign'}
-          </button>
+        <div className="bg-secondary-50 p-4 rounded-lg">
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Name:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Type:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{campaign.type}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Status:</span>
+              <span className="text-sm font-medium text-secondary-900 capitalize">{campaign.status}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Subject:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.subject || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Recipients:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.recipientCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Sent:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.sentCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Opened:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.openedCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Clicked:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.clickedCount || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created By:</span>
+              <span className="text-sm font-medium text-secondary-900">{campaign.createdBy.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Content Preview:</span>
+              <span className="text-sm font-medium text-secondary-900 max-w-xs truncate">
+                {campaign.content ? campaign.content.substring(0, 50) + '...' : 'N/A'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <p className="font-medium mb-1">⚠️ Warning:</p>
+          <p>Deleting this marketing campaign will also affect:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>Campaign performance data</li>
+            <li>Marketing analytics</li>
+            <li>Customer engagement metrics</li>
+            <li>Recipient lists</li>
+            <li>ROI calculations</li>
+          </ul>
         </div>
       </div>
-    </div>
-  );
+    </ModalWrapper>
+  )
 }
+
+export default DeleteCampaignModal

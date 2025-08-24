@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Task } from '../../services/tasks'
 import {
   HiExclamation,
-  HiTrash
+  HiClipboardList
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
 
@@ -26,13 +26,18 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
     try {
       setLoading(true)
       setError(null)
-      await onDelete(task.id)
+      await onDelete(task._id)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render if no task is provided
+  if (!task) {
+    return null
   }
 
   return (
@@ -42,8 +47,7 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
       title="Delete Task"
       submitText="Delete Task"
       onSubmit={handleDelete}
-      isLoading={loading}
-      submitButtonVariant="error"
+      submitColor="bg-red-600"
     >
       <div className="p-4 space-y-4">
         {error && (
@@ -96,7 +100,25 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 {task.assignedTo || 'Unassigned'}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-secondary-600">Created:</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
           </div>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+          <p className="font-medium mb-1">⚠️ Warning:</p>
+          <p>Deleting this task will also affect:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>Task tracking and progress</li>
+            <li>Workflow management</li>
+            <li>Team collaboration</li>
+            <li>Project timelines</li>
+            <li>Performance metrics</li>
+          </ul>
         </div>
       </div>
     </ModalWrapper>

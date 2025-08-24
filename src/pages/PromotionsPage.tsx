@@ -111,12 +111,10 @@ export default function PromotionsPage() {
   }
 
   // Handle promotion deletion
-  const handleDeletePromotion = async () => {
-    if (!selectedPromotion) return
-    
+  const handleDeletePromotion = async (promotionId: string) => {
     try {
       setIsSubmitting(true)
-      await dispatch(deletePromotion(selectedPromotion._id))
+      await dispatch(deletePromotion(promotionId))
       toast.success('Promotion deleted successfully!')
       
       setShowDeleteModal(false)
@@ -456,16 +454,17 @@ export default function PromotionsPage() {
       />
 
       {/* Delete Confirmation Modal */}
-      <DeletePromotionModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false)
-          setSelectedPromotion(null)
-        }}
-        onConfirm={handleDeletePromotion}
-        promotionTitle={selectedPromotion?.title || ''}
-        isLoading={isSubmitting}
-      />
+      {selectedPromotion && (
+        <DeletePromotionModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setSelectedPromotion(null)
+          }}
+          onDelete={handleDeletePromotion}
+          promotion={selectedPromotion}
+        />
+      )}
     </div>
   )
 }

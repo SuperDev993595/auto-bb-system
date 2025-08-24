@@ -101,12 +101,10 @@ export default function MarketingDashboard() {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteCampaign = async () => {
-    if (!selectedCampaign) return;
-
+  const handleDeleteCampaign = async (campaignId: string) => {
     try {
       setIsSubmitting(true);
-      await dispatch(deleteCampaign(selectedCampaign._id));
+      await dispatch(deleteCampaign(campaignId));
       toast.success('Campaign deleted successfully!');
       setShowDeleteModal(false);
       setSelectedCampaign(null);
@@ -489,16 +487,17 @@ export default function MarketingDashboard() {
       />
 
       {/* Delete Campaign Modal */}
-      <DeleteCampaignModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setSelectedCampaign(null);
-        }}
-        onConfirm={handleDeleteCampaign}
-        campaignName={selectedCampaign?.name}
-        isLoading={isSubmitting}
-      />
+      {selectedCampaign && (
+        <DeleteCampaignModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedCampaign(null);
+          }}
+          onDelete={handleDeleteCampaign}
+          campaign={selectedCampaign}
+        />
+      )}
     </div>
   );
 }

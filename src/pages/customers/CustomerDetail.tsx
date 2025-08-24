@@ -124,21 +124,10 @@ export default function CustomerDetail() {
     )
   }
 
-  // Debug: Log customer data for troubleshooting
-  console.log('Customer data loaded:', customer)
-
   // Handle nested customer data structure (API might return {customer: {...}})
   let actualCustomer = customer;
   if (customer && typeof customer === 'object' && 'customer' in customer && customer.customer) {
-    console.log('Found nested customer structure, extracting customer data');
     actualCustomer = customer.customer as any;
-  }
-
-  // Additional debugging for unexpected data structures
-  if (actualCustomer && typeof actualCustomer === 'object') {
-    console.log('Customer keys:', Object.keys(actualCustomer));
-    console.log('Customer _id:', actualCustomer._id);
-    console.log('Customer name:', actualCustomer.name);
   }
 
   // Validate required customer fields
@@ -261,6 +250,7 @@ export default function CustomerDetail() {
                   setSelectedVehicle(vehicle)
                   setShowDeleteVehicleModal(true)
                 }}
+                onAddVehicle={() => setShowAddVehicleModal(true)}
               />
             )}
             {activeTab === 'Payments' && (

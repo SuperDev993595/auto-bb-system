@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { Service } from '../../services/services'
+import { ServiceCatalogItem } from '../../services/services'
 import ModalWrapper from '../../utils/ModalWrapper'
 
 interface AddServiceModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (service: Partial<Service>) => Promise<void>
+  onSubmit: (service: Partial<ServiceCatalogItem>) => Promise<void>
 }
 
 const AddServiceModal: React.FC<AddServiceModalProps> = ({
@@ -17,15 +17,14 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
     name: '',
     description: '',
     laborRate: 0,
-    estimatedTime: '',
-    category: '',
+    estimatedDuration: 0,
+    category: '' as ServiceCatalogItem['category'],
     isActive: true
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -35,8 +34,8 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
         name: '',
         description: '',
         laborRate: 0,
-        estimatedTime: '',
-        category: '',
+        estimatedDuration: 0,
+        category: '' as ServiceCatalogItem['category'],
         isActive: true
       })
     } catch (err) {
@@ -68,17 +67,17 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
       title="Add New Service"
       submitText="Create Service"
       onSubmit={handleSubmit}
-      isLoading={loading}
+      submitColor="bg-blue-600"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="p-8 space-y-8">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <label htmlFor="name" className="form-label">
               Service Name *
             </label>
@@ -94,7 +93,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
             />
           </div>
 
-          <div>
+          <div className="space-y-3">
             <label htmlFor="category" className="form-label">
               Category
             </label>
@@ -106,16 +105,18 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
               className="form-select"
             >
               <option value="">Select category</option>
-              <option value="diagnostic">Diagnostic</option>
-              <option value="repair">Repair</option>
               <option value="maintenance">Maintenance</option>
+              <option value="repair">Repair</option>
+              <option value="diagnostic">Diagnostic</option>
               <option value="inspection">Inspection</option>
+              <option value="emergency">Emergency</option>
+              <option value="preventive">Preventive</option>
               <option value="other">Other</option>
             </select>
           </div>
         </div>
 
-        <div>
+        <div className="space-y-3">
           <label htmlFor="description" className="form-label">
             Description
           </label>
@@ -124,14 +125,14 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
             name="description"
             value={formData.description}
             onChange={handleChange}
-            rows={3}
+            rows={4}
             className="form-textarea"
             placeholder="Enter service description"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
             <label htmlFor="laborRate" className="form-label">
               Labor Rate ($/hr) *
             </label>
@@ -149,36 +150,38 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
             />
           </div>
 
-          <div>
-            <label htmlFor="estimatedTime" className="form-label">
-              Estimated Time
+          <div className="space-y-3">
+            <label htmlFor="estimatedDuration" className="form-label">
+              Estimated Duration (hours)
             </label>
             <input
-              type="text"
-              id="estimatedTime"
-              name="estimatedTime"
-              value={formData.estimatedTime}
+              type="number"
+              id="estimatedDuration"
+              name="estimatedDuration"
+              value={formData.estimatedDuration}
               onChange={handleChange}
+              min="0"
+              step="0.5"
               className="form-input"
-              placeholder="e.g., 2 hours"
+              placeholder="2.0"
             />
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-3 pt-4">
           <input
             type="checkbox"
             id="isActive"
             name="isActive"
             checked={formData.isActive}
             onChange={handleCheckboxChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="isActive" className="ml-2 block text-sm text-secondary-700">
+          <label htmlFor="isActive" className="text-sm text-secondary-700">
             Service is active and available for booking
           </label>
         </div>
-      </form>
+      </div>
     </ModalWrapper>
   )
 }
