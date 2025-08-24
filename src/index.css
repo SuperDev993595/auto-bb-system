@@ -692,6 +692,22 @@
 
 .tab-button {
   @apply py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+  -moz-outline: none;
+}
+
+.tab-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .tab-button-active {
@@ -705,6 +721,22 @@
 /* Alternative tab style for button-like tabs */
 .tab-button-alt {
   @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 border flex items-center gap-2;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+  -moz-outline: none;
+}
+
+.tab-button-alt:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+.tab-button-alt:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
 .tab-button-alt-active {
