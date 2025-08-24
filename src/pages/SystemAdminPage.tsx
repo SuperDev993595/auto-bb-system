@@ -48,60 +48,56 @@ const SystemAdminPage: React.FC = () => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      <div className="grid-responsive">
-        <div className="stats-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-secondary-600">System Status</p>
-              <p className={`text-2xl font-bold ${getStatusColor(systemHealth?.status || 'unknown')}`}>
-                {systemHealth?.status || 'Unknown'}
-              </p>
-            </div>
-            <div className={`stats-icon ${getStatusBgColor(systemHealth?.status || 'unknown')}`}>
-              <HiChartBar className="w-6 h-6" />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
+            <HiChartBar className="w-6 h-6 text-primary-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">System Status</p>
+          <p className={`text-2xl font-bold ${getStatusColor(systemHealth?.status || 'unknown')}`}>
+            {systemHealth?.status || 'Unknown'}
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">System Status</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-secondary-600">CPU Usage</p>
-              <p className="text-2xl font-bold text-secondary-900">
-                {systemHealth?.metrics?.cpu?.usage?.toFixed(1) || '0'}%
-              </p>
-            </div>
-            <div className="stats-icon bg-primary-100">
-              <HiDesktopComputer className="w-6 h-6 text-primary-600" />
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
+            <HiDesktopComputer className="w-6 h-6 text-info-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">CPU Usage</p>
+          <p className="text-2xl font-bold text-secondary-900">
+            {systemHealth?.metrics?.cpu?.usage?.toFixed(1) || '0'}%
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">CPU Usage</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-secondary-600">Memory Usage</p>
-              <p className="text-2xl font-bold text-secondary-900">
-                {systemHealth?.metrics?.memory?.usage?.toFixed(1) || '0'}%
-              </p>
-            </div>
-            <div className="stats-icon bg-success-100">
-              <HiDatabase className="w-6 h-6 text-success-600" />
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
+            <HiDatabase className="w-6 h-6 text-success-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Memory Usage</p>
+          <p className="text-2xl font-bold text-secondary-900">
+            {systemHealth?.metrics?.memory?.usage?.toFixed(1) || '0'}%
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Memory Usage</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-secondary-600">Disk Usage</p>
-              <p className="text-2xl font-bold text-secondary-900">
-                {systemHealth?.metrics?.disk?.usage?.toFixed(1) || '0'}%
-              </p>
-            </div>
-            <div className="stats-icon bg-info-100">
-              <HiChip className="w-6 h-6 text-info-600" />
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-xl mx-auto mb-4">
+            <HiChip className="w-6 h-6 text-warning-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Disk Usage</p>
+          <p className="text-2xl font-bold text-secondary-900">
+            {systemHealth?.metrics?.disk?.usage?.toFixed(1) || '0'}%
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Disk Usage</p>
           </div>
         </div>
       </div>
@@ -110,8 +106,8 @@ const SystemAdminPage: React.FC = () => {
 
   const renderSystemInfo = () => (
     <div className="space-y-6">
-      <div className="card">
-        <h3 className="page-subtitle mb-4">System Information</h3>
+      <div className="card p-6">
+        <h3 className="text-xl font-semibold text-secondary-900 mb-4">System Information</h3>
         {systemInfo && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -163,8 +159,8 @@ const SystemAdminPage: React.FC = () => {
       </div>
 
       {databaseInfo && (
-        <div className="card">
-          <h3 className="page-subtitle mb-4">Database Information</h3>
+        <div className="card p-6">
+          <h3 className="text-xl font-semibold text-secondary-900 mb-4">Database Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div className="flex justify-between">
@@ -209,42 +205,43 @@ const SystemAdminPage: React.FC = () => {
   );
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-secondary-900">System Administration</h1>
-          <p className="mt-2 text-secondary-600">
-            Monitor system health and view system information
-          </p>
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">System Administration</h1>
+          <p className="text-secondary-600">Monitor system health and view system information</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="card mb-6">
-        <div className="tab-container">
-          <div className="tab-header">
-            <nav className="tab-buttons">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`tab-button ${activeTab === tab.id ? 'tab-button-active' : 'tab-button-inactive'}`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="card">
+        <div className="p-4 border-b border-secondary-200">
+          <nav className="flex space-x-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === tab.id 
+                    ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                    : 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
 
       {/* Tab Content */}
       <div className="min-h-96">
         {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Loading system data...</p>
+          <div className="flex flex-col items-center justify-center min-h-96">
+            <div className="w-8 h-8 animate-spin mx-auto mb-4 text-primary-600 border-2 border-primary-600 border-t-transparent rounded-full"></div>
+            <p className="text-secondary-600">Loading system data...</p>
           </div>
         ) : (
           <>

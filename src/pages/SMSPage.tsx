@@ -191,91 +191,94 @@ export default function SMSPage() {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <PageTitle title="SMS Messaging" />
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">SMS Management</h1>
+          <p className="text-secondary-600">Send SMS messages and manage templates</p>
+        </div>
       </div>
-      
+
       {/* Stats Overview */}
-      <div className="grid-responsive mb-8">
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-info-100">
-              <HiPhone className="w-6 h-6 text-info-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Total Sent</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.totalSent}</p>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
+            <HiPhone className="w-6 h-6 text-info-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Total</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats.totalSent}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Total Sent</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-success-100">
-              <HiCheckCircle className="w-6 h-6 text-success-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Delivered</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.delivered}</p>
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
+            <HiCheckCircle className="w-6 h-6 text-success-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Delivered</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats.delivered}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Delivered</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-error-100">
-              <HiXCircle className="w-6 h-6 text-error-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Failed</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.failed}</p>
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-error-100 rounded-xl mx-auto mb-4">
+            <HiXCircle className="w-6 h-6 text-error-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Failed</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats.failed}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Failed</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="flex items-center">
-            <div className="stats-icon bg-primary-100">
-              <HiChartBar className="w-6 h-6 text-primary-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-secondary-600">Delivery Rate</p>
-              <p className="text-2xl font-bold text-secondary-900">{stats.deliveryRate.toFixed(1)}%</p>
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
+            <HiChartBar className="w-6 h-6 text-primary-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Rate</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats.deliveryRate.toFixed(1)}%</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Delivery Rate</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="card mb-6">
-        <div className="tab-container">
-          <div className="tab-header">
-            <nav className="tab-buttons">
-              {[
-                { id: 'send', label: 'Send SMS', icon: HiPhone },
-                { id: 'templates', label: 'Templates', icon: HiTemplate },
-                { id: 'history', label: 'History', icon: HiClock },
-                { id: 'analytics', label: 'Analytics', icon: HiChartBar }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`tab-button ${activeTab === tab.id ? 'tab-button-active' : 'tab-button-inactive'}`}
-                >
-                  <tab.icon className="w-5 h-5 mr-2" />
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="card">
+        <div className="p-4 border-b border-secondary-200">
+          <nav className="flex space-x-1">
+            {[
+              { id: 'send', label: 'Send SMS', icon: HiPhone },
+              { id: 'templates', label: 'Templates', icon: HiTemplate },
+              { id: 'history', label: 'History', icon: HiClock },
+              { id: 'analytics', label: 'Analytics', icon: HiChartBar }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === tab.id 
+                    ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                    : 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100'
+                }`}
+              >
+                <tab.icon className="w-5 h-5 mr-2" />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-        <div className="tab-content">
+        <div className="p-6">
           {activeTab === 'send' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Single SMS */}
-              <div>
-                <h3 className="page-subtitle mb-4">Send Single SMS</h3>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Send Single SMS</h3>
                 <form onSubmit={handleSendSMS} className="space-y-4">
                   <div>
                     <label className="form-label">
@@ -285,7 +288,7 @@ export default function SMSPage() {
                       type="tel"
                       value={sendForm.to}
                       onChange={(e) => setSendForm(prev => ({ ...prev, to: e.target.value }))}
-                      className="input-field"
+                      className="form-input"
                       placeholder="+1234567890"
                       required
                     />
@@ -299,7 +302,7 @@ export default function SMSPage() {
                       value={sendForm.message}
                       onChange={(e) => setSendForm(prev => ({ ...prev, message: e.target.value }))}
                       rows={4}
-                      className="input-field"
+                      className="form-textarea"
                       placeholder="Enter your message..."
                       maxLength={1600}
                       required
@@ -318,7 +321,7 @@ export default function SMSPage() {
                         type="datetime-local"
                         value={sendForm.scheduledAt}
                         onChange={(e) => setSendForm(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                        className="input-field"
+                        className="form-input"
                       />
                     </div>
                     
@@ -329,7 +332,7 @@ export default function SMSPage() {
                       <select
                         value={sendForm.priority}
                         onChange={(e) => setSendForm(prev => ({ ...prev, priority: e.target.value }))}
-                        className="select-field"
+                        className="form-select"
                       >
                         <option value="low">Low</option>
                         <option value="normal">Normal</option>
@@ -349,8 +352,8 @@ export default function SMSPage() {
               </div>
 
               {/* Bulk SMS */}
-              <div>
-                <h3 className="page-subtitle mb-4">Send Bulk SMS</h3>
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-secondary-900 mb-4">Send Bulk SMS</h3>
                 <form onSubmit={handleBulkSMS} className="space-y-4">
                   <div>
                     <label className="form-label">
@@ -360,7 +363,7 @@ export default function SMSPage() {
                       value={bulkForm.recipients}
                       onChange={(e) => setBulkForm(prev => ({ ...prev, recipients: e.target.value }))}
                       rows={3}
-                      className="input-field"
+                      className="form-textarea"
                       placeholder="+1234567890, +1234567891, +1234567892"
                       required
                     />
@@ -377,7 +380,7 @@ export default function SMSPage() {
                       value={bulkForm.message}
                       onChange={(e) => setBulkForm(prev => ({ ...prev, message: e.target.value }))}
                       rows={4}
-                      className="input-field"
+                      className="form-textarea"
                       placeholder="Enter your message..."
                       maxLength={1600}
                       required
@@ -396,7 +399,7 @@ export default function SMSPage() {
                         type="datetime-local"
                         value={bulkForm.scheduledAt}
                         onChange={(e) => setBulkForm(prev => ({ ...prev, scheduledAt: e.target.value }))}
-                        className="input-field"
+                        className="form-input"
                       />
                     </div>
                     
@@ -407,7 +410,7 @@ export default function SMSPage() {
                       <select
                         value={bulkForm.priority}
                         onChange={(e) => setBulkForm(prev => ({ ...prev, priority: e.target.value }))}
-                        className="select-field"
+                        className="form-select"
                       >
                         <option value="low">Low</option>
                         <option value="normal">Normal</option>
@@ -528,12 +531,12 @@ export default function SMSPage() {
 
           {activeTab === 'analytics' && (
             <div>
-              <h3 className="page-subtitle mb-6">SMS Analytics</h3>
+              <h3 className="text-xl font-semibold text-secondary-900 mb-6">SMS Analytics</h3>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Performance Metrics */}
-                <div className="card">
-                  <h4 className="page-subtitle mb-4">Performance Metrics</h4>
+                <div className="card p-6">
+                  <h4 className="text-lg font-semibold text-secondary-900 mb-4">Performance Metrics</h4>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary-600">Total Sent</span>
@@ -555,11 +558,11 @@ export default function SMSPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="card">
-                  <h4 className="page-subtitle mb-4">Recent Activity</h4>
+                <div className="card p-6">
+                  <h4 className="text-lg font-semibold text-secondary-900 mb-4">Recent Activity</h4>
                   <div className="space-y-3">
                     {smsHistory.slice(0, 5).map((sms) => (
-                      <div key={sms.id} className="flex items-center justify-between p-3 bg-secondary-50 rounded">
+                      <div key={sms._id} className="flex items-center justify-between p-3 bg-secondary-50 rounded">
                         <div>
                           <p className="text-sm font-medium text-secondary-900">{sms.to}</p>
                           <p className="text-xs text-secondary-500">
@@ -574,7 +577,7 @@ export default function SMSPage() {
                             </span>
                           </div>
                           <p className="text-xs text-secondary-500 mt-1">
-                            {new Date(sms.sentAt).toLocaleDateString()}
+                            {sms.sentAt ? new Date(sms.sentAt).toLocaleDateString() : '-'}
                           </p>
                         </div>
                       </div>
@@ -585,8 +588,7 @@ export default function SMSPage() {
             </div>
           )}
         </div>
-        </div>
       </div>
     </div>
-  )
+  );
 }

@@ -258,15 +258,19 @@ export default function MailChimpPage() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <PageTitle title="MailChimp Integration" icon={HiMail} />
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">MailChimp Integration</h1>
+          <p className="text-secondary-600">Manage email marketing campaigns and automation</p>
+        </div>
       </div>
       
       <div className="card">
         <div className="p-6 border-b border-secondary-200">
           <div className="flex justify-between items-center">
-            <h2 className="page-subtitle">Marketing Campaigns</h2>
+            <h2 className="text-xl font-semibold text-secondary-900">Marketing Campaigns</h2>
             <button 
               onClick={openCreateModal}
               className="btn-primary"
@@ -277,9 +281,9 @@ export default function MailChimpPage() {
           </div>
         </div>
 
-        <div className="table-container">
+        <div className="overflow-x-auto">
           <table className="table">
-            <thead className="table-header">
+            <thead>
               <tr>
                 <th className="table-header-cell">Campaign</th>
                 <th className="table-header-cell">Status</th>
@@ -289,18 +293,18 @@ export default function MailChimpPage() {
                 <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="table-body">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="table-cell text-center text-secondary-500">Loading campaigns...</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-secondary-500">Loading campaigns...</td>
                 </tr>
               ) : campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="table-cell text-center text-secondary-500">No campaigns found</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-secondary-500">No campaigns found</td>
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign._id} className="table-row hover:bg-secondary-50">
+                  <tr key={campaign._id} className="hover:bg-secondary-50">
                     <td className="table-cell">
                       <div>
                         <div className="text-sm font-medium text-secondary-900">{campaign.name}</div>
@@ -317,37 +321,37 @@ export default function MailChimpPage() {
                     </td>
                     <td className="table-cell">
                       <div className="text-sm text-secondary-900">
-                        <div>Opens: {campaign.analytics?.opens?.toLocaleString() || '0'}</div>
-                        <div>Rate: {campaign.analytics?.openRate ? `${campaign.analytics.openRate.toFixed(1)}%` : 'N/A'}</div>
+                        <div>Opens: {campaign.analytics.opens}</div>
+                        <div>Clicks: {campaign.analytics.clicks}</div>
                       </div>
                     </td>
                     <td className="table-cell text-sm text-secondary-500">
                       {new Date(campaign.createdAt).toLocaleDateString()}
                     </td>
                     <td className="table-cell text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button className="text-primary-600 hover:text-primary-900 transition-colors">
-                          <HiEye className="h-5 w-5" />
-                        </button>
+                      <div className="flex justify-end space-x-2">
                         <button 
                           onClick={() => openEditModal(campaign)}
-                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
+                          className="text-primary-600 hover:text-primary-900 transition-colors"
+                          title="Edit Campaign"
                         >
-                          <HiPencil className="h-5 w-5" />
+                          <HiPencil className="w-4 h-4" />
                         </button>
                         {campaign.status === 'save' && (
                           <button
                             onClick={() => handleSendCampaign(campaign._id)}
                             className="text-success-600 hover:text-success-900 transition-colors"
+                            title="Send Campaign"
                           >
-                            <HiPaperAirplane className="h-5 w-5" />
+                            <HiPaperAirplane className="w-4 h-4" />
                           </button>
                         )}
                         <button
                           onClick={() => openDeleteModal(campaign)}
                           className="text-error-600 hover:text-error-900 transition-colors"
+                          title="Delete Campaign"
                         >
-                          <HiTrash className="h-5 w-5" />
+                          <HiTrash className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

@@ -313,253 +313,246 @@ export default function YellowPagesPage() {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="flex justify-between items-center">
-          <PageTitle title="YellowPages Integration" icon={HiSearch} />
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-secondary-600">
-              Welcome, <span className="font-medium text-secondary-900">{currentUser.name}</span>
-              <span className="ml-2 px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
-                {currentUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-              </span>
-            </div>
-            <button
-              onClick={() => authService.logout()}
-              className="px-3 py-1 text-sm text-error-600 hover:text-error-800 hover:bg-error-50 rounded transition-colors"
-            >
-              Logout
-            </button>
-          </div>
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Yellow Pages Management</h1>
+          <p className="text-secondary-600">Manage business leads and contact information</p>
         </div>
       </div>
-      
-      {/* Search Section */}
-      <div className="card">
-        <h3 className="page-subtitle mb-4">Search YellowPages</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      {/* Search and Filters */}
+      <div className="card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="form-label">Keywords</label>
             <input
               type="text"
               value={searchParams.keywords}
-              onChange={(e) => setSearchParams({ ...searchParams, keywords: e.target.value })}
-              placeholder="e.g., auto repair, mechanic"
-              className="input-field"
+              onChange={(e) => setSearchParams(prev => ({ ...prev, keywords: e.target.value }))}
+              placeholder="Business name, services..."
+              className="form-input"
             />
           </div>
+          
           <div>
             <label className="form-label">Location</label>
             <input
               type="text"
               value={searchParams.location}
-              onChange={(e) => setSearchParams({ ...searchParams, location: e.target.value })}
-              placeholder="e.g., New York, NY"
-              className="input-field"
+              onChange={(e) => setSearchParams(prev => ({ ...prev, location: e.target.value }))}
+              placeholder="City, state, or zip"
+              className="form-input"
             />
           </div>
-          <div>
-            <label className="form-label">Radius (miles)</label>
-            <select
-              value={searchParams.radius}
-              onChange={(e) => setSearchParams({ ...searchParams, radius: parseInt(e.target.value) })}
-              className="select-field"
-            >
-              <option value={5}>5 miles</option>
-              <option value={10}>10 miles</option>
-              <option value={25}>25 miles</option>
-              <option value={50}>50 miles</option>
-              <option value={100}>100 miles</option>
-            </select>
-          </div>
+          
           <div>
             <label className="form-label">Category</label>
-            <input
-              type="text"
+            <select
               value={searchParams.category}
-              onChange={(e) => setSearchParams({ ...searchParams, category: e.target.value })}
-              placeholder="e.g., Automotive"
-              className="input-field"
-            />
+              onChange={(e) => setSearchParams(prev => ({ ...prev, category: e.target.value }))}
+              className="form-input"
+            >
+              <option value="">All Categories</option>
+              <option value="automotive">Automotive</option>
+              <option value="restaurant">Restaurant</option>
+              <option value="retail">Retail</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="professional">Professional Services</option>
+            </select>
           </div>
-        </div>
-        <div className="mt-4 flex space-x-2">
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="btn-primary"
-          >
-            <HiSearch className="h-5 w-5 mr-2" />
-            Search YellowPages
-          </button>
-          <button
-            onClick={() => {
-              setSearchParams({ keywords: '', location: '', radius: 25, category: '' });
-              setFilters({ status: '', priority: '', assignedTo: '', search: '' });
-              setPagination({ ...pagination, currentPage: 1 });
-            }}
-            className="btn-secondary"
-          >
-            <HiRefresh className="h-5 w-5 mr-2" />
-            Clear All
-          </button>
+          
+          <div className="flex items-end">
+            <button
+              onClick={handleSearch}
+              className="btn-primary w-full"
+            >
+              <HiSearch className="w-4 h-4 mr-2" />
+              Search
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <h3 className="page-subtitle mb-4">Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="select-field"
-          >
-            <option value="">All Status</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="interested">Interested</option>
-            <option value="not_interested">Not Interested</option>
-            <option value="converted">Converted</option>
-            <option value="lost">Lost</option>
-          </select>
-
-          <select
-            value={filters.priority}
-            onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            className="select-field"
-          >
-            <option value="">All Priorities</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Search businesses..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="input-field"
-          />
-
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-secondary-600">
-              Total: {pagination.totalRecords}
-            </span>
+      <div className="card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="form-label">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value, page: 1 }))}
+              className="form-input"
+            >
+              <option value="">All Status</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="interested">Interested</option>
+              <option value="not_interested">Not Interested</option>
+              <option value="converted">Converted</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="form-label">Priority</label>
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value, page: 1 }))}
+              className="form-input"
+            >
+              <option value="">All Priorities</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="form-label">Assigned To</label>
+            <select
+              value={filters.assignedTo}
+              onChange={(e) => setFilters(prev => ({ ...prev, assignedTo: e.target.value, page: 1 }))}
+              className="form-input"
+            >
+              <option value="">All Users</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="form-label">Search</label>
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+              placeholder="Search records..."
+              className="form-input"
+            />
           </div>
         </div>
       </div>
 
-      {/* Records List */}
+      {/* Records Table */}
       <div className="card">
-        <div className="table-container">
+        <div className="p-6 border-b border-secondary-200">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-medium text-secondary-900">Business Records</h2>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setSearchParams({ keywords: '', location: '', radius: 25, category: '' });
+                  setFilters({ status: '', priority: '', assignedTo: '', search: '' });
+                  setPagination({ ...pagination, currentPage: 1 });
+                }}
+                className="btn-secondary"
+              >
+                <HiRefresh className="w-4 h-4 mr-2" />
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
           <table className="table">
-            <thead className="table-header">
+            <thead>
               <tr>
                 <th className="table-header-cell">Business</th>
                 <th className="table-header-cell">Contact</th>
                 <th className="table-header-cell">Location</th>
-                <th className="table-header-cell">Lead Status</th>
-                <th className="table-header-cell">Quality Score</th>
+                <th className="table-header-cell">Status</th>
+                <th className="table-header-cell">Priority</th>
+                <th className="table-header-cell">Lead Score</th>
                 <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="table-body">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="table-cell text-center text-secondary-500">
-                    <div className="flex items-center justify-center">
-                      <div className="loading-spinner"></div>
-                      <span className="ml-2">Loading records...</span>
-                    </div>
-                  </td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-secondary-500">Loading records...</td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="table-cell text-center text-secondary-500">No records found</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-secondary-500">No records found</td>
                 </tr>
               ) : (
                 records.map((record) => (
-                  <tr key={record._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                  <tr key={record._id} className="hover:bg-secondary-50">
+                    <td className="table-cell">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{record.businessName}</div>
-                        <div className="text-sm text-gray-500">{record.category}</div>
-                        {record.businessInfo.yearsInBusiness && (
-                          <div className="text-xs text-gray-400">
-                            {record.businessInfo.yearsInBusiness} years in business
-                          </div>
-                        )}
+                        <div className="text-sm font-medium text-secondary-900">{record.businessName}</div>
+                        <div className="text-sm text-secondary-500">{record.category}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        {record.contact.phone && (
-                          <div className="flex items-center text-sm text-gray-900">
-                            <HiPhone className="h-4 w-4 mr-1" />
-                            {record.contact.phone}
-                          </div>
-                        )}
-                        {record.contact.email && (
-                          <div className="flex items-center text-sm text-gray-900">
-                            <HiMail className="h-4 w-4 mr-1" />
-                            {record.contact.email}
-                          </div>
-                        )}
-                        {record.contact.website && (
-                          <div className="flex items-center text-sm text-gray-900">
-                            <HiGlobe className="h-4 w-4 mr-1" />
-                            {record.contact.website}
-                          </div>
-                        )}
+                    <td className="table-cell">
+                      <div className="text-sm text-secondary-900">
+                        {record.contact.phone && <div>{record.contact.phone}</div>}
+                        {record.contact.email && <div>{record.contact.email}</div>}
+                        {record.contact.website && <div>{record.contact.website}</div>}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <HiLocationMarker className="h-4 w-4 mr-1" />
-                        {record.address.city}, {record.address.state}
+                    <td className="table-cell">
+                      <div className="text-sm text-secondary-900">
+                        {record.address.city && record.address.state && (
+                          <div>{record.address.city}, {record.address.state}</div>
+                        )}
+                        {record.address.zipCode && <div>{record.address.zipCode}</div>}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(record.leadInfo.status)}`}>
-                          {record.leadInfo.status}
-                        </span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(record.leadInfo.priority)}`}>
-                          {record.leadInfo.priority}
-                        </span>
-                      </div>
+                    <td className="table-cell">
+                      <span className={`status-badge ${getStatusColor(record.leadInfo.status)}`}>
+                        {record.leadInfo.status.replace('_', ' ')}
+                      </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="table-cell">
+                      <span className={`status-badge ${getPriorityColor(record.leadInfo.priority)}`}>
+                        {record.leadInfo.priority}
+                      </span>
+                    </td>
+                    <td className="table-cell">
                       <div className="flex items-center">
-                        <HiStar className="h-4 w-4 text-yellow-400 mr-1" />
-                        <span className="text-sm text-gray-900">{record.leadQualityScore}/10</span>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <HiStar
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < Math.floor(record.leadQualityScore / 2)
+                                  ? 'text-warning-500'
+                                  : 'text-secondary-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="ml-2 text-sm text-secondary-600">
+                          {record.leadQualityScore.toFixed(1)}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
+                    <td className="table-cell text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
                         <button 
                           onClick={() => handleViewRecord(record)}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          className="text-secondary-600 hover:text-secondary-900 transition-colors"
                           title="View Details"
                         >
-                          <HiEye className="h-5 w-5" />
+                          <HiEye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleEditRecord(record)}
-                          className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-50"
-                          title="Edit Lead"
+                          className="text-primary-600 hover:text-primary-900 transition-colors"
+                          title="Edit Record"
                         >
-                          <HiPencil className="h-5 w-5" />
+                          <HiPencil className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleAddContact(record)}
-                          className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                          title="Add Contact Attempt"
+                          className="text-success-600 hover:text-success-900 transition-colors"
+                          title="Contact Business"
                         >
-                          <HiUserAdd className="h-5 w-5" />
+                          <HiPhone className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

@@ -549,43 +549,39 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className="page-container">
-            {/* Header Section */}
-            <div className="page-header">
-                <div className="page-header-content">
-                    <div className="page-header-text">
-                        <h1 className="page-title">Appointment Management</h1>
-                        <p className="page-subtitle">Schedule and manage customer appointments</p>
-                    </div>
-                    <div className="page-header-actions">
-                        <button 
-                            onClick={() => setShowNewAppointmentModal(true)}
-                            className="btn-primary-outline"
-                        >
-                            <HiPlus className="w-5 h-5" />
-                            New Appointment
-                        </button>
-                    </div>
+        <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+            {/* Page Header */}
+            <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+                <div className="mb-4 lg:mb-0">
+                    <h1 className="text-3xl font-bold text-secondary-900 mb-2">Appointment Management</h1>
+                    <p className="text-secondary-600">Schedule and manage customer appointments</p>
                 </div>
+                <button
+                    onClick={() => setShowNewAppointmentModal(true)}
+                    className="btn-primary"
+                >
+                    <HiPlus className="w-5 h-5 mr-2" />
+                    New Appointment
+                </button>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid-responsive">
-                <div className="stats-card">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="card">
                     <div className="flex items-center justify-between p-6">
                         <div>
-                            <p className="text-sm font-medium text-secondary-600 mb-1">Today's Appointments</p>
+                            <p className="text-sm font-medium text-secondary-600 mb-1">Total</p>
                             <p className="text-3xl font-bold text-primary-600">
-                                {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.scheduledDate === new Date().toISOString().split('T')[0]).length}
+                                {appointments?.length || 0}
                             </p>
                         </div>
-                        <div className="stats-card-icon bg-primary-500">
-                            <HiCalendar className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                            <HiCalendar className="w-6 h-6 text-primary-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="stats-card">
+                <div className="card">
                     <div className="flex items-center justify-between p-6">
                         <div>
                             <p className="text-sm font-medium text-secondary-600 mb-1">Confirmed</p>
@@ -593,13 +589,13 @@ export default function AppointmentsPage() {
                                 {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'confirmed').length}
                             </p>
                         </div>
-                        <div className="stats-card-icon bg-success-500">
-                            <HiCheckCircle className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+                            <HiCheckCircle className="w-6 h-6 text-success-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="stats-card">
+                <div className="card">
                     <div className="flex items-center justify-between p-6">
                         <div>
                             <p className="text-sm font-medium text-secondary-600 mb-1">In Progress</p>
@@ -607,13 +603,13 @@ export default function AppointmentsPage() {
                                 {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'in-progress').length}
                             </p>
                         </div>
-                        <div className="stats-card-icon bg-warning-500">
-                            <HiClock className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+                            <HiClock className="w-6 h-6 text-warning-600" />
                         </div>
                     </div>
                 </div>
 
-                <div className="stats-card">
+                <div className="card">
                     <div className="flex items-center justify-between p-6">
                         <div>
                             <p className="text-sm font-medium text-secondary-600 mb-1">Completed</p>
@@ -621,14 +617,14 @@ export default function AppointmentsPage() {
                                 {(appointments && Array.isArray(appointments) ? appointments : []).filter(apt => apt.status === 'completed').length}
                             </p>
                         </div>
-                        <div className="stats-card-icon bg-info-500">
-                            <HiTrendingUp className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
+                            <HiTrendingUp className="w-6 h-6 text-info-600" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Unified Search and Filters */}
+            {/* Search and Filters */}
             <div className="card">
                 <div className="p-6 border-b border-secondary-200">
                     <div className="flex items-center justify-between">
@@ -643,7 +639,7 @@ export default function AppointmentsPage() {
                                     onClick={() => setViewMode('calendar')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${
                                         viewMode === 'calendar' 
-                                            ? 'bg-primary-600 text-white shadow-soft' 
+                                            ? 'bg-primary-600 text-white shadow-sm' 
                                             : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                                     }`}
                                     title="Calendar View"
@@ -654,7 +650,7 @@ export default function AppointmentsPage() {
                                     onClick={() => setViewMode('grid')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${
                                         viewMode === 'grid' 
-                                            ? 'bg-primary-600 text-white shadow-soft' 
+                                            ? 'bg-primary-600 text-white shadow-sm' 
                                             : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
                                     }`}
                                     title="Grid View"
@@ -681,7 +677,7 @@ export default function AppointmentsPage() {
                 <div className="p-6 space-y-6">
                     {/* Search Bar */}
                     <div className="relative">
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400">
                             <HiSearch className="w-5 h-5" />
                         </div>
                         <input
@@ -689,14 +685,14 @@ export default function AppointmentsPage() {
                             placeholder="Search by customer, vehicle, service, technician, or notes..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white text-gray-700"
+                            className="form-input w-full pl-12 pr-4 py-4"
                             autoComplete="off"
                         />
                         {searchTerm && (
                             <button
                                 type="button"
                                 onClick={() => setSearchTerm('')}
-                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
                             >
                                 ✕
                             </button>
@@ -706,11 +702,11 @@ export default function AppointmentsPage() {
                     {/* Filters Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <label className="form-label">Status</label>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                                className="form-input w-full"
                             >
                                 <option value="all">All Status</option>
                                 {(statuses && Array.isArray(statuses) ? statuses : []).map(status => (
@@ -722,11 +718,11 @@ export default function AppointmentsPage() {
                         </div>
                         
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Technician</label>
+                            <label className="form-label">Technician</label>
                             <select
                                 value={technicianFilter}
                                 onChange={(e) => setTechnicianFilter(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                                className="form-input w-full"
                             >
                                 <option value="all">All Technicians</option>
                                 {(technicians && Array.isArray(technicians) ? technicians : []).map(tech => (
@@ -739,8 +735,8 @@ export default function AppointmentsPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        <div className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between pt-4 border-t border-secondary-200">
+                        <div className="text-sm text-secondary-500">
                             {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
                         </div>
                         <div className="flex gap-3">
@@ -750,13 +746,13 @@ export default function AppointmentsPage() {
                                     setStatusFilter('all');
                                     setTechnicianFilter('all');
                                 }}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm font-medium"
+                                className="btn-outline"
                             >
                                 Clear All
                             </button>
                             <button
                                 onClick={handleSearch}
-                                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl"
+                                className="btn-primary"
                             >
                                 Apply Filters
                             </button>
@@ -767,26 +763,26 @@ export default function AppointmentsPage() {
 
             {/* Search Results Indicator */}
             {searchTerm && (
-                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-3xl p-6 shadow-lg">
+                <div className="card bg-gradient-to-r from-primary-50 to-info-50 border-primary-200">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-info-500 rounded-xl flex items-center justify-center">
                                 <HiSearch className="w-5 h-5 text-white" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-medium text-blue-700">Search Results</span>
-                                    <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                                    <span className="text-sm text-blue-600">
+                                    <span className="text-sm font-medium text-primary-700">Search Results</span>
+                                    <div className="w-1 h-1 bg-primary-400 rounded-full"></div>
+                                    <span className="text-sm text-primary-600">
                                         "{searchTerm}"
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-lg font-bold text-blue-800">
+                                    <span className="text-lg font-bold text-primary-800">
                                         {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
                                     </span>
                                     {viewMode === 'calendar' && (
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                        <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
                                             Calendar view
                                         </span>
                                     )}
@@ -800,14 +796,14 @@ export default function AppointmentsPage() {
                                     setStatusFilter('all');
                                     setTechnicianFilter('all');
                                 }}
-                                className="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg font-medium transition-all duration-200"
+                                className="btn-outline text-primary-600 hover:text-primary-800 hover:bg-primary-50"
                             >
                                 <HiRefresh className="w-4 h-4" />
                                 Clear All
                             </button>
                             <button
                                 onClick={() => setSearchTerm('')}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                                className="btn-primary"
                             >
                                 ✕
                                 Clear Search
@@ -819,89 +815,89 @@ export default function AppointmentsPage() {
 
             {/* Main Content */}
             {viewMode === 'calendar' ? (
-                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-6 border-b border-gray-200">
+                <div className="card">
+                    <div className="p-6 border-b border-secondary-200">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                                    <HiCalendar className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                                    <HiCalendar className="w-5 h-5 text-primary-600" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-gray-800">Calendar View</h3>
-                                    <p className="text-sm text-gray-600">Interactive calendar for appointment scheduling</p>
+                                    <h3 className="text-lg font-bold text-secondary-900">Calendar View</h3>
+                                    <p className="text-sm text-secondary-600">Interactive calendar for appointment scheduling</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
                                     {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="p-8">
+                        <div className="bg-white rounded-2xl shadow-lg border border-secondary-100 overflow-hidden">
                             <AppointmentCalendar appointments={filteredAppointments} />
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-6 border-b border-gray-200">
+                <div className="card">
+                    <div className="p-6 border-b border-secondary-200">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                                    <HiViewGrid className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-success-100 rounded-xl flex items-center justify-center">
+                                    <HiViewGrid className="w-5 h-5 text-success-600" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-gray-800">
+                                    <h3 className="text-lg font-bold text-secondary-900">
                                         Appointments Grid
                                     </h3>
-                                    <p className="text-sm text-gray-600">Card-based view of all appointments</p>
+                                    <p className="text-sm text-secondary-600">Card-based view of all appointments</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-600">Active</span>
+                                    <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                                    <span className="text-sm text-secondary-600">Active</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-600">Pending</span>
+                                    <div className="w-2 h-2 bg-warning-500 rounded-full"></div>
+                                    <span className="text-sm text-secondary-600">Pending</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    <span className="text-sm text-gray-600">Completed</span>
+                                    <div className="w-2 h-2 bg-info-500 rounded-full"></div>
+                                    <span className="text-sm text-secondary-600">Completed</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="p-8 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="p-8">
                         {loading ? (
                             <div className="flex items-center justify-center py-24">
                                 <div className="text-center">
                                     <div className="relative mb-6">
-                                        <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                                        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-blue-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                                        <div className="w-20 h-20 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+                                        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-primary-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Appointments</h3>
-                                    <p className="text-gray-500">Please wait while we fetch your data...</p>
+                                    <h3 className="text-lg font-semibold text-secondary-700 mb-2">Loading Appointments</h3>
+                                    <p className="text-secondary-500">Please wait while we fetch your data...</p>
                                 </div>
                             </div>
                         ) : filteredAppointments.length > 0 ? (
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                                            <span className="text-white text-sm font-bold">{filteredAppointments.length}</span>
+                                        <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                            <span className="text-primary-700 text-sm font-bold">{filteredAppointments.length}</span>
                                         </div>
-                                        <span className="text-lg font-semibold text-gray-800">
+                                        <span className="text-lg font-semibold text-secondary-900">
                                             {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <div className="flex items-center gap-2 text-sm text-secondary-500">
                                         <span>Showing all results</span>
-                                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                                        <div className="w-1 h-1 bg-secondary-400 rounded-full"></div>
                                         <span>Grid view</span>
                                     </div>
                                 </div>
@@ -909,7 +905,7 @@ export default function AppointmentsPage() {
                                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {filteredAppointments.map((apt, index) => (
                                         <div key={apt.id} className="group relative">
-                                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500"></div>
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-info-600 rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500"></div>
                                             <div className="relative">
                                                 <AppointmentCard 
                                                     appointment={apt}
@@ -925,15 +921,15 @@ export default function AppointmentsPage() {
                         ) : (
                             <div className="text-center py-24">
                                 <div className="relative mb-8">
-                                    <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto">
-                                        <HiCalendar className="w-12 h-12 text-gray-400" />
+                                    <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto">
+                                        <HiCalendar className="w-12 h-12 text-secondary-400" />
                                     </div>
-                                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-xs font-bold">!</span>
+                                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                        <span className="text-primary-700 text-xs font-bold">!</span>
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-gray-700 mb-4">No appointments found</h3>
-                                <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
+                                <h3 className="text-2xl font-bold text-secondary-700 mb-4">No appointments found</h3>
+                                <p className="text-secondary-500 mb-8 max-w-md mx-auto leading-relaxed">
                                     {searchTerm || statusFilter !== 'all' || technicianFilter !== 'all' 
                                         ? 'Try adjusting your filters or search terms to find appointments.' 
                                         : 'Get started by creating your first appointment to begin scheduling.'}
@@ -942,7 +938,7 @@ export default function AppointmentsPage() {
                                     <div className="flex items-center justify-center gap-4">
                                         <button 
                                             onClick={() => setShowNewAppointmentModal(true)}
-                                            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+                                            className="btn-primary px-8 py-4"
                                         >
                                             <HiPlus className="w-6 h-6" />
                                             Create First Appointment
@@ -953,7 +949,7 @@ export default function AppointmentsPage() {
                                                 setStatusFilter('all');
                                                 setTechnicianFilter('all');
                                             }}
-                                            className="inline-flex items-center gap-2 px-6 py-4 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl font-medium transition-all duration-200"
+                                            className="btn-outline px-6 py-4"
                                         >
                                             <HiRefresh className="w-5 h-5" />
                                             Reset Filters
@@ -990,7 +986,7 @@ export default function AppointmentsPage() {
             {showViewAppointmentModal && selectedAppointment && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-3xl">
+                        <div className="bg-primary-600 p-6 rounded-t-3xl">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-2xl font-bold text-white">Appointment Details</h2>
                                 <button
@@ -1004,74 +1000,74 @@ export default function AppointmentsPage() {
                         
                         <div className="p-8 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Customer</label>
-                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.customerName}</p>
+                                <div className="bg-primary-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Customer</label>
+                                    <p className="text-lg font-semibold text-secondary-900">{selectedAppointment.customerName}</p>
                                 </div>
-                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Vehicle</label>
-                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.vehicleInfo}</p>
+                                <div className="bg-success-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Vehicle</label>
+                                    <p className="text-lg font-semibold text-secondary-900">{selectedAppointment.vehicleInfo}</p>
                                 </div>
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                <div className="bg-info-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Date & Time</label>
+                                    <p className="text-lg font-semibold text-secondary-900">
                                         {selectedAppointment.scheduledDate} at {selectedAppointment.scheduledTime}
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Service</label>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                <div className="bg-warning-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Service</label>
+                                    <p className="text-lg font-semibold text-secondary-900">
                                         {typeof selectedAppointment.serviceType === 'string' 
                                             ? selectedAppointment.serviceType 
                                             : selectedAppointment.serviceType?.name || 'Unknown Service'
                                         }
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                                <div className="bg-secondary-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Status</label>
                                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                                        selectedAppointment.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                        selectedAppointment.status === 'in-progress' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                        selectedAppointment.status === 'completed' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                                        'bg-gray-100 text-gray-800 border border-gray-200'
+                                        selectedAppointment.status === 'confirmed' ? 'bg-success-100 text-success-800 border border-success-200' :
+                                        selectedAppointment.status === 'in-progress' ? 'bg-warning-100 text-warning-800 border border-warning-200' :
+                                        selectedAppointment.status === 'completed' ? 'bg-info-100 text-info-800 border border-info-200' :
+                                        'bg-secondary-100 text-secondary-800 border border-secondary-200'
                                     }`}>
                                         {selectedAppointment.status?.replace('-', ' ')}
                                     </span>
                                 </div>
-                                <div className="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                                <div className="bg-error-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Priority</label>
                                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                                        selectedAppointment.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-200' :
-                                        selectedAppointment.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                                        'bg-green-100 text-green-800 border border-green-200'
+                                        selectedAppointment.priority === 'high' ? 'bg-error-100 text-error-800 border border-error-200' :
+                                        selectedAppointment.priority === 'medium' ? 'bg-warning-100 text-warning-800 border border-warning-200' :
+                                        'bg-success-100 text-success-800 border border-success-200'
                                     }`}>
                                         {selectedAppointment.priority}
                                     </span>
                                 </div>
                                 {selectedAppointment.technicianName && (
-                                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Technician</label>
-                                        <p className="text-lg font-semibold text-gray-900">{selectedAppointment.technicianName}</p>
+                                    <div className="bg-primary-50 p-4 rounded-2xl">
+                                        <label className="block text-sm font-semibold text-secondary-700 mb-2">Technician</label>
+                                        <p className="text-lg font-semibold text-secondary-900">{selectedAppointment.technicianName}</p>
                                     </div>
                                 )}
-                                <div className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Duration</label>
-                                    <p className="text-lg font-semibold text-gray-900">{selectedAppointment.estimatedDuration} min</p>
+                                <div className="bg-info-50 p-4 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-2">Duration</label>
+                                    <p className="text-lg font-semibold text-secondary-900">{selectedAppointment.estimatedDuration} min</p>
                                 </div>
                             </div>
                             
                             {selectedAppointment.notes && (
-                                <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-2xl">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-3">Notes</label>
-                                    <p className="text-gray-900 leading-relaxed">{selectedAppointment.notes}</p>
+                                <div className="bg-secondary-50 p-6 rounded-2xl">
+                                    <label className="block text-sm font-semibold text-secondary-700 mb-3">Notes</label>
+                                    <p className="text-secondary-900 leading-relaxed">{selectedAppointment.notes}</p>
                                 </div>
                             )}
                         </div>
                         
-                        <div className="flex justify-end gap-4 p-6 bg-gray-50 rounded-b-3xl">
+                        <div className="flex justify-end gap-4 p-6 bg-secondary-50 rounded-b-3xl">
                             <button
                                 onClick={handleCloseViewModal}
-                                className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium transition-all duration-200"
+                                className="btn-outline"
                             >
                                 Close
                             </button>
@@ -1080,7 +1076,7 @@ export default function AppointmentsPage() {
                                     setShowViewAppointmentModal(false)
                                     handleEditAppointment(selectedAppointment)
                                 }}
-                                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                                className="btn-primary"
                             >
                                 Edit Appointment
                             </button>
@@ -1093,7 +1089,7 @@ export default function AppointmentsPage() {
             {showDeleteAppointmentModal && selectedAppointment && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
-                        <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-3xl">
+                        <div className="bg-error-600 p-6 rounded-t-3xl">
                             <div className="flex items-center justify-center mb-4">
                                 <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                                     <HiTrash className="h-8 w-8 text-white" />
@@ -1105,29 +1101,29 @@ export default function AppointmentsPage() {
                         </div>
                         
                         <div className="p-8 text-center">
-                            <p className="text-gray-700 mb-4">
+                            <p className="text-secondary-700 mb-4">
                                 Are you sure you want to delete the appointment for{' '}
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-secondary-900">
                                     {selectedAppointment.customerName}
                                 </span>?
                             </p>
-                            <p className="text-sm text-gray-500 mb-6">
+                            <p className="text-sm text-secondary-500 mb-6">
                                 This action cannot be undone and will permanently remove the appointment from the system.
                             </p>
                         </div>
                         
-                        <div className="flex gap-4 p-6 bg-gray-50 rounded-b-3xl">
+                        <div className="flex gap-4 p-6 bg-secondary-50 rounded-b-3xl">
                             <button
                                 onClick={handleCloseDeleteModal}
                                 disabled={isDeletingAppointment}
-                                className="flex-1 px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl font-medium disabled:opacity-50 transition-all duration-200"
+                                className="btn-outline flex-1"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
                                 disabled={isDeletingAppointment}
-                                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl font-medium disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                                className="btn-error flex-1 flex items-center justify-center gap-2"
                             >
                                 {isDeletingAppointment ? (
                                     <>

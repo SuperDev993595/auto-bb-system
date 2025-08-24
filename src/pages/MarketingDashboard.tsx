@@ -194,75 +194,79 @@ export default function MarketingDashboard() {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-header-text">
-            <PageTitle title="Marketing Dashboard" />
-          </div>
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Marketing Dashboard</h1>
+          <p className="text-secondary-600">Manage marketing campaigns and track performance</p>
         </div>
       </div>
       
       {/* Stats Overview */}
-      <div className="grid-responsive mb-8">
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Total Campaigns</div>
-            <div className="stats-card-value">{stats?.totalCampaigns || 0}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
+            <Mail className="w-6 h-6 text-info-600" />
           </div>
-          <div className="stats-card-icon bg-info-500">
-            <Mail className="w-6 h-6 text-white" />
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Total Recipients</div>
-            <div className="stats-card-value">{(stats?.totalRecipients || 0).toLocaleString()}</div>
-          </div>
-          <div className="stats-card-icon bg-success-500">
-            <Users className="w-6 h-6 text-white" />
+          <p className="text-sm font-medium text-secondary-600">Total</p>
+          <p className="text-2xl font-bold text-secondary-900">{stats?.totalCampaigns || 0}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Total Campaigns</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Delivery Rate</div>
-            <div className="stats-card-value">
-              {stats?.totalRecipients && stats.totalRecipients > 0 
-                ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) 
-                : '0.0'}%
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
+            <Users className="w-6 h-6 text-success-600" />
           </div>
-          <div className="stats-card-icon bg-primary-500">
-            <BarChart3 className="w-6 h-6 text-white" />
+          <p className="text-sm font-medium text-secondary-600">Recipients</p>
+          <p className="text-2xl font-bold text-secondary-900">{(stats?.totalRecipients || 0).toLocaleString()}</p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Total Recipients</p>
           </div>
         </div>
 
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-label">Open Rate</div>
-            <div className="stats-card-value">
-              {stats?.totalSent && stats.totalSent > 0 
-                ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) 
-                : '0.0'}%
-            </div>
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
+            <BarChart3 className="w-6 h-6 text-primary-600" />
           </div>
-          <div className="stats-card-icon bg-warning-500">
-            <Eye className="w-6 h-6 text-white" />
+          <p className="text-sm font-medium text-secondary-600">Delivery</p>
+          <p className="text-2xl font-bold text-secondary-900">
+            {stats?.totalRecipients && stats.totalRecipients > 0 
+              ? ((stats.totalSent / stats.totalRecipients) * 100).toFixed(1) 
+              : '0.0'}%
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Delivery Rate</p>
+          </div>
+        </div>
+
+        <div className="card p-6 text-center">
+          <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-xl mx-auto mb-4">
+            <Eye className="w-6 h-6 text-warning-600" />
+          </div>
+          <p className="text-sm font-medium text-secondary-600">Open Rate</p>
+          <p className="text-2xl font-bold text-secondary-900">
+            {stats?.totalSent && stats.totalSent > 0 
+              ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) 
+              : '0.0'}%
+          </p>
+          <div className="mt-2">
+            <p className="text-sm text-secondary-600">Open Rate</p>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card mb-8">
+      <div className="card p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="form-label">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="select-field"
+              className="form-input"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -277,7 +281,7 @@ export default function MarketingDashboard() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="select-field"
+              className="form-input"
             >
               <option value="all">All Types</option>
               <option value="email">Email</option>
@@ -293,7 +297,7 @@ export default function MarketingDashboard() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search campaigns..."
-              className="input-field"
+              className="form-input"
             />
           </div>
           
@@ -313,13 +317,15 @@ export default function MarketingDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="card hover-lift text-left"
+          className="card p-6 text-left hover:bg-secondary-50 transition-colors"
         >
           <div className="flex items-center">
-            <Mail className="w-6 h-6 text-info-600 mr-3" />
+            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center mr-4">
+              <Mail className="w-6 h-6 text-info-600" />
+            </div>
             <div>
               <p className="font-medium text-secondary-900">Create Email Campaign</p>
               <p className="text-sm text-secondary-600">Send to your customer list</p>
@@ -329,10 +335,12 @@ export default function MarketingDashboard() {
 
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="card hover-lift text-left"
+          className="card p-6 text-left hover:bg-secondary-50 transition-colors"
         >
           <div className="flex items-center">
-            <Phone className="w-6 h-6 text-success-600 mr-3" />
+            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center mr-4">
+              <Phone className="w-6 h-6 text-success-600" />
+            </div>
             <div>
               <p className="font-medium text-secondary-900">Send SMS</p>
               <p className="text-sm text-secondary-600">Quick text message</p>
@@ -342,10 +350,12 @@ export default function MarketingDashboard() {
 
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="card hover-lift text-left"
+          className="card p-6 text-left hover:bg-secondary-50 transition-colors"
         >
           <div className="flex items-center">
-            <FileText className="w-6 h-6 text-primary-600 mr-3" />
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mr-4">
+              <FileText className="w-6 h-6 text-primary-600" />
+            </div>
             <div>
               <p className="font-medium text-secondary-900">Create Template</p>
               <p className="text-sm text-secondary-600">Design reusable templates</p>
@@ -355,7 +365,7 @@ export default function MarketingDashboard() {
       </div>
 
       {/* Campaigns Table */}
-      <div className="table-container">
+      <div className="card">
         <div className="p-6 border-b border-secondary-200">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-medium text-secondary-900">Recent Campaigns</h2>
@@ -371,7 +381,7 @@ export default function MarketingDashboard() {
 
         <div className="overflow-x-auto">
           <table className="table">
-            <thead className="table-header">
+            <thead>
               <tr>
                 <th className="table-header-cell">Campaign</th>
                 <th className="table-header-cell">Type</th>
@@ -382,7 +392,7 @@ export default function MarketingDashboard() {
                 <th className="table-header-cell text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="table-body">
+            <tbody>
               {campaigns.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-secondary-500">
@@ -391,7 +401,7 @@ export default function MarketingDashboard() {
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign._id} className="table-row">
+                  <tr key={campaign._id} className="hover:bg-secondary-50">
                     <td className="table-cell">
                       <div>
                         <div className="text-sm font-medium text-secondary-900">{campaign.name}</div>

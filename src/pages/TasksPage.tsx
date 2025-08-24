@@ -496,31 +496,31 @@ export default function TasksPage() {
             </div>
           )}
         </div>
+        {/* Task Modal */}
+        <TaskModal
+          isOpen={showTaskModal}
+          onClose={() => {
+            setShowTaskModal(false)
+            setSelectedTask(null)
+          }}
+          onSave={handleSaveTask}
+          task={selectedTask}
+          isLoading={isSubmitting}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteTaskModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setSelectedTask(null)
+          }}
+          onConfirm={handleDeleteTask}
+          taskTitle={selectedTask?.title || ''}
+          isLoading={isSubmitting}
+        />
       </div>
 
-      {/* Task Modal */}
-      <TaskModal
-        isOpen={showTaskModal}
-        onClose={() => {
-          setShowTaskModal(false)
-          setSelectedTask(null)
-        }}
-        onSave={handleSaveTask}
-        task={selectedTask}
-        isLoading={isSubmitting}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteTaskModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false)
-          setSelectedTask(null)
-        }}
-        onConfirm={handleDeleteTask}
-        taskTitle={selectedTask?.title || ''}
-        isLoading={isSubmitting}
-      />
-    </div>
+      
   )
 }
