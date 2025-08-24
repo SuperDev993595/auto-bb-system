@@ -67,7 +67,7 @@ export default function Sidebar() {
     return (
         <aside className="bg-white text-secondary-900 w-64 flex flex-col h-screen border-r border-secondary-200">
             {/* Fixed Header */}
-            <div className="p-6 border-b border-secondary-200 bg-secondary-50">
+            <div className="p-6 border-b border-secondary-200 bg-secondary-50 flex-shrink-0">
                 <Link to="/" className="block">
                     <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -81,14 +81,14 @@ export default function Sidebar() {
             </div>
 
             {/* Scrollable Navigation */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+            <nav className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-scrollbar sidebar-nav min-h-0">
                 {navItems
                     .filter(item => !item.roles || item.roles.includes(user?.role || ''))
                     .map(item => (
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium ${
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
                                 location.pathname === item.to 
                                     ? "bg-blue-50 text-blue-700 border border-blue-300" 
                                     : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
@@ -101,7 +101,7 @@ export default function Sidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-secondary-200 bg-secondary-50">
+            <div className="p-4 border-t border-secondary-200 bg-secondary-50 flex-shrink-0">
                 <div className="text-xs text-secondary-600 text-center">
                     v2.0.0 • AutoCRM Pro
                 </div>

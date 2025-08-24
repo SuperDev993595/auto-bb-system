@@ -644,4 +644,35 @@
   .scrollbar-primary::-webkit-scrollbar-thumb:hover {
     background: var(--color-primary-400);
   }
+  
+  /* Sidebar-specific scrollbar styles */
+  .sidebar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-secondary-300) transparent;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-secondary-300);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary-400);
+  }
+  
+  /* Ensure sidebar navigation items have smooth scrolling */
+  .sidebar-nav {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
 }
