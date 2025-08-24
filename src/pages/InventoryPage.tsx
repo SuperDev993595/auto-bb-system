@@ -427,6 +427,7 @@ export default function InventoryPage() {
   // Purchase Order modal handlers
   const handleAddPurchaseOrder = () => {
     console.log('handleAddPurchaseOrder called');
+    alert('Add Purchase Order button clicked!'); // Temporary debug alert
     console.log('Setting modal mode to add');
     setPurchaseOrderModalMode('add')
     console.log('Setting selectedPurchaseOrder to null');
@@ -1279,6 +1280,13 @@ export default function InventoryPage() {
         purchaseOrder={selectedPurchaseOrder}
         mode={purchaseOrderModalMode}
       />
+      
+      {/* Debug info - remove after testing */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999 }}>
+        Modal State: {isAddEditPurchaseOrderModalOpen ? 'OPEN' : 'CLOSED'} | 
+        Mode: {purchaseOrderModalMode} | 
+        Selected: {selectedPurchaseOrder ? 'YES' : 'NO'}
+      </div>
 
       {selectedPurchaseOrder && (
         <DeletePurchaseOrderModal
