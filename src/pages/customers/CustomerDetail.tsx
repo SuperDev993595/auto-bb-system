@@ -232,17 +232,13 @@ export default function CustomerDetail() {
       <div className="px-6 mb-8">
         <div className="bg-white rounded-2xl shadow-xl px-6 py-4 border border-gray-100 overflow-x-auto">
           <nav className="flex gap-2 whitespace-nowrap">
-            {tabs.map(({ key, label, icon: Icon, color }) => (
+            {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-3 text-sm font-medium px-6 py-4 rounded-xl transition-all duration-300 ${
-                  activeTab === key
-                    ? `bg-gradient-to-r ${color} text-white shadow-lg transform scale-105`
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`tab-button-alt ${activeTab === key ? 'tab-button-alt-active' : 'tab-button-alt-inactive'}`}
               >
-                <Icon className={`w-5 h-5 ${activeTab === key ? 'text-white' : 'text-gray-400'}`} />
+                <Icon className="w-5 h-5" />
                 <span>{label}</span>
               </button>
             ))}

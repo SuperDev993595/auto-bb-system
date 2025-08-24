@@ -215,65 +215,55 @@ export default function InvoicesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Invoices</p>
-              <p className="text-3xl font-bold text-primary-600">{totalInvoices}</p>
+        <div className="card p-6 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
+              <HiDocumentText className="w-6 h-6 text-secondary-600" />
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <HiDocumentText className="w-6 h-6 text-primary-600" />
-            </div>
+            <p className="text-sm font-medium text-secondary-600 mb-1">Total Invoices</p>
+            <p className="text-3xl font-bold text-secondary-900">{totalInvoices}</p>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Paid Invoices</p>
-              <p className="text-3xl font-bold text-success-600">{paidInvoices}</p>
+        <div className="card p-6 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
+              <HiCheck className="w-6 h-6 text-secondary-600" />
             </div>
-            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
-              <HiCheck className="w-6 h-6 text-success-600" />
-            </div>
+            <p className="text-sm font-medium text-secondary-600 mb-1">Paid Invoices</p>
+            <p className="text-3xl font-bold text-secondary-900">{paidInvoices}</p>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Overdue Invoices</p>
-              <p className="text-3xl font-bold text-error-600">{overdueInvoices}</p>
+        <div className="card p-6 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
+              <HiExclamation className="w-6 h-6 text-secondary-600" />
             </div>
-            <div className="w-12 h-12 bg-error-100 rounded-xl flex items-center justify-center">
-              <HiExclamation className="w-6 h-6 text-error-600" />
-            </div>
+            <p className="text-sm font-medium text-secondary-600 mb-1">Overdue Invoices</p>
+            <p className="text-3xl font-bold text-secondary-900">{overdueInvoices}</p>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Revenue</p>
-              <p className="text-3xl font-bold text-info-600">${totalRevenue.toLocaleString()}</p>
-              <p className="text-sm text-secondary-500">Collected</p>
+        <div className="card p-6 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
+              <HiCurrencyDollar className="w-6 h-6 text-secondary-600" />
             </div>
-            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
-              <HiCurrencyDollar className="w-6 h-6 text-info-600" />
-            </div>
+            <p className="text-sm font-medium text-secondary-600 mb-1">Total Revenue</p>
+            <p className="text-3xl font-bold text-secondary-900">${totalRevenue.toLocaleString()}</p>
+            <p className="text-sm text-secondary-500">Collected</p>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
-            <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Outstanding</p>
-              <p className="text-3xl font-bold text-warning-600">${outstandingAmount.toLocaleString()}</p>
-              <p className="text-sm text-secondary-500">Pending</p>
+        <div className="card p-6 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
+              <HiClock className="w-6 h-6 text-secondary-600" />
             </div>
-            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
-              <HiClock className="w-6 h-6 text-warning-600" />
-            </div>
+            <p className="text-sm font-medium text-secondary-600 mb-1">Outstanding</p>
+            <p className="text-3xl font-bold text-secondary-900">${outstandingAmount.toLocaleString()}</p>
+            <p className="text-sm text-secondary-500">Pending</p>
           </div>
         </div>
       </div>
@@ -308,59 +298,59 @@ export default function InvoicesPage() {
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="table-container">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Invoice Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Customer & Vehicle
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Dates
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {filteredInvoices.map(invoice => (
-                <tr key={invoice._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
+                <tr key={invoice._id} className="table-row hover:bg-secondary-50">
+                  <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">#{invoice.invoiceNumber}</div>
-                      <div className="text-sm text-gray-500">WO: {invoice.workOrder || 'N/A'}</div>
+                      <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber}</div>
+                      <div className="text-sm text-secondary-600">WO: {invoice.workOrder || 'N/A'}</div>
                       {invoice.notes && (
-                        <div className="text-xs text-gray-400 mt-1 max-w-xs truncate">
+                        <div className="text-xs text-secondary-500 mt-1 max-w-xs truncate">
                           {invoice.notes}
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{invoice.customer?.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm font-medium text-secondary-900">{invoice.customer?.name}</div>
+                      <div className="text-sm text-secondary-600">
                         {invoice.vehicle ? `${invoice.vehicle.year} ${invoice.vehicle.make} ${invoice.vehicle.model}` : 'Vehicle info not available'}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="table-cell">
                     <div>
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-secondary-900">
                         Created: {new Date(invoice.issueDate).toLocaleDateString()}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-secondary-600">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
                       </div>
                       {invoice.paidDate && (
@@ -370,9 +360,9 @@ export default function InvoicesPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-secondary-900">
                         ${invoice.total.toFixed(2)}
                       </div>
                       {invoice.paidAmount > 0 && invoice.paidAmount < invoice.total && (
@@ -387,48 +377,48 @@ export default function InvoicesPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}>
+                  <td className="table-cell">
+                    <span className={`status-badge ${getStatusColor(invoice.status)}`}>
                       {invoice.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
+                  <td className="table-cell text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button 
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-secondary-600 hover:text-secondary-900"
                         title="View invoice"
                       >
                         <HiEye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDownloadPDF(invoice._id)}
-                        className="text-green-600 hover:text-green-900"
+                        className="text-secondary-600 hover:text-secondary-900"
                         title="Download PDF"
                       >
                         <HiDownload className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleSendEmail(invoice._id)}
-                        className="text-purple-600 hover:text-purple-900"
+                        className="text-secondary-600 hover:text-secondary-900"
                         title="Send email"
                       >
                         <HiMail className="w-4 h-4" />
                       </button>
-                                             {invoice.status !== 'paid' && (
-                         <button 
-                           onClick={() => handleOpenPaymentModal(invoice)}
-                           className="text-yellow-600 hover:text-yellow-900"
-                           title="Record payment"
-                         >
-                           <HiCurrencyDollar className="w-4 h-4" />
-                         </button>
-                       )}
+                      {invoice.status !== 'paid' && (
+                        <button 
+                          onClick={() => handleOpenPaymentModal(invoice)}
+                          className="text-secondary-600 hover:text-secondary-900"
+                          title="Record payment"
+                        >
+                          <HiCurrencyDollar className="w-4 h-4" />
+                        </button>
+                      )}
                       <button 
                         onClick={() => {
                           setSelectedInvoice(invoice)
                           setShowEditInvoiceModal(true)
                         }}
-                        className="text-gray-600 hover:text-gray-900"
+                        className="text-secondary-600 hover:text-secondary-900"
                         title="Edit"
                       >
                         <HiPencil className="w-4 h-4" />
@@ -460,63 +450,63 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="table-container">
+            <thead className="table-header">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Payment Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Invoice
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Method
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="table-header-cell">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="table-body">
               {(invoices || [])
                 .filter(inv => inv.status === 'paid' && inv.paidDate)
                 .sort((a, b) => new Date(b.paidDate!).getTime() - new Date(a.paidDate!).getTime())
                 .map(invoice => (
-                  <tr key={invoice._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                  <tr key={invoice._id} className="table-row hover:bg-secondary-50">
+                    <td className="table-cell whitespace-nowrap">
+                      <div className="text-sm text-secondary-900">
                         {new Date(invoice.paidDate!).toLocaleDateString()}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-secondary-500">
                         {new Date(invoice.paidDate!).toLocaleTimeString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">#{invoice.invoiceNumber}</div>
+                    <td className="table-cell whitespace-nowrap">
+                      <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{invoice.customer?.name}</div>
+                    <td className="table-cell whitespace-nowrap">
+                      <div className="text-sm text-secondary-900">{invoice.customer?.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="table-cell whitespace-nowrap">
                       <div className="text-sm font-medium text-green-600">
                         ${invoice.paidAmount.toFixed(2)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 capitalize">
+                    <td className="table-cell whitespace-nowrap">
+                      <span className="status-badge status-secondary capitalize">
                         {invoice.paymentMethod}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900">
+                    <td className="table-cell whitespace-nowrap text-sm font-medium">
+                      <button className="text-secondary-600 hover:text-secondary-900">
                         <HiEye className="w-4 h-4" />
                       </button>
                     </td>
@@ -538,62 +528,62 @@ export default function InvoicesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Company Information</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-4">Company Information</h3>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <label className="form-label">Company Name</label>
               <input
                 type="text"
                 value={settings.companyInfo.name}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="form-input"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="form-label">Address</label>
               <textarea
                 value={settings.companyInfo.address}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="form-textarea"
                 rows={3}
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="form-label">Phone</label>
                 <input
                   type="tel"
                   value={settings.companyInfo.phone}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="form-label">Email</label>
                 <input
                   type="email"
                   value={settings.companyInfo.email}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID</label>
+                <label className="form-label">Tax ID</label>
                 <input
                   type="text"
                   value={(settings.companyInfo as any).taxId || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">License #</label>
+                <label className="form-label">License #</label>
                 <input
                   type="text"
                   value={(settings.companyInfo as any).license || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
             </div>
@@ -601,23 +591,23 @@ export default function InvoicesPage() {
         </div>
 
         {/* Invoice Defaults */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Invoice Defaults</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-4">Invoice Defaults</h3>
           
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                <label className="form-label">Tax Rate (%)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={settings.invoiceDefaults.taxRate}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-                <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                <label className="form-label">Payment Terms</label>
+                <select className="form-select">
                   <option value="Net 30">Net 30</option>
                   <option value="Net 15">Net 15</option>
                   <option value="Due on Receipt">Due on Receipt</option>
@@ -628,38 +618,38 @@ export default function InvoicesPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Prefix</label>
+                <label className="form-label">Invoice Prefix</label>
                 <input
                   type="text"
                   value={settings.invoiceDefaults.invoicePrefix}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Next Invoice #</label>
+                <label className="form-label">Next Invoice #</label>
                 <input
                   type="number"
                   value={settings.invoiceDefaults.nextInvoiceNumber}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                 />
               </div>
             </div>
             
-                          <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Late Fee Penalty (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={(settings.invoiceDefaults as any).lateFeePenalty || 0}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
+            <div>
+              <label className="form-label">Late Fee Penalty (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={(settings.invoiceDefaults as any).lateFeePenalty || 0}
+                className="form-input"
+              />
+            </div>
           </div>
         </div>
 
         {/* Payment Methods */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Accepted Payment Methods</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-4">Accepted Payment Methods</h3>
           
           <div className="space-y-3">
             {Object.entries(settings.paymentMethods || {
@@ -670,11 +660,11 @@ export default function InvoicesPage() {
               online: true
             }).map(([method, enabled]) => (
               <div key={method} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 capitalize">
+                <span className="text-sm font-medium text-secondary-700 capitalize">
                   {method.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  enabled ? 'bg-blue-600' : 'bg-gray-200'
+                  enabled ? 'bg-blue-600' : 'bg-secondary-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                     enabled ? 'translate-x-6' : 'translate-x-1'
@@ -686,31 +676,31 @@ export default function InvoicesPage() {
         </div>
 
         {/* Template Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Template Settings</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-4">Template Settings</h3>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
+              <label className="form-label">Primary Color</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={(settings.template as any).primaryColor || settings.template.headerColor}
-                  className="w-12 h-10 border border-gray-300 rounded"
+                  className="w-12 h-10 border border-secondary-300 rounded"
                 />
                 <input
                   type="text"
                   value={(settings.template as any).primaryColor || settings.template.headerColor}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input flex-1"
                 />
               </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Show Company Logo</span>
+                <span className="text-sm font-medium text-secondary-700">Show Company Logo</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  (settings.template as any).showCompanyLogo || settings.template.includeLogo ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showCompanyLogo || settings.template.includeLogo ? 'bg-blue-600' : 'bg-secondary-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                     (settings.template as any).showCompanyLogo || settings.template.includeLogo ? 'translate-x-6' : 'translate-x-1'
@@ -719,9 +709,9 @@ export default function InvoicesPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Show Tax Breakdown</span>
+                <span className="text-sm font-medium text-secondary-700">Show Tax Breakdown</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  (settings.template as any).showTaxBreakdown ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showTaxBreakdown ? 'bg-blue-600' : 'bg-secondary-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                     (settings.template as any).showTaxBreakdown ? 'translate-x-6' : 'translate-x-1'
@@ -730,9 +720,9 @@ export default function InvoicesPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Show Labor Details</span>
+                <span className="text-sm font-medium text-secondary-700">Show Labor Details</span>
                 <button className={`relative inline-flex h-6 w-11 items-center rounded-full ${
-                  (settings.template as any).showLaborDetails ? 'bg-blue-600' : 'bg-gray-200'
+                  (settings.template as any).showLaborDetails ? 'bg-blue-600' : 'bg-secondary-200'
                 }`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                     (settings.template as any).showLaborDetails ? 'translate-x-6' : 'translate-x-1'
@@ -742,10 +732,10 @@ export default function InvoicesPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Footer Text</label>
+              <label className="form-label">Footer Text</label>
               <textarea
                 value={settings.template.footerText}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="form-textarea"
                 rows={3}
               />
             </div>
@@ -754,7 +744,7 @@ export default function InvoicesPage() {
       </div>
 
       <div className="flex justify-end">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium">
+        <button className="btn-primary">
           Save Settings
         </button>
       </div>
@@ -773,8 +763,8 @@ export default function InvoicesPage() {
 
       {/* Tab Navigation */}
       <div className="card">
-        <div className="border-b border-secondary-200">
-          <nav className="flex space-x-8 px-6">
+        <div className="tab-header">
+          <nav className="tab-buttons">
             {[
               { key: 'invoices', label: 'Invoices', count: (invoices || []).length },
               { key: 'payments', label: 'Payments', count: (invoices || []).filter(i => i.status === 'paid').length },
@@ -783,11 +773,7 @@ export default function InvoicesPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as TabType)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.key
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                }`}
+                className={`tab-button ${activeTab === tab.key ? 'tab-button-active' : 'tab-button-inactive'}`}
               >
                 {tab.label} {tab.count > 0 && `(${tab.count})`}
               </button>
@@ -805,12 +791,12 @@ export default function InvoicesPage() {
       {/* Payment Modal */}
       {showPaymentModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="card p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Record Payment</h3>
+              <h3 className="text-lg font-semibold text-secondary-900">Record Payment</h3>
               <button 
                 onClick={handleClosePaymentModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-secondary-400 hover:text-secondary-600"
               >
                 <HiX className="w-6 h-6" />
               </button>
@@ -818,29 +804,29 @@ export default function InvoicesPage() {
             
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600">Invoice: #{selectedInvoice.invoiceNumber}</p>
-                <p className="text-sm text-gray-600">Customer: {selectedInvoice.customer?.name}</p>
-                <p className="text-sm font-medium">Amount Due: ${(selectedInvoice.total - (selectedInvoice.paidAmount || 0)).toFixed(2)}</p>
+                <p className="text-sm text-secondary-600">Invoice: #{selectedInvoice.invoiceNumber}</p>
+                <p className="text-sm text-secondary-600">Customer: {selectedInvoice.customer?.name}</p>
+                <p className="text-sm font-medium text-secondary-900">Amount Due: ${(selectedInvoice.total - (selectedInvoice.paidAmount || 0)).toFixed(2)}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
+                <label className="form-label">Payment Amount</label>
                 <input
                   type="number"
                   step="0.01"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-input"
                   placeholder="0.00"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <label className="form-label">Payment Method</label>
                 <select 
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="form-select"
                 >
                   <option value="cash">Cash</option>
                   <option value="check">Check</option>
@@ -853,13 +839,13 @@ export default function InvoicesPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleClosePaymentModal}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg"
+                  className="btn-secondary flex-1"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handlePaymentRecord(selectedInvoice._id)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                  className="btn-primary flex-1"
                 >
                   Record Payment
                 </button>

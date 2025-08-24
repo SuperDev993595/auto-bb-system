@@ -1059,7 +1059,7 @@ export default function InventoryPage() {
           <button 
             onClick={() => {
               const timestamp = new Date().toISOString().split('T')[0]
-              if (activeTab === 'inventory') exportInventory(timestamp)
+              if (activeTab === 'inventory') exportInventoryItems(timestamp)
               else if (activeTab === 'transactions') exportTransactions(timestamp)
               else if (activeTab === 'suppliers') exportSuppliers(timestamp)
               else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
@@ -1178,11 +1178,7 @@ export default function InventoryPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as TabType)}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 border flex items-center gap-2 ${
-                  activeTab === tab.key
-                    ? 'bg-primary-600 text-white shadow-lg border-primary-600' 
-                    : 'bg-white text-secondary-700 hover:bg-secondary-50 border-secondary-200'
-                }`}
+                className={`tab-button-alt ${activeTab === tab.key ? 'tab-button-alt-active' : 'tab-button-alt-inactive'}`}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label} ({tab.count})

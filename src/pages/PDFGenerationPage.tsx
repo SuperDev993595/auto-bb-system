@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import PageTitle from '../components/Shared/PageTitle';
-import { HiDocumentText, HiDownload, HiMail, HiCog, HiPlus, HiPencil, HiTrash, HiEye, HiX } from 'react-icons/hi';
+import { HiDocumentText, HiDownload, HiMail, HiCog, HiPlus, HiPencil, HiTrash, HiEye, HiX, HiChartBar } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 
 interface PDFTemplate {
@@ -192,15 +192,15 @@ const PDFGenerationPage: React.FC = () => {
                 onClick={() => setActiveTab('templates')}
                 className={`tab-button ${activeTab === 'templates' ? 'tab-button-active' : 'tab-button-inactive'}`}
               >
-                <HiCog className="w-4 h-4" />
-                <span>Templates</span>
+                <HiDocumentText className="w-4 h-4" />
+                <span>PDF Templates</span>
               </button>
               <button
                 onClick={() => setActiveTab('reports')}
                 className={`tab-button ${activeTab === 'reports' ? 'tab-button-active' : 'tab-button-inactive'}`}
               >
-                <HiDocumentText className="w-4 h-4" />
-                <span>Generated Reports</span>
+                <HiChartBar className="w-4 h-4" />
+                <span>Reports</span>
               </button>
             </nav>
           </div>

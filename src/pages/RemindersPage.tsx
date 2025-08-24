@@ -970,8 +970,8 @@ export default function RemindersPage() {
 
         {/* Tab Navigation */}
         <div className="card">
-          <div className="border-b border-secondary-200">
-            <nav className="flex space-x-8 px-6">
+          <div className="tab-header">
+            <nav className="tab-buttons">
               {[
                 { key: 'reminders', label: 'Active Reminders', count: reminders.length },
                 { key: 'templates', label: 'Templates', count: templates.length },
@@ -980,11 +980,7 @@ export default function RemindersPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as TabType)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.key
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                  }`}
+                  className={`tab-button ${activeTab === tab.key ? 'tab-button-active' : 'tab-button-inactive'}`}
                 >
                   {tab.label} {tab.count > 0 && `(${tab.count})`}
                 </button>

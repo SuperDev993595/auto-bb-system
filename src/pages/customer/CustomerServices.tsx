@@ -287,8 +287,8 @@ export default function CustomerServices() {
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
+        <div className="tab-header">
+          <nav className="tab-buttons">
             {[
               { key: 'history', label: 'Service History', count: filteredServiceRecords.length },
               { key: 'schedule', label: 'Maintenance Schedule', count: filteredMaintenanceSchedule.length },
@@ -297,11 +297,7 @@ export default function CustomerServices() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`tab-button ${activeTab === tab.key ? 'tab-button-active' : 'tab-button-inactive'}`}
               >
                 {tab.label}
                 <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
