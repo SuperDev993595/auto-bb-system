@@ -3,7 +3,9 @@ import { useAppSelector, useAppDispatch } from '../../redux';
 import { createPurchaseOrder, updatePurchaseOrder, fetchPurchaseOrders } from '../../redux/actions/inventory';
 import { InventoryItem } from '../../services/inventory'
 import type { PurchaseOrder, Supplier } from '../../redux/reducer/inventoryReducer';
-import { X, Save, Plus, Trash2 } from '../../utils/icons';
+import { Save, Plus, Trash2 } from '../../utils/icons';
+import ModalWrapper from '../../utils/ModalWrapper';
+import { toast } from 'react-hot-toast';
 
 interface AddEditPurchaseOrderModalProps {
   isOpen: boolean;
@@ -135,32 +137,32 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
       if (mode === 'add') {
-        // For new purchase orders, if poNumber is empty, don't send it (let backend auto-generate)
-        const createData = { ...formData };
-        if (!createData.poNumber || createData.poNumber.trim() === '') {
-          delete createData.poNumber;
+        await dispatch(createPurchaseOrder(formData)).unwrap();
+        toast.success('Purchase order created successfully!');
+      } else {
+        if (!purchaseOrder?.id) {
+          toast.error('Purchase order ID is missing');
+          return;
         }
-        await dispatch(createPurchaseOrder(createData)).unwrap();
-        // Refresh the purchase orders list after successful creation
-        dispatch(fetchPurchaseOrders({}));
-      } else if (purchaseOrder) {
-        const updateData: UpdatePurchaseOrderData = { ...formData };
-        console.log('Sending update data:', updateData); // Debug log
+        const updateData: UpdatePurchaseOrderData = {
+          ...formData
+        };
         await dispatch(updatePurchaseOrder({ id: purchaseOrder.id, purchaseOrderData: updateData })).unwrap();
-        // Refresh the purchase orders list after successful update
-        dispatch(fetchPurchaseOrders({}));
+        toast.success('Purchase order updated successfully!');
       }
+      
+      // Refresh the purchase orders list
+      dispatch(fetchPurchaseOrders({}));
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving purchase order:', error);
+      toast.error(error.message || 'Failed to save purchase order');
     } finally {
       setIsSubmitting(false);
     }
@@ -225,23 +227,18 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'}
+      submitText={mode === 'add' ? 'Create PO' : 'Save Changes'}
+      onSubmit={handleSubmit}
+      submitColor="bg-blue-600"
+      size="xl"
+    >
+      <div className="p-8 space-y-8">
+        {/* Basic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 PO Number
@@ -448,36 +445,7 @@ export default function AddEditPurchaseOrderModal({ isOpen, onClose, purchaseOrd
               </div>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>{mode === 'add' ? 'Create PO' : 'Save Changes'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </ModalWrapper>
   );
 }

@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
+import AddEditVehicleModal from '../../components/customers/modal/AddEditVehicleModal';
 
 interface Vehicle {
   id: string;
@@ -312,6 +313,53 @@ export default function CustomerVehicles() {
         toast.error('Failed to save vehicle. Please try again.');
       }
     }
+  };
+
+  const handleModalSubmit = (data: VehicleFormData) => {
+    // Update the form data with the modal data
+    setFormData(data);
+    
+    // Validate and submit
+    if (!validateForm()) return;
+
+    const submitData = async () => {
+      try {
+        const vehicleData = {
+          year: parseInt(data.year),
+          make: data.make,
+          model: data.model,
+          vin: data.vin.toUpperCase(),
+          licensePlate: data.licensePlate.toUpperCase(),
+          color: data.color,
+          mileage: parseInt(data.mileage),
+          status: data.status as 'active' | 'inactive' | 'maintenance'
+        };
+
+        if (editingVehicle) {
+          const response = await customerApiService.updateVehicle(editingVehicle.id, vehicleData);
+          if (response.success) {
+            toast.success('Vehicle updated successfully');
+          } else {
+            toast.error(response.message || 'Failed to update vehicle');
+          }
+        } else {
+          const response = await customerApiService.addVehicle(vehicleData);
+          if (response.success) {
+            toast.success('Vehicle added successfully');
+          } else {
+            toast.error(response.message || 'Failed to add vehicle');
+          }
+        }
+
+        await loadVehicles();
+        handleCloseModal();
+      } catch (error) {
+        console.error('Error submitting vehicle:', error);
+        toast.error('An error occurred while saving the vehicle');
+      }
+    };
+
+    submitData();
   };
 
   const handleEdit = (vehicle: VehicleType) => {
@@ -767,157 +815,26 @@ export default function CustomerVehicles() {
 
       {/* Enhanced Add/Edit Vehicle Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingVehicle ? 'Edit Vehicle' : 'Add New Vehicle'}
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="text-2xl">×</span>
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Year *
-                  </label>
-                  <input
-                    type="text"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="2020"
-                    maxLength={4}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Color *
-                  </label>
-                  <input
-                    type="text"
-                    name="color"
-                    value={formData.color}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Silver"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Make *
-                </label>
-                <input
-                  type="text"
-                  name="make"
-                  value={formData.make}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Toyota"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Model *
-                </label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Camry"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  VIN (17 characters) *
-                </label>
-                <input
-                  type="text"
-                  name="vin"
-                  value={formData.vin}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
-                  placeholder="1HGBH41JXMN109186"
-                  maxLength={17}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  License Plate *
-                </label>
-                <input
-                  type="text"
-                  name="licensePlate"
-                  value={formData.licensePlate}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
-                  placeholder="ABC123"
-                />
-              </div>
-              
-                             <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                   Mileage *
-                 </label>
-                 <input
-                   type="number"
-                   name="mileage"
-                   value={formData.mileage}
-                   onChange={handleInputChange}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="45000"
-                   min="0"
-                 />
-               </div>
-               
-               <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                   Status
-                 </label>
-                 <select
-                   name="status"
-                   value={formData.status}
-                   onChange={handleInputChange}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                 >
-                   <option value="active">Active</option>
-                   <option value="inactive">Inactive</option>
-                   <option value="maintenance">Maintenance</option>
-                 </select>
-               </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  {editingVehicle ? 'Update Vehicle' : 'Add Vehicle'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddEditVehicleModal
+          isOpen={showAddModal}
+          onClose={handleCloseModal}
+          onSubmit={handleModalSubmit}
+          vehicle={editingVehicle ? {
+            year: editingVehicle.year.toString(),
+            make: editingVehicle.make,
+            model: editingVehicle.model,
+            vin: editingVehicle.vin,
+            licensePlate: editingVehicle.licensePlate,
+            color: editingVehicle.color,
+            mileage: editingVehicle.mileage.toString(),
+            fuelType: editingVehicle.fuelType || '',
+            transmission: editingVehicle.transmission || '',
+            engineSize: '',
+            status: editingVehicle.status,
+            notes: ''
+          } : null}
+          isEditing={!!editingVehicle}
+        />
       )}
 
       {/* Confirm Dialog */}

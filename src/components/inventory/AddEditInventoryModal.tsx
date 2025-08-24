@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../redux';
 import { createInventoryItem, updateInventoryItem } from '../../redux/actions/inventory';
 import { InventoryItem, CreateInventoryItemData, UpdateInventoryItemData } from '../../services/inventory';
-import { X, Save, Plus } from '../../utils/icons';
+import { Save, Plus } from '../../utils/icons';
 import { toast } from 'react-hot-toast';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface AddEditInventoryModalProps {
   isOpen: boolean;
@@ -106,9 +107,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -116,14 +115,19 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
       if (mode === 'add') {
         await dispatch(createInventoryItem(formData)).unwrap();
         toast.success('Inventory item created successfully!');
-      } else if (item) {
-        const updateData: UpdateInventoryItemData = { ...formData };
+      } else {
+        if (!item?._id) {
+          toast.error('Item ID is missing');
+          return;
+        }
+        const updateData: UpdateInventoryItemData = {
+          ...formData
+        };
         await dispatch(updateInventoryItem({ id: item._id, itemData: updateData })).unwrap();
         toast.success('Inventory item updated successfully!');
       }
       onClose();
     } catch (error: any) {
-      console.error('Error saving inventory item:', error);
       toast.error(error.message || 'Failed to save inventory item');
     } finally {
       setIsSubmitting(false);
@@ -140,21 +144,16 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {mode === 'add' ? 'Add New Inventory Item' : 'Edit Inventory Item'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === 'add' ? 'Add New Inventory Item' : 'Edit Inventory Item'}
+      submitText={mode === 'add' ? 'Add Item' : 'Update Item'}
+      onSubmit={handleSubmit}
+      submitColor="bg-blue-600"
+      size="xl"
+    >
+      <div className="p-8 space-y-8">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -440,36 +439,7 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
               <span className="ml-2 text-sm text-gray-700">Active</span>
             </label>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>{mode === 'add' ? 'Add Item' : 'Save Changes'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </ModalWrapper>
   );
 }

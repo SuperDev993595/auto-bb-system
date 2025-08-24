@@ -5,6 +5,7 @@ import { authService } from "../../services/auth";
 import { Appointment } from "../../utils/CustomerTypes";
 import { useAppDispatch, useAppSelector } from "../../redux";
 import { deleteAppointment } from "../../redux/actions/appointments";
+import ModalWrapper from "../../utils/ModalWrapper";
 
 type AppointmentData = {
     customer: string;
@@ -1230,627 +1231,323 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     }, [form.email, form.customerType]);
 
     return (
-        <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-            onClick={onClose}
+        <ModalWrapper
+            isOpen={true}
+            onClose={onClose}
+            title={isEditing ? "Edit Appointment" : "New Appointment"}
+            submitText={isLoading || isSavingToDatabase ? (isEditing ? 'Updating...' : 'Saving...') : (isEditing ? 'Update Appointment' : 'Create Appointment')}
+            onSubmit={handleSubmit}
+            submitColor="bg-blue-600"
         >
-            <div 
-                className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        {isEditing ? 'Edit Appointment' : 'New Appointment'}
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                        {isEditing ? 'Update appointment details' : 'Schedule a new appointment for a customer'}
-                    </p>
+            <div className="p-6 space-y-6">
+                {/* Customer Type Selection */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                        Customer Information
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <label className="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                name="customerType"
+                                value="new"
+                                checked={form.customerType === 'new'}
+                                onChange={(e) => setForm(prev => ({ ...prev, customerType: e.target.value as 'new' | 'existing' }))}
+                                className="text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">New Customer</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                            <input
+                                type="radio"
+                                name="customerType"
+                                value="existing"
+                                checked={form.customerType === 'existing'}
+                                onChange={(e) => setForm(prev => ({ ...prev, customerType: e.target.value as 'new' | 'existing' }))}
+                                className="text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Existing Customer</span>
+                        </label>
+                    </div>
+
+                    {form.customerType === 'existing' ? (
+                        <div>
+                            <label className="form-label">Select Existing Customer</label>
+                            <select
+                                value={form.existingCustomerId}
+                                onChange={(e) => {
+                                    const customerId = e.target.value;
+                                    setForm(prev => ({ ...prev, existingCustomerId: customerId }));
+                                    if (customerId) {
+                                        const customer = availableCustomers.find(c => c.id === customerId);
+                                        if (customer) {
+                                            setForm(prev => ({
+                                                ...prev,
+                                                customer: customer.name,
+                                                email: customer.email,
+                                                phone: customer.phone || ''
+                                            }));
+                                        }
+                                    }
+                                }}
+                                className="form-select"
+                            >
+                                <option value="">Select a customer</option>
+                                {availableCustomers.map(customer => (
+                                    <option key={customer.id} value={customer.id}>
+                                        {customer.name} - {customer.email}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="form-label">Customer Name *</label>
+                                <input
+                                    type="text"
+                                    name="customer"
+                                    placeholder="Full name"
+                                    className="form-input"
+                                    onChange={handleChange}
+                                    value={form.customer}
+                                    disabled={isLoading || isSavingToDatabase}
+                                    required
+                                />
+                                {errors.customer && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.customer}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="form-label">Email *</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="email@example.com"
+                                    className="form-input"
+                                    onChange={handleChange}
+                                    value={form.email}
+                                    disabled={isLoading || isSavingToDatabase}
+                                    required
+                                />
+                                {errors.email && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="form-label">Phone *</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    placeholder="(555) 123-4567"
+                                    className="form-input"
+                                    onChange={handleChange}
+                                    value={form.phone}
+                                    disabled={isLoading || isSavingToDatabase}
+                                    required
+                                />
+                                {errors.phone && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                <div className="p-6 space-y-6">
-                    {/* Customer Type Selection */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Customer Information</h3>
-                        
-                        {/* Customer Type Toggle */}
-                        <div className="flex gap-4 mb-4">
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="customerType"
-                                    checked={form.customerType === 'new'}
-                                    onChange={() => {
-                                        setForm(prev => ({ 
-                                            ...prev, 
-                                            customerType: 'new',
-                                            existingCustomerId: '',
-                                            customer: '',
-                                            email: '',
-                                            phone: ''
-                                        }));
-                                        setUseExistingVehicle(false);
-                                        setSelectedCustomerVehicles([]);
-                                    }}
-                                    className="mr-2"
-                                />
-                                <span className="font-medium">New Customer</span>
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="customerType"
-                                    checked={form.customerType === 'existing'}
-                                    onChange={() => {
-                                        setForm(prev => ({ 
-                                            ...prev, 
-                                            customerType: 'existing',
-                                            customer: '',
-                                            email: '',
-                                            phone: ''
-                                        }));
-                                        setUseExistingVehicle(false);
-                                        setSelectedCustomerVehicles([]);
-                                    }}
-                                    className="mr-2"
-                                />
-                                <span className="font-medium">Existing Customer</span>
-                            </label>
+                {/* Vehicle Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                        Vehicle Information
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="form-label">Vehicle Make *</label>
+                            <input
+                                type="text"
+                                name="vehicle"
+                                placeholder="e.g., Toyota"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.vehicle}
+                                disabled={isLoading || isSavingToDatabase}
+                                required
+                            />
+                            {errors.vehicle && (
+                                <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
+                            )}
                         </div>
-
-                        {/* Customer Name/Selection */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                {form.customerType === 'existing' ? 'Select Customer *' : 'Customer Name *'}
-                        </label>
-                            {form.customerType === 'existing' ? (
-                                <select
-                                    name="customer"
-                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        errors.customer ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                    onChange={(e) => {
-                                        const selectedCustomer = availableCustomers.find(c => c.id === e.target.value);
-                                        if (selectedCustomer) {
-                                            selectCustomer(selectedCustomer);
-                                        }
-                                    }}
-                                    value={form.existingCustomerId || ''}
-                                    disabled={isLoading || isSavingToDatabase}
-                                >
-                                    <option value="">Select a customer</option>
-                                    {availableCustomers.map((customer) => (
-                                        <option key={customer.id} value={customer.id}>
-                                            {customer.name} - {customer.email}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                        <input
-                            name="customer"
-                            placeholder="Enter customer name"
-                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                errors.customer ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            onChange={handleChange}
-                            value={form.customer}
-                            disabled={isLoading || isSavingToDatabase}
-                            required
-                        />
-                            )}
-                        {errors.customer && (
-                            <p className="text-red-500 text-sm mt-1">{errors.customer}</p>
-                        )}
-                    </div>
-                    
-                                                 {/* Email Field (for new customers) */}
-                         {form.customerType === 'new' && (
-                             <div className="mt-4">
-                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                     Email Address *
-                                 </label>
-                                 <div className="relative">
-                                     <input
-                                         name="email"
-                                         type="email"
-                                         placeholder="customer@example.com"
-                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                             errors.email ? 'border-red-500' : 
-                                             emailStatus === 'available' ? 'border-green-500' :
-                                             emailStatus === 'exists' ? 'border-red-500' :
-                                             emailStatus === 'checking' ? 'border-yellow-500' :
-                                             'border-gray-300'
-                                         }`}
-                                         onChange={handleChange}
-                                         value={form.email}
-                                         disabled={isLoading || isSavingToDatabase}
-                                         required
-                                     />
-                                     {/* Email status indicator */}
-                                     {emailStatus === 'checking' && (
-                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                                         </div>
-                                     )}
-                                     {emailStatus === 'available' && (
-                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                             <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                             </svg>
-                                         </div>
-                                     )}
-                                     {emailStatus === 'exists' && (
-                                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                             <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                             </svg>
-                                         </div>
-                                     )}
-                                 </div>
-                                 {errors.email && (
-                                     <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                                 )}
-                                 {emailStatus === 'available' && !errors.email && (
-                                     <p className="text-green-600 text-sm mt-1">✓ Email is available</p>
-                                 )}
-                                 {emailStatus === 'exists' && !errors.email && (
-                                     <p className="text-red-500 text-sm mt-1">⚠ This email is already registered</p>
-                                 )}
-                             </div>
-                         )}
-
-                        {/* Business Name Field (for new customers) */}
-                        {form.customerType === 'new' && (
-                            <div className="mt-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Business Name (Optional)
-                                </label>
-                                <input
-                                    name="businessName"
-                                    placeholder="Company or business name"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onChange={handleChange}
-                                    value={form.businessName}
-                                    disabled={isLoading || isSavingToDatabase}
-                                />
-                            </div>
-                        )}
-                        {/* Phone Number (only for new customers) */}
-                        {form.customerType === 'new' && (
-                            <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number
-                        </label>
-                        <input
-                            name="phone"
-                            placeholder="(555) 123-4567"
-                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                errors.phone ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            onChange={handlePhoneChange}
-                            value={form.phone}
-                            disabled={isLoading || isSavingToDatabase}
-                            maxLength={14}
-                            required
-                        />
-                        {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                                )}
-                            </div>
-                                                 )}
-                     </div>
-
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Vehicle Information</h3>
-                        
-                        {/* Vehicle Type Toggle */}
-                        <div className="flex gap-4 mb-4">
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="vehicleType"
-                                    checked={!useExistingVehicle}
-                                    onChange={() => setUseExistingVehicle(false)}
-                                    className="mr-2"
-                                    disabled={form.customerType === 'new'}
-                                />
-                                <span className={`font-medium ${form.customerType === 'new' ? 'text-gray-400' : ''}`}>
-                                New Vehicle
-                                </span>
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="vehicleType"
-                                    checked={useExistingVehicle}
-                                    onChange={() => setUseExistingVehicle(true)}
-                                    className="mr-2"
-                                    disabled={form.customerType === 'new'}
-                                />
-                                <span className={`font-medium ${form.customerType === 'new' ? 'text-gray-400' : ''}`}>
-                                Existing Vehicle
-                                </span>
-                            </label>
+                        <div>
+                            <label className="form-label">VIN</label>
+                            <input
+                                type="text"
+                                name="vin"
+                                placeholder="Vehicle Identification Number"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.vin}
+                                disabled={isLoading || isSavingToDatabase}
+                            />
                         </div>
-                        
-                        {form.customerType === 'new' && (
-                            <p className="text-sm text-gray-500 mb-4">
-                                New customers must have new vehicles. Select "Existing Customer" to use existing vehicles.
-                            </p>
-                        )}
-
-                        {useExistingVehicle ? (
-                            /* Existing Vehicle Selection */
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Select Vehicle *
-                                </label>
-                                <select
-                                    name="vehicleId"
-                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        errors.vehicle ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                    onChange={(e) => {
-                                        const selectedVehicle = selectedCustomerVehicles.find(v => v.id === e.target.value);
-                                        if (selectedVehicle) {
-                                            setForm(prev => ({
-                                                ...prev,
-                                                vehicleId: selectedVehicle.id,
-                                                vehicle: `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`,
-                                                vin: selectedVehicle.vin,
-                                                licensePlate: selectedVehicle.licensePlate
-                                            }));
-                                        } else {
-                                            setForm(prev => ({
-                                                ...prev,
-                                                vehicleId: '',
-                                                vehicle: '',
-                                                vin: '',
-                                                licensePlate: ''
-                                            }));
-                                        }
-                                    }}
-                                    value={form.vehicleId}
-                                    disabled={isLoading || isSavingToDatabase || !form.existingCustomerId}
-                                >
-                                    <option value="">
-                                        {!form.existingCustomerId 
-                                            ? 'Please select a customer first' 
-                                            : 'Select a vehicle'
-                                        }
-                                    </option>
-                                    {selectedCustomerVehicles.map((vehicle) => (
-                                        <option key={vehicle.id} value={vehicle.id}>
-                                            {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-                                        </option>
-                                    ))}
-                                </select>
-                                {!form.existingCustomerId && (
-                                    <p className="text-sm text-gray-500 mt-1">Please select a customer to see their vehicles.</p>
-                                )}
-                                {form.existingCustomerId && selectedCustomerVehicles.length === 0 && (
-                                    <p className="text-sm text-gray-500 mt-1">This customer has no vehicles. Please add a vehicle first.</p>
-                                )}
-                            </div>
-                        ) : (
-                            /* New Vehicle Input */
-                            <div className="relative">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Vehicle Description *
-                                </label>
-                                <input
-                                    ref={vehicleInputRef}
-                                    name="vehicle"
-                                    placeholder="e.g., Toyota Camry 2020, 2020 Honda Civic, Ford F-150, BMW X5"
-                                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        errors.vehicle ? 'border-red-500' : 'border-gray-300'
-                                    }`}
-                                    onChange={handleChange}
-                                    value={form.vehicle}
-                                    disabled={isLoading || isSavingToDatabase}
-                                />
-                                {errors.vehicle && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
-                                )}
-                                
-                                {/* Vehicle Suggestions */}
-                                {showVehicleSuggestions && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                        {filteredVehicles.map((vehicle, index) => (
-                                            <button
-                                                key={index}
-                                                className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                                onClick={() => selectVehicle(vehicle)}
-                                            >
-                                                {vehicle}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* VIN and License Plate - Only show for New Vehicle */}
-                        {!useExistingVehicle && (
-                            <>
-                                {/* VIN Number */}
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        VIN Number (Optional)
-                                    </label>
-                                    <input
-                                        name="vin"
-                                        placeholder="8-17 character VIN (e.g., 1HGBH41JXMN109186)"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onChange={handleChange}
-                                        value={form.vin}
-                                        disabled={isLoading || isSavingToDatabase}
-                                        maxLength={17}
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Vehicle Identification Number - found on dashboard, door jamb, or registration. Must be 8-17 characters. Leave blank to generate automatically if you don't have the VIN.
-                                    </p>
-                                    {errors.vin && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.vin}</p>
-                                    )}
-                                </div>
-
-                                {/* License Plate */}
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        License Plate (Optional)
-                                    </label>
-                                    <input
-                                        name="licensePlate"
-                                        placeholder="e.g., ABC123, XYZ-789"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onChange={handleChange}
-                                        value={form.licensePlate}
-                                        disabled={isLoading || isSavingToDatabase}
-                                        maxLength={10}
-                                    />
-                                </div>
-                            </>
-                        )}
+                        <div>
+                            <label className="form-label">License Plate</label>
+                            <input
+                                type="text"
+                                name="licensePlate"
+                                placeholder="ABC123"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.licensePlate}
+                                disabled={isLoading || isSavingToDatabase}
+                            />
+                        </div>
                     </div>
+                </div>
 
+                {/* Appointment Details */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                        Appointment Details
+                    </h3>
                     
-                    {/* Date & Time */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Appointment Date & Time *
-                        </label>
-                        <input
-                            type="datetime-local"
-                            name="date"
-                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                errors.date ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            onChange={handleChange}
-                            value={`${form.scheduledDate}T${form.scheduledTime}`}
-                            min={new Date().toISOString().slice(0, 16)}
-                            disabled={isLoading || isSavingToDatabase}
-                            required
-                        />
-                        {/* Debug info - remove after fixing */}
-                        {isEditing && (
-                            <div className="text-xs text-gray-500 mt-1">
-                                Debug: Date={form.scheduledDate}, Time={form.scheduledTime}, Combined={`${form.scheduledDate}T${form.scheduledTime}`}
-                            </div>
-                        )}
-                        {errors.date && (
-                            <p className="text-red-500 text-sm mt-1">{errors.date}</p>
-                        )}
-                    </div>
-                    
-                    {/* Service Type */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Service Type *
-                        </label>
-                        <select
-                            name="serviceType"
-                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                errors.serviceType ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            onChange={(e) => {
-                                const selectedService = serviceTypes.find(service => service.name === e.target.value);
-                                console.log('Service type selected:', {
-                                    value: e.target.value,
-                                    selectedService,
-                                    serviceTypeId: selectedService?._id || selectedService?.id || '',
-                                    estimatedDuration: selectedService?.estimatedDuration || 60
-                                });
-                                setForm(prev => ({
-                                    ...prev,
-                                    serviceType: e.target.value,
-                                    serviceTypeId: selectedService?._id || selectedService?.id || '',
-                                    estimatedDuration: selectedService?.estimatedDuration || 60
-                                }));
-                                if (errors.serviceType) {
-                                    setErrors(prev => ({ ...prev, serviceType: undefined }));
-                                }
-                            }}
-                            value={form.serviceType}
-                            disabled={isLoading || isSavingToDatabase}
-                            required
-                        >
-                            <option value="">Select a service type</option>
-                            {serviceTypes.length > 0 ? (
-                                serviceTypes.map((service: {_id?: string, id?: string, name: string, category: string, estimatedDuration: number}) => (
-                                    <option key={service._id || service.id} value={service.name}>
-                                        {service.name} - {service.category}
-                                    </option>
-                                ))
-                            ) : (
-                                <option value="" disabled>Loading service types...</option>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="form-label">Date *</label>
+                            <input
+                                type="date"
+                                name="scheduledDate"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.scheduledDate}
+                                disabled={isLoading || isSavingToDatabase}
+                                required
+                            />
+                            {errors.scheduledDate && (
+                                <p className="text-red-500 text-sm mt-1">{errors.scheduledDate}</p>
                             )}
-                        </select>
-                        {errors.serviceType && (
-                            <p className="text-red-500 text-sm mt-1">{errors.serviceType}</p>
-                        )}
-                    </div>
-
-                    {/* Technician */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assign Technician
-                        </label>
-                        <select
-                            name="technicianId"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={(e) => {
-                                const selectedTech = technicians.find(tech => tech._id === e.target.value);
-                                setForm(prev => ({
-                                    ...prev,
-                                    technicianId: e.target.value,
-                                    technicianName: selectedTech?.name || ""
-                                }));
-                            }}
-                            value={form.technicianId}
-                            disabled={isLoading || isSavingToDatabase}
-                        >
-                            {/* Debug info */}
-                            {isEditing && (
-                                <div className="text-xs text-gray-500 mb-1">
-                                    Debug: form.technicianId = "{form.technicianId}", technicians count = {technicians.length}
-                                    <br />
-                                    Available technician IDs: {technicians.map(t => t._id).join(', ')}
-                                    <br />
-                                    Match found: {technicians.find(t => t._id === form.technicianId) ? 'YES' : 'NO'}
-                                </div>
+                        </div>
+                        <div>
+                            <label className="form-label">Time *</label>
+                            <input
+                                type="time"
+                                name="scheduledTime"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.scheduledTime}
+                                disabled={isLoading || isSavingToDatabase}
+                                required
+                            />
+                            {errors.scheduledTime && (
+                                <p className="text-red-500 text-sm mt-1">{errors.scheduledTime}</p>
                             )}
-                                                         <option value="">Select a technician (optional)</option>
-                                                         {technicians.map((technician) => {
-                                 const specializations = technician.specializations || [];
-                                 const status = technician.isActive ? '' : ' (Inactive)';
-                                 return (
-                                     <option key={technician._id} value={technician._id}>
-                                         {technician.name}{status} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
-                                     </option>
-                                 );
-                             })}
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">Choose a technician to assign to this appointment</p>
+                        </div>
                     </div>
 
-                    {/* Priority */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Priority *
-                        </label>
-                        <select
-                            name="priority"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={handleChange}
-                            value={form.priority}
-                            disabled={isLoading || isSavingToDatabase}
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                        </select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="form-label">Service Type *</label>
+                            <select
+                                name="serviceType"
+                                className="form-select"
+                                onChange={handleChange}
+                                value={form.serviceType}
+                                disabled={isLoading || isSavingToDatabase}
+                                required
+                            >
+                                <option value="">Select service type</option>
+                                {serviceTypes.map(service => (
+                                    <option key={service._id || service.id} value={service._id || service.id}>
+                                        {service.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.serviceType && (
+                                <p className="text-red-500 text-sm mt-1">{errors.serviceType}</p>
+                            )}
+                        </div>
+                        <div>
+                            <label className="form-label">Priority</label>
+                            <select
+                                name="priority"
+                                className="form-select"
+                                onChange={handleChange}
+                                value={form.priority}
+                                disabled={isLoading || isSavingToDatabase}
+                            >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
                     </div>
 
-                    {/* Estimated Duration */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Estimated Duration (minutes) *
-                        </label>
-                        <input
-                            type="number"
-                            name="estimatedDuration"
-                            min="15"
-                            max="480"
-                            placeholder="60"
-                            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                errors.estimatedDuration ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            onChange={handleChange}
-                            value={form.estimatedDuration}
-                            disabled={isLoading || isSavingToDatabase}
-                        />
-                        {errors.estimatedDuration && (
-                            <p className="text-red-500 text-sm mt-1">{errors.estimatedDuration}</p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">Duration between 15 minutes and 8 hours</p>
-                    </div>
-
-
-
-                    {/* Status */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Status *
-                        </label>
-                        <select
-                            name="status"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={handleChange}
-                            value={form.status}
-                            disabled={isLoading || isSavingToDatabase}
-                        >
-                            <option value="scheduled">Scheduled</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="form-label">Estimated Duration (minutes) *</label>
+                            <input
+                                type="number"
+                                name="estimatedDuration"
+                                min="15"
+                                max="480"
+                                placeholder="60"
+                                className="form-input"
+                                onChange={handleChange}
+                                value={form.estimatedDuration}
+                                disabled={isLoading || isSavingToDatabase}
+                                required
+                            />
+                            {errors.estimatedDuration && (
+                                <p className="text-red-500 text-sm mt-1">{errors.estimatedDuration}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">Duration between 15 minutes and 8 hours</p>
+                        </div>
+                        <div>
+                            <label className="form-label">Status</label>
+                            <select
+                                name="status"
+                                className="form-select"
+                                onChange={handleChange}
+                                value={form.status}
+                                disabled={isLoading || isSavingToDatabase}
+                            >
+                                <option value="scheduled">Scheduled</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    {/* Notes */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Additional Notes
-                        </label>
+                        <label className="form-label">Notes</label>
                         <textarea
                             name="notes"
                             placeholder="Any special instructions or notes"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="form-textarea"
                             rows={3}
                             onChange={handleChange}
                             value={form.notes}
                             disabled={isLoading || isSavingToDatabase}
                         />
                     </div>
-
-
                 </div>
 
-                <div className="p-6 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                        {isEditing && (
-                            <button
-                                onClick={handleDelete}
-                                disabled={isLoading || isSavingToDatabase || isDeleting}
-                                className="px-6 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isDeleting ? 'Deleting...' : 'Delete Appointment'}
-                            </button>
-                        )}
-                        <div className="flex gap-3 ml-auto">
+                {/* Delete Button for Editing */}
+                {isEditing && (
+                    <div className="pt-4 border-t border-gray-200">
                         <button
-                            onClick={onClose}
-                                disabled={isLoading || isSavingToDatabase || isDeleting}
-                            className="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleDelete}
+                            disabled={isLoading || isSavingToDatabase || isDeleting}
+                            className="px-6 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Cancel
+                            {isDeleting ? 'Deleting...' : 'Delete Appointment'}
                         </button>
-                        <button
-                            onClick={handleSubmit}
-                                disabled={isLoading || isSavingToDatabase || isDeleting}
-                            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                                {isLoading || isSavingToDatabase 
-                                    ? (isEditing ? 'Updating...' : 'Saving to Database...') 
-                                    : (isEditing ? 'Update Appointment' : 'Create Appointment')
-                                }
-                        </button>
-                        </div>
                     </div>
-                </div>
+                )}
             </div>
-        </div>
+        </ModalWrapper>
     );
 }

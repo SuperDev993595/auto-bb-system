@@ -1,4 +1,6 @@
 import React from 'react';
+import { HiExclamation, HiCheckCircle, HiInformationCircle } from 'react-icons/hi';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -23,63 +25,46 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
-  const getTypeStyles = () => {
+  const getTypeConfig = () => {
     switch (type) {
       case 'danger':
         return {
-          icon: '⚠️',
-          confirmButton: 'bg-red-600 hover:bg-red-700 text-white',
-          border: 'border-red-200'
+          icon: <HiExclamation className="w-5 h-5" />,
+          submitColor: 'bg-red-600'
         };
       case 'warning':
         return {
-          icon: '⚠️',
-          confirmButton: 'bg-yellow-600 hover:bg-yellow-700 text-white',
-          border: 'border-yellow-200'
+          icon: <HiExclamation className="w-5 h-5" />,
+          submitColor: 'bg-yellow-600'
         };
       case 'success':
         return {
-          icon: '✅',
-          confirmButton: 'bg-green-600 hover:bg-green-700 text-white',
-          border: 'border-green-200'
+          icon: <HiCheckCircle className="w-5 h-5" />,
+          submitColor: 'bg-green-600'
         };
       default:
         return {
-          icon: 'ℹ️',
-          confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white',
-          border: 'border-blue-200'
+          icon: <HiInformationCircle className="w-5 h-5" />,
+          submitColor: 'bg-blue-600'
         };
     }
   };
 
-  const styles = getTypeStyles();
+  const config = getTypeConfig();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-white rounded-lg p-6 w-full max-w-md border-l-4 ${styles.border}`}>
-        <div className="flex items-start mb-4">
-          <span className="text-2xl mr-3">{styles.icon}</span>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="text-gray-600 mt-1">{message}</p>
-          </div>
-        </div>
-        
-        <div className="flex justify-end space-x-3 pt-4">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 rounded-lg transition-colors ${styles.confirmButton}`}
-          >
-            {confirmText}
-          </button>
-        </div>
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onCancel}
+      title={title}
+      icon={config.icon}
+      submitText={confirmText}
+      onSubmit={onConfirm}
+      submitColor={config.submitColor}
+    >
+      <div className="p-4">
+        <p className="text-gray-600">{message}</p>
       </div>
-    </div>
+    </ModalWrapper>
   );
 }

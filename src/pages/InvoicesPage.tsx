@@ -20,6 +20,7 @@ import PageTitle from '../components/Shared/PageTitle'
 import AddInvoiceModal from '../components/invoices/AddInvoiceModal'
 import EditInvoiceModal from '../components/invoices/EditInvoiceModal'
 import DeleteInvoiceModal from '../components/invoices/DeleteInvoiceModal'
+import PaymentModal from '../components/invoices/PaymentModal';
 import {
   HiDocumentText,
   HiCurrencyDollar,
@@ -788,69 +789,17 @@ export default function InvoicesPage() {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="card p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-secondary-900">Record Payment</h3>
-              <button 
-                onClick={handleClosePaymentModal}
-                className="text-secondary-400 hover:text-secondary-600"
-              >
-                <HiX className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-secondary-600">Invoice: #{selectedInvoice.invoiceNumber}</p>
-                <p className="text-sm text-secondary-600">Customer: {selectedInvoice.customer?.name}</p>
-                <p className="text-sm font-medium text-secondary-900">Amount Due: ${(selectedInvoice.total - (selectedInvoice.paidAmount || 0)).toFixed(2)}</p>
-              </div>
-              
-              <div>
-                <label className="form-label">Payment Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="form-input"
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div>
-                <label className="form-label">Payment Method</label>
-                <select 
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="cash">Cash</option>
-                  <option value="check">Check</option>
-                  <option value="credit_card">Credit Card</option>
-                  <option value="debit_card">Debit Card</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                </select>
-              </div>
-              
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleClosePaymentModal}
-                  className="btn-secondary flex-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handlePaymentRecord(selectedInvoice._id)}
-                  className="btn-primary flex-1"
-                >
-                  Record Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={handleClosePaymentModal}
+          invoice={selectedInvoice}
+          paymentAmount={paymentAmount}
+          setPaymentAmount={setPaymentAmount}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          onConfirm={handlePaymentRecord}
+          isLoading={loading}
+        />
       )}
 
       {/* Invoice Modals */}

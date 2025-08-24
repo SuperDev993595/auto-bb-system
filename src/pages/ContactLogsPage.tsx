@@ -5,6 +5,8 @@ import { fetchCustomers } from '../redux/actions/customers'
 import PageTitle from '../components/Shared/PageTitle'
 import CreateCommunicationLogModal from '../components/CommunicationLogs/CreateCommunicationLogModal'
 import EditCommunicationLogModal from '../components/CommunicationLogs/EditCommunicationLogModal'
+import DeleteCommunicationLogModal from '../components/CommunicationLogs/DeleteCommunicationLogModal';
+import ViewCommunicationLogModal from '../components/CommunicationLogs/ViewCommunicationLogModal';
 import { CommunicationLog } from '../utils/CustomerTypes'
 import {
   HiPhone,
@@ -380,59 +382,19 @@ export default function ContactLogsPage() {
       </div>
       </div>
 
-    {/* Modal for viewing details */}
-    {selectedLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
-              <h3 className="text-xl font-semibold text-secondary-900">Communication Details</h3>
-              <button 
-                onClick={() => setSelectedLog(null)}
-                className="text-secondary-400 hover:text-secondary-600 text-2xl font-bold hover:bg-secondary-100 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">Customer</label>
-                  <p className="text-secondary-900">{getCustomerName(selectedLog.customerId)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">Employee</label>
-                  <p className="text-secondary-900">{selectedLog.employeeName}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">Date</label>
-                  <p className="text-secondary-900">{selectedLog.date}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">Type</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    {getTypeIcon(selectedLog.type)}
-                    <span className="text-sm text-secondary-900 capitalize">{selectedLog.type}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-1">Subject</label>
-                <p className="text-secondary-900">{selectedLog.subject || 'No Subject'}</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-secondary-700 mb-1">Content</label>
-                <p className="text-secondary-900 bg-secondary-50 p-3 rounded-lg">{selectedLog.content}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Modal for viewing details */}
+      {selectedLog && (
+        <ViewCommunicationLogModal
+          isOpen={!!selectedLog}
+          onClose={() => setSelectedLog(null)}
+          log={selectedLog}
+          getCustomerName={getCustomerName}
+          getTypeIcon={getTypeIcon}
+        />
       )}
 
-    {/* Create Modal */}
-    {showCreateModal && (
+      {/* Create Modal */}
+      {showCreateModal && (
          <CreateCommunicationLogModal
            onClose={() => setShowCreateModal(false)}
            onSave={handleCreateLog}
@@ -440,8 +402,8 @@ export default function ContactLogsPage() {
          />
        )}
 
-    {/* Edit Modal */}
-    {showEditModal && editingLog && (
+      {/* Edit Modal */}
+      {showEditModal && editingLog && (
          <EditCommunicationLogModal
            onClose={() => {
              setShowEditModal(false)
@@ -453,32 +415,14 @@ export default function ContactLogsPage() {
          />
        )}
 
-    {/* Delete Confirmation Modal */}
-    {deleteLogId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <div className="p-6 border-b border-secondary-200">
-              <h3 className="text-xl font-semibold text-secondary-900">Confirm Delete</h3>
-            </div>
-            <div className="p-6">
-              <p className="text-secondary-600 mb-6">Are you sure you want to delete this communication log? This action cannot be undone.</p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteLogId(null)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDeleteLog(deleteLogId)}
-                  className="btn-error"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Delete Confirmation Modal */}
+      {deleteLogId && (
+        <DeleteCommunicationLogModal
+          isOpen={!!deleteLogId}
+          onClose={() => setDeleteLogId(null)}
+          onConfirm={() => handleDeleteLog(deleteLogId)}
+          isLoading={loading}
+        />
       )}
     </>
   )
