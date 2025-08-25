@@ -56,7 +56,7 @@ export default function NewArrangementModal({ customerId, onClose, onSuccess }: 
             submitColor="bg-green-600"
             onSubmit={handleSubmit}
         >
-            <div className="grid gap-6">
+            <div className="p-6 grid gap-6">
                 <label className="block">
                     <span className="text-sm font-medium text-gray-700 mb-2 block">Amount ($) *</span>
                     <input type="number" value={amount} onChange={e => setAmount(e.target.value)}

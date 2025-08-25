@@ -72,7 +72,7 @@ export default function NewAppointmentModal({ customerId, onClose, onSuccess }: 
             submitColor="bg-blue-600"
             onSubmit={handleSubmit}
         >
-            <div className="grid gap-6">
+            <div className="p-6 grid gap-6">
                 {/* Date and Time */}
                 <div className="grid grid-cols-2 gap-6">
                     <label className="block">
