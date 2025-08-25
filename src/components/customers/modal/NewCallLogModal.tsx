@@ -73,7 +73,7 @@ export default function NewCallLogModal({ customerId, onClose, onSuccess }: Prop
             submitColor="bg-blue-600"
             onSubmit={handleSubmit}
         >
-            <div className="grid gap-6">
+            <div className="p-6 grid gap-6">
                 <label className="block">
                     <span className="text-sm font-medium text-gray-700 mb-2 block">Date</span>
                     <input

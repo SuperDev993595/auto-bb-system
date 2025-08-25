@@ -477,7 +477,7 @@ export default function CustomerProfile() {
                   <div className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-gray-900">Change Password</h3>
+                        <h6 className="font-normal text-gray-900">Change Password</h6>
                         <p className="text-sm text-gray-600">Update your account password</p>
                       </div>
                       <button
@@ -492,7 +492,7 @@ export default function CustomerProfile() {
                   <div className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-gray-900">Two-Factor Authentication</h3>
+                        <h6 className="font-normal text-gray-900">Two-Factor Authentication</h6>
                         <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
                       </div>
                       <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
@@ -504,7 +504,7 @@ export default function CustomerProfile() {
                   <div className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-gray-900">Account Activity</h3>
+                        <h6 className="font-normal text-gray-900">Account Activity</h6>
                         <p className="text-sm text-gray-600">View your recent login activity</p>
                       </div>
                       <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
@@ -516,7 +516,7 @@ export default function CustomerProfile() {
                   <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-red-900">Delete Account</h3>
+                        <h6 className="font-normal text-red-900">Delete Account</h6>
                         <p className="text-sm text-red-600">Permanently delete your account and all data</p>
                       </div>
                       <button

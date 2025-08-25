@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Message as MessageType } from '../../services/customerApi';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, FileText, MessageSquare, Tag, Flag } from 'lucide-react';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface Message {
   id: string;
@@ -87,9 +88,7 @@ export default function CustomerMessages() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSendMessage = async () => {
     if (!newMessage.subject.trim() || !newMessage.message.trim()) {
       toast.error('Please fill in all required fields');
       return;
@@ -287,100 +286,88 @@ export default function CustomerMessages() {
 
       {/* New Message Modal */}
       {showNewMessageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Send New Message</h2>
-              <button
-                onClick={() => setShowNewMessageModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <ModalWrapper
+          isOpen={showNewMessageModal}
+          onClose={() => setShowNewMessageModal(false)}
+          title="Send New Message"
+          icon={<MessageSquare className="w-5 h-5" />}
+          submitText="Send Message"
+          onSubmit={handleSendMessage}
+          submitColor="bg-blue-600"
+          size="lg"
+        >
+          <div className="p-6 space-y-6">
+            {/* Subject */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Subject *
+              </label>
+              <input
+                type="text"
+                value={newMessage.subject}
+                onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                placeholder="Enter message subject"
+                required
+              />
             </div>
-            
-            <form onSubmit={handleSendMessage} className="space-y-4">
+
+            {/* Message */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Message *
+              </label>
+              <textarea
+                value={newMessage.message}
+                onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white resize-none"
+                rows={4}
+                placeholder="Enter your message"
+                required
+              />
+            </div>
+
+            {/* Type and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject *
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Type
                 </label>
-                <input
-                  type="text"
-                  value={newMessage.subject}
-                  onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter message subject"
-                  required
-                />
+                <select
+                  value={newMessage.type}
+                  onChange={(e) => setNewMessage(prev => ({ ...prev, type: e.target.value as any }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                >
+                  <option value="general">General</option>
+                  <option value="appointment">Appointment</option>
+                  <option value="service">Service</option>
+                  <option value="support">Support</option>
+                  <option value="reminder">Reminder</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Message *
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Flag className="w-4 h-4" />
+                  Priority
                 </label>
-                <textarea
-                  value={newMessage.message}
-                  onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={4}
-                  placeholder="Enter your message"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type
-                  </label>
-                  <select
-                    value={newMessage.type}
-                    onChange={(e) => setNewMessage(prev => ({ ...prev, type: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="general">General</option>
-                    <option value="appointment">Appointment</option>
-                    <option value="service">Service</option>
-                    <option value="support">Support</option>
-                    <option value="reminder">Reminder</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Priority
-                  </label>
-                  <select
-                    value={newMessage.priority}
-                    onChange={(e) => setNewMessage(prev => ({ ...prev, priority: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowNewMessageModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                <select
+                  value={newMessage.priority}
+                  onChange={(e) => setNewMessage(prev => ({ ...prev, priority: e.target.value as any }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Send Message
-                </button>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </ModalWrapper>
       )}
     </div>
   );

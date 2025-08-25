@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
-import { FileText, X, CheckCircle, DollarSign } from 'lucide-react';
+import { FileText, X, CheckCircle, DollarSign, CreditCard, Hash } from 'lucide-react';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface Invoice {
   id: string;
@@ -74,9 +75,7 @@ export default function CustomerInvoices() {
     setShowPaymentModal(true);
   };
 
-  const handleProcessPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleProcessPayment = async () => {
     if (!selectedInvoice) return;
 
     try {
@@ -293,73 +292,73 @@ export default function CustomerInvoices() {
 
       {/* Payment Modal */}
       {showPaymentModal && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Process Payment</h2>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+        <ModalWrapper
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          title="Process Payment"
+          icon={<CreditCard className="w-5 h-5" />}
+          submitText="Process Payment"
+          onSubmit={handleProcessPayment}
+          submitColor="bg-green-600"
+          size="lg"
+        >
+          <div className="p-6 space-y-6">
+            {/* Invoice Details */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Invoice Details
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Invoice #:</span> {selectedInvoice.invoiceNumber}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Amount:</span> ${selectedInvoice.total.toFixed(2)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Due Date:</span> {new Date(selectedInvoice.dueDate).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            
+            {/* Payment Method */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Payment Method *
+              </label>
+              <select
+                value={paymentData.paymentMethod}
+                onChange={(e) => setPaymentData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                required
               >
-                <X className="w-5 h-5" />
-              </button>
+                <option value="">Select payment method</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="debit_card">Debit Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="cash">Cash</option>
+              </select>
             </div>
-            
-            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-2">Invoice Details</h3>
-              <p className="text-sm text-gray-600">Invoice #{selectedInvoice.invoiceNumber}</p>
-              <p className="text-sm text-gray-600">Amount: ${selectedInvoice.total.toFixed(2)}</p>
-              <p className="text-sm text-gray-600">Due: {new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+
+            {/* Payment Reference */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Hash className="w-4 h-4" />
+                Payment Reference (Optional)
+              </label>
+              <input
+                type="text"
+                value={paymentData.paymentReference}
+                onChange={(e) => setPaymentData(prev => ({ ...prev, paymentReference: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                placeholder="Transaction ID or reference number"
+              />
+              <p className="text-xs text-gray-500 mt-2">Provide a reference number for tracking purposes</p>
             </div>
-            
-            <form onSubmit={handleProcessPayment} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Method
-                </label>
-                <select
-                  value={paymentData.paymentMethod}
-                  onChange={(e) => setPaymentData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="credit_card">Credit Card</option>
-                  <option value="debit_card">Debit Card</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="cash">Cash</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Reference (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={paymentData.paymentReference}
-                  onChange={(e) => setPaymentData(prev => ({ ...prev, paymentReference: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Transaction ID or reference number"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Process Payment
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
+        </ModalWrapper>
       )}
     </div>
   );

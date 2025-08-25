@@ -5,6 +5,7 @@ import { customerApiService, Appointment as AppointmentType, Vehicle as VehicleT
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
 import { Calendar, Clock, Truck, Cog, User, Flag, FileText, Lightbulb, AlertTriangle, CheckCircle, Wrench, DollarSign, X, Clipboard } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../redux';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface Appointment {
   id: string;
@@ -228,9 +229,7 @@ export default function CustomerAppointments() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     try {
@@ -732,212 +731,199 @@ export default function CustomerAppointments() {
 
       {/* Add/Edit Appointment Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingAppointment ? 'Edit Appointment' : 'Schedule New Appointment'}
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="text-2xl">×</span>
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    name="scheduledDate"
-                    value={formData.scheduledDate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    Time *
-                  </label>
-                  <input
-                    type="time"
-                    name="scheduledTime"
-                    value={formData.scheduledTime}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Truck className="w-4 h-4" />
-                    Vehicle *
-                  </label>
-                <select
-                  name="vehicleId"
-                  value={formData.vehicleId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={vehicles.length === 0}
-                >
-                  <option value="">
-                    {vehicles.length === 0 ? 'No vehicles available' : 'Select a vehicle'}
-                  </option>
-                  {vehicles.map(vehicle => (
-                    <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate} ({vehicle.mileage.toLocaleString()} mi)
-                    </option>
-                  ))}
-                </select>
-                {vehicles.length === 0 && (
-                  <p className="text-sm text-red-600 mt-1">
-                    Please add a vehicle first before scheduling an appointment.
-                  </p>
-                )}
-              </div>
-              
-              <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Cog className="w-4 h-4" />
-                    Service Type *
-                  </label>
-                <select
-                  name="serviceType"
-                  value={formData.serviceType}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select a service</option>
-                  {serviceTypes.map(service => (
-                    <option key={service} value={service}>
-                      {service}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <User className="w-4 h-4" />
-                    Assign Technician
-                  </label>
-                <select
-                  name="technicianId"
-                  value={formData.technicianId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select a technician (optional)</option>
-                  {technicians.filter(tech => tech.isActive).map((technician) => {
-                    const techId = (technician as any).id || (technician as any)._id;
-                    const specializations = (technician as any).specializations || (technician as any).specialization || [];
-                    return (
-                      <option key={techId} value={techId}>
-                        {technician.name} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
-                      </option>
-                    );
-                  })}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Choose a technician to assign to this appointment</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    Duration (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    name="estimatedDuration"
-                    min="15"
-                    max="480"
-                    value={formData.estimatedDuration}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="60"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <Flag className="w-4 h-4" />
-                    Priority
-                  </label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-              </div>
-
-                             <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                   <Flag className="w-4 h-4" />
-                   Status
-                 </label>
-                 <select
-                   name="status"
-                   value={formData.status}
-                   onChange={handleInputChange}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        <ModalWrapper
+          isOpen={showAddModal}
+          onClose={handleCloseModal}
+          title={editingAppointment ? 'Edit Appointment' : 'Schedule New Appointment'}
+          icon={<Calendar className="w-5 h-5" />}
+          submitText={editingAppointment ? 'Update Appointment' : 'Schedule Appointment'}
+          onSubmit={handleSubmit}
+          submitColor="bg-blue-600"
+          size="xl"
                  >
-                   <option value="scheduled">Scheduled</option>
-                   <option value="in-progress">In Progress</option>
-                   <option value="completed">Completed</option>
-                   <option value="cancelled">Cancelled</option>
-                 </select>
-               </div>
-              
+           <div className="p-6 space-y-6">
+            {/* Date and Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <FileText className="w-4 h-4" />
-                  Notes (Optional)
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Date *
                 </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
+                <input
+                  type="date"
+                  name="scheduledDate"
+                  value={formData.scheduledDate}
                   onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Any special requests or additional information..."
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  {editingAppointment ? 'Update Appointment' : 'Schedule Appointment'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Time *
+                </label>
+                <input
+                  type="time"
+                  name="scheduledTime"
+                  value={formData.scheduledTime}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                />
               </div>
-            </form>
-                     </div>
-         </div>
-       )}
+            </div>
+            
+            {/* Vehicle Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                Vehicle *
+              </label>
+              <select
+                name="vehicleId"
+                value={formData.vehicleId}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                disabled={vehicles.length === 0}
+              >
+                <option value="">
+                  {vehicles.length === 0 ? 'No vehicles available' : 'Select a vehicle'}
+                </option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate} ({vehicle.mileage.toLocaleString()} mi)
+                  </option>
+                ))}
+              </select>
+              {vehicles.length === 0 && (
+                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  Please add a vehicle first before scheduling an appointment.
+                </p>
+              )}
+            </div>
+            
+            {/* Service Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Cog className="w-4 h-4" />
+                Service Type *
+              </label>
+              <select
+                name="serviceType"
+                value={formData.serviceType}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+              >
+                <option value="">Select a service</option>
+                {serviceTypes.map(service => (
+                  <option key={service} value={service}>
+                    {service}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Technician Assignment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Assign Technician
+              </label>
+              <select
+                name="technicianId"
+                value={formData.technicianId}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+              >
+                <option value="">Select a technician (optional)</option>
+                {technicians.filter(tech => tech.isActive).map((technician) => {
+                  const techId = (technician as any).id || (technician as any)._id;
+                  const specializations = (technician as any).specializations || (technician as any).specialization || [];
+                  return (
+                    <option key={techId} value={techId}>
+                      {technician.name} - {Array.isArray(specializations) ? specializations.join(', ') : specializations}
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">Choose a technician to assign to this appointment</p>
+            </div>
+
+            {/* Duration and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  name="estimatedDuration"
+                  min="15"
+                  max="480"
+                  value={formData.estimatedDuration}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                  placeholder="60"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Flag className="w-4 h-4" />
+                  Priority
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Clipboard className="w-4 h-4" />
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Notes (Optional)
+              </label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white resize-none"
+                placeholder="Any special requests or additional information..."
+              />
+            </div>
+          </div>
+        </ModalWrapper>
+      )}
 
        {/* Confirm Dialog */}
        <ConfirmDialog
