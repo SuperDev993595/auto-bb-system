@@ -1,6 +1,18 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { 
+  Home, 
+  BarChart3, 
+  Car, 
+  Calendar, 
+  Wrench, 
+  DollarSign, 
+  MessageCircle, 
+  Bell, 
+  User, 
+  LogOut 
+} from 'lucide-react';
 
 export default function CustomerLayout() {
   const { user, logout } = useAuth();
@@ -13,24 +25,31 @@ export default function CustomerLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Customer Portal
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Car className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Auto Service Portal
               </h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {user?.name || 'Customer'}
-              </span>
+              <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
+                <User className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {user?.name || 'Customer'}
+                </span>
+              </div>
               <button
                 onClick={handleLogout}
-                className="text-sm text-red-600 hover:text-red-500"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
               >
-                Logout
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
               </button>
             </div>
           </div>
@@ -39,111 +58,127 @@ export default function CustomerLayout() {
 
       <div className="flex">
         {/* Sidebar */}
-        <nav className="w-64 bg-white shadow-sm min-h-screen">
-          <div className="p-4">
-            <nav className="space-y-2">
+        <nav className="w-64 bg-white shadow-lg border-r border-gray-200 min-h-screen">
+          <div className="p-6">
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Navigation</h2>
+              <div className="w-12 h-1 bg-blue-600 rounded-full"></div>
+            </div>
+            
+            <nav className="space-y-1">
               <Link
                 to="/"
-                className="block px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100"
+                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               >
-                🏠 Home
+                <Home className="w-5 h-5" />
+                <span>Home</span>
               </Link>
               
               <Link
                 to="/customer/dashboard"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                📊 Dashboard
+                <BarChart3 className="w-5 h-5" />
+                <span>Dashboard</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/vehicles"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/vehicles' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                🚗 My Vehicles
+                <Car className="w-5 h-5" />
+                <span>My Vehicles</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/appointments"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/appointments' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                📅 Appointments
+                <Calendar className="w-5 h-5" />
+                <span>Appointments</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/services"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/services' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                🔧 Services
+                <Wrench className="w-5 h-5" />
+                <span>Services</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/invoices"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/invoices' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                💰 Invoices
+                <DollarSign className="w-5 h-5" />
+                <span>Invoices</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/messages"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/messages' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                💬 Messages
+                <MessageCircle className="w-5 h-5" />
+                <span>Messages</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/notifications"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/notifications' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                🔔 Notifications
+                <Bell className="w-5 h-5" />
+                <span>Notifications</span>
               </Link>
               
               <Link
                 to="/customer/dashboard/profile"
-                className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   location.pathname === '/customer/dashboard/profile' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                👤 Profile
+                <User className="w-5 h-5" />
+                <span>Profile</span>
               </Link>
             </nav>
           </div>
         </nav>
 
-                 {/* Main Content */}
-         <main className="flex-1 p-6">
-           <Outlet />
-         </main>
+        {/* Main Content */}
+        <main className="flex-1 p-8 bg-gray-50">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );
