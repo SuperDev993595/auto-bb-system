@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
-import { FileText, X } from 'lucide-react';
+import { FileText, X, CheckCircle, DollarSign } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -153,7 +153,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-2xl">📄</span>
+              <FileText className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Invoiced</p>
@@ -164,7 +164,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Paid</p>
@@ -175,7 +175,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <span className="text-2xl">💰</span>
+              <DollarSign className="w-8 h-8 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Outstanding</p>
