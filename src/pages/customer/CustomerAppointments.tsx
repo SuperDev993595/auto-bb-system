@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Appointment as AppointmentType, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
-import { Calendar, Clock, Truck, Cog, User, Flag, FileText } from 'lucide-react';
+import { Calendar, Clock, Truck, Cog, User, Flag, FileText, Lightbulb, AlertTriangle, CheckCircle, Wrench, DollarSign, X, Clipboard } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../redux';
 
 interface Appointment {
@@ -401,11 +401,11 @@ export default function CustomerAppointments() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'scheduled': return '📅';
-      case 'in-progress': return '🔧';
-      case 'completed': return '✅';
-      case 'cancelled': return '❌';
-      default: return '📋';
+      case 'scheduled': return <Calendar className="w-6 h-6 text-blue-600" />;
+      case 'in-progress': return <Wrench className="w-6 h-6 text-yellow-600" />;
+      case 'completed': return <CheckCircle className="w-6 h-6 text-green-600" />;
+      case 'cancelled': return <X className="w-6 h-6 text-red-600" />;
+      default: return <Clipboard className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -457,7 +457,7 @@ export default function CustomerAppointments() {
               <div className="mt-3 space-y-2">
                 {smartSuggestions.slice(0, 2).map((suggestion) => (
                   <div key={suggestion.id} className="flex items-center text-sm text-amber-700 bg-amber-100 px-3 py-2 rounded-lg">
-                    <span className="mr-2">💡</span>
+                    <Lightbulb className="w-4 h-4 mr-2" />
                     {suggestion.description}
                     <button 
                       className="ml-2 text-amber-800 underline hover:text-amber-900"
@@ -473,7 +473,7 @@ export default function CustomerAppointments() {
             {/* No Vehicles Warning */}
             {vehicles.length === 0 && (
               <div className="mt-3 flex items-center text-sm text-red-700 bg-red-100 px-3 py-2 rounded-lg">
-                <span className="mr-2">⚠️</span>
+                <AlertTriangle className="w-4 h-4 mr-2" />
                 No vehicles found. Please add a vehicle first to schedule appointments.
               </div>
             )}
@@ -488,7 +488,7 @@ export default function CustomerAppointments() {
                 : 'bg-green-600 hover:bg-green-700 text-white hover:shadow-xl'
             }`}
           >
-            <span>📅</span>
+            <Calendar className="w-5 h-5" />
             <span>
               {vehicles.length === 0 ? 'No Vehicles Available' : 'Schedule Appointment'}
             </span>
@@ -501,7 +501,7 @@ export default function CustomerAppointments() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-2xl">📅</span>
+              <Calendar className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Appointments</p>
@@ -512,7 +512,7 @@ export default function CustomerAppointments() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Upcoming</p>
@@ -523,7 +523,7 @@ export default function CustomerAppointments() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <span className="text-2xl">🔧</span>
+              <Wrench className="w-8 h-8 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Completed</p>
@@ -536,7 +536,7 @@ export default function CustomerAppointments() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <span className="text-2xl">💰</span>
+              <DollarSign className="w-8 h-8 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Spent</p>
@@ -612,8 +612,8 @@ export default function CustomerAppointments() {
                 <tr key={appointment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="text-lg mr-3">{getStatusIcon(appointment.status)}</span>
-                      <div>
+                      {getStatusIcon(appointment.status)}
+                      <div className="ml-3">
                         <div className="text-sm font-medium text-gray-900">
                           #{appointment.id}
                         </div>
@@ -694,7 +694,7 @@ export default function CustomerAppointments() {
         {filteredAppointments.length === 0 && (
           <div className="text-center py-12">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <span className="text-3xl">📅</span>
+              <Calendar className="w-12 h-12 text-gray-600" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {activeTab === 'upcoming' ? 'No upcoming appointments' : 'No past appointments'}
