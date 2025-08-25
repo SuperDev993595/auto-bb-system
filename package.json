@@ -6,6 +6,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
+    "start": "npm run build && npm run server",
     "server": "node server/index.js",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "setup-db": "node scripts/setup-database.js",
