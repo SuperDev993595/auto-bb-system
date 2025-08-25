@@ -16,7 +16,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   serviceDescription: {
     type: String,
-    required: [true, 'Service description is required'],
+    required: false,
     trim: true
   },
   scheduledDate: {
@@ -50,7 +50,7 @@ const appointmentSchema = new mongoose.Schema({
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Appointment must be assigned to a user']
+    required: false
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

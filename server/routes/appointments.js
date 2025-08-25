@@ -14,61 +14,65 @@ const router = express.Router();
 // Validation schemas
 const appointmentSchema = Joi.object({
   customerId: Joi.string().required(),
-  vehicleId: Joi.string().optional(),
+  vehicle: Joi.string().optional().allow('', null), // Vehicle ID reference - optional in model
   serviceType: Joi.string().required(),
-  date: Joi.date().required(),
-  time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
-  notes: Joi.string().optional(),
+  serviceDescription: Joi.string().optional().allow('', null), // Will be generated from serviceType if not provided
+  scheduledDate: Joi.date().required(), // Modern field name
+  scheduledTime: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(), // Modern field name
+  estimatedDuration: Joi.number().min(15).max(480).required(),
+  assignedTo: Joi.string().optional().allow(null, ''),
+  priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
   status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
   // Legacy fields for backward compatibility
-  customer: Joi.string().optional(),
-  vehicle: Joi.string().optional(),
-  serviceDescription: Joi.string().optional(),
-  scheduledDate: Joi.date().optional(),
-  scheduledTime: Joi.string().optional(),
-  estimatedDuration: Joi.number().min(15).max(480).optional(),
-  assignedTo: Joi.string().optional(),
-  technician: Joi.string().optional(),
-  priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
-  customerNotes: Joi.string().optional(),
+  date: Joi.date().optional(), // Legacy field - will be mapped to scheduledDate
+  time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(), // Legacy field - will be mapped to scheduledTime
+  vehicleId: Joi.string().optional().allow('', null), // Legacy field - will be mapped to vehicle
+  notes: Joi.string().optional().allow('', null),
+  technician: Joi.string().optional().allow('', null),
+  customerNotes: Joi.string().optional().allow('', null),
   partsRequired: Joi.array().items(Joi.object({
     name: Joi.string().required(),
-    partNumber: Joi.string().optional(),
+    partNumber: Joi.string().optional().allow('', null),
     quantity: Joi.number().min(1).required(),
     cost: Joi.number().min(0).optional(),
     inStock: Joi.boolean().default(false)
   })).optional(),
-  tags: Joi.array().items(Joi.string()).optional()
+  tags: Joi.array().items(Joi.string().allow('', null)).optional()
 });
 
 const appointmentUpdateSchema = Joi.object({
-  vehicle: Joi.string().optional(), // Vehicle ID reference
-  serviceType: Joi.string().optional(), // ObjectId reference to ServiceCatalog
-  serviceDescription: Joi.string().optional(),
+  vehicle: Joi.string().optional().allow('', null), // Vehicle ID reference
+  serviceType: Joi.string().optional().allow('', null), // ObjectId reference to ServiceCatalog
+  serviceDescription: Joi.string().optional().allow('', null), // Can be empty or null
   scheduledDate: Joi.date().optional(),
   scheduledTime: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),
   estimatedDuration: Joi.number().min(15).max(480).optional(),
   status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').optional(),
-  assignedTo: Joi.string().optional(),
-  technician: Joi.string().optional(),
+  assignedTo: Joi.string().optional().allow('', null),
+  technician: Joi.string().optional().allow('', null),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
-  notes: Joi.string().optional(),
-  customerNotes: Joi.string().optional(),
+  notes: Joi.string().optional().allow('', null),
+  customerNotes: Joi.string().optional().allow('', null),
+  // Legacy fields for backward compatibility
+  customerId: Joi.string().optional().allow('', null), // Legacy field - will be ignored in updates
+  date: Joi.date().optional(), // Legacy field - will be mapped to scheduledDate
+  time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(), // Legacy field - will be mapped to scheduledTime
+  vehicleId: Joi.string().optional().allow('', null), // Legacy field - will be mapped to vehicle
   partsRequired: Joi.array().items(Joi.object({
     name: Joi.string().required(),
-    partNumber: Joi.string().optional(),
+    partNumber: Joi.string().optional().allow('', null),
     quantity: Joi.number().min(1).required(),
     cost: Joi.number().min(0).optional(),
     inStock: Joi.boolean().default(false)
   })).optional(),
   actualDuration: Joi.number().min(0).optional(),
-  completionNotes: Joi.string().optional(),
+  completionNotes: Joi.string().optional().allow('', null),
   actualCost: Joi.object({
     parts: Joi.number().min(0).optional(),
     labor: Joi.number().min(0).optional(),
     total: Joi.number().min(0).optional()
   }).optional(),
-  tags: Joi.array().items(Joi.string()).optional()
+  tags: Joi.array().items(Joi.string().allow('', null)).optional()
 });
 
 // @route   GET /api/appointments
@@ -459,9 +463,26 @@ router.get('/:id', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.post('/', requireAnyAdmin, async (req, res) => {
   try {
+    // Normalize request body for better compatibility
+    const normalizedBody = { ...req.body };
+    
+    // Ensure required fields are present
+    if (!normalizedBody.scheduledDate && normalizedBody.date) {
+      normalizedBody.scheduledDate = normalizedBody.date;
+    }
+    if (!normalizedBody.scheduledTime && normalizedBody.time) {
+      normalizedBody.scheduledTime = normalizedBody.time;
+    }
+    if (!normalizedBody.vehicle && normalizedBody.vehicleId) {
+      normalizedBody.vehicle = normalizedBody.vehicleId;
+    }
+    
     // Validate input
-    const { error, value } = appointmentSchema.validate(req.body);
+    const { error, value } = appointmentSchema.validate(normalizedBody);
     if (error) {
+      console.log('Appointment validation error:', error.details[0].message);
+      console.log('Request body:', req.body);
+      console.log('Normalized body:', normalizedBody);
       return res.status(400).json({
         success: false,
         message: error.details[0].message
@@ -517,7 +538,7 @@ router.post('/', requireAnyAdmin, async (req, res) => {
     const appointmentData = {
       customer: value.customerId || value.customer,
       serviceType: value.serviceType,
-      serviceDescription: value.serviceDescription || value.serviceType,
+      serviceDescription: value.serviceDescription || value.serviceType || 'Service appointment', // Ensure serviceDescription is never empty
       scheduledDate: value.date || value.scheduledDate,
       scheduledTime: value.time || value.scheduledTime,
       estimatedDuration: value.estimatedDuration || 60, // Default 1 hour
@@ -539,7 +560,7 @@ router.post('/', requireAnyAdmin, async (req, res) => {
 
     const appointment = new Appointment(appointmentData);
 
-
+    console.log('Creating appointment with data:', appointmentData);
 
     await appointment.save();
 
@@ -571,8 +592,10 @@ router.post('/', requireAnyAdmin, async (req, res) => {
 // @access  Private
 router.put('/:id', requireAnyAdmin, async (req, res) => {
   try {
-    // Map test fields to schema fields for compatibility
+    // Map legacy fields to schema fields for compatibility
     const mappedBody = { ...req.body };
+    
+    // Map date/time fields
     if (mappedBody.time && !mappedBody.scheduledTime) {
       mappedBody.scheduledTime = mappedBody.time;
       delete mappedBody.time;
@@ -581,10 +604,30 @@ router.put('/:id', requireAnyAdmin, async (req, res) => {
       mappedBody.scheduledDate = mappedBody.date;
       delete mappedBody.date;
     }
+    
+    // Map vehicle fields
+    if (mappedBody.vehicleId && !mappedBody.vehicle) {
+      mappedBody.vehicle = mappedBody.vehicleId;
+      delete mappedBody.vehicleId;
+    }
+    
+    // Map customer fields
+    if (mappedBody.customer && !mappedBody.customerId) {
+      mappedBody.customerId = mappedBody.customer;
+      delete mappedBody.customer;
+    }
+    
+    // Ensure serviceDescription is never empty if updating
+    if (mappedBody.serviceDescription === '') {
+      delete mappedBody.serviceDescription;
+    }
 
     // Validate input
     const { error, value } = appointmentUpdateSchema.validate(mappedBody);
     if (error) {
+      console.log('Appointment update validation error:', error.details[0].message);
+      console.log('Request body:', req.body);
+      console.log('Mapped body:', mappedBody);
       return res.status(400).json({
         success: false,
         message: error.details[0].message
@@ -665,6 +708,7 @@ router.delete('/:id', requireAnyAdmin, async (req, res) => {
       console.log('Admin accessing appointment not assigned to them - allowing for testing');
     }
 
+    console.log('============================Deleting appointment:', req.params.id);
     await Appointment.findByIdAndDelete(req.params.id);
 
     res.json({
