@@ -292,54 +292,38 @@ export default function AppointmentsPage() {
             setIsCreatingAppointment(true)
             
             // Validate required fields
-            if (!appointmentData.customer || !appointmentData.vehicle || !appointmentData.date || !appointmentData.serviceType) {
+            if (!appointmentData.customer || !appointmentData.vehicle || !appointmentData.scheduledDate || !appointmentData.scheduledTime || !appointmentData.serviceType) {
                 toast.error('Please fill in all required fields');
                 return;
             }
 
-            // Prepare data for API using the service interface
-            const appointmentPayload = {
+            // Add to Redux store
+            const newAppointment = {
+                id: appointmentData._id || `apt${Date.now()}`,
                 customerId: appointmentData.customerId,
-                date: appointmentData.date.split('T')[0],
-                time: appointmentData.date.split('T')[1]?.substring(0, 5) || '09:00',
-                service: appointmentData.serviceType,
+                customerName: appointmentData.customer,
                 vehicleId: appointmentData.vehicleId,
+                vehicleInfo: appointmentData.vehicle,
+                scheduledDate: appointmentData.scheduledDate,
+                scheduledTime: appointmentData.scheduledTime,
+                estimatedDuration: 60,
+                serviceType: appointmentData.serviceType,
+                description: appointmentData.serviceType,
+                status: 'scheduled' as const,
+                priority: 'medium' as const,
+                createdDate: new Date().toISOString().split('T')[0],
                 notes: appointmentData.notes || '',
-                technicianId: appointmentData.technicianId || (technicians.length > 0 ? technicians[0].id : undefined)
+                technicianId: appointmentData.technicianId || (technicians.length > 0 ? technicians[0].id : undefined),
+                technicianName: appointmentData.technicianName || (technicians.length > 0 ? technicians[0].name : undefined),
             }
-
-            const response = await appointmentService.createAppointment(appointmentPayload)
-
-            if (response.success) {
-                // Add to Redux store
-                const newAppointment = {
-                    id: response.data.appointment._id || `apt${Date.now()}`,
-                    customerId: appointmentData.customerId,
-                    customerName: appointmentData.customer,
-                    vehicleId: appointmentData.vehicleId,
-                    vehicleInfo: appointmentData.vehicle,
-                    scheduledDate: appointmentData.date.split('T')[0],
-                    scheduledTime: appointmentData.date.split('T')[1]?.substring(0, 5) || '09:00',
-                    estimatedDuration: 60,
-                    serviceType: appointmentData.serviceType,
-                    description: appointmentData.serviceType,
-                    status: 'scheduled' as const,
-                    priority: 'medium' as const,
-                    createdDate: new Date().toISOString().split('T')[0],
-                    notes: appointmentData.notes || '',
-                    technicianId: appointmentData.technicianId || (technicians.length > 0 ? technicians[0].id : undefined),
-                    technicianName: appointmentData.technicianName || (technicians.length > 0 ? technicians[0].name : undefined),
-                }
-                
-                dispatch(addAppointment(newAppointment))
-                toast.success('Appointment created successfully!')
-                setShowNewAppointmentModal(false)
-                
-                // Refresh appointments list
-                fetchAppointments()
-            } else {
-                toast.error(response.message || 'Failed to create appointment')
-            }
+            
+            dispatch(addAppointment(newAppointment))
+            toast.success('Appointment created successfully!')
+            setShowNewAppointmentModal(false)
+            
+            // Refresh appointments list
+            fetchAppointments()
+            
         } catch (error) {
             console.error('Error creating appointment:', error)
             toast.error('Failed to create appointment. Please try again.')

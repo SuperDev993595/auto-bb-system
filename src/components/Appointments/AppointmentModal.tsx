@@ -75,7 +75,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         status: 'scheduled',
         technicianId: "",
         technicianName: "",
-        customerType: 'new',
+        customerType: 'existing', // Always existing
         existingCustomerId: "",
         date: selectedDate ? selectedDate.toISOString().split('T')[0] : "",
         time: selectedTime || "09:00"
@@ -91,10 +91,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
     const dispatch = useAppDispatch();
     const [technicians, setTechnicians] = useState<any[]>([]);
 
-    const [useExistingVehicle, setUseExistingVehicle] = useState(false);
     const [availableCustomers, setAvailableCustomers] = useState<Array<{id: string, name: string, email: string, phone?: string}>>([]);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState<Vehicle[]>([]);
-    const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'exists'>('idle');
+    const [isLoadingCustomerVehicles, setIsLoadingCustomerVehicles] = useState(false);
     
     const vehicleInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,9 +191,9 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 serviceTypeName = appointment.serviceType.name || '';
                 serviceTypeId = appointment.serviceType._id || '';
             } else if (typeof appointment.serviceType === 'string') {
-                serviceTypeName = appointment.serviceType;
-                // For string serviceType, we need to find the corresponding serviceTypeId
-                // This will be handled when the service types are loaded
+                // serviceType is just an ID string, we'll need to find the name later
+                serviceTypeId = appointment.serviceType;
+                serviceTypeName = ''; // Will be populated when service types are loaded
             }
             
             console.log('Service type processing:', {
@@ -230,7 +229,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             });
             
             // Set useExistingVehicle to true when editing an existing appointment
-            setUseExistingVehicle(true);
+            // setUseExistingVehicle(true); // This state is removed
         } else {
             // Set date based on selected date from calendar or default to tomorrow
             let targetDate: Date;
@@ -404,18 +403,32 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
     const loadServiceTypes = async () => {
         try {
+            console.log('Loading service types...');
+            console.log('API endpoint:', `${API_ENDPOINTS.SERVICES}/types`);
+            console.log('Auth headers:', getAuthHeaders());
+            
             const response = await fetch(`${API_ENDPOINTS.SERVICES}/types`, {
                 headers: getAuthHeaders()
             });
+            console.log('Service types response status:', response.status);
+            console.log('Service types response headers:', response.headers);
+            
             if (response.ok) {
                 const data = await response.json();
+                console.log('Service types response data:', data);
                 if (data.success) {
                     console.log('Loaded service types:', data.data);
                     const serviceTypesData = Array.isArray(data.data) ? data.data : [];
+                    console.log('Setting service types state:', serviceTypesData);
                     setServiceTypes(serviceTypesData);
                     
                     // If we're editing and have a serviceType name but no ID, try to find the matching service
                     if (isEditing && form.serviceType && !form.serviceTypeId) {
+                        console.log('Looking for matching service:', {
+                            serviceType: form.serviceType,
+                            serviceTypeId: form.serviceTypeId,
+                            availableServices: serviceTypesData.map((s: any) => ({ id: s._id || s.id, name: s.name }))
+                        });
                         const matchingService = serviceTypesData.find((service: any) => 
                             service.name === form.serviceType
                         );
@@ -425,21 +438,52 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 ...prev,
                                 serviceTypeId: matchingService._id || matchingService.id || ''
                             }));
+                        } else {
+                            console.log('No matching service found for:', form.serviceType);
                         }
                     }
+                    
+                    // If we're editing and have a serviceTypeId but no serviceType name, try to find the matching service
+                    if (isEditing && form.serviceTypeId && !form.serviceType) {
+                        console.log('Looking for matching service by ID:', {
+                            serviceTypeId: form.serviceTypeId,
+                            serviceType: form.serviceType,
+                            availableServices: serviceTypesData.map((s: any) => ({ id: s._id || s.id, name: s.name }))
+                        });
+                        const matchingService = serviceTypesData.find((service: any) => 
+                            (service._id || service.id) === form.serviceTypeId
+                        );
+                        if (matchingService) {
+                            console.log('Found matching service by ID:', matchingService);
+                            setForm(prev => ({
+                                ...prev,
+                                serviceType: matchingService.name || ''
+                            }));
+                        } else {
+                            console.log('No matching service found for ID:', form.serviceTypeId);
+                        }
+                    }
+                } else {
+                    console.error('Service types response not successful:', data);
+                    setServiceTypes([]);
                 }
             } else {
                 console.error('Failed to load service types:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error response body:', errorText);
+                setServiceTypes([]);
             }
         } catch (error) {
             console.warn('Failed to load service types:', error);
-            // Fallback to empty array
+            console.error('Error details:', error);
             setServiceTypes([]);
         } finally {
             // Ensure serviceTypes is always an array
             setServiceTypes(prev => Array.isArray(prev) ? prev : []);
         }
     };
+
+
 
     const loadVehicleMakes = async () => {
         try {
@@ -464,6 +508,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
     const loadCustomerVehicles = async (customerId: string) => {
         try {
+            setIsLoadingCustomerVehicles(true);
             const response = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles?customer=${customerId}`, {
                 headers: getAuthHeaders()
             });
@@ -478,6 +523,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             console.warn('Failed to load customer vehicles:', error);
             setSelectedCustomerVehicles([]);
         } finally {
+            setIsLoadingCustomerVehicles(false);
             setSelectedCustomerVehicles(prev => Array.isArray(prev) ? prev : []);
         }
     };
@@ -565,7 +611,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
     // Filter vehicles based on input
     useEffect(() => {
-        if (form.vehicle && !useExistingVehicle) {
+        if (form.vehicle && form.customerType === 'existing') {
             const input = form.vehicle.toLowerCase().trim();
             
             // First, filter makes that match the input
@@ -602,7 +648,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         } else {
             setShowVehicleSuggestions(false);
         }
-    }, [form.vehicle, useExistingVehicle, vehicleMakes]);
+    }, [form.vehicle, form.customerType, vehicleMakes]);
 
 
 
@@ -617,6 +663,20 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 scheduledDate: datePart,
                 scheduledTime: timePart || '09:00'
             }));
+        }
+        // Handle service type selection
+        else if (name === 'serviceType') {
+            const selectedService = serviceTypes.find(service => 
+                (service._id || service.id) === value
+            );
+            if (selectedService) {
+                setForm(prev => ({ 
+                    ...prev, 
+                    serviceType: selectedService.name,
+                    serviceTypeId: selectedService._id || selectedService.id,
+                    estimatedDuration: selectedService.estimatedDuration || 60
+                }));
+            }
         }
         // Handle number fields
         else if (name === 'estimatedDuration') {
@@ -640,54 +700,43 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             vin: vehicle.vin,
             licensePlate: vehicle.licensePlate
         }));
-        setUseExistingVehicle(false);
+        // setUseExistingVehicle(false); // This state is removed
+    };
+
+    const handleExistingVehicleSelection = (vehicleId: string) => {
+        if (vehicleId) {
+            const vehicle = (selectedCustomerVehicles || []).find(v => v.id === vehicleId);
+            if (vehicle) {
+                setForm(prev => ({
+                    ...prev,
+                    vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+                    vehicleId: vehicle.id,
+                    vin: vehicle.vin || "",
+                    licensePlate: vehicle.licensePlate || ""
+                }));
+            }
+        } else {
+            setForm(prev => ({
+                ...prev,
+                vehicle: "",
+                vehicleId: "",
+                vin: "",
+                licensePlate: ""
+            }));
+        }
     };
 
     const validateForm = (): boolean => {
         const newErrors: Partial<AppointmentData> = {};
 
-        if (!form.customer.trim()) {
-            newErrors.customer = 'Customer name is required';
-        } else if (form.customer.trim().length < 2) {
-            newErrors.customer = 'Customer name must be at least 2 characters';
+        // Customer validation - only existing customers allowed
+        if (!form.existingCustomerId) {
+            newErrors.existingCustomerId = 'Please select an existing customer';
         }
 
-        // Email validation for new customers
-        if (form.customerType === 'new') {
-            if (!form.email.trim()) {
-                newErrors.email = 'Email address is required';
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-                newErrors.email = 'Please enter a valid email address';
-            } else if (emailStatus === 'exists') {
-                newErrors.email = 'This email is already registered. Please use a different email or select "Existing Customer" instead.';
-            } else if (emailStatus === 'checking') {
-                newErrors.email = 'Checking email availability...';
-            }
-        }
-
-        if (!form.vehicle.trim()) {
-            newErrors.vehicle = 'Vehicle information is required';
-        } else if (form.customerType === 'new' || !useExistingVehicle) {
-            // Basic vehicle validation for new vehicles
-            const vehicleText = form.vehicle.trim();
-            const parts = vehicleText.split(' ').filter(part => part.length > 0);
-            
-            if (parts.length < 1) {
-                newErrors.vehicle = 'Please enter at least a vehicle make (e.g., Toyota, Honda)';
-            } else if (parts.length === 1) {
-                // Only make provided, that's okay
-            } else {
-                // Check if first part could be a year
-                const firstPart = parts[0];
-                const yearMatch = firstPart.match(/^(19|20)\d{2}$/);
-                
-                if (yearMatch) {
-                    const year = parseInt(firstPart);
-                    if (year < 1900 || year > new Date().getFullYear() + 1) {
-                        newErrors.vehicle = `Invalid year: ${year}. Please enter a year between 1900 and ${new Date().getFullYear() + 1}`;
-                    }
-                }
-            }
+        // Vehicle validation - only existing vehicles allowed
+        if (!form.vehicleId) {
+            newErrors.vehicle = 'Please select a vehicle for this customer';
         }
 
         if (!form.scheduledDate) {
@@ -700,22 +749,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             }
         }
 
-        if (!form.serviceType.trim()) {
+        if (!form.serviceTypeId) {
             newErrors.serviceType = 'Service type is required';
         }
 
         if (form.estimatedDuration < 15 || form.estimatedDuration > 480) {
             newErrors.estimatedDuration = 'Estimated duration must be between 15 and 480 minutes' as any;
-        }
-
-        // Phone validation (optional but if provided, validate format)
-        if (form.phone.trim() && !/^[\+]?[1-9][\d]{0,15}$/.test(form.phone.replace(/[\s\-\(\)]/g, ''))) {
-            newErrors.phone = 'Please enter a valid phone number';
-        }
-
-        // VIN validation (optional but if provided, validate format)
-        if (form.vin.trim() && (form.vin.trim().length < 8 || form.vin.trim().length > 17)) {
-            newErrors.vin = 'VIN must be between 8 and 17 characters long';
         }
 
         setErrors(newErrors);
@@ -739,229 +778,20 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 throw new Error('Backend server is not running. Please start the server with: npm run server');
             }
 
-            // Handle customer creation/finding based on customer type
+            // Handle customer - only existing customers allowed
             let customerId = null;
-            let userId = null;
-            let securePassword = ''; // Declare outside try block for scope
             
-            try {
-                if (appointmentData.customerType === 'existing' && appointmentData.existingCustomerId) {
-                    // Use existing customer
-                    customerId = appointmentData.existingCustomerId;
-                } else {
-                    // Create new customer and user
-                    const currentUser = authService.getCurrentUserFromStorage();
-                    
-                                         // Check if email already exists before creating user
-                     const emailCheckResponse = await fetch(`${API_ENDPOINTS.AUTH}/check-email`, {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json'
-                         },
-                         body: JSON.stringify({
-                             email: appointmentData.email
-                         })
-                     });
-
-                     if (emailCheckResponse.ok) {
-                         const emailCheckData = await emailCheckResponse.json();
-                         if (emailCheckData.exists) {
-                             throw new Error(`A user with email ${appointmentData.email} already exists. Please use a different email or select "Existing Customer" instead.`);
-                         }
-                     }
-
-                     // Generate a secure random password
-                     const generatePassword = () => {
-                         const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-                         let password = '';
-                         for (let i = 0; i < 12; i++) {
-                             password += charset.charAt(Math.floor(Math.random() * charset.length));
-                         }
-                         return password;
-                     };
-
-                     securePassword = generatePassword();
-
-                     // First, create a new user account
-                     const userResponse = await fetch(`${API_ENDPOINTS.AUTH}/register`, {
-                        method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json'
-                         },
-                        body: JSON.stringify({
-                            name: appointmentData.customer,
-                             email: appointmentData.email,
-                             password: securePassword, // Secure random password
-                             role: 'customer',
-                            phone: appointmentData.phone || '',
-                             businessName: appointmentData.businessName || ''
-                        })
-                    });
-
-                     if (userResponse.ok) {
-                         const userData = await userResponse.json();
-                         if (userData.success) {
-                             userId = userData.data.user._id || userData.data.user.id;
-                         } 
-                     } else {
-                         const errorData = await userResponse.json().catch(() => ({}));
-                         if (errorData.message && errorData.message.includes('already exists')) {
-                             throw new Error(`A user with email ${appointmentData.email} already exists. Please use a different email or select "Existing Customer" instead.`);
-                         }
-                         throw new Error(errorData.message || `Failed to create user account (${userResponse.status})`);
-                     }
-
-                                         // Customer record is automatically created during user registration
-                     // We need to fetch the customer ID that was created
-                     const customerResponse = await fetch(`${API_ENDPOINTS.CUSTOMERS}?email=${encodeURIComponent(appointmentData.email)}`, {
-                         headers: getAuthHeaders()
-                     });
-
-                     if (!customerResponse.ok) {
-                         throw new Error(`Failed to fetch customer data after user registration (${customerResponse.status})`);
-                     }
-
-                        const customerData = await customerResponse.json();
-                     if (!customerData.success) {
-                         throw new Error(customerData.message || 'Failed to fetch customer data after user registration');
-                     }
-
-                     if (!customerData.data.customers || customerData.data.customers.length === 0) {
-                         throw new Error('Customer record was not found after user registration. Please try again or contact support.');
-                     }
-
-                     customerId = customerData.data.customers[0]._id || customerData.data.customers[0].id;
-                     
-                     if (!customerId) {
-                         throw new Error('Customer ID is missing from the customer record. Please try again or contact support.');
-                    }
-                }
-            } catch (error) {
-                console.warn('Customer creation/finding failed:', error);
-                throw new Error('Failed to create or find customer. Please try again.');
+            if (!appointmentData.existingCustomerId) {
+                throw new Error('Please select an existing customer');
             }
+            
+            customerId = appointmentData.existingCustomerId;
 
-            // Handle vehicle - use existing vehicle ID if available, otherwise create new vehicle
+            // Handle vehicle - only existing vehicles allowed
             let vehicleId = appointmentData.vehicleId;
             
-            // Create new vehicle if:
-            // 1. No vehicle ID is provided AND
-            // 2. Either it's a new customer (who must have new vehicles) OR
-            // 3. It's an existing customer who selected "New Vehicle" option
-            // 4. OR if we're editing and the user changed to "New Vehicle" option
-            const shouldCreateNewVehicle = !vehicleId && (appointmentData.customerType === 'new' || !useExistingVehicle);
-            
-            if (shouldCreateNewVehicle) {
-                // Validate that we have vehicle information
-                if (!appointmentData.vehicle.trim()) {
-                    throw new Error('Vehicle information is required when creating a new vehicle');
-                }
-                
-                // Parse vehicle info for new vehicle creation
-                const vehicleText = appointmentData.vehicle.trim();
-                
-                let make = '';
-                let model = '';
-                let year = new Date().getFullYear();
-                
-                const yearMatch = vehicleText.match(/\b(19|20)\d{2}\b/);
-                if (yearMatch) {
-                    year = parseInt(yearMatch[0]);
-                    const vehicleWithoutYear = vehicleText.replace(/\b(19|20)\d{2}\b/, '').trim();
-                    const parts = vehicleWithoutYear.split(' ').filter(part => part.length > 0);
-                    
-                    if (parts.length >= 2) {
-                        make = parts[0];
-                        model = parts.slice(1).join(' ');
-                    } else if (parts.length === 1) {
-                        make = parts[0];
-                        model = ''; // Leave empty instead of placeholder
-                    }
-                } else {
-                    const parts = vehicleText.split(' ').filter(part => part.length > 0);
-                    if (parts.length >= 2) {
-                        make = parts[0];
-                        model = parts.slice(1).join(' ');
-                    } else if (parts.length === 1) {
-                        make = parts[0];
-                        model = ''; // Leave empty instead of placeholder
-                    }
-                }
-
-                if (!make.trim()) {
-                    throw new Error('Please enter a vehicle make (e.g., Toyota, Honda, Ford)');
-                }
-
-                // Validate that we have a model if make is provided
-                if (!model.trim()) {
-                    throw new Error('Please enter a vehicle model (e.g., Camry, Civic, F-150)');
-                }
-
-                if (year < 1900 || year > new Date().getFullYear() + 1) {
-                    throw new Error(`Invalid vehicle year: ${year}. Please enter a year between 1900 and ${new Date().getFullYear() + 1}`);
-                }
-
-                // Create new vehicle
-                try {
-                    console.log('Creating new vehicle for customer:', customerId);
-                    console.log('Vehicle data:', {
-                        year,
-                        make: make.trim(),
-                        model: model.trim(),
-                        vin: appointmentData.vin.trim() || '',
-                        licensePlate: appointmentData.licensePlate.trim() || '',
-                        customer: customerId
-                    });
-
-                    const vehicleResponse = await fetch(`${API_ENDPOINTS.APPOINTMENTS}/vehicles`, {
-                        method: 'POST',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({
-                            year,
-                            make: make.trim(),
-                            model: model.trim(),
-                            vin: appointmentData.vin.trim() || '',
-                            licensePlate: appointmentData.licensePlate.trim() || '',
-                            color: '',
-                            mileage: 0,
-                            status: 'active',
-                            customer: customerId // Associate with the customer (new or existing)
-                        })
-                    });
-
-                        const vehicleData = await vehicleResponse.json();
-                    console.log('Vehicle response status:', vehicleResponse.status);
-                    console.log('Vehicle response data:', vehicleData);
-                    
-                    if (vehicleResponse.ok && vehicleData.success) {
-                        // Both HTTP status and business logic are successful
-                            vehicleId = vehicleData.data.vehicle._id || vehicleData.data.vehicle.id;
-                        console.log('Vehicle created successfully with ID:', vehicleId);
-                    } else {
-                        // Either HTTP error or business logic error
-                        console.error('Vehicle creation failed:', {
-                            status: vehicleResponse.status,
-                            ok: vehicleResponse.ok,
-                            success: vehicleData.success,
-                            message: vehicleData.message
-                        });
-                        
-                        // Handle specific VIN duplicate error
-                        if (vehicleData.message && vehicleData.message.includes('already exists')) {
-                            throw new Error(`Vehicle with this VIN already exists. Please use a different VIN or leave it blank to generate one automatically.`);
-                        }
-                        
-                        throw new Error(vehicleData.message || `Failed to create vehicle (${vehicleResponse.status})`);
-                    }
-                } catch (error) {
-                    console.warn('Vehicle creation failed:', error);
-                    // Show specific error message and re-throw to cancel appointment creation
-                    if (error instanceof Error) {
-                        throw new Error(`Vehicle creation failed: ${error.message}. Appointment creation cancelled.`);
-                    } else {
-                        throw new Error('Vehicle creation failed. Appointment creation cancelled.');
-                    }
-                }
+            if (!vehicleId) {
+                throw new Error('Please select a vehicle for this customer');
             }
 
             // Use the service type ObjectId from the form
@@ -992,7 +822,6 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             const appointmentPayload: any = {
                 vehicle: vehicleId,
                 serviceType: serviceTypeId,
-                serviceDescription: appointmentData.serviceType,
                 scheduledDate: appointmentData.scheduledDate,
                 scheduledTime: appointmentData.scheduledTime,
                 estimatedDuration: appointmentData.estimatedDuration,
@@ -1001,9 +830,14 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 status: appointmentData.status
             };
 
-            // Only include customer field when creating new appointments
+            // Only include serviceDescription if it's not empty
+            if (appointmentData.serviceType && appointmentData.serviceType.trim()) {
+                appointmentPayload.serviceDescription = appointmentData.serviceType.trim();
+            }
+
+            // Only include customerId when creating new appointments, not when updating
             if (!isEditing || !appointment?.id) {
-                appointmentPayload.customer = customerId;
+                appointmentPayload.customerId = customerId;
             }
 
             // Add technician if selected
@@ -1050,31 +884,14 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             // Show appropriate success message
             if (isEditing && appointment?.id) {
                 toast.success('Appointment updated successfully!');
-            } else if (shouldCreateNewVehicle) {
-                toast.success('Appointment saved and new vehicle created successfully!');
             } else {
                 toast.success('Appointment saved to database successfully!');
-            }
-            
-            // If a new customer was created, show password information
-            if (appointmentData.customerType === 'new') {
-                toast.success(`New customer account created! Password: ${securePassword}`, {
-                    duration: 8000, // Show for 8 seconds
-                    icon: '🔑'
-                });
             }
             
             return savedAppointment;
         } catch (error) {
             console.error('Error saving appointment to database:', error);
-            
-            // Show specific error message for vehicle creation failures
-            if (error instanceof Error && error.message.includes('Vehicle creation failed')) {
-                toast.error(error.message);
-            } else {
             toast.error(error instanceof Error ? error.message : 'Failed to save appointment to database');
-            }
-            
             throw error;
         }
     };
@@ -1126,18 +943,12 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 toast.success(message);
                 
                 // Pass the saved appointment data (with real database ID) to the calendar
-                console.log('Saving appointment data to parent:', savedAppointment.data.appointment);
+                // The server returns the appointment data directly, not nested under data.appointment
+                console.log('Saving appointment data to parent:', savedAppointment);
                 onSave(savedAppointment.data.appointment);
                 
             } catch (dbError) {
                 console.warn('Database save failed:', dbError);
-                
-                // Check if it's a vehicle creation failure - don't save locally
-                if (dbError instanceof Error && dbError.message.includes('Vehicle creation failed')) {
-                    // Vehicle creation failed - don't save appointment locally
-                    console.log('Vehicle creation failed - appointment creation cancelled');
-                    return; // Exit without saving locally
-                }
                 
                 // Check if it's an authentication error
                 if (dbError instanceof Error && dbError.message.includes('login')) {
@@ -1173,6 +984,11 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         vehicleInputRef.current?.focus();
     };
 
+    // Remove unused functions
+    const handleCustomerTypeChange = (customerType: 'new' | 'existing') => {
+        // This function is no longer needed since we only allow existing customers
+    };
+
     const selectCustomer = (customer: {id: string, name: string, email: string, phone?: string}) => {
         setForm(prev => ({ 
             ...prev, 
@@ -1185,72 +1001,33 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         
         // Load vehicles for the selected customer
         loadCustomerVehicles(customer.id);
+        
+        // Clear vehicle selection when customer changes
+        setForm(prev => ({
+            ...prev,
+            vehicle: "",
+            vehicleId: "",
+            vin: "",
+            licensePlate: ""
+        }));
     };
 
+    // Remove unused functions
     const formatPhoneNumber = (value: string) => {
-        // Remove all non-digits
-        const phoneNumber = value.replace(/\D/g, '');
-        
-        // Format as (XXX) XXX-XXXX
-        if (phoneNumber.length <= 3) {
-            return phoneNumber;
-        } else if (phoneNumber.length <= 6) {
-            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-        } else {
-            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-        }
+        // This function is no longer needed
     };
 
     const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatPhoneNumber(e.target.value);
-        setForm(prev => ({ ...prev, phone: formatted }));
-        
-        if (errors.phone) {
-            setErrors(prev => ({ ...prev, phone: undefined }));
-        }
+        // This function is no longer needed
     };
 
-    // Check email availability
     const checkEmailAvailability = async (email: string) => {
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            setEmailStatus('idle');
-            return;
-        }
-
-        setEmailStatus('checking');
-        
-        try {
-            const response = await fetch(`${API_ENDPOINTS.AUTH}/check-email`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setEmailStatus(data.exists ? 'exists' : 'available');
-            } else {
-                setEmailStatus('idle');
-            }
-        } catch (error) {
-            console.warn('Email check failed:', error);
-            setEmailStatus('idle');
-        }
+        // This function is no longer needed
     };
 
-    // Debounced email check
+    // Remove unused useEffect for email check
     useEffect(() => {
-        if (form.customerType === 'new' && form.email) {
-            const timeoutId = setTimeout(() => {
-                checkEmailAvailability(form.email);
-            }, 500); // Wait 500ms after user stops typing
-
-            return () => clearTimeout(timeoutId);
-        } else {
-            setEmailStatus('idle');
-        }
+        // This effect is no longer needed
     }, [form.email, form.customerType]);
 
     return (
@@ -1263,58 +1040,41 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             submitColor="bg-blue-600"
         >
             <div className="p-6 space-y-6">
-                {/* Customer Type Selection */}
+                {/* Customer Selection */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                        Customer Information
+                        Customer & Vehicle Selection
                     </h3>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                        <label className="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                name="customerType"
-                                value="new"
-                                checked={form.customerType === 'new'}
-                                onChange={(e) => setForm(prev => ({ ...prev, customerType: e.target.value as 'new' | 'existing' }))}
-                                className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="text-sm font-medium text-gray-700">New Customer</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                name="customerType"
-                                value="existing"
-                                checked={form.customerType === 'existing'}
-                                onChange={(e) => setForm(prev => ({ ...prev, customerType: e.target.value as 'new' | 'existing' }))}
-                                className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="text-sm font-medium text-gray-700">Existing Customer</span>
-                        </label>
-                    </div>
-
-                    {form.customerType === 'existing' ? (
+                    <div className="space-y-4">
                         <div>
-                            <label className="form-label">Select Existing Customer</label>
+                            <label className="form-label">Select Customer *</label>
                             <select
                                 value={form.existingCustomerId}
                                 onChange={(e) => {
                                     const customerId = e.target.value;
-                                    setForm(prev => ({ ...prev, existingCustomerId: customerId }));
                                     if (customerId) {
                                         const customer = (availableCustomers || []).find(c => c.id === customerId);
                                         if (customer) {
-                                            setForm(prev => ({
-                                                ...prev,
-                                                customer: customer.name,
-                                                email: customer.email,
-                                                phone: customer.phone || ''
-                                            }));
+                                            selectCustomer(customer);
                                         }
+                                    } else {
+                                        setForm(prev => ({
+                                            ...prev,
+                                            customer: "",
+                                            email: "",
+                                            phone: "",
+                                            existingCustomerId: "",
+                                            vehicle: "",
+                                            vehicleId: "",
+                                            vin: "",
+                                            licensePlate: ""
+                                        }));
+                                        setSelectedCustomerVehicles([]);
                                     }
                                 }}
                                 className="form-select"
+                                required
                             >
                                 <option value="">Select a customer</option>
                                 {(availableCustomers || []).map(customer => (
@@ -1323,108 +1083,41 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                     </option>
                                 ))}
                             </select>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="form-label">Customer Name *</label>
-                                <input
-                                    type="text"
-                                    name="customer"
-                                    placeholder="Full name"
-                                    className="form-input"
-                                    onChange={handleChange}
-                                    value={form.customer}
-                                    disabled={isLoading || isSavingToDatabase}
-                                    required
-                                />
-                                {errors.customer && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.customer}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="form-label">Email *</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="email@example.com"
-                                    className="form-input"
-                                    onChange={handleChange}
-                                    value={form.email}
-                                    disabled={isLoading || isSavingToDatabase}
-                                    required
-                                />
-                                {errors.email && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="form-label">Phone *</label>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    placeholder="(555) 123-4567"
-                                    className="form-input"
-                                    onChange={handleChange}
-                                    value={form.phone}
-                                    disabled={isLoading || isSavingToDatabase}
-                                    required
-                                />
-                                {errors.phone && (
-                                    <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Vehicle Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                        Vehicle Information
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="form-label">Vehicle Make *</label>
-                            <input
-                                type="text"
-                                name="vehicle"
-                                placeholder="e.g., Toyota"
-                                className="form-input"
-                                onChange={handleChange}
-                                value={form.vehicle}
-                                disabled={isLoading || isSavingToDatabase}
-                                required
-                            />
-                            {errors.vehicle && (
-                                <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
+                            {errors.existingCustomerId && (
+                                <p className="text-red-500 text-sm mt-1">{errors.existingCustomerId}</p>
                             )}
                         </div>
-                        <div>
-                            <label className="form-label">VIN</label>
-                            <input
-                                type="text"
-                                name="vin"
-                                placeholder="Vehicle Identification Number"
-                                className="form-input"
-                                onChange={handleChange}
-                                value={form.vin}
-                                disabled={isLoading || isSavingToDatabase}
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">License Plate</label>
-                            <input
-                                type="text"
-                                name="licensePlate"
-                                placeholder="ABC123"
-                                className="form-input"
-                                onChange={handleChange}
-                                value={form.licensePlate}
-                                disabled={isLoading || isSavingToDatabase}
-                            />
-                        </div>
+                        
+                        {form.existingCustomerId && (
+                            <div>
+                                <label className="form-label">Select Vehicle *</label>
+                                <select
+                                    value={form.vehicleId}
+                                    onChange={(e) => handleExistingVehicleSelection(e.target.value)}
+                                    className="form-select"
+                                    disabled={isLoadingCustomerVehicles}
+                                    required
+                                >
+                                    <option value="">
+                                        {isLoadingCustomerVehicles ? 'Loading vehicles...' : 'Select a vehicle'}
+                                    </option>
+                                    {(selectedCustomerVehicles || []).map(vehicle => (
+                                        <option key={vehicle.id} value={vehicle.id}>
+                                            {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate || 'No Plate'}
+                                        </option>
+                                    ))}
+                                </select>
+                                {isLoadingCustomerVehicles && (
+                                    <p className="text-sm text-gray-500 mt-1">Loading customer vehicles...</p>
+                                )}
+                                {!isLoadingCustomerVehicles && selectedCustomerVehicles.length === 0 && form.existingCustomerId && (
+                                    <p className="text-sm text-gray-500 mt-1">No vehicles found for this customer</p>
+                                )}
+                                {errors.vehicle && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.vehicle}</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1474,7 +1167,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 name="serviceType"
                                 className="form-select"
                                 onChange={handleChange}
-                                value={form.serviceType}
+                                value={form.serviceTypeId}
                                 disabled={isLoading || isSavingToDatabase}
                                 required
                             >

@@ -1284,24 +1284,7 @@ router.get('/specializations', requireAnyAdmin, async (req, res) => {
   }
 });
 
-// @route   GET /api/services/types
-// @desc    Get all service types
-// @access  Private
-router.get('/types', requireAnyAdmin, async (req, res) => {
-  try {
-    const types = await ServiceCatalog.distinct('name');
-    res.json({
-      success: true,
-      data: { types }
-    });
-  } catch (error) {
-    console.error('Get service types error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-});
+
 
 // @route   GET /api/services/vehicle-makes
 // @desc    Get all vehicle makes
@@ -1316,6 +1299,43 @@ router.get('/vehicle-makes', requireAnyAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Get vehicle makes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/types
+// @desc    Get all service types for appointments
+// @access  Private
+router.get('/types', requireAnyAdmin, async (req, res) => {
+  try {
+    console.log('Fetching service types from ServiceCatalog...');
+    
+    const services = await ServiceCatalog.find({ isActive: true })
+      .select('_id name category estimatedDuration')
+      .sort({ name: 1 });
+    
+    console.log('Found services:', services);
+    
+    // Transform the data to ensure proper format
+    const transformedServices = services.map(service => ({
+      _id: service._id,
+      id: service._id, // Also include as 'id' for compatibility
+      name: service.name,
+      category: service.category || 'general',
+      estimatedDuration: service.estimatedDuration || 60
+    }));
+    
+    console.log('Transformed services:', transformedServices);
+    
+    res.json({
+      success: true,
+      data: transformedServices
+    });
+  } catch (error) {
+    console.error('Get service types error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -1751,27 +1771,7 @@ router.get('/specializations', requireAnyAdmin, async (req, res) => {
   }
 });
 
-// @route   GET /api/services/types
-// @desc    Get all service types for appointments
-// @access  Private
-router.get('/types', requireAnyAdmin, async (req, res) => {
-  try {
-    const services = await ServiceCatalog.find({ isActive: true })
-      .select('name category estimatedDuration')
-      .sort({ name: 1 });
-    
-    res.json({
-      success: true,
-      data: services
-    });
-  } catch (error) {
-    console.error('Get service types error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-});
+
 
 // @route   GET /api/services/vehicle-makes
 // @desc    Get all vehicle makes from existing vehicles

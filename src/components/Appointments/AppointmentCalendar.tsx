@@ -37,6 +37,7 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
   const [showEditAppointmentModal, setShowEditAppointmentModal] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   // Drag and drop state
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null)
@@ -52,13 +53,18 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
   // Load appointments from backend when component mounts
   const loadAppointments = async () => {
     try {
+      console.log('Loading appointments from backend...');
       const response = await AppointmentService.getAppointments();
       
       if (response.success) {
         // Check if appointments array exists and has data
         if (!response.data.appointments || response.data.appointments.length === 0) {
+          console.log('No appointments found, clearing Redux state');
+          dispatch(setAppointments([]));
           return;
         }
+        
+        console.log(`Found ${response.data.appointments.length} appointments`);
         
         // Transform backend data to match our Appointment interface
         const transformedAppointments = response.data.appointments.map((apt: any) => {
@@ -105,8 +111,10 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
           return transformed;
         });
         
+        console.log('Dispatching transformed appointments to Redux:', transformedAppointments.length);
         dispatch(setAppointments(transformedAppointments));
       } else {
+        console.error('Failed to load appointments:', response);
         toast.error('Failed to load appointments');
       }
     } catch (error: any) {
@@ -127,7 +135,16 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
 
   useEffect(() => {
     loadAppointments();
-  }, [dispatch]);
+  }, [dispatch, refreshTrigger]);
+
+  // Debug: Log when appointments change
+  useEffect(() => {
+    console.log('Appointments updated:', {
+      count: appointments.length,
+      refreshTrigger,
+      appointments: appointments.map(apt => ({ id: apt.id, customerName: apt.customerName, scheduledDate: apt.scheduledDate }))
+    });
+  }, [appointments, refreshTrigger]);
 
   // Calendar navigation
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -148,6 +165,16 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
     const filtered = appointments.filter(apt => {
       return apt.scheduledDate && apt.scheduledDate === dateStr;
     });
+    
+    // Debug logging for appointment filtering
+    if (refreshTrigger > 0) {
+      console.log(`Filtering appointments for ${dateStr}:`, {
+        totalAppointments: appointments.length,
+        filteredCount: filtered.length,
+        refreshTrigger
+      });
+    }
+    
     return filtered;
   }
 
@@ -253,11 +280,29 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
     
     if (window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
       try {
+        // First delete from backend
         await dispatch(deleteAppointment(appointment.id)).unwrap()
+        
+        // Close the edit modal if it's open
+        if (showEditAppointmentModal) {
+          setShowEditAppointmentModal(false)
+          setSelectedAppointment(null)
+        }
+        
+        // Show success message
+        toast.success('Appointment deleted successfully!')
+        
+        // Small delay to ensure backend has processed the deletion
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         // Refresh appointments from backend to ensure we have the latest data
         await loadAppointments()
+        
+        // Force a re-render of the calendar
+        setRefreshTrigger(prev => prev + 1)
       } catch (error) {
         console.error('Failed to delete appointment:', error)
+        toast.error('Failed to delete appointment. Please try again.')
       }
     }
   }
@@ -518,6 +563,8 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
     setShowNewAppointmentModal(false)
     setShowEditAppointmentModal(false)
     setSelectedAppointment(null)
+    // Force refresh when modal is closed
+    setRefreshTrigger(prev => prev + 1)
   }
 
   const renderMonthView = () => (

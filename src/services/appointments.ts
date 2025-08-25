@@ -38,18 +38,18 @@ export interface Appointment {
 
 export interface CreateAppointmentData {
   customerId: string;
-  date: string;
-  time: string;
-  service: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  serviceType: string;
   vehicleId: string;
   notes?: string;
-  estimatedCost?: number;
+  estimatedDuration?: number;
   technicianId?: string;
 }
 
 export interface UpdateAppointmentData {
-  date?: string;
-  time?: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
   service?: string;
   status?: Appointment['status'];
   notes?: string;
