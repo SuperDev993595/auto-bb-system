@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
 import AddEditVehicleModal from '../../components/customers/modal/AddEditVehicleModal';
+import { CheckCircle, FileText } from 'lucide-react';
 
 interface Vehicle {
   id: string;
@@ -701,7 +702,7 @@ export default function CustomerVehicles() {
               {maintenanceAlerts.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-2xl">✅</span>
+                    <CheckCircle className="w-8 h-8 text-green-600" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
                   <p className="text-gray-600">No maintenance items due at this time.</p>
@@ -764,7 +765,7 @@ export default function CustomerVehicles() {
               {serviceHistory.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-2xl">📋</span>
+                    <FileText className="w-8 h-8 text-gray-600" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No service history</h3>
                   <p className="text-gray-600">Service records will appear here after your first visit.</p>

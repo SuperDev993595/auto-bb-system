@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
+import { FileText, X } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -281,7 +282,7 @@ export default function CustomerInvoices() {
           {filteredInvoices.length === 0 && (
             <div className="text-center py-12">
               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <span className="text-3xl">📄</span>
+                <FileText className="w-12 h-12 text-gray-600" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
               <p className="text-gray-600">Your invoices will appear here after service appointments.</p>
@@ -300,7 +301,7 @@ export default function CustomerInvoices() {
                 onClick={() => setShowPaymentModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
             

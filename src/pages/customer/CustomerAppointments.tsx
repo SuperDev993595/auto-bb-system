@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Appointment as AppointmentType, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
-import { HiCalendar, HiClock, HiTruck, HiCog, HiUser, HiFlag, HiDocumentText } from 'react-icons/hi';
+import { Calendar, Clock, Truck, Cog, User, Flag, FileText } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../redux';
 
 interface Appointment {
@@ -750,7 +750,7 @@ export default function CustomerAppointments() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <HiCalendar className="w-4 h-4" />
+                    <Calendar className="w-4 h-4" />
                     Date *
                   </label>
                   <input
@@ -764,7 +764,7 @@ export default function CustomerAppointments() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <HiClock className="w-4 h-4" />
+                    <Clock className="w-4 h-4" />
                     Time *
                   </label>
                   <input
@@ -778,10 +778,10 @@ export default function CustomerAppointments() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <HiTruck className="w-4 h-4" />
-                  Vehicle *
-                </label>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <Truck className="w-4 h-4" />
+                    Vehicle *
+                  </label>
                 <select
                   name="vehicleId"
                   value={formData.vehicleId}
@@ -806,10 +806,10 @@ export default function CustomerAppointments() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <HiCog className="w-4 h-4" />
-                  Service Type *
-                </label>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <Cog className="w-4 h-4" />
+                    Service Type *
+                  </label>
                 <select
                   name="serviceType"
                   value={formData.serviceType}
@@ -826,10 +826,10 @@ export default function CustomerAppointments() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <HiUser className="w-4 h-4" />
-                  Assign Technician
-                </label>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    Assign Technician
+                  </label>
                 <select
                   name="technicianId"
                   value={formData.technicianId}
@@ -853,7 +853,7 @@ export default function CustomerAppointments() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <HiClock className="w-4 h-4" />
+                    <Clock className="w-4 h-4" />
                     Duration (minutes)
                   </label>
                   <input
@@ -869,7 +869,7 @@ export default function CustomerAppointments() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <HiFlag className="w-4 h-4" />
+                    <Flag className="w-4 h-4" />
                     Priority
                   </label>
                   <select
@@ -888,7 +888,7 @@ export default function CustomerAppointments() {
 
                              <div>
                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                   <HiFlag className="w-4 h-4" />
+                   <Flag className="w-4 h-4" />
                    Status
                  </label>
                  <select
@@ -906,7 +906,7 @@ export default function CustomerAppointments() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  <HiDocumentText className="w-4 h-4" />
+                  <FileText className="w-4 h-4" />
                   Notes (Optional)
                 </label>
                 <textarea

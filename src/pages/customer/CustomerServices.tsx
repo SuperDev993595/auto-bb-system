@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, ServiceRecord as ServiceRecordType, Vehicle as VehicleType } from '../../services/customerApi';
+import { Wrench, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface ServiceRecord {
   id: string;
@@ -393,7 +394,7 @@ export default function CustomerServices() {
               {filteredServiceRecords.length === 0 && (
                 <div className="text-center py-12">
                   <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-3xl">🔧</span>
+                    <Wrench className="w-12 h-12 text-gray-600" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No service records found</h3>
                   <p className="text-gray-600">Your service history will appear here after your first service appointment.</p>
@@ -455,7 +456,7 @@ export default function CustomerServices() {
               {filteredMaintenanceSchedule.length === 0 && (
                 <div className="text-center py-12">
                   <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-3xl">📋</span>
+                    <FileText className="w-12 h-12 text-gray-600" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance schedule found</h3>
                   <p className="text-gray-600">Your maintenance schedule will be created based on your vehicle and service history.</p>
@@ -469,7 +470,7 @@ export default function CustomerServices() {
               {overdueServices > 0 ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-3">⚠️</span>
+                    <AlertTriangle className="w-6 h-6 mr-3 text-yellow-600" />
                     <h3 className="text-lg font-semibold text-yellow-800">Maintenance Recommendations</h3>
                   </div>
                   <p className="text-yellow-700 mb-4">
@@ -482,7 +483,7 @@ export default function CustomerServices() {
               ) : (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-3">✅</span>
+                    <CheckCircle className="w-6 h-6 mr-3 text-green-600" />
                     <h3 className="text-lg font-semibold text-green-800">All Up to Date</h3>
                   </div>
                   <p className="text-green-700">
