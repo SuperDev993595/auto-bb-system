@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const MembershipPlan = require('../models/MembershipPlan');
 const CustomerMembership = require('../models/CustomerMembership');
 const Customer = require('../models/Customer');
 
 // Get all membership plans
-router.get('/plans', auth, async (req, res) => {
+router.get('/plans', authenticateToken, async (req, res) => {
   try {
     const plans = await MembershipPlan.find({ isActive: true })
       .populate('createdBy', 'name email')
@@ -20,7 +20,7 @@ router.get('/plans', auth, async (req, res) => {
 });
 
 // Get a single membership plan
-router.get('/plans/:id', auth, async (req, res) => {
+router.get('/plans/:id', authenticateToken, async (req, res) => {
   try {
     const plan = await MembershipPlan.findById(req.params.id)
       .populate('createdBy', 'name email');
@@ -37,7 +37,7 @@ router.get('/plans/:id', auth, async (req, res) => {
 });
 
 // Create a new membership plan
-router.post('/plans', auth, async (req, res) => {
+router.post('/plans', authenticateToken, async (req, res) => {
   try {
     const {
       name,
@@ -76,7 +76,7 @@ router.post('/plans', auth, async (req, res) => {
 });
 
 // Update a membership plan
-router.put('/plans/:id', auth, async (req, res) => {
+router.put('/plans/:id', authenticateToken, async (req, res) => {
   try {
     const plan = await MembershipPlan.findByIdAndUpdate(
       req.params.id,
@@ -99,7 +99,7 @@ router.put('/plans/:id', auth, async (req, res) => {
 });
 
 // Delete a membership plan
-router.delete('/plans/:id', auth, async (req, res) => {
+router.delete('/plans/:id', authenticateToken, async (req, res) => {
   try {
     const plan = await MembershipPlan.findById(req.params.id);
     
@@ -130,7 +130,7 @@ router.delete('/plans/:id', auth, async (req, res) => {
 });
 
 // Get customer memberships
-router.get('/customer/:customerId', auth, async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const memberships = await CustomerMembership.find({
       customer: req.params.customerId
@@ -148,7 +148,7 @@ router.get('/customer/:customerId', auth, async (req, res) => {
 });
 
 // Create a new customer membership
-router.post('/customer/:customerId', auth, async (req, res) => {
+router.post('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const {
       membershipPlan,
@@ -207,7 +207,7 @@ router.post('/customer/:customerId', auth, async (req, res) => {
 });
 
 // Update customer membership
-router.put('/customer/:customerId/:membershipId', auth, async (req, res) => {
+router.put('/customer/:customerId/:membershipId', authenticateToken, async (req, res) => {
   try {
     const membership = await CustomerMembership.findOneAndUpdate(
       {
@@ -236,7 +236,7 @@ router.put('/customer/:customerId/:membershipId', auth, async (req, res) => {
 });
 
 // Cancel customer membership
-router.patch('/customer/:customerId/:membershipId/cancel', auth, async (req, res) => {
+router.patch('/customer/:customerId/:membershipId/cancel', authenticateToken, async (req, res) => {
   try {
     const { cancellationReason } = req.body;
 
@@ -269,7 +269,7 @@ router.patch('/customer/:customerId/:membershipId/cancel', auth, async (req, res
 });
 
 // Get membership statistics
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const stats = await CustomerMembership.aggregate([
       {

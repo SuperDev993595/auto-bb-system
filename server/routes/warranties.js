@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const Warranty = require('../models/Warranty');
 const Customer = require('../models/Customer');
 const Vehicle = require('../models/Vehicle');
 
 // Get all warranties
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { customer, vehicle, status, warrantyType } = req.query;
     const filter = {};
@@ -30,7 +30,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get a single warranty
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const warranty = await Warranty.findById(req.params.id)
       .populate('customer', 'name email phone')
@@ -49,7 +49,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Create a new warranty
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       customer,
@@ -108,7 +108,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update a warranty
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const warranty = await Warranty.findByIdAndUpdate(
       req.params.id,
@@ -134,7 +134,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Delete a warranty
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const warranty = await Warranty.findById(req.params.id);
 
@@ -158,7 +158,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Get customer warranties
-router.get('/customer/:customerId', auth, async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const warranties = await Warranty.find({
       customer: req.params.customerId
@@ -175,7 +175,7 @@ router.get('/customer/:customerId', auth, async (req, res) => {
 });
 
 // Get vehicle warranties
-router.get('/vehicle/:vehicleId', auth, async (req, res) => {
+router.get('/vehicle/:vehicleId', authenticateToken, async (req, res) => {
   try {
     const warranties = await Warranty.find({
       vehicle: req.params.vehicleId
@@ -192,7 +192,7 @@ router.get('/vehicle/:vehicleId', auth, async (req, res) => {
 });
 
 // Update warranty mileage
-router.patch('/:id/mileage', auth, async (req, res) => {
+router.patch('/:id/mileage', authenticateToken, async (req, res) => {
   try {
     const { currentMileage } = req.body;
 
@@ -224,7 +224,7 @@ router.patch('/:id/mileage', auth, async (req, res) => {
 });
 
 // Add warranty claim
-router.patch('/:id/claim', auth, async (req, res) => {
+router.patch('/:id/claim', authenticateToken, async (req, res) => {
   try {
     const { claimAmount, claimDescription } = req.body;
 
@@ -263,7 +263,7 @@ router.patch('/:id/claim', auth, async (req, res) => {
 });
 
 // Get warranty statistics
-router.get('/stats/overview', auth, async (req, res) => {
+router.get('/stats/overview', authenticateToken, async (req, res) => {
   try {
     const stats = await Warranty.aggregate([
       {
@@ -310,7 +310,7 @@ router.get('/stats/overview', auth, async (req, res) => {
 });
 
 // Get warranties by type
-router.get('/stats/by-type', auth, async (req, res) => {
+router.get('/stats/by-type', authenticateToken, async (req, res) => {
   try {
     const typeStats = await Warranty.aggregate([
       {
