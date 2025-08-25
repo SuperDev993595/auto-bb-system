@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
 import AddEditVehicleModal from '../../components/customers/modal/AddEditVehicleModal';
-import { CheckCircle, FileText } from 'lucide-react';
+import { CheckCircle, FileText, Car, AlertTriangle, Wrench, TrendingUp, Droplets, RotateCcw, Shield, Clock, Wind, Zap } from 'lucide-react';
 
 interface Vehicle {
   id: string;
@@ -443,13 +443,13 @@ export default function CustomerVehicles() {
 
   const getMaintenanceIcon = (type: string) => {
     switch (type) {
-      case 'oil_change': return '🛢️';
-      case 'tire_rotation': return '🔄';
-      case 'brake_service': return '🛑';
-      case 'timing_belt': return '⏱️';
-      case 'air_filter': return '💨';
-      case 'spark_plugs': return '⚡';
-      default: return '🔧';
+      case 'oil_change': return <Droplets className="w-6 h-6 text-blue-600" />;
+      case 'tire_rotation': return <RotateCcw className="w-6 h-6 text-green-600" />;
+      case 'brake_service': return <Shield className="w-6 h-6 text-red-600" />;
+      case 'timing_belt': return <Clock className="w-6 h-6 text-orange-600" />;
+      case 'air_filter': return <Wind className="w-6 h-6 text-gray-600" />;
+      case 'spark_plugs': return <Zap className="w-6 h-6 text-yellow-600" />;
+      default: return <Wrench className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -481,11 +481,11 @@ export default function CustomerVehicles() {
             {maintenanceAlerts.length > 0 && (
               <div className="mt-3 flex items-center space-x-4">
                 <div className="flex items-center text-sm text-amber-700 bg-amber-100 px-3 py-2 rounded-lg">
-                  <span className="mr-2">⚠️</span>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
                   {maintenanceAlerts.filter(a => a.priority === 'urgent').length} urgent maintenance items
                 </div>
                 <div className="flex items-center text-sm text-orange-700 bg-orange-100 px-3 py-2 rounded-lg">
-                  <span className="mr-2">🔧</span>
+                  <Wrench className="w-4 h-4 mr-2" />
                   {maintenanceAlerts.length} total maintenance alerts
                 </div>
               </div>
@@ -496,7 +496,7 @@ export default function CustomerVehicles() {
             onClick={() => setShowAddModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            <span>🚗</span>
+            <Car className="w-5 h-5" />
             <span>Add Vehicle</span>
           </button>
         </div>
@@ -507,7 +507,7 @@ export default function CustomerVehicles() {
         <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-2xl">🚗</span>
+              <Car className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Vehicles</p>
@@ -518,7 +518,7 @@ export default function CustomerVehicles() {
         <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Active Vehicles</p>
@@ -531,7 +531,7 @@ export default function CustomerVehicles() {
         <div className="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <span className="text-2xl">🔧</span>
+              <Wrench className="w-8 h-8 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Due for Service</p>
@@ -544,7 +544,7 @@ export default function CustomerVehicles() {
         <div className="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <span className="text-2xl">📊</span>
+              <TrendingUp className="w-8 h-8 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Avg Mileage</p>
@@ -678,7 +678,7 @@ export default function CustomerVehicles() {
                 {vehicles.length === 0 && (
                   <div className="text-center py-12">
                     <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <span className="text-3xl">🚗</span>
+                      <Car className="w-12 h-12 text-gray-600" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles found</h3>
                     <p className="text-gray-600 mb-6">You haven't added any vehicles yet. Add your first vehicle to get started.</p>
@@ -686,7 +686,7 @@ export default function CustomerVehicles() {
                       onClick={() => setShowAddModal(true)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2 mx-auto"
                     >
-                      <span>🚗</span>
+                      <Car className="w-5 h-5" />
                       <span>Add Your First Vehicle</span>
                     </button>
                   </div>
@@ -721,8 +721,8 @@ export default function CustomerVehicles() {
                           alert.isOverdue ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'
                         }`}>
                           <div className="flex items-start justify-between">
-                            <div className="flex items-start space-x-3">
-                              <span className="text-2xl">{getMaintenanceIcon(alert.type)}</span>
+                                                      <div className="flex items-start space-x-3">
+                            {getMaintenanceIcon(alert.type)}
                               <div>
                                 <h4 className="font-medium text-gray-900">{alert.title}</h4>
                                 <p className="text-sm text-gray-600">{alert.description}</p>
