@@ -26,6 +26,16 @@ export default function MembershipCard({
   onCancel, 
   showActions = true 
 }: MembershipCardProps) {
+  // Handle undefined membership
+  if (!membership) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="text-center text-gray-500">
+          <p>No membership data available</p>
+        </div>
+      </div>
+    );
+  }
   const getStatusIcon = () => {
     switch (membership.status) {
       case 'active':
@@ -57,7 +67,8 @@ export default function MembershipCard({
   };
 
   const getTierIcon = () => {
-    switch (membership.membershipPlan.tier) {
+    const tier = membership?.membershipPlan?.tier || 'basic';
+    switch (tier) {
       case 'vip':
         return <Crown className="w-5 h-5 text-yellow-600" />;
       case 'enterprise':
@@ -86,12 +97,12 @@ export default function MembershipCard({
 
   const isExpiringSoon = () => {
     if (membership.status !== 'active') return false;
-    const daysUntilRenewal = membership.daysUntilRenewal;
+    const daysUntilRenewal = membership.daysUntilRenewal || 0;
     return daysUntilRenewal <= 30 && daysUntilRenewal > 0;
   };
 
   const isExpired = () => {
-    return membership.status === 'expired' || membership.isExpired;
+    return membership.status === 'expired' || membership.isExpired || false;
   };
 
   return (
@@ -102,10 +113,10 @@ export default function MembershipCard({
           {getTierIcon()}
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {membership.membershipPlan.name}
+              {membership?.membershipPlan?.name || 'Membership Plan'}
             </h3>
             <p className="text-sm text-gray-600 capitalize">
-              {membership.membershipPlan.tier} Tier
+              {membership?.membershipPlan?.tier || 'basic'} Tier
             </p>
           </div>
         </div>
@@ -152,28 +163,28 @@ export default function MembershipCard({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Next Billing:</span>
           <span className="font-medium text-gray-900">
-            {formatDate(membership.nextBillingDate)}
+            {membership.nextBillingDate ? formatDate(membership.nextBillingDate) : 'Not set'}
           </span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Start Date:</span>
           <span className="font-medium text-gray-900">
-            {formatDate(membership.startDate)}
+            {membership.startDate ? formatDate(membership.startDate) : 'Not set'}
           </span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">End Date:</span>
           <span className="font-medium text-gray-900">
-            {formatDate(membership.endDate)}
+            {membership.endDate ? formatDate(membership.endDate) : 'Not set'}
           </span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Payment Method:</span>
           <span className="font-medium text-gray-900 capitalize">
-            {membership.paymentMethod.replace('_', ' ')}
+            {membership.paymentMethod?.replace('_', ' ') || 'Not set'}
           </span>
         </div>
 
@@ -187,7 +198,7 @@ export default function MembershipCard({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Total Paid:</span>
           <span className="font-medium text-gray-900">
-            {formatCurrency(membership.totalPaid)}
+            {formatCurrency(membership.totalPaid || 0)}
           </span>
         </div>
       </div>
@@ -197,15 +208,15 @@ export default function MembershipCard({
         <h4 className="text-sm font-medium text-gray-900 mb-2">Benefits Used</h4>
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="text-center">
-            <div className="font-semibold text-blue-600">{membership.benefitsUsed.inspections}</div>
+            <div className="font-semibold text-blue-600">{membership.benefitsUsed?.inspections || 0}</div>
             <div className="text-gray-600">Inspections</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-green-600">{membership.benefitsUsed.roadsideAssistance}</div>
+            <div className="font-semibold text-green-600">{membership.benefitsUsed?.roadsideAssistance || 0}</div>
             <div className="text-gray-600">Roadside</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-purple-600">{membership.benefitsUsed.priorityBookings}</div>
+            <div className="font-semibold text-purple-600">{membership.benefitsUsed?.priorityBookings || 0}</div>
             <div className="text-gray-600">Priority</div>
           </div>
         </div>

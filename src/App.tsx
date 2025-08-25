@@ -21,6 +21,15 @@ import CustomerNotifications from "./pages/customer/CustomerNotifications";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerPortalDashboard from "./pages/customer/CustomerPortalDashboard";
 
+// Phase 2: Enhanced Customer Features
+import CustomerMemberships from "./pages/customer/CustomerMemberships";
+import CustomerWarranties from "./pages/customer/CustomerWarranties";
+import CustomerAnalytics from "./pages/customer/CustomerAnalytics";
+import CustomerVehicleDatabase from "./pages/customer/CustomerVehicleDatabase";
+import CustomerPaymentOptions from "./pages/customer/CustomerPaymentOptions";
+import CustomerLiveChat from "./pages/customer/CustomerLiveChat";
+import CustomerReports from "./pages/customer/CustomerReports";
+
 // Dashboard Pages
 import AppointmentsPage from "./pages/AppointmentsPage";
 import TasksPage from "./pages/TasksPage";
@@ -155,6 +164,15 @@ export default function App() {
         <Route path="notifications" element={<CustomerNotifications />} />
         <Route path="profile" element={<CustomerProfile />} />
         <Route path="portal/:customerId" element={<CustomerPortalDashboard />} />
+        
+        {/* Phase 2: Enhanced Customer Features */}
+        <Route path="memberships" element={<CustomerMemberships />} />
+        <Route path="warranties" element={<CustomerWarranties />} />
+        <Route path="analytics" element={<CustomerAnalytics />} />
+        <Route path="vehicle-database" element={<CustomerVehicleDatabase />} />
+        <Route path="payment-options" element={<CustomerPaymentOptions />} />
+        <Route path="live-chat" element={<CustomerLiveChat />} />
+        <Route path="reports" element={<CustomerReports />} />
       </Route>
       
         {/* Catch-all route for 404s */}

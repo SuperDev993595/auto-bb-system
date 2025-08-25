@@ -28,8 +28,19 @@ export default function WarrantyCard({
   onFileClaim, 
   showActions = true 
 }: WarrantyCardProps) {
+  // Handle undefined warranty
+  if (!warranty) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="text-center text-gray-500">
+          <p>No warranty data available</p>
+        </div>
+      </div>
+    );
+  }
   const getStatusIcon = () => {
-    switch (warranty.status) {
+    const status = warranty.status || 'unknown';
+    switch (status) {
       case 'active':
         return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'expired':
@@ -44,7 +55,8 @@ export default function WarrantyCard({
   };
 
   const getStatusColor = () => {
-    switch (warranty.status) {
+    const status = warranty.status || 'unknown';
+    switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
       case 'expired':
@@ -59,7 +71,8 @@ export default function WarrantyCard({
   };
 
   const getWarrantyTypeIcon = () => {
-    switch (warranty.warrantyType) {
+    const warrantyType = warranty.warrantyType || 'unknown';
+    switch (warrantyType) {
       case 'manufacturer':
         return <Shield className="w-5 h-5 text-blue-600" />;
       case 'extended':
@@ -93,23 +106,29 @@ export default function WarrantyCard({
   };
 
   const isExpiringSoon = () => {
-    if (warranty.status !== 'active') return false;
-    const daysUntilExpiration = warranty.daysUntilExpiration;
+    const status = warranty.status || 'unknown';
+    if (status !== 'active') return false;
+    const daysUntilExpiration = warranty.daysUntilExpiration || 0;
     return daysUntilExpiration <= 90 && daysUntilExpiration > 0;
   };
 
   const isMileageExpiring = () => {
-    if (warranty.status !== 'active' || !warranty.mileageLimit || !warranty.mileageRemaining) return false;
+    const status = warranty.status || 'unknown';
+    if (status !== 'active' || !warranty.mileageLimit || !warranty.mileageRemaining) return false;
     const remainingPercentage = (warranty.mileageRemaining / warranty.mileageLimit) * 100;
     return remainingPercentage <= 10 && remainingPercentage > 0;
   };
 
   const getCoverageSummary = () => {
+    if (!warranty.coverage) return 'Coverage details not available';
+    
     const coverageItems = Object.entries(warranty.coverage)
       .filter(([_, covered]) => covered)
       .map(([key, _]) => key.charAt(0).toUpperCase() + key.slice(1));
     
-    return coverageItems.slice(0, 3).join(', ') + (coverageItems.length > 3 ? '...' : '');
+    return coverageItems.length > 0 
+      ? coverageItems.slice(0, 3).join(', ') + (coverageItems.length > 3 ? '...' : '')
+      : 'No specific coverage details available';
   };
 
   return (
@@ -120,18 +139,18 @@ export default function WarrantyCard({
           {getWarrantyTypeIcon()}
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {warranty.name}
+              {warranty.name || 'Unnamed Warranty'}
             </h3>
             <p className="text-sm text-gray-600 capitalize">
-              {warranty.warrantyType.replace('_', ' ')} Warranty
+              {warranty.warrantyType?.replace('_', ' ') || 'Unknown'} Warranty
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           {getStatusIcon()}
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor()}`}>
-            {warranty.status}
-          </span>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor()}`}>
+              {warranty.status || 'unknown'}
+            </span>
         </div>
       </div>
 
@@ -140,11 +159,11 @@ export default function WarrantyCard({
         <div className="flex items-center space-x-2 mb-2">
           <Car className="w-4 h-4 text-blue-600" />
           <span className="text-sm font-medium text-blue-900">
-            {warranty.vehicle.year} {warranty.vehicle.make} {warranty.vehicle.model}
+            {warranty.vehicle?.year || 'N/A'} {warranty.vehicle?.make || 'N/A'} {warranty.vehicle?.model || 'N/A'}
           </span>
         </div>
         <div className="text-xs text-blue-700">
-          VIN: {warranty.vehicle.vin}
+          VIN: {warranty.vehicle?.vin || 'N/A'}
         </div>
       </div>
 
@@ -154,7 +173,7 @@ export default function WarrantyCard({
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
             <span className="text-sm font-medium text-orange-800">
-              Expires in {warranty.daysUntilExpiration} days
+              Expires in {warranty.daysUntilExpiration || 0} days
             </span>
           </div>
         </div>
@@ -165,7 +184,7 @@ export default function WarrantyCard({
           <div className="flex items-center space-x-2">
             <Gauge className="w-4 h-4 text-yellow-600" />
             <span className="text-sm font-medium text-yellow-800">
-              {formatMileage(warranty.mileageRemaining!)} miles remaining
+              {formatMileage(warranty.mileageRemaining || 0)} miles remaining
             </span>
           </div>
         </div>
@@ -176,14 +195,14 @@ export default function WarrantyCard({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Start Date:</span>
           <span className="font-medium text-gray-900">
-            {formatDate(warranty.startDate)}
+            {warranty.startDate ? formatDate(warranty.startDate) : 'Not set'}
           </span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">End Date:</span>
           <span className="font-medium text-gray-900">
-            {formatDate(warranty.endDate)}
+            {warranty.endDate ? formatDate(warranty.endDate) : 'Not set'}
           </span>
         </div>
 
@@ -191,7 +210,7 @@ export default function WarrantyCard({
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Mileage Limit:</span>
             <span className="font-medium text-gray-900">
-              {formatMileage(warranty.mileageLimit)} miles
+              {formatMileage(warranty.mileageLimit || 0)} miles
             </span>
           </div>
         )}
@@ -199,15 +218,15 @@ export default function WarrantyCard({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Current Mileage:</span>
           <span className="font-medium text-gray-900">
-            {formatMileage(warranty.currentMileage)} miles
+            {formatMileage(warranty.currentMileage || 0)} miles
           </span>
         </div>
 
-        {warranty.deductible > 0 && (
+        {(warranty.deductible || 0) > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Deductible:</span>
             <span className="font-medium text-gray-900">
-              {formatCurrency(warranty.deductible)}
+              {formatCurrency(warranty.deductible || 0)}
             </span>
           </div>
         )}
@@ -216,7 +235,7 @@ export default function WarrantyCard({
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Max Claim:</span>
             <span className="font-medium text-gray-900">
-              {formatCurrency(warranty.maxClaimAmount)}
+              {formatCurrency(warranty.maxClaimAmount || 0)}
             </span>
           </div>
         )}
@@ -224,7 +243,7 @@ export default function WarrantyCard({
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Total Claims:</span>
           <span className="font-medium text-gray-900">
-            {warranty.totalClaims} (${formatCurrency(warranty.totalClaimAmount)})
+            {warranty.totalClaims || 0} (${formatCurrency(warranty.totalClaimAmount || 0)})
           </span>
         </div>
       </div>
@@ -238,7 +257,7 @@ export default function WarrantyCard({
       </div>
 
       {/* Provider Info */}
-      {warranty.provider.name && (
+      {warranty.provider?.name && (
         <div className="mb-4 p-3 bg-green-50 rounded-lg">
           <h4 className="text-sm font-medium text-green-900 mb-1">Provider</h4>
           <p className="text-xs text-green-700">{warranty.provider.name}</p>
@@ -259,7 +278,7 @@ export default function WarrantyCard({
               View Details
             </button>
           )}
-          {onUpdateMileage && warranty.status === 'active' && (
+          {onUpdateMileage && (warranty.status || 'unknown') === 'active' && (
             <button
               onClick={() => onUpdateMileage(warranty)}
               className="flex-1 py-2 px-4 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
@@ -267,7 +286,7 @@ export default function WarrantyCard({
               Update Mileage
             </button>
           )}
-          {onFileClaim && warranty.status === 'active' && (
+          {onFileClaim && (warranty.status || 'unknown') === 'active' && (
             <button
               onClick={() => onFileClaim(warranty)}
               className="flex-1 py-2 px-4 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors text-sm font-medium"

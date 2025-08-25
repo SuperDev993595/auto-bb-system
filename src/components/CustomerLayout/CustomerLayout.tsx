@@ -11,7 +11,15 @@ import {
   MessageCircle, 
   Bell, 
   User, 
-  LogOut 
+  LogOut,
+  Shield,
+  Crown,
+  TrendingUp,
+  Database,
+  Settings,
+  FileText,
+  Users,
+  Activity
 } from 'lucide-react';
 
 export default function CustomerLayout() {
@@ -157,6 +165,109 @@ export default function CustomerLayout() {
                 <Bell className="w-5 h-5" />
                 <span>Notifications</span>
               </Link>
+
+              {/* Enhanced Portal Features - Phase 2 */}
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Enhanced Features
+                </h3>
+                
+                <Link
+                  to="/customer/dashboard/portal/123"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname.includes('/customer/dashboard/portal') 
+                      ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Crown className="w-5 h-5" />
+                  <span>Portal Dashboard</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/memberships"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/memberships' 
+                      ? 'bg-green-100 text-green-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Memberships</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/warranties"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/warranties' 
+                      ? 'bg-orange-100 text-orange-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>Warranties</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/analytics"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/analytics' 
+                      ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  <span>Analytics</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/vehicle-database"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/vehicle-database' 
+                      ? 'bg-indigo-100 text-indigo-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Database className="w-5 h-5" />
+                  <span>Vehicle Database</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/payment-options"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/payment-options' 
+                      ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <DollarSign className="w-5 h-5" />
+                  <span>Payment Options</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/live-chat"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/live-chat' 
+                      ? 'bg-pink-100 text-pink-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Live Chat</span>
+                </Link>
+
+                <Link
+                  to="/customer/dashboard/reports"
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === '/customer/dashboard/reports' 
+                      ? 'bg-teal-100 text-teal-700 shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Activity className="w-5 h-5" />
+                  <span>Reports</span>
+                </Link>
+              </div>
               
               <Link
                 to="/customer/dashboard/profile"
