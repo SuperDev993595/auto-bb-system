@@ -2,6 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Notification } from '../../services/customerApi';
+import { 
+  Wrench, 
+  Calendar, 
+  CheckCircle, 
+  DollarSign, 
+  AlertTriangle, 
+  Shield, 
+  Phone, 
+  Megaphone, 
+  Clipboard, 
+  Bell, 
+  Mail, 
+  Ruler, 
+  ChevronLeft, 
+  ChevronRight 
+} from 'lucide-react';
 
 export default function CustomerNotifications() {
   const { user } = useAuth();
@@ -81,23 +97,23 @@ export default function CustomerNotifications() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'service_reminder':
-        return '🔧';
+        return <Wrench className="w-6 h-6 text-blue-600" />;
       case 'appointment_reminder':
-        return '📅';
+        return <Calendar className="w-6 h-6 text-purple-600" />;
       case 'appointment_confirmation':
-        return '✅';
+        return <CheckCircle className="w-6 h-6 text-green-600" />;
       case 'payment_reminder':
-        return '💰';
+        return <DollarSign className="w-6 h-6 text-orange-600" />;
       case 'maintenance_alert':
-        return '⚠️';
+        return <AlertTriangle className="w-6 h-6 text-red-600" />;
       case 'warranty_expiry':
-        return '🛡️';
+        return <Shield className="w-6 h-6 text-yellow-600" />;
       case 'follow_up':
-        return '📞';
+        return <Phone className="w-6 h-6 text-indigo-600" />;
       case 'marketing':
-        return '📢';
+        return <Megaphone className="w-6 h-6 text-pink-600" />;
       default:
-        return '📋';
+        return <Clipboard className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -196,7 +212,7 @@ export default function CustomerNotifications() {
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <span className="text-blue-600 text-xl">📋</span>
+                  <Clipboard className="w-8 h-8 text-blue-600" />
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Total</p>
@@ -207,7 +223,7 @@ export default function CustomerNotifications() {
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="flex items-center">
                 <div className="p-2 bg-red-100 rounded-lg">
-                  <span className="text-red-600 text-xl">🔔</span>
+                  <Bell className="w-8 h-8 text-red-600" />
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Unread</p>
@@ -218,7 +234,7 @@ export default function CustomerNotifications() {
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <span className="text-green-600 text-xl">✅</span>
+                  <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-600">Read</p>
@@ -267,7 +283,9 @@ export default function CustomerNotifications() {
         <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="bg-white p-8 rounded-lg shadow text-center">
-              <div className="text-6xl mb-4">📭</div>
+              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Mail className="w-12 h-12 text-gray-600" />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No notifications</h3>
               <p className="text-gray-600">
                 {activeFilter === 'all' 
@@ -285,10 +303,10 @@ export default function CustomerNotifications() {
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className="text-2xl">
-                      {getNotificationIcon(notification.type)}
-                    </div>
+                                  <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex items-center justify-center w-12 h-12">
+                    {getNotificationIcon(notification.type)}
+                  </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
@@ -303,13 +321,25 @@ export default function CustomerNotifications() {
                       </div>
                       <p className="text-gray-700 mb-3">{notification.message}</p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>📅 {formatDate(notification.createdAt)}</span>
-                        <span>📤 {notification.channel}</span>
+                        <span className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          {formatDate(notification.createdAt)}
+                        </span>
+                        <span className="flex items-center">
+                          <Mail className="w-4 h-4 mr-1" />
+                          {notification.channel}
+                        </span>
                         {notification.metadata?.serviceType && (
-                          <span>🔧 {notification.metadata.serviceType}</span>
+                          <span className="flex items-center">
+                            <Wrench className="w-4 h-4 mr-1" />
+                            {notification.metadata.serviceType}
+                          </span>
                         )}
                         {notification.metadata?.mileage && (
-                          <span>📏 {notification.metadata.mileage.toLocaleString()} miles</span>
+                          <span className="flex items-center">
+                            <Ruler className="w-4 h-4 mr-1" />
+                            {notification.metadata.mileage.toLocaleString()} miles
+                          </span>
                         )}
                       </div>
                     </div>
@@ -340,8 +370,9 @@ export default function CustomerNotifications() {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
               </button>
               <span className="px-3 py-2 text-sm text-gray-700">
@@ -350,9 +381,10 @@ export default function CustomerNotifications() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 Next
+                <ChevronRight className="w-4 h-4 ml-1" />
               </button>
             </nav>
           </div>
