@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, CustomerProfile as CustomerProfileType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
+import { User, Settings, Lock } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -202,9 +203,9 @@ export default function CustomerProfile() {
           <div className="bg-white rounded-lg shadow p-4">
             <nav className="space-y-2">
               {[
-                { key: 'profile', label: 'Profile', icon: '👤' },
-                { key: 'preferences', label: 'Preferences', icon: '⚙️' },
-                { key: 'security', label: 'Security', icon: '🔒' }
+                { key: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
+                { key: 'preferences', label: 'Preferences', icon: <Settings className="w-5 h-5" /> },
+                { key: 'security', label: 'Security', icon: <Lock className="w-5 h-5" /> }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -215,7 +216,7 @@ export default function CustomerProfile() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="text-lg">{tab.icon}</span>
+                  <span className="flex items-center">{tab.icon}</span>
                   <span className="font-medium">{tab.label}</span>
                 </button>
               ))}
