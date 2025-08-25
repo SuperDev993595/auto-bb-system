@@ -43,6 +43,8 @@ const adminRoutes = require('./routes/admin');
 const emailRoutes = require('./routes/email');
 const smsRoutes = require('./routes/sms');
 const systemAdminRoutes = require('./routes/systemAdmin');
+const membershipRoutes = require('./routes/memberships');
+const warrantyRoutes = require('./routes/warranties');
 
 // Import models for Socket.io
 const Chat = require('./models/Chat');
@@ -184,6 +186,8 @@ app.use('/api/admin', authenticateToken, adminRoutes);
 app.use('/api/email', authenticateToken, emailRoutes);
 app.use('/api/sms', authenticateToken, smsRoutes);
 app.use('/api/system-admin', authenticateToken, systemAdminRoutes);
+app.use('/api/memberships', authenticateToken, membershipRoutes);
+app.use('/api/warranties', authenticateToken, warrantyRoutes);
 
 // Error handling
 app.use(errorLogger);

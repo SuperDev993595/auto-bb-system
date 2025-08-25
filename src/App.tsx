@@ -19,6 +19,7 @@ import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerMessages from "./pages/customer/CustomerMessages";
 import CustomerNotifications from "./pages/customer/CustomerNotifications";
 import CustomerProfile from "./pages/customer/CustomerProfile";
+import CustomerPortalDashboard from "./pages/customer/CustomerPortalDashboard";
 
 // Dashboard Pages
 import AppointmentsPage from "./pages/AppointmentsPage";
@@ -153,6 +154,7 @@ export default function App() {
         <Route path="messages" element={<CustomerMessages />} />
         <Route path="notifications" element={<CustomerNotifications />} />
         <Route path="profile" element={<CustomerProfile />} />
+        <Route path="portal/:customerId" element={<CustomerPortalDashboard />} />
       </Route>
       
         {/* Catch-all route for 404s */}
