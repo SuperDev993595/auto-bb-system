@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, ServiceRecord as ServiceRecordType, Vehicle as VehicleType } from '../../services/customerApi';
-import { Wrench, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Wrench, FileText, CheckCircle, AlertTriangle, DollarSign, Clipboard, Calendar, Clock } from 'lucide-react';
 
 interface ServiceRecord {
   id: string;
@@ -183,13 +183,13 @@ export default function CustomerServices() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return '✅';
-      case 'in-progress': return '🔧';
-      case 'scheduled': return '📅';
-      case 'due': return '⚠️';
-      case 'upcoming': return '📋';
-      case 'overdue': return '🚨';
-      default: return '📋';
+      case 'completed': return <CheckCircle className="w-6 h-6 text-green-600" />;
+      case 'in-progress': return <Wrench className="w-6 h-6 text-yellow-600" />;
+      case 'scheduled': return <Calendar className="w-6 h-6 text-blue-600" />;
+      case 'due': return <AlertTriangle className="w-6 h-6 text-orange-600" />;
+      case 'upcoming': return <Clipboard className="w-6 h-6 text-blue-600" />;
+      case 'overdue': return <AlertTriangle className="w-6 h-6 text-red-600" />;
+      default: return <Clipboard className="w-6 h-6 text-gray-600" />;
     }
   };
 
@@ -243,7 +243,7 @@ export default function CustomerServices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-2xl">🔧</span>
+              <Wrench className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Services</p>
@@ -254,7 +254,7 @@ export default function CustomerServices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Completed</p>
@@ -265,7 +265,7 @@ export default function CustomerServices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <span className="text-2xl">💰</span>
+              <DollarSign className="w-8 h-8 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Spent</p>
@@ -276,7 +276,7 @@ export default function CustomerServices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <span className="text-2xl">📋</span>
+              <Clipboard className="w-8 h-8 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Upcoming</p>
@@ -317,7 +317,7 @@ export default function CustomerServices() {
                 <div key={record.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{getStatusIcon(record.status)}</span>
+                      {getStatusIcon(record.status)}
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{record.serviceType}</h3>
                         <p className="text-sm text-gray-600">
@@ -409,7 +409,7 @@ export default function CustomerServices() {
                 <div key={schedule.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{getStatusIcon(schedule.status)}</span>
+                      {getStatusIcon(schedule.status)}
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{schedule.serviceType}</h3>
                         <p className="text-sm text-gray-600">{schedule.vehicleInfo}</p>
