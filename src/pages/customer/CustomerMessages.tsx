@@ -149,17 +149,23 @@ export default function CustomerMessages() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-          <p className="text-gray-600">View messages from our service team</p>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+            <p className="text-gray-600">View messages from our service team</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowNewMessageModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              New Message
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowNewMessageModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300"
-        >
-          New Message
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-96">
