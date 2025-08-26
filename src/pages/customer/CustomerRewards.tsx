@@ -335,51 +335,51 @@ export default function CustomerRewards() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-100">Active Memberships</p>
-                <p className="text-2xl font-bold">{stats.activeMemberships}</p>
+                <p className="text-sm font-medium text-gray-600">Active Memberships</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeMemberships}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-400 rounded-lg flex items-center justify-center">
-                <Crown className="w-6 h-6" />
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Crown className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-100">Total Savings</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.totalSavings)}</p>
+                <p className="text-sm font-medium text-gray-600">Total Savings</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalSavings)}</p>
               </div>
-              <div className="w-12 h-12 bg-green-400 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-6 h-6" />
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">Benefits Used</p>
-                <p className="text-2xl font-bold">{stats.totalBenefitsUsed}</p>
+                <p className="text-sm font-medium text-gray-600">Benefits Used</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.totalBenefitsUsed}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-400 rounded-lg flex items-center justify-center">
-                <Gift className="w-6 h-6" />
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Gift className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-100">Available Discounts</p>
-                <p className="text-2xl font-bold">{stats.availableDiscounts}%</p>
+                <p className="text-sm font-medium text-gray-600">Available Discounts</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.availableDiscounts}%</p>
               </div>
-                             <div className="w-12 h-12 bg-orange-400 rounded-lg flex items-center justify-center">
-                 <DollarSign className="w-6 h-6" />
-               </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-orange-600" />
+              </div>
             </div>
           </div>
         </div>

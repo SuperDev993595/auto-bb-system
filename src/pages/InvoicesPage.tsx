@@ -215,56 +215,52 @@ export default function InvoicesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="card p-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
-              <HiDocumentText className="w-6 h-6 text-secondary-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">{totalInvoices}</p>
             </div>
-            <p className="text-sm font-medium text-secondary-600 mb-1">Total Invoices</p>
-            <p className="text-3xl font-bold text-secondary-900">{totalInvoices}</p>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <HiDocumentText className="w-6 h-6 text-blue-600" />
+            </div>
           </div>
         </div>
         
-        <div className="card p-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
-              <HiCheck className="w-6 h-6 text-secondary-600" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Paid Invoices</p>
+              <p className="text-2xl font-bold text-green-600">{paidInvoices}</p>
             </div>
-            <p className="text-sm font-medium text-secondary-600 mb-1">Paid Invoices</p>
-            <p className="text-3xl font-bold text-secondary-900">{paidInvoices}</p>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <HiCheck className="w-6 h-6 text-green-600" />
+            </div>
           </div>
         </div>
         
-        <div className="card p-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
-              <HiExclamation className="w-6 h-6 text-secondary-600" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Overdue Invoices</p>
+              <p className="text-2xl font-bold text-red-600">{overdueInvoices}</p>
             </div>
-            <p className="text-sm font-medium text-secondary-600 mb-1">Overdue Invoices</p>
-            <p className="text-3xl font-bold text-secondary-900">{overdueInvoices}</p>
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <HiExclamation className="w-6 h-6 text-red-600" />
+            </div>
           </div>
         </div>
         
-        <div className="card p-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
-              <HiCurrencyDollar className="w-6 h-6 text-secondary-600" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-purple-600">${totalRevenue.toLocaleString()}</p>
             </div>
-            <p className="text-sm font-medium text-secondary-600 mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-secondary-900">${totalRevenue.toLocaleString()}</p>
-            <p className="text-sm text-secondary-500">Collected</p>
-          </div>
-        </div>
-        
-        <div className="card p-6 text-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center mb-3">
-              <HiClock className="w-6 h-6 text-secondary-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <HiCurrencyDollar className="w-6 h-6 text-purple-600" />
             </div>
-            <p className="text-sm font-medium text-secondary-600 mb-1">Outstanding</p>
-            <p className="text-3xl font-bold text-secondary-900">${outstandingAmount.toLocaleString()}</p>
-            <p className="text-sm text-secondary-500">Pending</p>
           </div>
         </div>
       </div>

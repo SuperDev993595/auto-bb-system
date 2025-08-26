@@ -109,50 +109,54 @@ function CustomerList() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Customers */}
-        <div className="card p-6 text-center">
-          <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
-            <Users className="w-6 h-6 text-primary-600" />
-          </div>
-          <p className="text-sm font-medium text-secondary-600">Total</p>
-          <p className="text-2xl font-bold text-secondary-900">{stats?.totalCustomers || 0}</p>
-          <div className="mt-2">
-            <p className="text-sm text-secondary-600">Total Customers</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalCustomers || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
           </div>
         </div>
 
         {/* Active Customers */}
-        <div className="card p-6 text-center">
-          <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
-            <Users className="w-6 h-6 text-success-600" />
-          </div>
-          <p className="text-sm font-medium text-secondary-600">Active</p>
-          <p className="text-2xl font-bold text-secondary-900">{stats?.activeCustomers || 0}</p>
-          <div className="mt-2">
-            <p className="text-sm text-secondary-600">Active Customers</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Customers</p>
+              <p className="text-2xl font-bold text-green-600">{stats?.activeCustomers || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
           </div>
         </div>
 
         {/* New This Month */}
-        <div className="card p-6 text-center">
-          <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
-            <Users className="w-6 h-6 text-info-600" />
-          </div>
-          <p className="text-sm font-medium text-secondary-600">This Month</p>
-          <p className="text-2xl font-bold text-secondary-900">{stats?.customersThisMonth || 0}</p>
-          <div className="mt-2">
-            <p className="text-sm text-secondary-600">New This Month</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">New This Month</p>
+              <p className="text-2xl font-bold text-purple-600">{stats?.customersThisMonth || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-purple-600" />
+            </div>
           </div>
         </div>
 
         {/* Total Vehicles */}
-        <div className="card p-6 text-center">
-          <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-xl mx-auto mb-4">
-            <Users className="w-6 h-6 text-warning-600" />
-          </div>
-          <p className="text-sm font-medium text-secondary-600">Vehicles</p>
-          <p className="text-2xl font-bold text-secondary-900">{stats?.totalVehicles || 0}</p>
-          <div className="mt-2">
-            <p className="text-sm text-secondary-600">Total Vehicles</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Vehicles</p>
+              <p className="text-2xl font-bold text-orange-600">{stats?.totalVehicles || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-orange-600" />
+            </div>
           </div>
         </div>
       </div>

@@ -241,48 +241,48 @@ export default function CustomerServices() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Wrench className="w-8 h-8 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Total Services</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Services</p>
               <p className="text-2xl font-bold text-gray-900">{serviceRecords.length}</p>
             </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{completedServices}</p>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Wrench className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <DollarSign className="w-8 h-8 text-orange-600" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completed</p>
+              <p className="text-2xl font-bold text-green-600">{completedServices}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Total Spent</p>
-              <p className="text-2xl font-bold text-gray-900">${totalSpent.toFixed(2)}</p>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Clipboard className="w-8 h-8 text-purple-600" />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Spent</p>
+              <p className="text-2xl font-bold text-orange-600">${totalSpent.toFixed(2)}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-600">Upcoming</p>
-              <p className="text-2xl font-bold text-gray-900">{upcomingServices}</p>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Upcoming</p>
+              <p className="text-2xl font-bold text-purple-600">{upcomingServices}</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Clipboard className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>

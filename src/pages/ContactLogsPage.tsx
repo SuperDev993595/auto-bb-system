@@ -191,56 +191,56 @@ export default function ContactLogsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Contacts</p>
-              <p className="text-3xl font-bold text-primary-600">{communicationLogs.length}</p>
+              <p className="text-sm font-medium text-gray-600">Total Contacts</p>
+              <p className="text-2xl font-bold text-gray-900">{communicationLogs.length}</p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <HiChatAlt className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <HiChatAlt className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Phone Calls</p>
-              <p className="text-3xl font-bold text-success-600">
+              <p className="text-sm font-medium text-gray-600">Phone Calls</p>
+              <p className="text-2xl font-bold text-green-600">
                 {communicationLogs.filter(log => log.type === 'phone').length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
-              <HiPhone className="w-6 h-6 text-success-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <HiPhone className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Emails</p>
-              <p className="text-3xl font-bold text-info-600">
+              <p className="text-sm font-medium text-gray-600">Emails</p>
+              <p className="text-2xl font-bold text-purple-600">
                 {communicationLogs.filter(log => log.type === 'email').length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
-              <HiMail className="w-6 h-6 text-info-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <HiMail className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">In-Person</p>
-              <p className="text-3xl font-bold text-warning-600">
+              <p className="text-sm font-medium text-gray-600">In-Person</p>
+              <p className="text-2xl font-bold text-orange-600">
                 {communicationLogs.filter(log => log.type === 'in-person').length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
-              <HiUser className="w-6 h-6 text-warning-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <HiUser className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>

@@ -235,58 +235,58 @@ export default function PromotionsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Active Promotions</p>
-              <p className="text-3xl font-bold text-success-600">
+              <p className="text-sm font-medium text-gray-600">Active Promotions</p>
+              <p className="text-2xl font-bold text-green-600">
                 {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
-              <HiSpeakerphone className="w-6 h-6 text-success-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <HiSpeakerphone className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Usage</p>
-              <p className="text-3xl font-bold text-info-600">
+              <p className="text-sm font-medium text-gray-600">Total Usage</p>
+              <p className="text-2xl font-bold text-purple-600">
                 {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
-              <HiUsers className="w-6 h-6 text-info-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <HiUsers className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Scheduled</p>
-              <p className="text-3xl font-bold text-warning-600">
+              <p className="text-sm font-medium text-gray-600">Scheduled</p>
+              <p className="text-2xl font-bold text-orange-600">
                 {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
               </p>
             </div>
-            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
-              <HiCalendar className="w-6 h-6 text-warning-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <HiCalendar className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Avg Savings</p>
-              <p className="text-3xl font-bold text-primary-600">
+              <p className="text-sm font-medium text-gray-600">Avg Savings</p>
+              <p className="text-2xl font-bold text-blue-600">
                 ${Math.round(stats?.overview?.avgDiscountValue || 0)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <HiCurrencyDollar className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <HiCurrencyDollar className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>

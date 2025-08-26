@@ -158,62 +158,62 @@ export default function CustomerMemberships() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Active Memberships</p>
               <p className="text-2xl font-bold text-gray-900">
                 {memberships.filter(m => m.status === 'active').length}
               </p>
             </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Shield className="w-6 h-6 text-blue-600" />
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Monthly Cost</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-green-600">
                 ${memberships.filter(m => m.status === 'active').reduce((sum, m) => sum + m.monthlyFee, 0).toFixed(2)}
               </p>
             </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-600" />
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Benefits Used</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-purple-600">
                 {memberships.reduce((sum, m) => sum + m.benefitsUsed, 0)}
               </p>
             </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-purple-600" />
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Calendar className="w-6 h-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Next Billing</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-orange-600">
                 {memberships.filter(m => m.status === 'active').length > 0 
                   ? new Date(memberships.filter(m => m.status === 'active')[0].nextBillingDate).toLocaleDateString()
                   : 'N/A'
                 }
               </p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>

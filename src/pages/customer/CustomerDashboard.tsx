@@ -286,56 +286,50 @@ export default function CustomerDashboard() {
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Car className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">My Vehicles</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalVehicles}</p>
-              {stats.nextServiceDue && (
-                <p className="text-xs text-gray-500">Next service: {new Date(stats.nextServiceDue).toLocaleDateString()}</p>
-              )}
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Car className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-xl">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
+              <p className="text-2xl font-bold text-green-600">{stats.upcomingAppointments}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <Calendar className="w-6 h-6 text-green-600" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.upcomingAppointments}</p>
-              <p className="text-xs text-gray-500">Click to view details</p>
-            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-xl">
-              <DollarSign className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingInvoices}</p>
-              <p className="text-xs text-gray-500">All caught up!</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.pendingInvoices}</p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <MessageCircle className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm font-medium text-gray-600">Unread Messages</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.unreadMessages}</p>
-              <p className="text-xs text-gray-500">Requires attention</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.unreadMessages}</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>

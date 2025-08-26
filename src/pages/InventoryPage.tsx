@@ -1123,56 +1123,50 @@ export default function InventoryPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Items</p>
-              <p className="text-3xl font-bold text-primary-600">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
-              <p className="text-sm text-secondary-500">
-                ${(items && Array.isArray(items) ? items : []).reduce((sum, item) => sum + (item.totalValue || 0), 0).toLocaleString()}
-              </p>
+              <p className="text-sm font-medium text-gray-600">Total Items</p>
+              <p className="text-2xl font-bold text-gray-900">{(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}</p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Total Transactions</p>
-              <p className="text-3xl font-bold text-info-600">{(transactions && Array.isArray(transactions) ? transactions : []).length}</p>
-              <p className="text-sm text-secondary-500">This Month</p>
+              <p className="text-sm font-medium text-gray-600">Total Transactions</p>
+              <p className="text-2xl font-bold text-purple-600">{(transactions && Array.isArray(transactions) ? transactions : []).length}</p>
             </div>
-            <div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
-              <ClipboardList className="w-6 h-6 text-info-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <ClipboardList className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Active Suppliers</p>
-              <p className="text-3xl font-bold text-success-600">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</p>
-              <p className="text-sm text-secondary-500">Partners</p>
+              <p className="text-sm font-medium text-gray-600">Active Suppliers</p>
+              <p className="text-2xl font-bold text-green-600">{(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}</p>
             </div>
-            <div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-success-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-600 mb-1">Purchase Orders</p>
-              <p className="text-3xl font-bold text-warning-600">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</p>
-              <p className="text-sm text-secondary-500">Pending: {pendingOrders.length}</p>
+              <p className="text-sm font-medium text-gray-600">Purchase Orders</p>
+              <p className="text-2xl font-bold text-orange-600">{(purchaseOrders && Array.isArray(purchaseOrders) ? purchaseOrders : []).length}</p>
             </div>
-            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-warning-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <ShoppingCart className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
