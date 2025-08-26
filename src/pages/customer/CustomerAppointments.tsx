@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Appointment as AppointmentType, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
-import { Calendar, Clock, Truck, Cog, User, Flag, FileText, Lightbulb, AlertTriangle, CheckCircle, Wrench, DollarSign, X, Clipboard } from 'lucide-react';
+import { Calendar, Clock, Truck, Cog, User, Flag, FileText, Lightbulb, AlertTriangle, CheckCircle, Wrench, DollarSign, X, Clipboard } from '../../utils/icons';
 import { useAppSelector, useAppDispatch } from '../../redux';
 import ModalWrapper from '../../utils/ModalWrapper';
 

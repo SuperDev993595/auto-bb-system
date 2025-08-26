@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
-import { FileText, X, CheckCircle, DollarSign, CreditCard, Hash } from 'lucide-react';
+import { FileText, X, CheckCircle, DollarSign, CreditCard, Hash } from '../../utils/icons';
 import ModalWrapper from '../../utils/ModalWrapper';
 
 interface Invoice {

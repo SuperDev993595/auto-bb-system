@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Info, X } from '../../utils/icons';
 
 // Standard Button Components
 export const Button = {

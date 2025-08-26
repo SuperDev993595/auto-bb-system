@@ -137,6 +137,8 @@ import {
   RotateCcw,
   Loader2,
   MessageSquare,
+  Crown,
+  Lightbulb,
 } from 'lucide-react'
 
 // Export all icons for direct use
@@ -274,6 +276,8 @@ export {
   RotateCcw,
   Loader2,
   MessageSquare,
+  Crown,
+  Lightbulb,
 }
 
 // Icon size constants for consistency

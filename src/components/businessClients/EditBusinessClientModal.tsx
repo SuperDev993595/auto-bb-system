@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { Building } from 'lucide-react';
+import { Building } from '../../../utils/icons';
 import businessClientService, { BusinessClient, UpdateBusinessClientData } from '../../services/businessClients';
 import ModalWrapper from '../../utils/ModalWrapper';
 

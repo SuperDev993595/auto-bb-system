@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { customerApiService, Vehicle as VehicleType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
 import AddEditVehicleModal from '../../components/customers/modal/AddEditVehicleModal';
-import { CheckCircle, FileText, Car, AlertTriangle, Wrench, TrendingUp, Droplets, RotateCcw, Shield, Clock, Wind, Zap } from 'lucide-react';
+import { CheckCircle, FileText, Car, AlertTriangle, Wrench, TrendingUp, Droplets, RotateCcw, Shield, Clock, Wind, Zap } from '../../utils/icons';
 
 interface Vehicle {
   id: string;

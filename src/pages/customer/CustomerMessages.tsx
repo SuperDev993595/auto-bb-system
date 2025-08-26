@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, Message as MessageType } from '../../services/customerApi';
-import { MessageCircle, X, FileText, MessageSquare, Tag, Flag } from 'lucide-react';
+import { MessageCircle, X, FileText, MessageSquare, Tag, Flag } from '../../utils/icons';
 import ModalWrapper from '../../utils/ModalWrapper';
 
 interface Message {

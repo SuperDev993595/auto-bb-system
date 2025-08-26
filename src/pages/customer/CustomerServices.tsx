@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { customerApiService, ServiceRecord as ServiceRecordType, Vehicle as VehicleType } from '../../services/customerApi';
-import { Wrench, FileText, CheckCircle, AlertTriangle, DollarSign, Clipboard, Calendar, Clock } from 'lucide-react';
+import { Wrench, FileText, CheckCircle, AlertTriangle, DollarSign, Clipboard, Calendar, Clock } from '../../utils/icons';
 
 interface ServiceRecord {
   id: string;

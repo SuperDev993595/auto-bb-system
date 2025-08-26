@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast';
 import { authService } from '../../services/auth';
 import { customerApiService, CustomerProfile as CustomerProfileType } from '../../services/customerApi';
 import ConfirmDialog from '../../components/Shared/ConfirmDialog';
-import { User, Settings, Lock } from 'lucide-react';
+import { User, Settings, Lock } from '../../utils/icons';
 
 interface UserProfile {
   id: string;
