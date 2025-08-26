@@ -70,7 +70,7 @@ export default class CustomerErrorBoundary extends Component<Props, State> {
             </p>
 
             {/* Error Details (Development Only) */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mb-6 text-left">
                 <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
                   Error Details (Development)

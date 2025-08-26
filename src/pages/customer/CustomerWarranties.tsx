@@ -18,11 +18,10 @@ import {
   MapPin,
   Phone,
   Mail,
-  Tool,
   Wrench,
   Zap,
   Settings
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Warranty {
   id: string;
@@ -243,7 +242,7 @@ export default function CustomerWarranties() {
       case 'engine':
         return <Settings className="w-4 h-4" />;
       case 'transmission':
-        return <Tool className="w-4 h-4" />;
+        return <Wrench className="w-4 h-4" />;
       case 'electrical':
         return <Zap className="w-4 h-4" />;
       case 'brakes':

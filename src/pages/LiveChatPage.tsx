@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { HiChat, HiUsers, HiClock, HiCheckCircle, HiXCircle, HiEye, HiUserAdd, HiPaperAirplane, HiRefresh } from 'react-icons/hi';
+import { MessageCircle, Users, Clock, CheckCircle, XCircle, Eye, UserPlus, Send, RefreshCw } from '../utils/icons';
 import PageTitle from '../components/Shared/PageTitle';
 import api from '../services/api';
 import { authService } from '../services/auth';
@@ -325,7 +325,7 @@ export default function LiveChatPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6 text-center">
           <div className="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-xl mx-auto mb-4">
-            <HiChat className="w-6 h-6 text-primary-600" />
+                                    <MessageCircle className="w-6 h-6 text-primary-600" />
           </div>
           <p className="text-sm font-medium text-secondary-600">Total</p>
           <p className="text-2xl font-bold text-secondary-900">{pagination.totalChats}</p>
@@ -336,7 +336,7 @@ export default function LiveChatPage() {
 
         <div className="card p-6 text-center">
           <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-xl mx-auto mb-4">
-            <HiClock className="w-6 h-6 text-warning-600" />
+                                    <Clock className="w-6 h-6 text-warning-600" />
           </div>
           <p className="text-sm font-medium text-secondary-600">Waiting</p>
           <p className="text-2xl font-bold text-secondary-900">
@@ -349,7 +349,7 @@ export default function LiveChatPage() {
 
         <div className="card p-6 text-center">
           <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-xl mx-auto mb-4">
-            <HiCheckCircle className="w-6 h-6 text-success-600" />
+                                    <CheckCircle className="w-6 h-6 text-success-600" />
           </div>
           <p className="text-sm font-medium text-secondary-600">Active</p>
           <p className="text-2xl font-bold text-secondary-900">
@@ -362,7 +362,7 @@ export default function LiveChatPage() {
 
         <div className="card p-6 text-center">
           <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-xl mx-auto mb-4">
-            <HiUsers className="w-6 h-6 text-info-600" />
+                                    <Users className="w-6 h-6 text-info-600" />
           </div>
           <p className="text-sm font-medium text-secondary-600">Resolved</p>
           <p className="text-2xl font-bold text-secondary-900">
@@ -497,14 +497,14 @@ export default function LiveChatPage() {
                           className="text-secondary-600 hover:text-secondary-900 transition-colors"
                           title="View Chat"
                         >
-                          <HiEye className="w-4 h-4" />
+                                                      <Eye className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleAssignChat(chat._id)}
                           className="text-primary-600 hover:text-primary-900 transition-colors"
                           title="Assign Chat"
                         >
-                          <HiUserAdd className="w-4 h-4" />
+                                                      <UserPlus className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -611,7 +611,7 @@ export default function LiveChatPage() {
                     disabled={!newMessage.trim() || sendingMessage}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
-                    <HiPaperAirplane className="h-4 w-4" />
+                                                <Send className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -626,7 +626,7 @@ export default function LiveChatPage() {
                       onClick={() => handleAssignChat(selectedChat._id)}
                       className="btn-primary"
                     >
-                      <HiUserAdd className="h-4 w-4 mr-1" />
+                                                  <UserPlus className="h-4 w-4 mr-1" />
                       Assign to Me
                     </button>
                   )}
@@ -635,7 +635,7 @@ export default function LiveChatPage() {
                       onClick={() => handleResolveChat(selectedChat._id)}
                       className="btn-success"
                     >
-                      <HiCheckCircle className="h-4 w-4 mr-1" />
+                                                  <CheckCircle className="h-4 w-4 mr-1" />
                       Resolve
                     </button>
                   )}
@@ -644,7 +644,7 @@ export default function LiveChatPage() {
                       onClick={() => handleCloseChat(selectedChat._id)}
                       className="btn-secondary"
                     >
-                      <HiXCircle className="h-4 w-4 mr-1" />
+                                                  <XCircle className="h-4 w-4 mr-1" />
                       Close
                     </button>
                   )}
@@ -662,7 +662,7 @@ export default function LiveChatPage() {
           </div>
         ) : (
           <div className="empty-state">
-            <HiChat className="empty-state-icon" />
+                                    <MessageCircle className="empty-state-icon" />
             <h3 className="empty-state-title">Select a Chat</h3>
             <p className="empty-state-description">Choose a chat from the list to view the conversation</p>
           </div>

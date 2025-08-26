@@ -131,6 +131,12 @@ import {
   Activity,
   Network,
   Printer,
+  Bell,
+  Package,
+  Building,
+  RotateCcw,
+  Loader2,
+  MessageSquare,
 } from 'lucide-react'
 
 // Export all icons for direct use
@@ -262,6 +268,12 @@ export {
   Activity,
   Network,
   Printer,
+  Bell,
+  Package,
+  Building,
+  RotateCcw,
+  Loader2,
+  MessageSquare,
 }
 
 // Icon size constants for consistency
@@ -405,4 +417,9 @@ export const ACTION_ICONS = {
   flag: { icon: Flag, color: ICON_COLORS.warning, size: ICON_SIZES.md },
   activity: { icon: Activity, color: ICON_COLORS.primary, size: ICON_SIZES.md },
   network: { icon: Network, color: ICON_COLORS.info, size: ICON_SIZES.md },
+  bell: { icon: Bell, color: ICON_COLORS.warning, size: ICON_SIZES.md },
+  package: { icon: Package, color: ICON_COLORS.secondary, size: ICON_SIZES.md },
+  rotateCcw: { icon: RotateCcw, color: ICON_COLORS.primary, size: ICON_SIZES.md },
+  loader2: { icon: Loader2, color: ICON_COLORS.primary, size: ICON_SIZES.md },
+  messageSquare: { icon: MessageSquare, color: ICON_COLORS.primary, size: ICON_SIZES.md },
 } as const
