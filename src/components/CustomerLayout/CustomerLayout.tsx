@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Home, 
@@ -25,22 +25,30 @@ import {
 export default function CustomerLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
   };
 
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200">
+      <header className="bg-white shadow-lg border-b border-gray-200 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Car className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 
+                className="text-xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={handleHomeClick}
+              >
                 Auto Service Portal
               </h1>
             </div>
@@ -64,24 +72,11 @@ export default function CustomerLayout() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <nav className="w-64 bg-white shadow-lg border-r border-gray-200 min-h-screen">
-          <div className="p-6">
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Navigation</h2>
-              <div className="w-12 h-1 bg-blue-600 rounded-full"></div>
-            </div>
-            
-            <nav className="space-y-1">
-              <Link
-                to="/"
-                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              >
-                <Home className="w-5 h-5" />
-                <span>Home</span>
-              </Link>
-              
+        <nav className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col flex-shrink-0">
+          <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+            <nav className="space-y-1">                           
               <Link
                 to="/customer/dashboard"
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -266,7 +261,7 @@ export default function CustomerLayout() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 p-8 bg-gray-50">
+        <main className="flex-1 p-8 bg-gray-50 overflow-y-auto custom-scrollbar">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
