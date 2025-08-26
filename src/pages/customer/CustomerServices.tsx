@@ -217,24 +217,26 @@ export default function CustomerServices() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Service History</h1>
-          <p className="text-gray-600">View your vehicle maintenance records and schedules</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedVehicle}
-            onChange={(e) => setSelectedVehicle(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Vehicles</option>
-            {vehicles.map(vehicle => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
-              </option>
-            ))}
-          </select>
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Service History</h1>
+            <p className="text-gray-600">View your vehicle maintenance records and schedules</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <select
+              value={selectedVehicle}
+              onChange={(e) => setSelectedVehicle(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Vehicles</option>
+              {vehicles.map(vehicle => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
