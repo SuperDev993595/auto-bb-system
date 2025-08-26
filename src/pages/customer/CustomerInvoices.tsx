@@ -141,10 +141,19 @@ export default function CustomerInvoices() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Invoices & Payments</h1>
-          <p className="text-gray-600">Manage your invoices and track payments</p>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Invoices & Payments</h1>
+            <p className="text-gray-600">Manage your invoices and track payments</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <FileText className="w-4 h-4" />
+              Download All
+            </button>
+          </div>
         </div>
       </div>
 
