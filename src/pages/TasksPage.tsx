@@ -87,7 +87,9 @@ export default function TasksPage() {
         id: task._id,
         title: task.title,
         customer: task.customer,
-        customerType: typeof task.customer
+        customerType: typeof task.customer,
+        assignedTo: task.assignedTo,
+        assignedToType: typeof task.assignedTo
       })))
     }
   }, [tasks])
@@ -190,6 +192,14 @@ export default function TasksPage() {
     setShowTaskModal(true)
   }
 
+  // Utility function to safely get assigned user name
+  const getAssignedUserName = (assignedTo: any) => {
+    if (!assignedTo) return 'Unassigned'
+    if (typeof assignedTo === 'string') return assignedTo
+    if (assignedTo.name) return assignedTo.name
+    return 'Unknown'
+  }
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200'
@@ -227,7 +237,12 @@ export default function TasksPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+    if (!dateString) return 'No date set'
+    try {
+      return new Date(dateString).toLocaleDateString()
+    } catch (error) {
+      return 'Invalid date'
+    }
   }
 
   if (isLoading) {
@@ -401,16 +416,18 @@ export default function TasksPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredTasks.map(task => (
-                <div key={task._id} className="group bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-200 p-6">
+              {filteredTasks.map(task => {
+                try {
+                  return (
+                    <div key={task._id} className="group bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-200 p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-start gap-4">
                       <div className="mt-1">
                         {getCategoryIcon(task.type)}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{task.title}</h3>
-                        <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{task.title || 'Untitled Task'}</h3>
+                        <p className="text-gray-600 text-sm mb-3">{task.description || 'No description provided'}</p>
                         <div className="flex items-center gap-1 mb-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-500 text-sm">
@@ -426,8 +443,10 @@ export default function TasksPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>Assigned to: <strong className="text-gray-700">{typeof task.assignedTo === 'string' ? task.assignedTo : task.assignedTo.name}</strong></span>
-                          <span className="capitalize">Type: <strong className="text-gray-700">{task.type.replace('-', ' ')}</strong></span>
+                          <span>Assigned to: <strong className="text-gray-700">
+                            {getAssignedUserName(task.assignedTo)}
+                          </strong></span>
+                          <span className="capitalize">Type: <strong className="text-gray-700">{task.type ? task.type.replace('-', ' ') : 'Unknown'}</strong></span>
                           {task.progress !== undefined && (
                             <span>Progress: <strong className="text-gray-700">{task.progress}%</strong></span>
                           )}
@@ -435,14 +454,17 @@ export default function TasksPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
+                      <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
+                        {task.priority || 'medium'}
                       </span>
-                      <TaskStatusUpdate
-                        task={task}
-                        onStatusUpdate={handleStatusUpdate}
-                        isLoading={isSubmitting}
-                      />
+                                              <TaskStatusUpdate
+                          task={{
+                            ...task,
+                            status: task.status || 'pending'
+                          }}
+                          onStatusUpdate={handleStatusUpdate}
+                          isLoading={isSubmitting}
+                        />
                     </div>
                   </div>
                   
@@ -469,7 +491,19 @@ export default function TasksPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                  )
+                } catch (error) {
+                  console.error('Error rendering task:', task._id, error)
+                  return (
+                    <div key={task._id} className="group bg-white rounded-xl border border-red-200 p-6">
+                      <div className="text-red-600">
+                        <h3 className="text-lg font-semibold mb-2">Error Loading Task</h3>
+                        <p className="text-sm">There was an error loading this task. Please refresh the page or contact support.</p>
+                      </div>
+                    </div>
+                  )
+                }
+              })}
             </div>
           )}
           
