@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireCustomer } = require('../middleware/auth');
 const MembershipPlan = require('../models/MembershipPlan');
 const CustomerMembership = require('../models/CustomerMembership');
 const Customer = require('../models/Customer');
@@ -129,7 +129,67 @@ router.delete('/plans/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Get customer memberships
+// Get customer memberships (for authenticated customer)
+router.get('/customer/me', authenticateToken, requireCustomer, async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const memberships = await CustomerMembership.find({
+      customer: customer._id
+    })
+    .populate('membershipPlan')
+    .populate('customer', 'name email phone')
+    .populate('createdBy', 'name email')
+    .sort({ createdAt: -1 });
+
+    // Get available plans
+    const availablePlans = await MembershipPlan.find({ isActive: true })
+      .sort({ price: 1 });
+
+    res.json({
+      success: true,
+      data: {
+        memberships: memberships.map(membership => ({
+          _id: membership._id,
+          status: membership.status,
+          startDate: membership.startDate,
+          endDate: membership.endDate,
+          nextBillingDate: membership.nextBillingDate,
+          billingCycle: membership.billingCycle,
+          price: membership.price,
+          autoRenew: membership.autoRenew,
+          paymentStatus: membership.paymentStatus,
+          totalPaid: membership.totalPaid || 0,
+          benefitsUsed: {
+            inspections: membership.benefitsUsed?.inspections || 0,
+            roadsideAssistance: membership.benefitsUsed?.roadsideAssistance || 0,
+            priorityBookings: membership.benefitsUsed?.priorityBookings || 0
+          },
+          membershipPlan: membership.membershipPlan,
+          createdAt: membership.createdAt
+        })),
+        availablePlans: availablePlans.map(plan => ({
+          _id: plan._id,
+          name: plan.name,
+          description: plan.description,
+          tier: plan.tier,
+          price: plan.price,
+          billingCycle: plan.billingCycle,
+          features: plan.features,
+          benefits: plan.benefits
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching customer memberships:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get customer memberships (for admin use)
 router.get('/customer/:customerId', authenticateToken, async (req, res) => {
   try {
     const memberships = await CustomerMembership.find({

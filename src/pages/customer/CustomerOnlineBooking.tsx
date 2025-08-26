@@ -227,7 +227,7 @@ export default function CustomerOnlineBooking() {
                   className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">{service.name}</h3>
+                    <h6 className="font-medium text-gray-900">{service.name}</h6>
                     <span className="text-lg font-bold text-blue-600">{formatCurrency(service.price)}</span>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{service.description}</p>

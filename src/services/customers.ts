@@ -585,5 +585,103 @@ export const customerService = {
   }> {
     const response = await apiResponse(api.get('/customers/services'));
     return response;
+  },
+
+  // Get customer invoices
+  async getCustomerInvoices(): Promise<{
+    success: boolean;
+    data: {
+      invoices: Array<{
+        _id: string;
+        invoiceNumber: string;
+        date: string;
+        dueDate: string;
+        serviceType: string;
+        subtotal: number;
+        tax: number;
+        total: number;
+        status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+        paymentMethod?: string;
+        paymentDate?: string;
+        paymentReference?: string;
+        appointmentId?: {
+          _id: string;
+          date: string;
+          serviceType: string;
+        };
+        createdAt: string;
+      }>;
+    };
+  }> {
+    const response = await apiResponse(api.get('/customers/invoices'));
+    return response;
+  },
+
+  // Get customer rewards and membership
+  async getCustomerRewards(): Promise<{
+    success: boolean;
+    data: {
+      memberships: Array<{
+        _id: string;
+        status: 'active' | 'inactive' | 'suspended' | 'cancelled' | 'expired';
+        startDate: string;
+        endDate: string;
+        nextBillingDate: string;
+        billingCycle: 'monthly' | 'quarterly' | 'yearly';
+        price: number;
+        autoRenew: boolean;
+        paymentStatus: 'paid' | 'pending' | 'failed' | 'overdue';
+        totalPaid: number;
+        benefitsUsed: {
+          inspections: number;
+          roadsideAssistance: number;
+          priorityBookings: number;
+        };
+        membershipPlan: {
+          _id: string;
+          name: string;
+          description: string;
+          tier: 'basic' | 'premium' | 'vip' | 'enterprise';
+          features: Array<{
+            name: string;
+            description: string;
+            included: boolean;
+          }>;
+          benefits: {
+            discountPercentage: number;
+            priorityBooking: boolean;
+            freeInspections: number;
+            roadsideAssistance: boolean;
+            extendedWarranty: boolean;
+            conciergeService: boolean;
+          };
+        };
+        createdAt: string;
+      }>;
+      availablePlans: Array<{
+        _id: string;
+        name: string;
+        description: string;
+        tier: 'basic' | 'premium' | 'vip' | 'enterprise';
+        price: number;
+        billingCycle: 'monthly' | 'quarterly' | 'yearly';
+        features: Array<{
+          name: string;
+          description: string;
+          included: boolean;
+        }>;
+        benefits: {
+          discountPercentage: number;
+          priorityBooking: boolean;
+          freeInspections: number;
+          roadsideAssistance: boolean;
+          extendedWarranty: boolean;
+          conciergeService: boolean;
+        };
+      }>;
+    };
+  }> {
+    const response = await apiResponse(api.get('/memberships/customer/me'));
+    return response;
   }
 };
