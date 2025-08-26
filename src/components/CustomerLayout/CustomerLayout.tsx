@@ -96,9 +96,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -116,9 +116,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/vehicles"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/vehicles' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -128,9 +128,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/service-history"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/service-history' 
-                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                        ? 'bg-purple-100 text-purple-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -148,9 +148,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/appointments"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/appointments' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -160,9 +160,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/services"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/services' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -180,9 +180,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/invoices"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/invoices' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -192,9 +192,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/payments"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/payments' 
-                        ? 'bg-green-100 text-green-700 shadow-sm' 
+                        ? 'bg-green-100 text-green-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -204,9 +204,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/rewards"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/rewards' 
-                        ? 'bg-yellow-100 text-yellow-700 shadow-sm' 
+                        ? 'bg-yellow-100 text-yellow-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -224,9 +224,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/messages"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/messages' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -236,9 +236,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/notifications"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/notifications' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -248,9 +248,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/support"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/support' 
-                        ? 'bg-orange-100 text-orange-700 shadow-sm' 
+                        ? 'bg-orange-100 text-orange-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -268,9 +268,9 @@ export default function CustomerLayout() {
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/profile"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/profile' 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -280,9 +280,9 @@ export default function CustomerLayout() {
                   
                   <Link
                     to="/customer/dashboard/preferences"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                       location.pathname === '/customer/dashboard/preferences' 
-                        ? 'bg-gray-100 text-gray-700 shadow-sm' 
+                        ? 'bg-gray-100 text-gray-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
