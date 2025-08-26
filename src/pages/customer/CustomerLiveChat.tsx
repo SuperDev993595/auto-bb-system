@@ -281,8 +281,29 @@ export default function CustomerLiveChat() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Live Chat Support</h1>
+            <p className="text-gray-600">Get instant help from our support team</p>
+            <div className="flex items-center space-x-4 text-sm text-gray-600 mt-2">
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <MessageCircle className="w-4 h-4" />
+              Start New Chat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Chat Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
             <div className="flex items-center justify-between">
