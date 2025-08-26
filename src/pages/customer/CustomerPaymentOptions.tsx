@@ -22,7 +22,7 @@ import {
   CreditCard as CreditCardIcon,
   Banknote,
   Smartphone
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface PaymentMethod {
   id: string;

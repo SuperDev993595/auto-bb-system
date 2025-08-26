@@ -23,7 +23,7 @@ import {
   MapPin,
   Users,
   Star
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface ServiceMetrics {
   totalServices: number;

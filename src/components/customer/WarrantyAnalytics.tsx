@@ -9,7 +9,7 @@ import {
   CheckCircle,
   BarChart3,
   Activity
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface WarrantyAnalyticsProps {
   customerId: string;

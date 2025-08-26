@@ -24,7 +24,7 @@ import {
   MapPin,
   Gauge,
   Fuel
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface ServiceReport {
   id: string;

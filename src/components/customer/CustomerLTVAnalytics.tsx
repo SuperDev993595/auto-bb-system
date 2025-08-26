@@ -12,7 +12,7 @@ import {
   Crown,
   Clock,
   Award
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface CustomerLTVAnalyticsProps {
   customerId: string;

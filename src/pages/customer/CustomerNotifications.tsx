@@ -17,7 +17,7 @@ import {
   Ruler, 
   ChevronLeft, 
   ChevronRight 
-} from 'lucide-react';
+} from '../../utils/icons';
 
 export default function CustomerNotifications() {
   const { user } = useAuth();

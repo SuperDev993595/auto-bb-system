@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Crown, Shield, Zap } from '../../../utils/icons';
+import { Check, X, Star, Crown, Shield, Zap } from '../../utils/icons';
 
 interface MembershipPlan {
   id: string;

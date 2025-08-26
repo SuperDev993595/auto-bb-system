@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { TrendingUp, Users, Car, DollarSign, Calendar, MapPin, Activity, Star, Target } from '../../../utils/icons'
+import { TrendingUp, Users, Car, DollarSign, Calendar, MapPin, Activity, Star, Target } from '../../utils/icons'
 
 interface CustomerMetrics {
   totalCustomers: number

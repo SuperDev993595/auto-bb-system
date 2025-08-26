@@ -14,7 +14,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock
-} from 'lucide-react';
+} from '../../utils/icons';
 import { MembershipStats } from '../../services/memberships';
 
 interface MembershipAnalyticsProps {

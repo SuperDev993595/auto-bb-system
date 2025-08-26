@@ -10,7 +10,7 @@ import {
   DollarSign,
   Users,
   Shield
-} from 'lucide-react';
+} from '../../utils/icons';
 import { CustomerMembership } from '../../services/memberships';
 
 interface MembershipCardProps {

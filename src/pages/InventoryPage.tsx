@@ -24,7 +24,7 @@ import DeleteSupplierModal from '../components/inventory/DeleteSupplierModal'
 import AddEditPurchaseOrderModal from '../components/inventory/AddEditPurchaseOrderModal'
 import DeletePurchaseOrderModal from '../components/inventory/DeletePurchaseOrderModal'
 import {
-  Cube,
+  Package,
   Truck,
   Users,
   ClipboardList,
@@ -42,13 +42,12 @@ import {
   RefreshCw,
   MapPin,
   Tag,
-  Package,
   ShoppingCart,
   DollarSign,
   BarChart3,
   Settings,
   Loader2
-} from 'lucide-react'
+} from '../utils/icons'
 
 type TabType = 'inventory' | 'transactions' | 'suppliers' | 'purchase-orders'
 

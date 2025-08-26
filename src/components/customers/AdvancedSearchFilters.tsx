@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Filter, X, Calendar, MapPin, Car, DollarSign, User, Building2 } from '../../../utils/icons'
+import { Search, Filter, X, Calendar, MapPin, Car, DollarSign, User, Building2 } from '../../utils/icons'
 
 interface AdvancedFilters {
   search: string

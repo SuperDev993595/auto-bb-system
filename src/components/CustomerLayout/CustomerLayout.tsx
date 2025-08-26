@@ -20,7 +20,7 @@ import {
   FileText,
   Users,
   Activity
-} from 'lucide-react';
+} from '../../utils/icons';
 
 export default function CustomerLayout() {
   const { user, logout } = useAuth();

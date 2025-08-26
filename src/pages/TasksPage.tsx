@@ -23,7 +23,7 @@ import {
   Settings,
   Grid3X3,
   List
-} from 'lucide-react'
+} from '../utils/icons'
 import { fetchTasks, fetchTaskStats, createTask, updateTask, deleteTask } from '../redux/actions/tasks'
 import { toast } from 'react-hot-toast'
 import { Task, CreateTaskData, UpdateTaskData } from '../services/tasks'

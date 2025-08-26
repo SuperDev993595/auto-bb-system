@@ -17,7 +17,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface MarketingCampaign {
   id: string;

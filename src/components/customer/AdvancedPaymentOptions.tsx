@@ -18,7 +18,7 @@ import {
   Lock,
   Percent,
   TrendingUp
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface PaymentOption {
   id: string;

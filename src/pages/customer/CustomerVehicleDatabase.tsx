@@ -10,9 +10,7 @@ import {
   Download, 
   Calendar, 
   Gauge, 
-  Fuel, 
   Settings, 
-  Wrench, 
   AlertTriangle, 
   CheckCircle, 
   Clock, 
@@ -20,16 +18,14 @@ import {
   FileText, 
   BarChart3, 
   TrendingUp,
-  Zap,
   Droplets,
   Thermometer,
   Battery,
-  Tire,
-  Brake,
-  Engine,
-  Transmission,
+  Wrench,
+  Cog,
+  Zap,
   DollarSign
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Vehicle {
   id: string;

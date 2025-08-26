@@ -21,7 +21,7 @@ import {
   Settings,
   Minimize,
   Maximize
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Message {
   id: string;

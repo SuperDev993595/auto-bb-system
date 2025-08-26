@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, MapPin, Building2, Car, AlertCircle, CheckCircle, Eye, EyeOff } from '../../../utils/icons'
+import { User, Mail, Phone, MapPin, Building2, Car, AlertCircle, CheckCircle, Eye, EyeOff } from '../../utils/icons'
 
 interface CustomerFormData {
   // Basic Information

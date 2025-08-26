@@ -11,7 +11,7 @@ import {
   Car,
   DollarSign,
   Shield
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Notification {
   id: string;

@@ -22,7 +22,7 @@ import {
   Users,
   Car,
   Wrench
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Report {
   id: string;

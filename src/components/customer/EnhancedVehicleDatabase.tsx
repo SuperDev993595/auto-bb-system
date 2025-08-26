@@ -16,7 +16,7 @@ import {
   DollarSign,
   TrendingUp,
   BarChart3
-} from 'lucide-react';
+} from '../../utils/icons';
 
 interface Vehicle {
   id: string;

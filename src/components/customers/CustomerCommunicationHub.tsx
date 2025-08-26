@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Phone, Mail, MessageSquare, Calendar, Clock, User, PhoneCall, Voicemail, Send, Plus } from '../../../utils/icons'
+import { Phone, Mail, MessageSquare, Calendar, Clock, User, PhoneCall, Voicemail, Send, Plus } from '../../utils/icons'
 
 interface CommunicationRecord {
   id: string

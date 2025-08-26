@@ -21,7 +21,7 @@ import {
   Download,
   Eye,
   Plus
-} from 'lucide-react';
+} from '../../utils/icons';
 
 // Import all our Customer Portal components
 import MembershipCard from '../../components/customer/MembershipCard';

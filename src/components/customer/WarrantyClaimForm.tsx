@@ -6,7 +6,7 @@ import {
   CheckCircle,
   DollarSign,
   Upload
-} from 'lucide-react';
+} from '../../utils/icons';
 import { Warranty } from '../../services/warranties';
 import { warrantyService } from '../../services/warranties';
 import ModalWrapper from '../../utils/ModalWrapper';

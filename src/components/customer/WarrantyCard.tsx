@@ -10,7 +10,7 @@ import {
   Gauge,
   DollarSign,
   FileText
-} from 'lucide-react';
+} from '../../utils/icons';
 import { Warranty } from '../../services/warranties';
 
 interface WarrantyCardProps {

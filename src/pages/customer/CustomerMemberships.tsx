@@ -16,7 +16,7 @@ import {
   Download,
   Filter,
   Search
-} from 'lucide-react';
+} from '../../utils/icons';
 import MembershipCard from '../../components/customer/MembershipCard';
 import MembershipComparison from '../../components/customer/MembershipComparison';
 

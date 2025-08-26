@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building } from '../../../utils/icons';
+import { Building } from '../../utils/icons';
 import { BusinessClient } from '../../services/businessClients';
 import ModalWrapper from '../../utils/ModalWrapper';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Building, User, MapPin, CreditCard, Settings } from '../../../utils/icons';
+import { Building, User, MapPin, CreditCard, Settings } from '../../utils/icons';
 import businessClientService, { CreateBusinessClientData } from '../../services/businessClients';
 import ModalWrapper from '../../utils/ModalWrapper';
 
