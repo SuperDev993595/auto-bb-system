@@ -275,9 +275,7 @@ export default function CustomerNotifications() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Notifications List */}
+          {/* Notifications List */}
         <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="bg-white p-8 rounded-lg shadow text-center">
@@ -302,7 +300,7 @@ export default function CustomerNotifications() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
-                  <div className="flex items-center justify-center w-12 h-12">
+                    <div className="flex items-center justify-center w-12 h-12">
                     {getNotificationIcon(notification.type)}
                   </div>
                     <div className="flex-1">
@@ -388,6 +386,5 @@ export default function CustomerNotifications() {
           </div>
         )}
       </div>
-    </div>
   );
 }
