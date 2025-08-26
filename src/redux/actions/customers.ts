@@ -97,6 +97,20 @@ export const deleteCustomer = createAsyncThunk(
   }
 )
 
+// Delete vehicle
+export const deleteVehicle = createAsyncThunk(
+  'customers/deleteVehicle',
+  async ({ customerId, vehicleId }: { customerId: string; vehicleId: string }, { rejectWithValue }) => {
+    try {
+      await customerService.deleteVehicle(customerId, vehicleId)
+      return { customerId, vehicleId }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to delete vehicle'
+      return rejectWithValue(message)
+    }
+  }
+)
+
 // Fetch customer statistics
 export const fetchCustomerStats = createAsyncThunk(
   'customers/fetchStats',
@@ -257,6 +271,26 @@ const customerSlice = createSlice({
         }
       })
       .addCase(deleteCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // Delete vehicle
+    builder
+      .addCase(deleteVehicle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteVehicle.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove the vehicle from the selected customer's vehicles array
+        if (state.selectedCustomer && state.selectedCustomer.vehicles) {
+          state.selectedCustomer.vehicles = state.selectedCustomer.vehicles.filter(
+            vehicle => vehicle._id !== action.payload.vehicleId && vehicle.id !== action.payload.vehicleId
+          );
+        }
+      })
+      .addCase(deleteVehicle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -33,7 +33,6 @@ interface VehicleFormData {
   mileage: string;
   fuelType: string;
   transmission: string;
-  engineSize: string;
   status: string;
 }
 
@@ -82,7 +81,6 @@ export default function CustomerVehicles() {
     mileage: '',
     fuelType: '',
     transmission: '',
-    engineSize: '',
     status: 'active'
   });
 
@@ -263,6 +261,43 @@ export default function CustomerVehicles() {
     return true;
   };
 
+  const validateFormData = (data: VehicleFormData) => {
+    if (!data.year || !data.make || !data.model || !data.vin || !data.licensePlate || !data.color || !data.mileage) {
+      toast.error('Please fill in all required fields');
+      return false;
+    }
+    if (data.vin.length !== 17) {
+      toast.error('VIN must be 17 characters long');
+      return false;
+    }
+    
+    // Check for duplicate VIN (only for new vehicles)
+    if (!editingVehicle) {
+      const existingVehicle = vehicles.find(v => v.vin.toUpperCase() === data.vin.toUpperCase());
+      if (existingVehicle) {
+        toast.error('A vehicle with this VIN already exists');
+        return false;
+      }
+    }
+    
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const year = parseInt(data.year);
+    if (year < 1900 || year > currentYear + 1) {
+      toast.error(`Year must be between 1900 and ${currentYear + 1}`);
+      return false;
+    }
+    
+    // Validate mileage
+    const mileage = parseInt(data.mileage);
+    if (mileage < 0) {
+      toast.error('Mileage must be a positive number');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -317,11 +352,8 @@ export default function CustomerVehicles() {
   };
 
   const handleModalSubmit = (data: VehicleFormData) => {
-    // Update the form data with the modal data
-    setFormData(data);
-    
-    // Validate and submit
-    if (!validateForm()) return;
+    // Validate the data directly
+    if (!validateFormData(data)) return;
 
     const submitData = async () => {
       try {
@@ -333,6 +365,8 @@ export default function CustomerVehicles() {
           licensePlate: data.licensePlate.toUpperCase(),
           color: data.color,
           mileage: parseInt(data.mileage),
+          fuelType: data.fuelType,
+          transmission: data.transmission,
           status: data.status as 'active' | 'inactive' | 'maintenance'
         };
 
@@ -375,7 +409,6 @@ export default function CustomerVehicles() {
       mileage: vehicle.mileage.toString(),
       fuelType: vehicle.fuelType || '',
       transmission: vehicle.transmission || '',
-      engineSize: (vehicle as any).engineSize || '',
       status: vehicle.status || 'active'
     });
     setShowAddModal(true);
@@ -418,7 +451,6 @@ export default function CustomerVehicles() {
       mileage: '',
       fuelType: '',
       transmission: '',
-      engineSize: '',
       status: 'active'
     });
   };
@@ -830,9 +862,7 @@ export default function CustomerVehicles() {
             mileage: editingVehicle.mileage.toString(),
             fuelType: editingVehicle.fuelType || '',
             transmission: editingVehicle.transmission || '',
-            engineSize: '',
-            status: editingVehicle.status,
-            notes: ''
+            status: editingVehicle.status
           } : null}
           isEditing={!!editingVehicle}
         />

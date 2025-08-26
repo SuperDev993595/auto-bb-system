@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../redux'
 import { useState, useEffect } from 'react'
-import { fetchCustomer } from '../../redux/actions/customers'
+import { fetchCustomer, deleteVehicle } from '../../redux/actions/customers'
 
 import OverviewSection from '../../components/customers/section/OverviewSection'
 import PaymentsSection from '../../components/customers/section/PaymentsSection'
@@ -298,9 +298,13 @@ export default function CustomerDetail() {
           />
           
           <DeleteCustomerModal
-            customer={actualCustomer}
+            customer={actualCustomer as any}
             isOpen={showDeleteModal}
             onClose={() => setShowDeleteModal(false)}
+            onDelete={async (customerId: string) => {
+              // This will be handled by the DeleteCustomerModal internally
+              // The modal will dispatch the delete action
+            }}
           />
           
           <AddVehicleModal
@@ -334,17 +338,15 @@ export default function CustomerDetail() {
               />
               
               <DeleteVehicleModal
-                customer={actualCustomer}
                 vehicle={selectedVehicle}
                 isOpen={showDeleteVehicleModal}
                 onClose={() => {
                   setShowDeleteVehicleModal(false)
                   setSelectedVehicle(null)
                 }}
-                onSuccess={() => {
-                  // Refresh customer data after successful vehicle deletion
+                onDelete={async (vehicleId: string) => {
                   if (id) {
-                    dispatch(fetchCustomer(id))
+                    await dispatch(deleteVehicle({ customerId: id, vehicleId }))
                   }
                 }}
               />

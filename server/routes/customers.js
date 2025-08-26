@@ -28,6 +28,8 @@ const vehicleSchema = Joi.object({
   licensePlate: Joi.string().min(1).max(20).required(),
   color: Joi.string().min(1).max(30).required(),
   mileage: Joi.number().integer().min(0).required(),
+  fuelType: Joi.string().valid('gasoline', 'diesel', 'hybrid', 'electric', 'other').default('gasoline'),
+  transmission: Joi.string().valid('automatic', 'manual', 'cvt', 'other').default('automatic'),
   status: Joi.string().valid('active', 'inactive', 'maintenance').default('active')
 });
 
@@ -570,6 +572,7 @@ router.get('/vehicles', authenticateToken, requireCustomer, async (req, res) => 
     // Transform vehicles to match frontend expectations
     const transformedVehicles = vehicles.map(vehicle => ({
       _id: vehicle._id,
+      id: vehicle._id, // Add id field for frontend compatibility
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,
@@ -639,6 +642,7 @@ router.get('/vehicles/all', authenticateToken, requireAnyAdmin, async (req, res)
     // Transform vehicles to match frontend expectations
     const transformedVehicles = vehicles.map(vehicle => ({
       _id: vehicle._id,
+      id: vehicle._id, // Add id field for frontend compatibility
       year: vehicle.year,
       make: vehicle.make,
       model: vehicle.model,

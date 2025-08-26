@@ -12,9 +12,7 @@ interface VehicleFormData {
   mileage: string;
   fuelType: string;
   transmission: string;
-  engineSize: string;
   status: string;
-  notes?: string;
 }
 
 interface AddEditVehicleModalProps {
@@ -42,7 +40,6 @@ export default function AddEditVehicleModal({
     mileage: '',
     fuelType: '',
     transmission: '',
-    engineSize: '',
     status: 'active'
   });
 
@@ -60,7 +57,6 @@ export default function AddEditVehicleModal({
         mileage: '',
         fuelType: '',
         transmission: '',
-        engineSize: '',
         status: 'active'
       });
     }
@@ -226,29 +222,7 @@ export default function AddEditVehicleModal({
           </div>
         </div>
         
-        <div>
-          <label className="form-label">Engine Size</label>
-          <input
-            type="text"
-            name="engineSize"
-            value={formData.engineSize}
-            onChange={handleInputChange}
-            className="form-input"
-            placeholder="2.5L"
-          />
-        </div>
-        
-        <div>
-          <label className="form-label">Notes</label>
-          <textarea
-            name="notes"
-            value={formData.notes || ''}
-            onChange={handleInputChange}
-            className="form-textarea"
-            rows={3}
-            placeholder="Additional notes about the vehicle..."
-          />
-        </div>
+
       </div>
     </ModalWrapper>
   );

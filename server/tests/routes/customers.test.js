@@ -141,4 +141,78 @@ describe('Customer Routes', () => {
       expect(response.body.success).toBe(true);
     });
   });
+
+  describe('DELETE /api/customers/:customerId/vehicles/:vehicleId', () => {
+    it('should delete vehicle successfully for admin', async () => {
+      const customer = await createTestCustomer();
+      
+      // Create a test vehicle
+      const Vehicle = require('../../models/Vehicle');
+      const vehicle = new Vehicle({
+        customer: customer._id,
+        make: 'Toyota',
+        model: 'Camry',
+        year: 2020,
+        vin: 'TEST123456789',
+        licensePlate: 'ABC123',
+        mileage: 50000,
+        color: 'White',
+        engine: '2.5L 4-Cylinder'
+      });
+      await vehicle.save();
+
+      const response = await request(app)
+        .delete(`/api/customers/${customer._id}/vehicles/${vehicle._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Vehicle deleted successfully');
+    });
+
+    it('should return 404 for non-existent vehicle', async () => {
+      const customer = await createTestCustomer();
+      const fakeVehicleId = '507f1f77bcf86cd799439011';
+
+      const response = await request(app)
+        .delete(`/api/customers/${customer._id}/vehicles/${fakeVehicleId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Vehicle not found');
+    });
+
+    it('should return 403 for vehicle not belonging to customer', async () => {
+      const customer1 = await createTestCustomer();
+      const customer2 = await createTestCustomer({
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        phone: '987-654-3210'
+      });
+      
+      // Create a test vehicle for customer2
+      const Vehicle = require('../../models/Vehicle');
+      const vehicle = new Vehicle({
+        customer: customer2._id,
+        make: 'Honda',
+        model: 'Civic',
+        year: 2019,
+        vin: 'TEST987654321',
+        licensePlate: 'XYZ789',
+        mileage: 30000,
+        color: 'Blue',
+        engine: '1.5L 4-Cylinder'
+      });
+      await vehicle.save();
+
+      const response = await request(app)
+        .delete(`/api/customers/${customer1._id}/vehicles/${vehicle._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Vehicle does not belong to this customer');
+    });
+  });
 });
