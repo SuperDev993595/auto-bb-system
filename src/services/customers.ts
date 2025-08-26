@@ -558,5 +558,32 @@ export const customerService = {
   }> {
     const response = await apiResponse(api.delete(`/customers/${customerId}/call-logs/${callLogId}`));
     return response;
+  },
+
+  // Get customer service history
+  async getCustomerServiceHistory(): Promise<{
+    success: boolean;
+    data: {
+      services: Array<{
+        _id: string;
+        date: string;
+        serviceType: string;
+        description: string;
+        cost: number;
+        vehicle: {
+          make: string;
+          model: string;
+          year: number;
+          vin: string;
+        };
+        technician: string;
+        status: string;
+        notes?: string;
+        createdAt: string;
+      }>;
+    };
+  }> {
+    const response = await apiResponse(api.get('/customers/services'));
+    return response;
   }
 };
