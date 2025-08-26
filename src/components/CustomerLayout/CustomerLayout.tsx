@@ -13,13 +13,23 @@ import {
   User, 
   LogOut,
   Shield,
-  Crown,
-  TrendingUp,
-  Database,
-  Settings,
   FileText,
   Users,
-  Activity
+  Activity,
+  Settings,
+  CreditCard,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Star,
+  Heart,
+  Phone,
+  Mail,
+  Camera,
+  MapPin,
+  Gauge,
+  Zap,
+  Database
 } from '../../utils/icons';
 
 export default function CustomerLayout() {
@@ -76,186 +86,235 @@ export default function CustomerLayout() {
         {/* Sidebar */}
         <nav className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col flex-shrink-0">
           <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-            <nav className="space-y-1">                           
-              <Link
-                to="/customer/dashboard"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <BarChart3 className="w-5 h-5" />
-                <span>Dashboard</span>
-              </Link>
+            <nav className="space-y-6">
               
-              <Link
-                to="/customer/dashboard/vehicles"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/vehicles' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Car className="w-5 h-5" />
-                <span>My Vehicles</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/appointments"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/appointments' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Calendar className="w-5 h-5" />
-                <span>Appointments</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/services"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/services' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Wrench className="w-5 h-5" />
-                <span>Services</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/invoices"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/invoices' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <DollarSign className="w-5 h-5" />
-                <span>Invoices</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/messages"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/messages' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>Messages</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/notifications"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/notifications' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Bell className="w-5 h-5" />
-                <span>Notifications</span>
-              </Link>
+              {/* Main Dashboard */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Overview
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                to="/customer/dashboard/memberships"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/memberships' 
-                    ? 'bg-green-100 text-green-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Shield className="w-5 h-5" />
-                <span>Memberships</span>
-              </Link>
+              {/* Vehicle Management */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Vehicles
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/vehicles"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/vehicles' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Car className="w-5 h-5" />
+                    <span>My Vehicles</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/vehicle-health"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/vehicle-health' 
+                        ? 'bg-green-100 text-green-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Gauge className="w-5 h-5" />
+                    <span>Vehicle Health</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/service-history"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/service-history' 
+                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>Service History</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                to="/customer/dashboard/warranties"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/warranties' 
-                    ? 'bg-orange-100 text-orange-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <FileText className="w-5 h-5" />
-                <span>Warranties</span>
-              </Link>
+              {/* Services & Appointments */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Services
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/appointments"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/appointments' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Calendar className="w-5 h-5" />
+                    <span>Appointments</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/services"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/services' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Wrench className="w-5 h-5" />
+                    <span>Service Catalog</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/online-booking"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/online-booking' 
+                        ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Clock className="w-5 h-5" />
+                    <span>Book Service</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                to="/customer/dashboard/analytics"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/analytics' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <TrendingUp className="w-5 h-5" />
-                <span>Analytics</span>
-              </Link>
+              {/* Financial */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Financial
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/invoices"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/invoices' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    <span>Invoices</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/payments"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/payments' 
+                        ? 'bg-green-100 text-green-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>Payments</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/rewards"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/rewards' 
+                        ? 'bg-yellow-100 text-yellow-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Star className="w-5 h-5" />
+                    <span>Rewards</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                to="/customer/dashboard/vehicle-database"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/vehicle-database' 
-                    ? 'bg-indigo-100 text-indigo-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Database className="w-5 h-5" />
-                <span>Vehicle Database</span>
-              </Link>
+              {/* Communication */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Communication
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/messages"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/messages' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span>Messages</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/notifications"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/notifications' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Bell className="w-5 h-5" />
+                    <span>Notifications</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/support"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/support' 
+                        ? 'bg-orange-100 text-orange-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span>Support</span>
+                  </Link>
+                </div>
+              </div>
 
-              <Link
-                to="/customer/dashboard/payment-options"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/payment-options' 
-                    ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <DollarSign className="w-5 h-5" />
-                <span>Payment Options</span>
-              </Link>
-
-              <Link
-                to="/customer/dashboard/live-chat"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/live-chat' 
-                    ? 'bg-pink-100 text-pink-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>Live Chat</span>
-              </Link>
-
-              <Link
-                to="/customer/dashboard/reports"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/reports' 
-                    ? 'bg-teal-100 text-teal-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <Activity className="w-5 h-5" />
-                <span>Reports</span>
-              </Link>
-              
-              <Link
-                to="/customer/dashboard/profile"
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/customer/dashboard/profile' 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <User className="w-5 h-5" />
-                <span>Profile</span>
-              </Link>
+              {/* Account */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Account
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/profile"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/profile' 
+                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Profile</span>
+                  </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/preferences"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/customer/dashboard/preferences' 
+                        ? 'bg-gray-100 text-gray-700 shadow-sm' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Preferences</span>
+                  </Link>
+                </div>
+              </div>
             </nav>
           </div>
         </nav>

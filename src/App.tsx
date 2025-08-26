@@ -21,14 +21,14 @@ import CustomerNotifications from "./pages/customer/CustomerNotifications";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 
 
-// Phase 2: Enhanced Customer Features
-import CustomerMemberships from "./pages/customer/CustomerMemberships";
-import CustomerWarranties from "./pages/customer/CustomerWarranties";
-import CustomerAnalytics from "./pages/customer/CustomerAnalytics";
-import CustomerVehicleDatabase from "./pages/customer/CustomerVehicleDatabase";
-import CustomerPaymentOptions from "./pages/customer/CustomerPaymentOptions";
-import CustomerLiveChat from "./pages/customer/CustomerLiveChat";
-import CustomerReports from "./pages/customer/CustomerReports";
+// Enhanced Customer Features
+import CustomerVehicleHealth from "./pages/customer/CustomerVehicleHealth";
+import CustomerServiceHistory from "./pages/customer/CustomerServiceHistory";
+import CustomerOnlineBooking from "./pages/customer/CustomerOnlineBooking";
+import CustomerPayments from "./pages/customer/CustomerPayments";
+import CustomerRewards from "./pages/customer/CustomerRewards";
+import CustomerSupport from "./pages/customer/CustomerSupport";
+import CustomerPreferences from "./pages/customer/CustomerPreferences";
 
 // Dashboard Pages
 import AppointmentsPage from "./pages/AppointmentsPage";
@@ -165,14 +165,14 @@ export default function App() {
         <Route path="profile" element={<CustomerProfile />} />
 
         
-        {/* Phase 2: Enhanced Customer Features */}
-        <Route path="memberships" element={<CustomerMemberships />} />
-        <Route path="warranties" element={<CustomerWarranties />} />
-        <Route path="analytics" element={<CustomerAnalytics />} />
-        <Route path="vehicle-database" element={<CustomerVehicleDatabase />} />
-        <Route path="payment-options" element={<CustomerPaymentOptions />} />
-        <Route path="live-chat" element={<CustomerLiveChat />} />
-        <Route path="reports" element={<CustomerReports />} />
+        {/* Enhanced Customer Features */}
+        <Route path="vehicle-health" element={<CustomerVehicleHealth />} />
+        <Route path="service-history" element={<CustomerServiceHistory />} />
+        <Route path="online-booking" element={<CustomerOnlineBooking />} />
+        <Route path="payments" element={<CustomerPayments />} />
+        <Route path="rewards" element={<CustomerRewards />} />
+        <Route path="support" element={<CustomerSupport />} />
+        <Route path="preferences" element={<CustomerPreferences />} />
       </Route>
       
         {/* Catch-all route for 404s */}

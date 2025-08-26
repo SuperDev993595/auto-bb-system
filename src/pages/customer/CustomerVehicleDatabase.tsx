@@ -24,7 +24,8 @@ import {
   Wrench,
   Cog,
   Zap,
-  DollarSign
+  DollarSign,
+  Fuel
 } from '../../utils/icons';
 
 interface Vehicle {
