@@ -1,6 +1,6 @@
 const sgMail = require('@sendgrid/mail');
 
-class EmailService {
+class EmailService { 
   constructor() {
     // Configure SendGrid
     const apiKey = process.env.SENDGRID_API_KEY;
