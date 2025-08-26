@@ -213,6 +213,38 @@ export default function CustomerLayout() {
                     <Star className="w-5 h-5" />
                     <span>Rewards</span>
                   </Link>
+                  
+                  <Link
+                    to="/customer/dashboard/memberships"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
+                      location.pathname === '/customer/dashboard/memberships' 
+                        ? 'bg-purple-100 text-purple-700' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span>Memberships</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Vehicle Management */}
+              <div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Vehicle Services
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/customer/dashboard/warranties"
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
+                      location.pathname === '/customer/dashboard/warranties' 
+                        ? 'bg-emerald-100 text-emerald-700' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    <span>Warranties</span>
+                  </Link>
                 </div>
               </div>
 
