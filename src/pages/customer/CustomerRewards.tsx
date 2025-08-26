@@ -308,8 +308,8 @@ export default function CustomerRewards() {
     <div className="space-y-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+          <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Rewards & Memberships</h1>
               <p className="text-gray-600">View your loyalty points, rewards, and membership benefits</p>

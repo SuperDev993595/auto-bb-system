@@ -270,8 +270,8 @@ export default function CustomerReports() {
     <div className="space-y-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
+          <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
               <p className="text-gray-600">Generate and manage comprehensive service reports and analytics</p>
@@ -284,6 +284,7 @@ export default function CustomerReports() {
               Generate Report
             </button>
           </div>
+        </div>
 
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
