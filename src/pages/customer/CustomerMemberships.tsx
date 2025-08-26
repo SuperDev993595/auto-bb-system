@@ -163,7 +163,7 @@ export default function CustomerMemberships() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Memberships</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-blue-600">
                 {memberships.filter(m => m.status === 'active').length}
               </p>
             </div>
@@ -230,13 +230,13 @@ export default function CustomerMemberships() {
                 placeholder="Search memberships..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-0 focus:border-blue-500"
               />
             </div>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-0 focus:border-blue-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>

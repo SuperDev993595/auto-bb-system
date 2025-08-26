@@ -60,6 +60,8 @@ import PublicHomePage from "./pages/PublicWebsite/HomePage";
 import PublicServicesPage from "./pages/PublicWebsite/ServicesPage";
 import PublicAboutPage from "./pages/PublicWebsite/AboutPage";
 import PublicContactPage from "./pages/PublicWebsite/ContactPage";
+import CustomerMemberships from "./pages/customer/CustomerMemberships";
+import CustomerWarranties from "./pages/customer/CustomerWarranties";
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -169,6 +171,8 @@ export default function App() {
         <Route path="rewards" element={<CustomerRewards />} />
         <Route path="support" element={<CustomerSupport />} />
         <Route path="preferences" element={<CustomerPreferences />} />
+        <Route path="memberships" element={<CustomerMemberships />} />
+        <Route path="warranties" element={<CustomerWarranties />} />
       </Route>
       
         {/* Catch-all route for 404s */}
