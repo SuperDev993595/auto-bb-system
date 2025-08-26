@@ -301,7 +301,7 @@ export default function CustomerNotifications() {
                 }`}
               >
                 <div className="flex items-start justify-between">
-                                  <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex items-start space-x-4 flex-1">
                   <div className="flex items-center justify-center w-12 h-12">
                     {getNotificationIcon(notification.type)}
                   </div>
