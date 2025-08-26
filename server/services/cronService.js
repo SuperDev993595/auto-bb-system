@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const notificationService = require('./notificationService');
+const appointmentCommunicationService = require('./appointmentCommunicationService');
 
 class CronService {
   constructor() {
@@ -22,7 +23,7 @@ class CronService {
     cron.schedule('0 8 * * *', async () => {
       console.log('Running daily appointment reminders generation...');
       try {
-        await notificationService.generateAppointmentReminders();
+        await appointmentCommunicationService.generateAppointmentReminders();
         console.log('Daily appointment reminders generated successfully');
       } catch (error) {
         console.error('Error generating daily appointment reminders:', error);

@@ -16,6 +16,7 @@ const Arrangement = require('../models/Arrangement');
 const Towing = require('../models/Towing');
 const CallLog = require('../models/CallLog');
 const notificationService = require('../services/notificationService');
+const appointmentCommunicationService = require('../services/appointmentCommunicationService');
 
 const router = express.Router();
 
@@ -42,7 +43,10 @@ const appointmentSchema = Joi.object({
   status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
   estimatedDuration: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
-  technicianId: Joi.string().optional()
+  technicianId: Joi.string().optional(),
+  // NEW: Booking & Communication Workflow Fields
+  customerConcerns: Joi.string().max(1000).allow('').optional(),
+  preferredContact: Joi.string().valid('email', 'sms', 'both').default('email')
 });
 
 const messageSchema = Joi.object({
@@ -895,10 +899,29 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
       assignedTo: req.user.id, // For now, assign to the customer (will be updated by admin)
       notes: value.notes,
       priority: value.priority || 'medium',
-      technician: value.technicianId ? (mongoose.Types.ObjectId.isValid(value.technicianId) ? new mongoose.Types.ObjectId(value.technicianId) : value.technicianId) : undefined
+      technician: value.technicianId ? (mongoose.Types.ObjectId.isValid(value.technicianId) ? new mongoose.Types.ObjectId(value.technicianId) : value.technicianId) : undefined,
+      // NEW: Booking & Communication Workflow Fields
+      bookingSource: 'customer_portal',
+      customerConcerns: value.customerConcerns,
+      preferredContact: value.preferredContact || 'email',
+      reminderSettings: {
+        send24hReminder: true,
+        send2hReminder: true,
+        sendSameDayReminder: true,
+        preferredChannel: 'both'
+      }
     });
 
     await appointment.save();
+    
+    // Send immediate confirmation
+    try {
+      await appointmentCommunicationService.sendAppointmentConfirmation(appointment._id, req.user.id);
+      console.log('Customer appointment confirmation sent successfully');
+    } catch (error) {
+      console.error('Failed to send customer appointment confirmation:', error);
+      // Don't fail the appointment creation if confirmation fails
+    }
     
     res.status(201).json({
       success: true,

@@ -31,7 +31,7 @@ const testUsers = {
   },
   customer: {
     name: 'Test Customer',
-    email: 'customer@test.com',
+    email: 'pioneer200082@gmail.com',
     password: 'password123',
     role: 'customer',
     permissions: ['view_own_data']

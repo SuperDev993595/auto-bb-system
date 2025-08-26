@@ -8,6 +8,7 @@ const Vehicle = require('../models/Vehicle');
 const { Service } = require('../models/Service');
 const { Technician } = require('../models/Service');
 const { requireAnyAdmin } = require('../middleware/auth');
+const appointmentCommunicationService = require('../services/appointmentCommunicationService');
 
 const router = express.Router();
 
@@ -23,6 +24,16 @@ const appointmentSchema = Joi.object({
   assignedTo: Joi.string().optional().allow(null, ''),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
   status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
+  // NEW: Booking & Communication Workflow Fields
+  bookingSource: Joi.string().valid('customer_portal', 'phone_call', 'walk_in', 'admin_created').default('admin_created'),
+  customerConcerns: Joi.string().optional().allow('', null),
+  preferredContact: Joi.string().valid('email', 'sms', 'both').default('email'),
+  reminderSettings: Joi.object({
+    send24hReminder: Joi.boolean().default(true),
+    send2hReminder: Joi.boolean().default(true),
+    sendSameDayReminder: Joi.boolean().default(true),
+    preferredChannel: Joi.string().valid('email', 'sms', 'both').default('both')
+  }).optional(),
   // Legacy fields for backward compatibility
   date: Joi.date().optional(), // Legacy field - will be mapped to scheduledDate
   time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(), // Legacy field - will be mapped to scheduledTime
@@ -550,6 +561,16 @@ router.post('/', requireAnyAdmin, async (req, res) => {
       customerNotes: value.customerNotes,
       partsRequired: value.partsRequired,
       tags: value.tags,
+      // NEW: Booking & Communication Workflow Fields
+      bookingSource: value.bookingSource || 'admin_created',
+      customerConcerns: value.customerConcerns,
+      preferredContact: value.preferredContact || 'email',
+      reminderSettings: value.reminderSettings || {
+        send24hReminder: true,
+        send2hReminder: true,
+        sendSameDayReminder: true,
+        preferredChannel: 'both'
+      },
       createdBy: req.user.id
     };
 
@@ -569,6 +590,15 @@ router.post('/', requireAnyAdmin, async (req, res) => {
     await appointment.populate('technician', 'name email specializations');
     await appointment.populate('customer', 'name email phone businessName');
     await appointment.populate('createdBy', 'name');
+
+    // Send immediate confirmation
+    try {
+      await appointmentCommunicationService.sendAppointmentConfirmation(appointment._id, req.user.id);
+      console.log('Appointment confirmation sent successfully');
+    } catch (error) {
+      console.error('Failed to send appointment confirmation:', error);
+      // Don't fail the appointment creation if confirmation fails
+    }
 
     res.status(201).json({
       success: true,
@@ -901,6 +931,26 @@ router.put('/:id/status', requireAnyAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/appointments/trigger-reminders
+// @desc    Manually trigger appointment reminders (for testing)
+// @access  Private
+router.post('/trigger-reminders', requireAnyAdmin, async (req, res) => {
+  try {
+    const result = await appointmentCommunicationService.generateAppointmentReminders();
+    res.json({
+      success: true,
+      message: `Reminders processed successfully`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error triggering reminders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to trigger reminders'
     });
   }
 });

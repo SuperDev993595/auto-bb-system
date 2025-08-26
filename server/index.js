@@ -162,7 +162,8 @@ app.set('io', io);
 
 // Routes with specific rate limiting
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/customers', apiLimiter, authenticateToken, customerRoutes);
+//app.use('/api/customers', apiLimiter, authenticateToken, customerRoutes);
+app.use('/api/customers', authenticateToken, customerRoutes);
 app.use('/api/business-clients', authenticateToken, businessClientRoutes);
 app.use('/api/appointments', authenticateToken, appointmentRoutes);
 app.use('/api/marketing', authenticateToken, marketingRoutes);

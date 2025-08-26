@@ -29,6 +29,7 @@
     "@mui/system": "^7.2.0",
     "@mui/x-data-grid": "^8.9.1",
     "@reduxjs/toolkit": "^1.9.7",
+    "@sendgrid/mail": "^8.1.5",
     "archiver": "^7.0.1",
     "axios": "^1.6.0",
     "bcryptjs": "^2.4.3",

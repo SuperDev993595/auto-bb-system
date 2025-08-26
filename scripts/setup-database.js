@@ -499,7 +499,7 @@ async function setupDatabase() {
     console.log('👤 Creating default Customer user...');
     const customerUser = await User.create({
       name: 'John Customer',
-      email: 'customer@autocrm.com',
+      email: 'pioneer200082@gmail.com',
       password: 'customer123',
       role: 'customer',
       phone: '(555) 123-4569',
@@ -512,7 +512,7 @@ async function setupDatabase() {
     console.log('👥 Creating Customer record for user...');
     const customerRecord = await Customer.create({
       name: 'John Customer',
-      email: 'customer@autocrm.com',
+      email: 'pioneer200082@gmail.com',
       phone: '(555) 123-4569',
       businessName: '',
       userId: customerUser._id,
@@ -554,10 +554,13 @@ async function setupDatabase() {
 
     // Create sample inventory items
     console.log('📦 Creating sample inventory items...');
-    const inventoryItems = await InventoryItem.insertMany(sampleInventoryItems.map(item => ({
-      ...item,
-      createdBy: superAdmin._id
-    })));
+    const inventoryItems = await InventoryItem.insertMany(sampleInventoryItems.map(item => {
+      const { supplier, ...itemData } = item;
+      return {
+        ...itemData,
+        createdBy: superAdmin._id
+      };
+    }));
     console.log(`✅ Created ${inventoryItems.length} sample inventory items`);
 
     // Create sample customers
@@ -703,6 +706,7 @@ async function setupDatabase() {
     // Create sample MailChimp campaigns
     const sampleMailChimpCampaigns = [
       {
+        campaignId: 'camp_123456789',
         name: 'Welcome Newsletter',
         subject: 'Welcome to Our Auto Repair Service!',
         type: 'regular',
@@ -731,6 +735,7 @@ async function setupDatabase() {
         createdBy: superAdmin._id
       },
       {
+        campaignId: 'camp_987654321',
         name: 'Service Reminder',
         subject: 'Your Vehicle is Due for Service',
         type: 'regular',

@@ -66,6 +66,74 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  
+  // NEW: Booking & Communication Workflow Fields
+  bookingSource: {
+    type: String,
+    enum: ['customer_portal', 'phone_call', 'walk_in', 'admin_created'],
+    required: false,
+    default: 'customer_portal'
+  },
+  
+  // Communication tracking
+  communicationHistory: [{
+    type: {
+      type: String,
+      enum: ['confirmation', 'reminder_24h', 'reminder_2h', 'reminder_same_day', 'follow_up'],
+      required: true
+    },
+    channel: {
+      type: String,
+      enum: ['email', 'sms', 'both'],
+      required: true
+    },
+    sentAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['sent', 'delivered', 'failed'],
+      default: 'sent'
+    },
+    messageId: String,
+    errorMessage: String
+  }],
+  
+  // Reminder settings
+  reminderSettings: {
+    send24hReminder: {
+      type: Boolean,
+      default: true
+    },
+    send2hReminder: {
+      type: Boolean,
+      default: true
+    },
+    sendSameDayReminder: {
+      type: Boolean,
+      default: true
+    },
+    preferredChannel: {
+      type: String,
+      enum: ['email', 'sms', 'both'],
+      default: 'both'
+    }
+  },
+  
+  // Customer concerns/issues
+  customerConcerns: {
+    type: String,
+    trim: true
+  },
+  
+  // Preferred contact method
+  preferredContact: {
+    type: String,
+    enum: ['email', 'sms', 'phone'],
+    default: 'email'
+  },
+  
   partsRequired: [{
     name: {
       type: String,
