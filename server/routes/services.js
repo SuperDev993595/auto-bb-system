@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const { ServiceCatalog, WorkOrder, Technician, Service } = require('../models/Service');
 const Customer = require('../models/Customer');
-const { requireAnyAdmin } = require('../middleware/auth');
+const { requireAnyAdmin, requireCustomer } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -140,7 +140,7 @@ const basicServiceSchema = Joi.object({
 
 // Service Catalog Routes
 // @route   GET /api/services/catalog
-// @desc    Get all service catalog items
+// @desc    Get all service catalog items (Admin only)
 // @access  Private
 router.get('/catalog', requireAnyAdmin, async (req, res) => {
   try {
@@ -198,6 +198,57 @@ router.get('/catalog', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Get service catalog error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/catalog/public
+// @desc    Get active service catalog items for customers
+// @access  Private (for authenticated users)
+// Note: Using authenticateToken only (not requireCustomer) to allow flexibility
+// for different user types who might need to access service catalog
+router.get('/catalog/public', async (req, res) => {
+  try {
+    const {
+      category,
+      search,
+      sortBy = 'name',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Build query - only active services
+    const query = { isActive: true };
+
+    if (category) query.category = category;
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query - no pagination for customer view, get all active services
+    const services = await ServiceCatalog.find(query)
+      .sort(sort)
+      .exec();
+
+    res.json({
+      success: true,
+      data: {
+        services
+      }
+    });
+
+  } catch (error) {
+    console.error('Get public service catalog error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

@@ -18,6 +18,7 @@ interface Appointment {
   estimatedDuration?: string;
   notes?: string;
   technician?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   totalCost?: number;
   createdAt: string;
   updatedAt: string;
@@ -41,6 +42,7 @@ export default function CustomerAppointments() {
   const [technicians, setTechnicians] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [vehicles, setVehicles] = useState<VehicleType[]>([]);
+  const [serviceCatalog, setServiceCatalog] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<AppointmentType | null>(null);
@@ -73,24 +75,7 @@ export default function CustomerAppointments() {
     type: 'info'
   });
 
-  const serviceTypes = [
-    'Oil Change & Inspection',
-    'Brake Service',
-    'Tire Rotation',
-    'Tire Replacement',
-    'Battery Replacement',
-    'Air Filter Replacement',
-    'Spark Plug Replacement',
-    'Transmission Service',
-    'Coolant Flush',
-    'Power Steering Service',
-    'Suspension Service',
-    'Exhaust System Repair',
-    'Electrical System Repair',
-    'AC/Heating Service',
-    'Diagnostic Service',
-    'Custom Service'
-  ];
+
 
   useEffect(() => {
     loadData();
@@ -123,12 +108,36 @@ export default function CustomerAppointments() {
     }
   }, [vehicles, appointments]);
 
+  // Update form data when service catalog is loaded (for editing appointments)
+  useEffect(() => {
+    if (editingAppointment && serviceCatalog.length > 0 && formData.serviceType) {
+      // Check if the current serviceType is an ID and needs to be converted to a name
+      const selectedService = serviceCatalog.find(service => 
+        service._id === formData.serviceType || service.id === formData.serviceType
+      );
+      
+      if (selectedService && selectedService.name !== formData.serviceType) {
+        console.log('Updating service type from ID to name:', {
+          from: formData.serviceType,
+          to: selectedService.name
+        });
+        
+        setFormData(prev => ({
+          ...prev,
+          serviceType: selectedService.name,
+          estimatedDuration: selectedService.estimatedDuration?.toString() || prev.estimatedDuration
+        }));
+      }
+    }
+  }, [serviceCatalog, editingAppointment, formData.serviceType]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [appointmentsResponse, vehiclesResponse] = await Promise.all([
+      const [appointmentsResponse, vehiclesResponse, serviceCatalogResponse] = await Promise.all([
         customerApiService.getAppointments(),
-        customerApiService.getVehicles()
+        customerApiService.getVehicles(),
+        customerApiService.getServiceCatalog()
       ]);
       
       if (appointmentsResponse.success) {
@@ -142,9 +151,15 @@ export default function CustomerAppointments() {
       } else {
         toast.error(vehiclesResponse.message || 'Failed to load vehicles');
       }
+
+      if (serviceCatalogResponse.success) {
+        setServiceCatalog(serviceCatalogResponse.data.services);
+      } else {
+        toast.error(serviceCatalogResponse.message || 'Failed to load service catalog');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load appointments and vehicles');
+      toast.error('Failed to load appointments, vehicles, and service catalog');
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +187,7 @@ export default function CustomerAppointments() {
     // Check for upcoming appointments that need confirmation
     appointments.forEach(appointment => {
       if (appointment.status === 'scheduled') {
-        const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
+        const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
         const daysUntil = Math.ceil((appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysUntil <= 2 && daysUntil > 0) {
@@ -180,7 +195,7 @@ export default function CustomerAppointments() {
             id: `confirm_${appointment.id}`,
             type: 'confirmation_needed',
             title: 'Confirm Appointment',
-            description: `Please confirm your appointment for ${appointment.scheduledDate}`,
+            description: `Please confirm your appointment for ${appointment.date}`,
             priority: 'medium',
             action: 'Confirm',
             appointmentId: appointment.id
@@ -194,10 +209,30 @@ export default function CustomerAppointments() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'serviceType') {
+      // Find the selected service to get its estimated duration
+      // First try to find by name, then by ID if that fails
+      let selectedService = serviceCatalog.find((service: any) => service.name === value);
+      
+      // If not found by name, try to find by ID (for editing cases)
+      if (!selectedService) {
+        selectedService = serviceCatalog.find((service: any) => 
+          service._id === value || service.id === value
+        );
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        estimatedDuration: selectedService ? selectedService.estimatedDuration.toString() : prev.estimatedDuration
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -208,6 +243,11 @@ export default function CustomerAppointments() {
     
     if (vehicles.length === 0) {
       toast.error('Please add a vehicle first before scheduling an appointment');
+      return false;
+    }
+
+    if (serviceCatalog.length === 0 && formData.serviceType !== 'Custom Service') {
+      toast.error('Service catalog is not available. Please select "Custom Service" or try again.');
       return false;
     }
     
@@ -233,16 +273,43 @@ export default function CustomerAppointments() {
     if (!validateForm()) return;
 
     try {
+      // Find the service catalog item to get the ObjectId
+      // First try to find by name, then by ID if that fails
+      let selectedService = serviceCatalog.find(service => service.name === formData.serviceType);
+      
+      // If not found by name, try to find by ID (for editing cases)
+      if (!selectedService) {
+        selectedService = serviceCatalog.find(service => 
+          service._id === formData.serviceType || service.id === formData.serviceType
+        );
+      }
+      
+      if (!selectedService) {
+        toast.error(`Service type "${formData.serviceType}" not found in catalog`);
+        return;
+      }
+
+      // Find the technician to get the ObjectId
+      let technicianId = undefined;
+      if (formData.technicianId) {
+        const selectedTechnician = technicians.find(tech => 
+          tech.name === formData.technicianId || tech._id === formData.technicianId || tech.id === formData.technicianId
+        );
+        if (selectedTechnician) {
+          technicianId = selectedTechnician._id || selectedTechnician.id;
+        }
+      }
+
       const appointmentData = {
-        scheduledDate: formData.scheduledDate,
-        scheduledTime: formData.scheduledTime,
-        serviceType: formData.serviceType,
+        date: formData.scheduledDate,
+        time: formData.scheduledTime,
+        serviceType: selectedService._id || selectedService.id, // Send ObjectId instead of name
         vehicleId: formData.vehicleId,
         notes: formData.notes.trim() || undefined,
         status: formData.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
         estimatedDuration: formData.estimatedDuration,
-        priority: formData.priority,
-        technicianId: formData.technicianId || undefined
+        priority: formData.priority as 'low' | 'medium' | 'high' | 'urgent',
+        technicianId: technicianId // Send ObjectId instead of name
       };
 
       if (editingAppointment) {
@@ -273,15 +340,37 @@ export default function CustomerAppointments() {
 
   const handleEdit = (appointment: AppointmentType) => {
     setEditingAppointment(appointment);
-    setFormData({
-      scheduledDate: appointment.scheduledDate.split('T')[0],
-      scheduledTime: appointment.scheduledTime,
-      serviceType: appointment.serviceType,
-      vehicleId: appointment.vehicleId,
-      notes: appointment.notes || '',
+    
+    // Find the service type name from the service catalog
+    const selectedService = serviceCatalog.find(service => 
+      service._id === appointment.serviceType || service.id === appointment.serviceType
+    );
+    
+    // If service catalog is not loaded yet, we'll need to wait for it
+    if (serviceCatalog.length === 0) {
+      console.log('Service catalog not loaded yet, will update when loaded');
+    }
+    
+    console.log('Editing appointment data:', {
+      appointment,
+      selectedService,
+      serviceType: selectedService ? selectedService.name : appointment.serviceType,
+      priority: appointment.priority || 'medium',
       status: appointment.status,
       estimatedDuration: appointment.estimatedDuration || '60',
-      priority: 'medium',
+      notes: appointment.notes || '',
+      technician: appointment.technician || ''
+    });
+    
+    setFormData({
+      scheduledDate: appointment.date.split('T')[0],
+      scheduledTime: appointment.time,
+      serviceType: selectedService ? selectedService.name : appointment.serviceType,
+      vehicleId: appointment.vehicleId,
+      notes: appointment.notes || '',
+      status: appointment.status || 'scheduled',
+      estimatedDuration: appointment.estimatedDuration || '60',
+      priority: appointment.priority || 'medium',
       technicianId: appointment.technician || ''
     });
     setShowAddModal(true);
@@ -409,7 +498,7 @@ export default function CustomerAppointments() {
   };
 
   const filteredAppointments = appointments.filter(appointment => {
-    const appointmentDate = new Date(`${appointment.scheduledDate}T${appointment.scheduledTime}`);
+    const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
     const now = new Date();
     
     switch (activeTab) {
@@ -425,12 +514,12 @@ export default function CustomerAppointments() {
   });
 
   const upcomingAppointments = appointments.filter(a => {
-    const appointmentDate = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
+    const appointmentDate = new Date(`${a.date}T${a.time}`);
     return appointmentDate > new Date() && a.status !== 'cancelled';
   });
 
   const pastAppointments = appointments.filter(a => {
-    const appointmentDate = new Date(`${a.scheduledDate}T${a.scheduledTime}`);
+    const appointmentDate = new Date(`${a.date}T${a.time}`);
     return appointmentDate <= new Date() || a.status === 'completed';
   });
 
@@ -642,16 +731,16 @@ export default function CustomerAppointments() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {appointment.serviceType}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div>
-                      <div className="font-medium">
-                        {new Date(appointment.scheduledDate).toLocaleDateString()}
-                      </div>
-                      <div className="text-gray-500">
-                        {appointment.scheduledTime}
-                      </div>
-                    </div>
-                  </td>
+                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     <div>
+                       <div className="font-medium">
+                         {new Date(appointment.date).toLocaleDateString()}
+                       </div>
+                       <div className="text-gray-500">
+                         {appointment.time}
+                       </div>
+                     </div>
+                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(appointment.status)}`}>
                       {appointment.status.replace('-', ' ')}
@@ -816,12 +905,21 @@ export default function CustomerAppointments() {
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
               >
                 <option value="">Select a service</option>
-                {serviceTypes.map(service => (
-                  <option key={service} value={service}>
-                    {service}
+                {serviceCatalog.map((service: any) => (
+                  <option key={service._id || service.id} value={service.name}>
+                    {service.name} ({service.category}) - ${service.laborRate}/hr ({service.estimatedDuration} min)
                   </option>
                 ))}
+                {serviceCatalog.length === 0 && (
+                  <option value="Custom Service">Custom Service</option>
+                )}
               </select>
+              {serviceCatalog.length === 0 && (
+                <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  Service catalog unavailable. You can select "Custom Service" or contact support.
+                </p>
+              )}
             </div>
 
             {/* Technician Assignment */}

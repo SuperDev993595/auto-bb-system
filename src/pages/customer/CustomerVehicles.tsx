@@ -756,7 +756,7 @@ export default function CustomerVehicles() {
                                                       <div className="flex items-start space-x-3">
                             {getMaintenanceIcon(alert.type)}
                               <div>
-                                <h4 className="font-medium text-gray-900">{alert.title}</h4>
+                                <h6 className="font-medium text-gray-900">{alert.title}</h6>
                                 <p className="text-sm text-gray-600">{alert.description}</p>
                                 {vehicle && (
                                   <p className="text-xs text-gray-500 mt-1">

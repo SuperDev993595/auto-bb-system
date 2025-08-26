@@ -11,7 +11,8 @@ const appointmentSchema = new mongoose.Schema({
     ref: 'Vehicle'
   },
   serviceType: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ServiceCatalog',
     required: [true, 'Service type is required']
   },
   serviceDescription: {

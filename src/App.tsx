@@ -22,9 +22,7 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 
 
 // Enhanced Customer Features
-import CustomerVehicleHealth from "./pages/customer/CustomerVehicleHealth";
 import CustomerServiceHistory from "./pages/customer/CustomerServiceHistory";
-import CustomerOnlineBooking from "./pages/customer/CustomerOnlineBooking";
 import CustomerPayments from "./pages/customer/CustomerPayments";
 import CustomerRewards from "./pages/customer/CustomerRewards";
 import CustomerSupport from "./pages/customer/CustomerSupport";
@@ -166,9 +164,7 @@ export default function App() {
 
         
         {/* Enhanced Customer Features */}
-        <Route path="vehicle-health" element={<CustomerVehicleHealth />} />
         <Route path="service-history" element={<CustomerServiceHistory />} />
-        <Route path="online-booking" element={<CustomerOnlineBooking />} />
         <Route path="payments" element={<CustomerPayments />} />
         <Route path="rewards" element={<CustomerRewards />} />
         <Route path="support" element={<CustomerSupport />} />

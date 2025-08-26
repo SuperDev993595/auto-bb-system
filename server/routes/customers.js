@@ -39,8 +39,8 @@ const appointmentSchema = Joi.object({
   serviceType: Joi.string().min(1).max(100).required(),
   vehicleId: Joi.string().required(),
   notes: Joi.string().max(500).allow('').optional(),
-  status: Joi.string().valid('scheduled', 'in-progress', 'completed', 'cancelled').default('scheduled'),
-  estimatedDuration: Joi.string().optional(),
+  status: Joi.string().valid('scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show').default('scheduled'),
+  estimatedDuration: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
   technicianId: Joi.string().optional()
 });
@@ -829,6 +829,7 @@ router.get('/appointments', authenticateToken, requireCustomer, async (req, res)
 
     const appointments = await Appointment.find({ customer: customer._id })
       .populate('vehicle', 'year make model vin licensePlate mileage')
+      .populate('serviceType', 'name category laborRate estimatedDuration')
       .sort({ scheduledDate: -1, scheduledTime: -1 });
      
     // Transform appointments to match frontend expectations
@@ -836,13 +837,14 @@ router.get('/appointments', authenticateToken, requireCustomer, async (req, res)
       id: appointment._id,
       date: appointment.scheduledDate.toISOString().split('T')[0],
       time: appointment.scheduledTime,
-      serviceType: appointment.serviceDescription,
+      serviceType: appointment.serviceType._id,
       vehicleId: appointment.vehicle?._id || '', // Use vehicle ID as identifier
       vehicleInfo: appointment.vehicle ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}` : 'Unknown Vehicle',
       status: appointment.status,
-      estimatedDuration: `${appointment.estimatedDuration} minutes`,
+      estimatedDuration: appointment.estimatedDuration,
       notes: appointment.notes,
       technician: appointment.technician,
+      priority: appointment.priority,
       totalCost: appointment.estimatedCost?.total || 0,
       createdAt: appointment.createdAt,
       updatedAt: appointment.updatedAt
@@ -880,32 +882,11 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
       return res.status(400).json({ success: false, message: 'Invalid vehicle' });
     }
 
-    // Map service type to enum values
-    const serviceTypeMap = {
-      'Oil Change & Inspection': 'maintenance',
-      'Brake Service': 'brake_service',
-      'Tire Rotation': 'tire_rotation',
-      'Tire Replacement': 'tire_rotation',
-      'Battery Replacement': 'electrical_repair',
-      'Air Filter Replacement': 'maintenance',
-      'Spark Plug Replacement': 'engine_repair',
-      'Transmission Service': 'transmission_service',
-      'Coolant Flush': 'maintenance',
-      'Power Steering Service': 'maintenance',
-      'Suspension Service': 'maintenance',
-      'Exhaust System Repair': 'engine_repair',
-      'Electrical System Repair': 'electrical_repair',
-      'AC/Heating Service': 'maintenance',
-      'Diagnostic Service': 'diagnostic',
-      'Custom Service': 'other'
-    };
-
     // Create appointment with vehicle reference
     const appointment = new Appointment({
       customer: customer._id, // Use customer ID from customers table
       vehicle: vehicle._id, // Reference to the vehicle document
-      serviceType: serviceTypeMap[value.serviceType] || 'other',
-      serviceDescription: value.serviceType,
+      serviceType: value.serviceType, // Use the service catalog ObjectId
       scheduledDate: new Date(value.date),
       scheduledTime: value.time,
       estimatedDuration: value.estimatedDuration ? parseInt(value.estimatedDuration) : 60, // Use provided duration or default 1 hour
@@ -918,7 +899,7 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
     });
 
     await appointment.save();
-
+    
     res.status(201).json({
       success: true,
       message: 'Appointment scheduled successfully',
@@ -933,10 +914,13 @@ router.post('/appointments', authenticateToken, requireCustomer, async (req, res
 // Update appointment
 router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, res) => {
   try {
+    console.log('UPDATE: Received request body:', req.body);
     const { error, value } = appointmentSchema.validate(req.body);
     if (error) {
+      console.log('UPDATE: Validation error:', error.details[0].message);
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
+    console.log('UPDATE: Validated data:', value);
 
     // Find customer and verify vehicle belongs to customer
     const customer = await Customer.findOne({ userId: req.user.id });
@@ -952,37 +936,21 @@ router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, 
       return res.status(400).json({ success: false, message: 'Invalid vehicle' });
     }
 
-    // Map service type to enum values
-    const serviceTypeMap = {
-      'Oil Change & Inspection': 'maintenance',
-      'Brake Service': 'brake_service',
-      'Tire Rotation': 'tire_rotation',
-      'Tire Replacement': 'tire_rotation',
-      'Battery Replacement': 'electrical_repair',
-      'Air Filter Replacement': 'maintenance',
-      'Spark Plug Replacement': 'engine_repair',
-      'Transmission Service': 'transmission_service',
-      'Coolant Flush': 'maintenance',
-      'Power Steering Service': 'maintenance',
-      'Suspension Service': 'maintenance',
-      'Exhaust System Repair': 'engine_repair',
-      'Electrical System Repair': 'electrical_repair',
-      'AC/Heating Service': 'maintenance',
-      'Diagnostic Service': 'diagnostic',
-      'Custom Service': 'other'
-    };
+    console.log('UPDATE: appointment', value);
 
     const updateData = {
       vehicle: vehicle._id, // Reference to the vehicle document
-      serviceType: serviceTypeMap[value.serviceType] || 'other',
-      serviceDescription: value.serviceType,
+      serviceType: value.serviceType, // Use the service catalog ObjectId
       scheduledDate: new Date(value.date),
       scheduledTime: value.time,
       notes: value.notes,
+      status: value.status || 'scheduled',
       estimatedDuration: value.estimatedDuration ? parseInt(value.estimatedDuration) : 60,
       priority: value.priority || 'medium',
       technician: value.technicianId ? (mongoose.Types.ObjectId.isValid(value.technicianId) ? new mongoose.Types.ObjectId(value.technicianId) : value.technicianId) : undefined
     };
+    
+    console.log('UPDATE: updateData', updateData);
 
     const appointment = await Appointment.findOneAndUpdate(
       { _id: req.params.id, customer: customer._id },
@@ -993,6 +961,9 @@ router.put('/appointments/:id', authenticateToken, requireCustomer, async (req, 
     if (!appointment) {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
+
+    console.log('UPDATE: Appointment updated successfully with ID:', appointment._id);
+    console.log('UPDATE: Updated serviceType field:', appointment.serviceType);
 
     res.json({
       success: true,
@@ -1314,6 +1285,7 @@ router.get('/dashboard', authenticateToken, requireCustomer, async (req, res) =>
     // Get recent appointments
     const recentAppointments = await Appointment.find({ customer: customer._id })
       .populate('vehicle', 'year make model vin licensePlate mileage')
+      .populate('serviceType', 'name category laborRate estimatedDuration')
       .sort({ scheduledDate: -1, scheduledTime: -1 })
       .limit(5);
 
@@ -1324,6 +1296,7 @@ router.get('/dashboard', authenticateToken, requireCustomer, async (req, res) =>
       status: 'scheduled'
     })
       .populate('vehicle', 'year make model vin licensePlate mileage')
+      .populate('serviceType', 'name category laborRate estimatedDuration')
       .sort({ scheduledDate: 1, scheduledTime: 1 })
       .limit(5);
 

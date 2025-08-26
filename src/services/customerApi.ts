@@ -56,8 +56,8 @@ export interface Vehicle {
 
 export interface Appointment {
   id: string;
-  scheduledDate: string;
-  scheduledTime: string;
+  date: string;
+  time: string;
   serviceType: string;
   vehicleId: string;
   vehicleInfo?: string;
@@ -65,6 +65,7 @@ export interface Appointment {
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   estimatedDuration?: string;
   technician?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   totalCost?: number;
   createdAt: string;
   updatedAt: string;
@@ -305,6 +306,12 @@ class CustomerApiService {
   // Technicians
   async getTechnicians(): Promise<{ success: boolean; data: { technicians: any[] }; message?: string }> {
     const response = await api.get('/customers/technicians');
+    return response.data;
+  }
+
+  // Service Catalog
+  async getServiceCatalog(): Promise<{ success: boolean; data: { services: any[] }; message?: string }> {
+    const response = await api.get('/services/catalog/public');
     return response.data;
   }
 }

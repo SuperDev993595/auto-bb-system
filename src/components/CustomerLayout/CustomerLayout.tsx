@@ -127,18 +127,6 @@ export default function CustomerLayout() {
                   </Link>
                   
                   <Link
-                    to="/customer/dashboard/vehicle-health"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      location.pathname === '/customer/dashboard/vehicle-health' 
-                        ? 'bg-green-100 text-green-700 shadow-sm' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    <Gauge className="w-5 h-5" />
-                    <span>Vehicle Health</span>
-                  </Link>
-                  
-                  <Link
                     to="/customer/dashboard/service-history"
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       location.pathname === '/customer/dashboard/service-history' 
@@ -180,18 +168,6 @@ export default function CustomerLayout() {
                   >
                     <Wrench className="w-5 h-5" />
                     <span>Service Catalog</span>
-                  </Link>
-                  
-                  <Link
-                    to="/customer/dashboard/online-booking"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      location.pathname === '/customer/dashboard/online-booking' 
-                        ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    <Clock className="w-5 h-5" />
-                    <span>Book Service</span>
                   </Link>
                 </div>
               </div>

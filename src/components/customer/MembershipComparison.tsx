@@ -50,7 +50,6 @@ const membershipPlans: MembershipPlan[] = [
       '20% off parts',
       'Priority scheduling',
       'Extended roadside assistance',
-      'Vehicle health reports',
       'Concierge service'
     ],
     benefits: [
