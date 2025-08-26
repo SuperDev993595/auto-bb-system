@@ -19,7 +19,7 @@ import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerMessages from "./pages/customer/CustomerMessages";
 import CustomerNotifications from "./pages/customer/CustomerNotifications";
 import CustomerProfile from "./pages/customer/CustomerProfile";
-import CustomerPortalDashboard from "./pages/customer/CustomerPortalDashboard";
+
 
 // Phase 2: Enhanced Customer Features
 import CustomerMemberships from "./pages/customer/CustomerMemberships";
@@ -163,7 +163,7 @@ export default function App() {
         <Route path="messages" element={<CustomerMessages />} />
         <Route path="notifications" element={<CustomerNotifications />} />
         <Route path="profile" element={<CustomerProfile />} />
-        <Route path="portal/:customerId" element={<CustomerPortalDashboard />} />
+
         
         {/* Phase 2: Enhanced Customer Features */}
         <Route path="memberships" element={<CustomerMemberships />} />
