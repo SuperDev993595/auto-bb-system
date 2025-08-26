@@ -88,7 +88,7 @@ export default function Sidebar() {
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
                                 location.pathname === item.to 
                                     ? "bg-blue-50 text-blue-700 border border-blue-300" 
                                     : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
