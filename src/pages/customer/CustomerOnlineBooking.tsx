@@ -161,7 +161,7 @@ export default function CustomerOnlineBooking() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="animate-pulse">
@@ -175,7 +175,7 @@ export default function CustomerOnlineBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="space-y-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">

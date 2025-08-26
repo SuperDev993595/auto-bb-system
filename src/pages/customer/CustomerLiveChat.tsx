@@ -181,7 +181,7 @@ export default function CustomerLiveChat() {
 
   if (showCustomerForm) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="text-center mb-8">
@@ -280,7 +280,7 @@ export default function CustomerLiveChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="space-y-6">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Chat Header */}
