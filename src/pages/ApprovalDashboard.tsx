@@ -3,7 +3,6 @@ import PendingApprovalsList from '../components/Appointments/PendingApprovalsLis
 import ApprovalWorkflow from '../components/Appointments/ApprovalWorkflow';
 import ApprovalAnalytics from '../components/Appointments/ApprovalAnalytics';
 import SmartAlerts from '../components/Appointments/SmartAlerts';
-import BreadcrumbNav from '../components/Shared/BreadcrumbNav';
 
 const ApprovalDashboard: React.FC = () => {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
@@ -24,51 +23,47 @@ const ApprovalDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNav />
-        
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Approval Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Review and manage appointments that require approval
-          </p>
+    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+      
+      {/* Page Header */}
+      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
+        <div className="mb-4 lg:mb-0">
+          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Approval Dashboard</h1>
+          <p className="text-secondary-600">Review and manage appointments that require approval</p>
         </div>
-
-        {/* Content */}
-        {selectedAppointmentId ? (
-          <div>
-            <div className="mb-4">
-              <button
-                onClick={handleBackToList}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                ← Back to Pending Approvals
-              </button>
-            </div>
-            <ApprovalWorkflow
-              appointmentId={selectedAppointmentId}
-              onApprovalComplete={handleApprovalComplete}
-            />
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Smart Alerts */}
-            <SmartAlerts />
-            
-            {/* Analytics Dashboard */}
-            <ApprovalAnalytics />
-            
-            {/* Pending Approvals List */}
-            <PendingApprovalsList
-              key={refreshKey}
-              onApprovalAction={handleApprovalAction}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Content */}
+      {selectedAppointmentId ? (
+        <div>
+          <div className="mb-4">
+            <button
+              onClick={handleBackToList}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              ← Back to Pending Approvals
+            </button>
+          </div>
+          <ApprovalWorkflow
+            appointmentId={selectedAppointmentId}
+            onApprovalComplete={handleApprovalComplete}
+          />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Smart Alerts */}
+          <SmartAlerts />
+          
+          {/* Analytics Dashboard */}
+          <ApprovalAnalytics />
+          
+          {/* Pending Approvals List */}
+          <PendingApprovalsList
+            key={refreshKey}
+            onApprovalAction={handleApprovalAction}
+          />
+        </div>
+      )}
     </div>
   );
 };
