@@ -172,7 +172,7 @@ const SmartAlerts: React.FC = () => {
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   {getPriorityIcon(alert.priority)}
-                  <h4 className="font-medium text-gray-900">{alert.title}</h4>
+                  <h6 className="font-medium text-gray-900">{alert.title}</h6>
                   <span className="text-xs text-gray-500">
                     {getTimeAgo(alert.timestamp)}
                   </span>
