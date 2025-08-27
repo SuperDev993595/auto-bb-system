@@ -43,6 +43,10 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
       const response = await appointmentService.getAppointment(appointmentId);
       if (response.success) {
         setAppointment(response.data.appointment);
+        // Debug: Log service type data to check labor rate
+        console.log('Appointment data:', response.data.appointment);
+        console.log('Service Type:', (response.data.appointment as any).serviceType);
+        console.log('Labor Rate:', (response.data.appointment as any).serviceType?.laborRate);
       }
     } catch (error) {
       console.error('Error fetching appointment:', error);
@@ -204,7 +208,12 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Vehicle:</span>
-                <span className="font-medium text-gray-900">{appointment.vehicleInfo || 'N/A'}</span>
+                <span className="font-medium text-gray-900">
+                  {appointment.vehicle ? 
+                    `${appointment.vehicle.year || ''} ${appointment.vehicle.make || ''} ${appointment.vehicle.model || ''}`.trim() || 'N/A' 
+                    : 'N/A'
+                  }
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">VIN:</span>
@@ -214,12 +223,18 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
                 <span className="text-gray-600">License Plate:</span>
                 <span className="font-medium text-gray-900">{appointment.vehicle?.licensePlate || 'N/A'}</span>
               </div>
+              {appointment.vehicle?.mileage && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Mileage:</span>
+                  <span className="font-medium text-gray-900">{appointment.vehicle.mileage.toLocaleString()} mi</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Service & Cost Information */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center space-x-3 mb-2">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -239,6 +254,30 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
             </div>
             <p className="text-lg font-semibold text-gray-900">
               ${appointment.estimatedCost?.total?.toFixed(2) || '0.00'}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <HiCurrencyDollar className="h-4 w-4 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-600">Labor Rate</span>
+            </div>
+            <p className="text-lg font-semibold text-gray-900">
+              ${(() => {
+                // Try multiple sources for labor rate
+                const rate = appointment.serviceType?.laborRate || 
+                           appointment.laborRate || 
+                           appointment.technician?.hourlyRate ||
+                           100; // Default fallback
+                return rate;
+              })()}/hr
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {appointment.serviceType?.laborRate ? 'From service type' : 
+               appointment.laborRate ? 'From appointment' :
+               appointment.technician?.hourlyRate ? 'From technician' : 'Default rate'}
             </p>
           </div>
 

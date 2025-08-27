@@ -462,7 +462,7 @@ router.get('/pending-approval', requireAnyAdmin, async (req, res) => {
     const appointments = await Appointment.find(query)
       .populate('customer', 'name email businessName')
       .populate('vehicle', 'make model year vin')
-      .populate('serviceType', 'name description')
+      .populate('serviceType', 'name description laborRate')
       .populate('technician', 'name')
       .populate('assignedTo', 'name')
       .populate('approvedBy', 'name')
@@ -507,7 +507,7 @@ router.get('/:id', requireAnyAdmin, async (req, res) => {
       .populate('technician', 'name email specializations')
       .populate('customer', 'name email phone businessName')
       .populate('vehicle', 'year make model vin licensePlate mileage')
-      .populate('serviceType', 'name category estimatedDuration')
+      .populate('serviceType', 'name category estimatedDuration laborRate')
       .populate('createdBy', 'name')
       .populate('attachments.uploadedBy', 'name');
 
