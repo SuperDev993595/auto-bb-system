@@ -11,7 +11,7 @@ if (!jwtToken) {
   console.log('2. Set the environment variable:');
   console.log('   Windows: set JWT_TOKEN=your-jwt-token-here');
   console.log('   Linux/Mac: export JWT_TOKEN=your-jwt-token-here');
-  console.log('3. Run the test again: node test-manual-workorder-simple.js');
+  console.log('3. Run the test again: node scripts/test/test-manual-workorder-simple.js');
   process.exit(1);
 }
 

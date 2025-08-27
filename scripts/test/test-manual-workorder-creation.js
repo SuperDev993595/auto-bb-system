@@ -60,7 +60,7 @@ async function testManualWorkOrderCreation() {
     console.log('2. Set the environment variable:');
     console.log('   Windows: set JWT_TOKEN=your-jwt-token-here');
     console.log('   Linux/Mac: export JWT_TOKEN=your-jwt-token-here');
-    console.log('3. Run the test again: node test-manual-workorder-creation.js');
+    console.log('3. Run the test again: node scripts/test/test-manual-workorder-creation.js');
     return;
   }
 
