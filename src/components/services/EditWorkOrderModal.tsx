@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
+import PartsEditor from './PartsEditor'
 import { Edit, Plus, Trash2 } from '../../utils/icons'
 import { updateWorkOrder } from '../../redux/actions/services'
 import { useAppDispatch, useAppSelector } from '../../redux'
@@ -216,6 +217,16 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
                     className="form-textarea text-sm"
                     rows={2}
                     placeholder="Service description..."
+                  />
+                </div>
+                
+                <div className="mt-3 space-y-1">
+                  <label className="block text-xs font-medium text-gray-600">
+                    Parts
+                  </label>
+                  <PartsEditor
+                    parts={service.parts || []}
+                    onChange={(parts) => handleServiceChange(index, 'parts', parts)}
                   />
                 </div>
               </div>
