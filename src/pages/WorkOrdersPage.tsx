@@ -162,14 +162,14 @@ const WorkOrdersPage: React.FC = () => {
             >
               {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
             </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors flex items-center gap-2"
-              title="Add New Work Order"
-            >
-              <Plus className="w-5 h-5" />
-              New Work Order
-            </button>
+                         <button
+               onClick={() => setShowAddModal(true)}
+               className="btn-primary flex items-center gap-2"
+               title="Add New Work Order"
+             >
+               <Plus className="w-5 h-5" />
+               New Work Order
+             </button>
           </div>
         </div>
       </div>
@@ -180,45 +180,45 @@ const WorkOrdersPage: React.FC = () => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Header Section */}
-            <div className="flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Work Order Management</h3>
-            </div>
+                         <div className="flex items-center gap-2">
+               <ClipboardList className="w-5 h-5 text-primary-600" />
+               <h3 className="text-lg font-semibold text-gray-900">Work Order Management</h3>
+             </div>
             
             {/* Controls Section */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {/* View Toggle */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                    viewMode === 'grid' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                  }`}
-                  title="Grid View"
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                    viewMode === 'list' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                  }`}
-                  title="List View"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+                             <div className="flex bg-gray-100 rounded-lg p-1">
+                 <button
+                   onClick={() => setViewMode('grid')}
+                   className={`p-1.5 rounded-md transition-all duration-200 ${
+                     viewMode === 'grid' 
+                       ? 'bg-primary-600 text-white' 
+                       : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                   }`}
+                   title="Grid View"
+                 >
+                   <Grid3X3 className="w-4 h-4" />
+                 </button>
+                 <button
+                   onClick={() => setViewMode('list')}
+                   className={`p-1.5 rounded-md transition-all duration-200 ${
+                     viewMode === 'list' 
+                       ? 'bg-primary-600 text-white' 
+                       : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                   }`}
+                   title="List View"
+                 >
+                   <List className="w-4 h-4" />
+                 </button>
+               </div>
             </div>
           </div>
         </div>
         
         <div className="p-6">
           {/* Search and Filters */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
+          <div className="bg-white rounded-xl mb-6">
             <div className="flex flex-col lg:flex-row gap-4 items-center">
               {/* Search Bar */}
               <div className="flex-1 relative max-w-md">
@@ -230,7 +230,7 @@ const WorkOrdersPage: React.FC = () => {
                   placeholder="Search work orders..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                 />
                 {searchTerm && (
                   <button
@@ -251,7 +251,7 @@ const WorkOrdersPage: React.FC = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer"
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 cursor-pointer"
                   >
                     <option value="all">📊 All Status</option>
                     <option value="pending">⏳ Pending</option>
@@ -272,7 +272,7 @@ const WorkOrdersPage: React.FC = () => {
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer"
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 cursor-pointer"
                   >
                     <option value="all">🎯 All Priority</option>
                     <option value="low">🟢 Low</option>
@@ -312,11 +312,11 @@ const WorkOrdersPage: React.FC = () => {
                 <div className="flex flex-wrap gap-2 items-center">
                   <span className="text-sm text-gray-500">Active filters:</span>
                   {searchTerm && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full">
                       Search: "{searchTerm}"
                       <button
                         onClick={() => setSearchTerm('')}
-                        className="ml-1 hover:text-blue-600"
+                        className="ml-1 hover:text-primary-600"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -365,14 +365,14 @@ const WorkOrdersPage: React.FC = () => {
                   ? 'Try adjusting your search or filters to find what you\'re looking for' 
                   : 'Get started by creating your first work order to begin managing your automotive services'}
               </p>
-              {!searchTerm && statusFilter === 'all' && priorityFilter === 'all' && (
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Create Work Order
-                </button>
-              )}
+                             {!searchTerm && statusFilter === 'all' && priorityFilter === 'all' && (
+                 <button
+                   onClick={() => setShowAddModal(true)}
+                   className="btn-primary"
+                 >
+                   Create Work Order
+                 </button>
+               )}
             </div>
           ) : (
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
