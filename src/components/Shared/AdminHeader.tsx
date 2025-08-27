@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { HiUser, HiLogout, HiBell, HiCog } from 'react-icons/hi';
+import PendingApprovalsCounter from './PendingApprovalsCounter';
 
 export default function AdminHeader() {
     const { user, logout, isLoading } = useAuth();
@@ -38,6 +39,14 @@ export default function AdminHeader() {
                 </div>
                 
                 <div className="flex items-center space-x-4">
+                    {/* Pending Approvals Counter */}
+                    <Link 
+                        to="/admin/dashboard/approvals"
+                        className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200 relative"
+                    >
+                        <PendingApprovalsCounter />
+                    </Link>
+                    
                     {/* Notifications */}
                     <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200">
                         <HiBell className="w-5 h-5" />

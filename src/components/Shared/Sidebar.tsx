@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
     
     // Operations & Marketing
     { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
+    { to: "/admin/dashboard/approvals", label: "Approvals", icon: <ClipboardList size={18} />, roles: ['super_admin', 'admin'] },
     { to: "/admin/dashboard/promotions", label: "Promotions", icon: <MessageCircle size={18} /> },
     
     // Advanced Features

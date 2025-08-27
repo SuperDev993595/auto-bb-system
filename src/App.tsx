@@ -53,6 +53,7 @@ import InvoicesPage from "./pages/InvoicesPage";
 import ReportsPage from "./pages/ReportsPage";
 import PDFGenerationPage from "./pages/PDFGenerationPage";
 import Dashboard from "./pages/dashboard/Dashboard";
+import ApprovalDashboard from "./pages/ApprovalDashboard";
 
 // Public Website Pages
 import PublicLayout from "./components/PublicWebsite/PublicLayout";
@@ -127,6 +128,7 @@ export default function App() {
         />
         <Route path="reminders" element={<RemindersPage />} />
         <Route path="tasks" element={<TasksPage />} />
+        <Route path="approvals" element={<ApprovalDashboard />} />
         <Route path="promotions" element={<PromotionsPage />} />
         <Route path="contact-logs" element={<ContactLogsPage />} />
         <Route path="mailchimp" element={<MailChimpPage />} />

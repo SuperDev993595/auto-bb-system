@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useRoleAccess from '../../hooks/useRoleAccess';
 
 interface ApprovalWorkflowProps {
   appointmentId: string;
@@ -17,6 +18,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
   const [declineReason, setDeclineReason] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [subAdmins, setSubAdmins] = useState<any[]>([]);
+  const { canApproveAppointments, canDeclineAppointments } = useRoleAccess();
 
   useEffect(() => {
     fetchAppointment();
@@ -114,18 +116,22 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
 
       {appointment.approvalStatus === 'pending' && (
         <div className="flex gap-4">
-          <button
-            onClick={() => setShowApprovalModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => setShowDeclineModal(true)}
-            className="bg-red-600 text-white px-4 py-2 rounded"
-          >
-            Decline
-          </button>
+          {canApproveAppointments && (
+            <button
+              onClick={() => setShowApprovalModal(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Approve
+            </button>
+          )}
+          {canDeclineAppointments && (
+            <button
+              onClick={() => setShowDeclineModal(true)}
+              className="bg-red-600 text-white px-4 py-2 rounded"
+            >
+              Decline
+            </button>
+          )}
         </div>
       )}
 
