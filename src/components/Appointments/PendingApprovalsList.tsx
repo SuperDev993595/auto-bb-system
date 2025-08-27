@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarMonth, AccessTime, Person, AttachMoney } from '@mui/icons-material';
+import { appointmentService } from '../../services/appointments';
 
 interface PendingApprovalsListProps {
   onApprovalAction: (appointmentId: string) => void;
@@ -18,12 +19,11 @@ const PendingApprovalsList: React.FC<PendingApprovalsListProps> = ({ onApprovalA
   const fetchPendingApprovals = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/appointments/pending-approval?page=${currentPage}&limit=10`);
-      const data = await response.json();
+      const response = await appointmentService.getPendingApprovals(currentPage, 10);
       
-      if (data.success) {
-        setAppointments(data.data.appointments);
-        setTotalPages(data.data.pagination.totalPages);
+      if (response.success) {
+        setAppointments(response.data.appointments);
+        setTotalPages(response.data.pagination.totalPages);
       }
     } catch (error) {
       console.error('Error fetching pending approvals:', error);

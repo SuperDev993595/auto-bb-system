@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
 // Helper function to get auth headers
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  console.log('getAuthHeaders: Token found:', !!token, 'Token length:', token ? token.length : 0);
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -118,9 +119,12 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Request: Token found and added to headers');
+    } else {
+      console.warn('API Request: No auth token found');
     }
     return config;
   },

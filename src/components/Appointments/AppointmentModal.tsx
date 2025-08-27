@@ -773,7 +773,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
 
             // Check if backend server is accessible
             try {
-                const healthCheck = await fetch('http://localhost:3001/api/health');
+                const healthCheck = await fetch('/api/health');
                 if (!healthCheck.ok) {
                     throw new Error('Backend server is not accessible');
                 }

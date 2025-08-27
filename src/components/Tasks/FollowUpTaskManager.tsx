@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarMonth, Phone, Email, CheckCircle } from '@mui/icons-material';
+import { taskService } from '../../services/tasks';
 
 interface FollowUpTaskManagerProps {
   userId: string;
@@ -47,11 +48,13 @@ const FollowUpTaskManager: React.FC<FollowUpTaskManagerProps> = ({ userId }) => 
   const fetchFollowUpTasks = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/tasks/follow-up?assignedTo=${userId}`);
-      const data = await response.json();
+      const response = await taskService.getMyTasks({ 
+        type: 'follow_up',
+        assignedTo: userId 
+      });
       
-      if (data.success) {
-        setTasks(data.tasks);
+      if (response.success) {
+        setTasks(response.data.tasks);
       }
     } catch (error) {
       console.error('Error fetching follow-up tasks:', error);
@@ -69,19 +72,15 @@ const FollowUpTaskManager: React.FC<FollowUpTaskManagerProps> = ({ userId }) => 
     if (!selectedTask || !taskNotes.trim()) return;
 
     try {
-      const response = await fetch(`/api/tasks/${selectedTask._id}/update-followup`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          outcome: followUpOutcome,
-          notes: taskNotes,
-        }),
+      // Use the existing updateTask method from taskService
+      const response = await taskService.updateTask(selectedTask._id, {
+        status: 'completed',
+        progress: 100,
+        result: followUpOutcome,
+        notes: taskNotes,
       });
 
-      const data = await response.json();
-      if (data.success) {
+      if (response.success) {
         setShowTaskModal(false);
         setTaskNotes('');
         setFollowUpOutcome('');

@@ -65,7 +65,7 @@ const io = socketIo(server, {
 // Enhanced middleware stack
 app.use(securityHeaders);
 app.use(cors(corsOptions));
-app.use(devLimiter); // Development-friendly rate limiter
+//app.use(devLimiter); // Development-friendly rate limiter
 app.use(sanitizeRequest);
 app.use(requestLogger);
 app.use(performanceMonitor);
@@ -161,7 +161,8 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // Routes with specific rate limiting
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
+//app.use('/api/auth', authLimiter, authRoutes);
 //app.use('/api/customers', apiLimiter, authenticateToken, customerRoutes);
 app.use('/api/customers', authenticateToken, customerRoutes);
 app.use('/api/business-clients', authenticateToken, businessClientRoutes);

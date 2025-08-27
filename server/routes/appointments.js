@@ -429,6 +429,74 @@ router.get('/customers', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// ========================================
+// APPROVAL WORKFLOW ENDPOINTS
+// ========================================
+
+// @route   GET /api/appointments/pending-approval
+// @desc    Get appointments that require approval
+// @access  Private
+router.get('/pending-approval', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'scheduledDate',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Build query for appointments requiring approval
+    const query = {
+      $or: [
+        { status: 'pending_approval' },
+        { approvalStatus: { $in: ['pending', 'requires_followup'] } },
+        { requiresApproval: true }
+      ]
+    };
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const appointments = await Appointment.find(query)
+      .populate('customer', 'name email businessName')
+      .populate('vehicle', 'make model year vin')
+      .populate('serviceType', 'name description')
+      .populate('technician', 'name')
+      .populate('assignedTo', 'name')
+      .populate('approvedBy', 'name')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Get total count
+    const total = await Appointment.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        appointments,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalAppointments: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get pending approval appointments error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/appointments/:id
 // @desc    Get single appointment
 // @access  Private

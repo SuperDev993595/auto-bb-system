@@ -5,7 +5,7 @@ import AppointmentModal from './AppointmentModal'
 import { addAppointment, updateAppointment, setAppointments } from '../../redux/reducer/appointmentsReducer'
 import { deleteAppointment } from '../../redux/actions/appointments'
 import { toast } from 'react-hot-toast'
-import AppointmentService from '../../services/appointments'
+import { appointmentService } from '../../services/appointments'
 import { getAuthHeaders } from '../../services/api'
 import {
   HiChevronLeft,
@@ -54,7 +54,7 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
   const loadAppointments = async () => {
     try {
       console.log('Loading appointments from backend...');
-      const response = await AppointmentService.getAppointments();
+      const response = await appointmentService.getAppointments();
       
       if (response.success) {
         // Check if appointments array exists and has data
@@ -522,13 +522,8 @@ export default function AppointmentCalendar({ appointments: propAppointments }: 
       
       console.log('Sending update data:', updateData);
       
-      const response = await fetch(`/api/appointments/${draggedAppointment.id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updateData)
-      })
-
-      const result = await response.json()
+      const response = await appointmentService.updateAppointment(draggedAppointment.id, updateData)
+      const result = response
 
       if (result.success) {
         // Update in Redux store

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Tooltip } from '@mui/material';
 import { Notifications } from '@mui/icons-material';
+import { appointmentService } from '../../services/appointments';
 
 interface PendingApprovalsCounterProps {
   className?: string;
@@ -21,11 +22,10 @@ const PendingApprovalsCounter: React.FC<PendingApprovalsCounterProps> = ({ class
 
   const fetchPendingCount = async () => {
     try {
-      const response = await fetch('/api/appointments/pending-approval?page=1&limit=1');
-      const data = await response.json();
+      const response = await appointmentService.getPendingApprovals(1, 1);
       
-      if (data.success) {
-        setCount(data.data.pagination.totalAppointments || 0);
+      if (response.success) {
+        setCount(response.data.pagination.totalAppointments || 0);
       }
     } catch (error) {
       console.error('Error fetching pending approvals count:', error);
