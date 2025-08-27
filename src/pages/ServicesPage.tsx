@@ -201,26 +201,30 @@ export default function ServicesPage() {
   }
 
   // Handle work order creation
-  const handleCreateWorkOrder = async (workOrderData: Partial<WorkOrder>) => {
+  const handleCreateWorkOrder = async (workOrderData: CreateWorkOrderData) => {
     try {
-      // This would need to be implemented with the actual work order creation action
+      await dispatch(createWorkOrder(workOrderData)).unwrap()
       setShowAddWorkOrderModal(false)
       handleWorkOrderSuccess()
+      toast.success('Work order created successfully')
     } catch (error) {
       console.error('Error creating work order:', error)
+      toast.error('Failed to create work order')
       throw error
     }
   }
 
   // Handle work order update
-  const handleUpdateWorkOrder = async (id: string, workOrderData: Partial<WorkOrder>) => {
+  const handleUpdateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData) => {
     try {
-      // This would need to be implemented with the actual work order update action
+      await dispatch(updateWorkOrder({ id, data: workOrderData })).unwrap()
       setShowEditWorkOrderModal(false)
       setSelectedWorkOrder(null)
       handleWorkOrderSuccess()
+      toast.success('Work order updated successfully')
     } catch (error) {
       console.error('Error updating work order:', error)
+      toast.error('Failed to update work order')
       throw error
     }
   }
@@ -228,12 +232,14 @@ export default function ServicesPage() {
   // Handle work order deletion
   const handleDeleteWorkOrder = async (id: string) => {
     try {
-      // This would need to be implemented with the actual work order deletion action
+      await dispatch(deleteWorkOrder(id)).unwrap()
       setShowDeleteWorkOrderModal(false)
       setSelectedWorkOrder(null)
       handleWorkOrderSuccess()
+      toast.success('Work order deleted successfully')
     } catch (error) {
       console.error('Error deleting work order:', error)
+      toast.error('Failed to delete work order')
       throw error
     }
   }
