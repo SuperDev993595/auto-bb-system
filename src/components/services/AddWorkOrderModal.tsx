@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { WorkOrder, CreateWorkOrderData } from '../../services/services'
 import ModalWrapper from '../../utils/ModalWrapper'
+import PartsEditor from './PartsEditor'
 import { toast } from 'react-hot-toast'
 import { API_ENDPOINTS, getAuthHeaders } from '../../services/api'
 
@@ -402,8 +403,6 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
               />
             </div>
           </div>
-
-
         </div>
 
         {/* Services */}
@@ -518,14 +517,11 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                      <p className="text-red-500 text-sm mt-1">{formErrors[`totalCost${index}`]}</p>
                    )}
                  </div>
-                 <div>
-                   <label className="form-label">Parts Count</label>
-                   <input
-                     type="number"
-                     value={service.parts.length}
-                     className="form-input bg-gray-50"
-                     disabled
-                     placeholder="0"
+                 <div className="lg:col-span-2">
+                   <label className="form-label">Parts</label>
+                   <PartsEditor
+                     parts={service.parts}
+                     onChange={(parts) => handleServiceChange(index, 'parts', parts)}
                    />
                  </div>
               </div>
