@@ -128,7 +128,7 @@ export default function Sidebar() {
     return (
         <aside className="bg-white text-secondary-900 w-64 flex flex-col h-screen border-r border-secondary-200">
             {/* Fixed Header */}
-            <div className="p-6 border-b border-secondary-200 bg-secondary-50 flex-shrink-0">
+            <div className="p-6 flex-shrink-0">
                 <Link to="/" className="block">
                     <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
