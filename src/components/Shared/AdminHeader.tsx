@@ -46,7 +46,7 @@ export default function AdminHeader() {
                         to="/admin/dashboard/approvals"
                         className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200 relative"
                     >
-                        <PendingApprovalsCounter />
+                        <PendingApprovalsCounter color="black" />
                     </Link>
                     
                     {/* User Info */}

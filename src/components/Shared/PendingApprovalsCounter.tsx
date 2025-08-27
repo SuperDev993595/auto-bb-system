@@ -5,9 +5,10 @@ import { appointmentService } from '../../services/appointments';
 
 interface PendingApprovalsCounterProps {
   className?: string;
+  color?: 'black' | 'white' | 'default';
 }
 
-const PendingApprovalsCounter: React.FC<PendingApprovalsCounterProps> = ({ className }) => {
+const PendingApprovalsCounter: React.FC<PendingApprovalsCounterProps> = ({ className, color = 'white' }) => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +58,11 @@ const PendingApprovalsCounter: React.FC<PendingApprovalsCounterProps> = ({ class
           }
         }}
       >
-        <Notifications className="w-5 h-5 text-gray-600" />
+        <Notifications className={`w-5 h-5 ${
+          color === 'black' ? 'text-black' : 
+          color === 'white' ? 'text-white' : 
+          'text-gray-600'
+        }`} />
       </Badge>
     </Tooltip>
   );

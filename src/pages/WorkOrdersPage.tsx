@@ -253,12 +253,12 @@ const WorkOrdersPage: React.FC = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 cursor-pointer"
                   >
-                    <option value="all">📊 All Status</option>
-                    <option value="pending">⏳ Pending</option>
-                    <option value="in_progress">🔄 In Progress</option>
-                    <option value="completed">✅ Completed</option>
-                    <option value="cancelled">❌ Cancelled</option>
-                    <option value="on_hold">⏸️ On Hold</option>
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="on_hold">On Hold</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
