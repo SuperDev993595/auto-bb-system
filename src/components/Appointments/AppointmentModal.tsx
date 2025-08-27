@@ -24,6 +24,7 @@ type AppointmentData = {
     priority: 'low' | 'medium' | 'high' | 'urgent';
     estimatedDuration: number;
     status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
+    approvalStatus: 'pending' | 'approved' | 'declined' | 'requires_followup';
     technicianId?: string;
     technicianName?: string;
     customerType: 'existing' | 'new';
@@ -73,6 +74,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         priority: 'medium',
         estimatedDuration: 60,
         status: 'scheduled',
+        approvalStatus: 'pending',
         technicianId: "",
         technicianName: "",
         customerType: 'existing', // Always existing
@@ -220,6 +222,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                 priority: appointment.priority,
                 estimatedDuration: appointment.estimatedDuration,
                 status: appointment.status,
+                approvalStatus: (appointment as any).approvalStatus || 'pending',
                 technicianId: appointment.technicianId || appointment.technician?._id || (appointment as any).technician || "",
                 technicianName: appointment.technicianName || appointment.technician?.name || (appointment as any).technicianName || "",
                 customerType: 'existing',
@@ -1229,10 +1232,27 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 disabled={isLoading || isSavingToDatabase}
                             >
                                 <option value="scheduled">Scheduled</option>
+                                <option value="pending_approval">Pending Approval</option>
                                 <option value="confirmed">Confirmed</option>
                                 <option value="in-progress">In Progress</option>
                                 <option value="completed">Completed</option>
                                 <option value="cancelled">Cancelled</option>
+                                <option value="no-show">No Show</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="form-label">Approval Status</label>
+                            <select
+                                name="approvalStatus"
+                                className="form-select"
+                                onChange={handleChange}
+                                value={form.approvalStatus || 'pending'}
+                                disabled={isLoading || isSavingToDatabase}
+                            >
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="declined">Declined</option>
+                                <option value="requires_followup">Requires Follow-up</option>
                             </select>
                         </div>
                     </div>
