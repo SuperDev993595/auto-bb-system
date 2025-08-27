@@ -1077,47 +1077,77 @@ export default function InventoryPage() {
   )
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Header Section */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Inventory Management</h1>
-          <p className="text-secondary-600">Manage inventory, suppliers, and purchase orders</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
+            <p className="text-gray-600">Manage inventory, suppliers, and purchase orders</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const timestamp = new Date().toISOString().split('T')[0]
+                if (activeTab === 'inventory') exportInventoryItems(timestamp)
+                else if (activeTab === 'transactions') exportTransactions(timestamp)
+                else if (activeTab === 'suppliers') exportSuppliers(timestamp)
+                else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
+              }}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Export Data"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+            {activeTab !== 'transactions' && (
+              <button
+                onClick={() => {
+                  console.log('Button clicked, activeTab:', activeTab);
+                  if (activeTab === 'inventory') {
+                    console.log('Calling handleAddItem');
+                    handleAddItem();
+                  } else if (activeTab === 'suppliers') {
+                    console.log('Calling handleAddSupplier');
+                    handleAddSupplier();
+                  } else if (activeTab === 'purchase-orders') {
+                    console.log('Calling handleAddPurchaseOrder');
+                    handleAddPurchaseOrder();
+                  }
+                }}
+                className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+                title="Add New"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => {
-              const timestamp = new Date().toISOString().split('T')[0]
-              if (activeTab === 'inventory') exportInventoryItems(timestamp)
-              else if (activeTab === 'transactions') exportTransactions(timestamp)
-              else if (activeTab === 'suppliers') exportSuppliers(timestamp)
-              else if (activeTab === 'purchase-orders') exportPurchaseOrders(timestamp)
-            }}
-            className="btn-secondary"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-          {activeTab !== 'transactions' && <button 
-            onClick={() => {
-              console.log('Button clicked, activeTab:', activeTab);
-              if (activeTab === 'inventory') {
-                console.log('Calling handleAddItem');
-                handleAddItem();
-              } else if (activeTab === 'suppliers') {
-                console.log('Calling handleAddSupplier');
-                handleAddSupplier();
-              } else if (activeTab === 'purchase-orders') {
-                console.log('Calling handleAddPurchaseOrder');
-                handleAddPurchaseOrder();
-              }
-            }}
-            className="btn-primary"
-          >
-            <Plus className="w-5 h-5" />
-            {activeTab === 'inventory' ? 'Add Item' : 
-             activeTab === 'suppliers' ? 'Add Supplier' : 'Add Purchase Order'}
-          </button>}
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Active Tab: {activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ')}
+            </span>
+            <span className="text-sm text-gray-500">
+              Total Items: {(items && Array.isArray(items) ? items : []).filter(i => i.isActive).length}
+            </span>
+            <span className="text-sm text-gray-500">
+              Active Suppliers: {(suppliers && Array.isArray(suppliers) ? suppliers : []).filter(s => s.isActive).length}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as TabType)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="inventory">Inventory</option>
+              <option value="transactions">Transactions</option>
+              <option value="suppliers">Suppliers</option>
+              <option value="purchase-orders">Purchase Orders</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -215,21 +215,51 @@ export default function PromotionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Page Header */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Marketing & Promotions</h1>
-          <p className="text-secondary-600">Manage marketing campaigns and promotional offers</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Marketing & Promotions</h1>
+            <p className="text-gray-600">Manage marketing campaigns and promotional offers</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleAddPromotion}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              title="Create Promotion"
+            >
+              <HiPlus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleAddPromotion}
-            className="btn-primary"
-          >
-            <HiPlus className="w-4 h-4" />
-            Create Promotion
-          </button>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Active Promotions: {stats?.overview?.activePromotions || filteredPromotions.filter(p => p.status === 'active' && p.isActive !== false).length}
+            </span>
+            <span className="text-sm text-gray-500">
+              Total Usage: {stats?.overview?.totalUsage || filteredPromotions.filter(p => p.isActive !== false).reduce((sum, p) => sum + p.usageCount, 0)}
+            </span>
+            <span className="text-sm text-gray-500">
+              Scheduled: {stats?.overview?.scheduledPromotions || filteredPromotions.filter(p => p.status === 'scheduled' && p.isActive !== false).length}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="expired">Expired</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
         </div>
       </div>
 

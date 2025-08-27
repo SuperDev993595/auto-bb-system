@@ -350,33 +350,64 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Header Section */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Service Management</h1>
-          <p className="text-secondary-600">Manage services, work orders, and technicians</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Service Management</h1>
+            <p className="text-gray-600">Manage services, work orders, and technicians</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Toggle View"
+            >
+              {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={handleRefresh}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Refresh Data"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                if (activeTab === 'catalog') handleAddService()
+                else if (activeTab === 'workorders') handleAddWorkOrder()
+                else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
+              }}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              title="Add New"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleRefresh}
-            className="btn-secondary"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
-          <button 
-            onClick={() => {
-              if (activeTab === 'catalog') handleAddService()
-              else if (activeTab === 'workorders') handleAddWorkOrder()
-              else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
-            }}
-            className="btn-primary"
-          >
-            <Plus className="w-5 h-5" />
-            {activeTab === 'catalog' ? 'Add Service' : 
-             activeTab === 'workorders' ? 'Add Work Order' : 'Add Technician'}
-          </button>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Active Tab: {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            </span>
+            <span className="text-sm text-gray-500">
+              View Mode: {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as TabType)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="catalog">Service Catalog</option>
+              <option value="workorders">Work Orders</option>
+              <option value="technicians">Technicians</option>
+            </select>
+          </div>
         </div>
       </div>
 

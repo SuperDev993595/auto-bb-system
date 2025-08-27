@@ -171,21 +171,51 @@ export default function ContactLogsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-        {/* Page Header */}
-        <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">Customer Communication Logs</h1>
-            <p className="text-secondary-600">Track and manage all customer interactions</p>
+      <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Customer Communication Logs</h1>
+              <p className="text-gray-600">Track and manage all customer interactions</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+                title="Log Communication"
+              >
+                <HiPlus className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary"
-            >
-              <HiPlus className="w-4 h-4" />
-              Log Communication
-            </button>
+
+          {/* Status Bar */}
+          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">
+                Total Contacts: {communicationLogs.length}
+              </span>
+              <span className="text-sm text-gray-500">
+                Phone Calls: {communicationLogs.filter(log => log.type === 'phone').length}
+              </span>
+              <span className="text-sm text-gray-500">
+                Emails: {communicationLogs.filter(log => log.type === 'email').length}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Types</option>
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="in-person">In Person</option>
+                <option value="sms">SMS</option>
+              </select>
+            </div>
           </div>
         </div>
 

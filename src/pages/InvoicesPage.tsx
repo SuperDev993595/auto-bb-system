@@ -747,12 +747,49 @@ export default function InvoicesPage() {
   )
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Page Header */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Invoices & Billing</h1>
-          <p className="text-secondary-600">Manage customer invoices and payments</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Invoices & Billing</h1>
+            <p className="text-gray-600">Manage customer invoices and payments</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAddInvoiceModal(true)}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              title="New Invoice"
+            >
+              <HiPlus className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Total Invoices: {totalInvoices}
+            </span>
+            <span className="text-sm text-gray-500">
+              Paid: {paidInvoices}
+            </span>
+            <span className="text-sm text-gray-500">
+              Outstanding: ${outstandingAmount.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as TabType)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="invoices">Invoices</option>
+              <option value="payments">Payments</option>
+              <option value="settings">Settings</option>
+            </select>
+          </div>
         </div>
       </div>
 

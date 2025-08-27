@@ -533,20 +533,64 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-            {/* Page Header */}
-            <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-                <div className="mb-4 lg:mb-0">
-                    <h1 className="text-3xl font-bold text-secondary-900 mb-2">Appointment Management</h1>
-                    <p className="text-secondary-600">Schedule and manage customer appointments</p>
+        <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Appointment Management</h1>
+                        <p className="text-gray-600">Schedule and manage customer appointments</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setViewMode(viewMode === 'calendar' ? 'grid' : 'calendar')}
+                            className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+                            title="Toggle View"
+                        >
+                            {viewMode === 'calendar' ? <HiViewGrid className="w-5 h-5" /> : <HiCalendar className="w-5 h-5" />}
+                        </button>
+                        <button
+                            onClick={fetchAppointments}
+                            className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+                            title="Refresh Data"
+                        >
+                            <HiRefresh className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setShowNewAppointmentModal(true)}
+                            className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+                            title="New Appointment"
+                        >
+                            <HiPlus className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
-                <button
-                    onClick={() => setShowNewAppointmentModal(true)}
-                    className="btn-primary"
-                >
-                    <HiPlus className="w-5 h-5 mr-2" />
-                    New Appointment
-                </button>
+
+                {/* Status Bar */}
+                <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-500">
+                            Total Appointments: {appointments?.length || 0}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                            View Mode: {viewMode === 'calendar' ? 'Calendar' : 'Grid'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Stats Cards */}

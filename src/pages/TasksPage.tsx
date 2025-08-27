@@ -257,31 +257,72 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Header Section */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Task Management</h1>
-          <p className="text-secondary-600">Organize and track your team's tasks and projects</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Task Management</h1>
+            <p className="text-gray-600">Organize and track your team's tasks and projects</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                dispatch(fetchTasks({}))
+                dispatch(fetchTaskStats())
+              }}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Refresh Data"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleAddTask}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              title="Add Task"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => {
-              dispatch(fetchTasks({}))
-              dispatch(fetchTaskStats())
-            }}
-            className="btn-secondary"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
-          <button 
-            onClick={handleAddTask}
-            className="btn-primary"
-          >
-            <Plus className="w-5 h-5" />
-            Add Task
-          </button>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Total Tasks: {stats?.overview?.totalTasks || tasks?.length || 0}
+            </span>
+            <span className="text-sm text-gray-500">
+              Pending: {stats?.overview?.pendingTasks || filteredTasks.filter(t => t.status === 'pending').length}
+            </span>
+            <span className="text-sm text-gray-500">
+              In Progress: {stats?.overview?.inProgressTasks || filteredTasks.filter(t => t.status === 'in_progress').length}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -731,21 +731,44 @@ export default function ReportsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Header with title and controls */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Reports & Analytics</h1>
-          <p className="text-secondary-600">Comprehensive business insights and performance metrics</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
+            <p className="text-gray-600">Comprehensive business insights and performance metrics</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50"
+              title="Export current report data"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Date Range Selector */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-secondary-700">Date Range:</label>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Report Type: {activeReport.charAt(0).toUpperCase() + activeReport.slice(1)}
+            </span>
+            <span className="text-sm text-gray-500">
+              Date Range: {dateRange === 'custom' ? 'Custom' : dateRange}
+            </span>
+            <span className="text-sm text-gray-500">
+              Total Revenue: ${metrics.revenue.total.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="form-input"
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -753,39 +776,26 @@ export default function ReportsPage() {
               <option value="1y">Last year</option>
               <option value="custom">Custom range</option>
             </select>
+            {dateRange === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Start Date"
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="End Date"
+                />
+              </div>
+            )}
           </div>
-          
-          {/* Custom Date Range Inputs */}
-          {dateRange === 'custom' && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="form-input"
-                placeholder="Start Date"
-              />
-              <span className="text-secondary-500">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="form-input"
-                placeholder="End Date"
-              />
-            </div>
-          )}
-          
-          {/* Export Button */}
-          <button 
-            onClick={handleExport}
-            disabled={isExporting}
-            className="btn-primary"
-            title="Export current report data"
-          >
-            <Download className="w-4 h-4" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </button>
         </div>
       </div>
 
