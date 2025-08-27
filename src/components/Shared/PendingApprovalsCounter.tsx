@@ -14,8 +14,8 @@ const PendingApprovalsCounter: React.FC<PendingApprovalsCounterProps> = ({ class
   useEffect(() => {
     fetchPendingCount();
     
-    // Refresh count every 5 minutes
-    const interval = setInterval(fetchPendingCount, 5 * 60 * 1000);
+    // Refresh count every 1 minutes
+    const interval = setInterval(fetchPendingCount, 1 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, []);

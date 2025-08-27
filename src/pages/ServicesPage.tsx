@@ -749,7 +749,7 @@ export default function ServicesPage() {
                     <div className="empty-state-icon">
                       <ClipboardList className="w-8 h-8" />
                     </div>
-                    <h3 className="empty-state-title">No work orders found</h3>
+                    <h6 className="empty-state-title">No work orders found</h6>
                     <p className="empty-state-description">Get started by creating your first work order</p>
                     <button
                       onClick={handleAddWorkOrder}

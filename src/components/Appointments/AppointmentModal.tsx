@@ -598,19 +598,6 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
         }
     };
 
-    // Handle escape key to close modal
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        };
-        
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [onClose]);
-
-
 
     // Filter vehicles based on input
     useEffect(() => {
@@ -1041,6 +1028,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
             submitText={isLoading || isSavingToDatabase ? (isEditing ? 'Updating...' : 'Saving...') : (isEditing ? 'Update Appointment' : 'Create Appointment')}
             onSubmit={handleSubmit}
             submitColor="bg-blue-600"
+            submitDisabled={isLoading || isSavingToDatabase}
         >
             <div className="p-6 space-y-6">
                 {/* Customer Selection */}
@@ -1240,21 +1228,7 @@ export default function AppointmentModal({ onClose, onSave, isLoading = false, a
                                 <option value="no-show">No Show</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="form-label">Approval Status</label>
-                            <select
-                                name="approvalStatus"
-                                className="form-select"
-                                onChange={handleChange}
-                                value={form.approvalStatus || 'pending'}
-                                disabled={isLoading || isSavingToDatabase}
-                            >
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="declined">Declined</option>
-                                <option value="requires_followup">Requires Follow-up</option>
-                            </select>
-                        </div>
+
                     </div>
                     
                     <div>

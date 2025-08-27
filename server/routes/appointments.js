@@ -497,6 +497,87 @@ router.get('/pending-approval', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/appointments/alerts
+// @desc    Get appointment alerts and notifications
+// @access  Private
+router.get('/alerts', requireAnyAdmin, async (req, res) => {
+  try {
+    const alerts = [];
+
+    // Check for urgent approvals (high value appointments)
+    const urgentApprovals = await Appointment.find({
+      status: 'pending_approval',
+      'estimatedCost.total': { $gt: 1000 }
+    }).populate('customer', 'name businessName');
+
+    if (urgentApprovals.length > 0) {
+      alerts.push({
+        _id: 'urgent-approvals',
+        type: 'urgent',
+        title: 'High-Value Approvals Pending',
+        message: `${urgentApprovals.length} appointments with value over $1,000 require approval`,
+        priority: 'urgent',
+        timestamp: new Date(),
+        actionUrl: '/admin/dashboard/approvals',
+        dismissed: false
+      });
+    }
+
+    // Check for appointments exceeding approval window (24+ hours)
+    const overdueApprovals = await Appointment.find({
+      status: 'pending_approval',
+      createdAt: { $lt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    }).populate('customer', 'name businessName');
+
+    if (overdueApprovals.length > 0) {
+      alerts.push({
+        _id: 'overdue-approvals',
+        type: 'deadline',
+        title: 'Approval Deadline Exceeded',
+        message: `${overdueApprovals.length} appointments have been waiting over 24 hours for approval`,
+        priority: 'high',
+        timestamp: new Date(),
+        actionUrl: '/admin/dashboard/approvals',
+        dismissed: false
+      });
+    }
+
+    // Check for upcoming appointments in next 2 hours
+    const upcomingAppointments = await Appointment.find({
+      status: { $in: ['confirmed', 'scheduled'] },
+      scheduledDate: {
+        $gte: new Date(),
+        $lte: new Date(Date.now() + 2 * 60 * 60 * 1000)
+      }
+    }).populate('customer', 'name businessName');
+
+    if (upcomingAppointments.length > 0) {
+      alerts.push({
+        _id: 'upcoming-appointments',
+        type: 'reminder',
+        title: 'Upcoming Appointments',
+        message: `${upcomingAppointments.length} appointments scheduled in the next 2 hours`,
+        priority: 'medium',
+        timestamp: new Date(),
+        actionUrl: '/admin/dashboard/approvals',
+        dismissed: false
+      });
+    }
+
+    res.json({
+      success: true,
+      data: alerts
+    });
+
+  } catch (error) {
+    console.error('Get appointment alerts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/appointments/:id
 // @desc    Get single appointment
 // @access  Private
@@ -1532,87 +1613,6 @@ router.get('/stats/overview', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Get appointment stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-});
-
-// @route   GET /api/appointments/alerts
-// @desc    Get appointment alerts and notifications
-// @access  Private
-router.get('/alerts', requireAnyAdmin, async (req, res) => {
-  try {
-    const alerts = [];
-
-    // Check for urgent approvals (high value appointments)
-    const urgentApprovals = await Appointment.find({
-      status: 'pending_approval',
-      'estimatedCost.total': { $gt: 1000 }
-    }).populate('customer', 'name businessName');
-
-    if (urgentApprovals.length > 0) {
-      alerts.push({
-        _id: 'urgent-approvals',
-        type: 'urgent',
-        title: 'High-Value Approvals Pending',
-        message: `${urgentApprovals.length} appointments with value over $1,000 require approval`,
-        priority: 'urgent',
-        timestamp: new Date(),
-        actionUrl: '/admin/dashboard/approvals',
-        dismissed: false
-      });
-    }
-
-    // Check for appointments exceeding approval window (24+ hours)
-    const overdueApprovals = await Appointment.find({
-      status: 'pending_approval',
-      createdAt: { $lt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-    }).populate('customer', 'name businessName');
-
-    if (overdueApprovals.length > 0) {
-      alerts.push({
-        _id: 'overdue-approvals',
-        type: 'deadline',
-        title: 'Approval Deadline Exceeded',
-        message: `${overdueApprovals.length} appointments have been waiting over 24 hours for approval`,
-        priority: 'high',
-        timestamp: new Date(),
-        actionUrl: '/admin/dashboard/approvals',
-        dismissed: false
-      });
-    }
-
-    // Check for upcoming appointments in next 2 hours
-    const upcomingAppointments = await Appointment.find({
-      status: { $in: ['confirmed', 'scheduled'] },
-      scheduledDate: {
-        $gte: new Date(),
-        $lte: new Date(Date.now() + 2 * 60 * 60 * 1000)
-      }
-    }).populate('customer', 'name businessName');
-
-    if (upcomingAppointments.length > 0) {
-      alerts.push({
-        _id: 'upcoming-appointments',
-        type: 'reminder',
-        title: 'Upcoming Appointments',
-        message: `${upcomingAppointments.length} appointments scheduled in the next 2 hours`,
-        priority: 'medium',
-        timestamp: new Date(),
-        actionUrl: '/admin/dashboard/approvals',
-        dismissed: false
-      });
-    }
-
-    res.json({
-      success: true,
-      data: alerts
-    });
-
-  } catch (error) {
-    console.error('Get appointment alerts error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

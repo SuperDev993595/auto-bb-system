@@ -1,5 +1,5 @@
 import { X } from '../utils/icons'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 
 interface ModalWrapperProps {
   isOpen: boolean
@@ -10,6 +10,7 @@ interface ModalWrapperProps {
   submitText?: string
   onSubmit?: () => void
   submitColor?: string
+  submitDisabled?: boolean
   disableOutsideClose?: boolean
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }
@@ -23,6 +24,7 @@ export default function ModalWrapper({
   submitText,
   onSubmit,
   submitColor = 'bg-blue-600',
+  submitDisabled = false,
   disableOutsideClose = false,
   size = 'md'
 }: ModalWrapperProps) {
@@ -36,10 +38,22 @@ export default function ModalWrapper({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !disableOutsideClose) {
+    if (e.target === e.currentTarget && !disableOutsideClose && !submitDisabled) {
       onClose()
     }
   }
+
+  // Handle escape key to close modal (disabled while saving)
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !submitDisabled) {
+        onClose()
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose, submitDisabled]);
 
   return (
     <div 
@@ -56,7 +70,8 @@ export default function ModalWrapper({
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
+              disabled={submitDisabled}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <X className="w-5 h-5" />
             </button>
@@ -73,13 +88,15 @@ export default function ModalWrapper({
           <div className="flex justify-end gap-3 p-6 border-t border-gray-100">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+              disabled={submitDisabled}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={onSubmit}
-              className={`${submitColor} text-white text-sm px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium`}
+              disabled={submitDisabled}
+              className={`${submitColor} text-white text-sm px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {submitText}
             </button>
