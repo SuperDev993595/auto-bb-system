@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { HiUser, HiLogout, HiBell, HiCog } from 'react-icons/hi';
 import PendingApprovalsCounter from './PendingApprovalsCounter';
+import NotificationCenter from './NotificationCenter';
 
 export default function AdminHeader() {
     const { user, logout, isLoading } = useAuth();
+    const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -47,10 +49,13 @@ export default function AdminHeader() {
                         <PendingApprovalsCounter />
                     </Link>
                     
-                    {/* Notifications */}
-                    <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200">
-                        <HiBell className="w-5 h-5" />
-                    </button>
+                                         {/* Notifications */}
+                     <button 
+                         onClick={() => setIsNotificationCenterOpen(true)}
+                         className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200 relative"
+                     >
+                         <HiBell className="w-5 h-5" />
+                     </button>
                     
                     {/* Settings */}
                     <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200">
@@ -78,6 +83,12 @@ export default function AdminHeader() {
                     </button>
                 </div>
             </div>
+            
+            {/* Notification Center */}
+            <NotificationCenter 
+                isOpen={isNotificationCenterOpen}
+                onClose={() => setIsNotificationCenterOpen(false)}
+            />
         </header>
     );
 }

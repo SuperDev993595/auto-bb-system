@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
 import PerformanceMonitor from "./components/Performance/PerformanceMonitor";
@@ -182,12 +183,24 @@ export default function App() {
       </Routes>
       
       {/* Performance Monitor - Only show in development */}
-      {import.meta.env.DEV && (
+      {process.env.NODE_ENV === 'development' && (
         <PerformanceMonitor enabled={true} showDetails={true} />
       )}
       
       {/* Dashboard Quick Access Button */}
       <DashboardQuickAccess />
+      
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useRoleAccess from '../../hooks/useRoleAccess';
+import notificationService from '../../services/notificationService';
 
 interface ApprovalWorkflowProps {
   appointmentId: string;
@@ -62,6 +63,15 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
 
       const data = await response.json();
       if (data.success) {
+        // Send success notification
+        notificationService.addNotification({
+          type: 'success',
+          title: 'Appointment Approved',
+          message: `Appointment for ${appointment.customer?.name} has been approved and work order created`,
+          priority: 'medium',
+          category: 'approval'
+        });
+        
         setShowApprovalModal(false);
         setApprovalNotes('');
         onApprovalComplete();
@@ -90,6 +100,12 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
 
       const data = await response.json();
       if (data.success) {
+        // Send follow-up task notification
+        notificationService.sendFollowUpTaskNotification(
+          appointment.customer?.name || 'Customer',
+          subAdmins.find(admin => admin._id === assignedTo)?.name || 'Sub Admin'
+        );
+        
         setShowDeclineModal(false);
         setDeclineReason('');
         setAssignedTo('');

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import PendingApprovalsList from '../components/Appointments/PendingApprovalsList';
 import ApprovalWorkflow from '../components/Appointments/ApprovalWorkflow';
+import ApprovalAnalytics from '../components/Appointments/ApprovalAnalytics';
+import SmartAlerts from '../components/Appointments/SmartAlerts';
 import BreadcrumbNav from '../components/Shared/BreadcrumbNav';
 
 const ApprovalDashboard: React.FC = () => {
@@ -52,10 +54,19 @@ const ApprovalDashboard: React.FC = () => {
             />
           </div>
         ) : (
-          <PendingApprovalsList
-            key={refreshKey}
-            onApprovalAction={handleApprovalAction}
-          />
+          <div className="space-y-6">
+            {/* Smart Alerts */}
+            <SmartAlerts />
+            
+            {/* Analytics Dashboard */}
+            <ApprovalAnalytics />
+            
+            {/* Pending Approvals List */}
+            <PendingApprovalsList
+              key={refreshKey}
+              onApprovalAction={handleApprovalAction}
+            />
+          </div>
         )}
       </div>
     </div>
