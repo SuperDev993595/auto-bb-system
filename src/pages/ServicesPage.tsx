@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { useAppSelector, useAppDispatch } from "../redux"
 import { ServiceCatalogItem, Technician } from "../services/services"
-import PageTitle from "../components/Shared/PageTitle"
 import {
   fetchServiceCatalog,
   fetchTechnicians,
@@ -13,27 +12,21 @@ import {
 import AddServiceModal from "../components/services/AddServiceModal"
 import EditServiceModal from "../components/services/EditServiceModal"
 import DeleteServiceModal from "../components/services/DeleteServiceModal"
-
 import AddTechnicianModal from "../components/services/AddTechnicianModal"
 import EditTechnicianModal from "../components/services/EditTechnicianModal"
 import DeleteTechnicianModal from "../components/services/DeleteTechnicianModal"
 import { 
   Plus, 
   Search, 
-  Filter, 
   Grid3X3, 
   List, 
   RefreshCw, 
   Wrench, 
   Users, 
-  ClipboardList,
   TrendingUp,
-  CheckCircle,
   Clock,
-  AlertCircle,
   DollarSign,
   Settings,
-  Eye,
   Edit,
   Trash2,
   Loader2
@@ -46,8 +39,6 @@ export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('catalog')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [showInactiveTechnicians, setShowInactiveTechnicians] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   
   // Modal states
@@ -303,10 +294,11 @@ export default function ServicesPage() {
                 if (activeTab === 'catalog') handleAddService()
                 else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
               }}
-              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              className="btn-primary flex items-center gap-2"
               title="Add New"
             >
               <Plus className="w-5 h-5" />
+              {activeTab === 'catalog' ? 'Add Service' : 'Add Technician'}
             </button>
           </div>
         </div>
@@ -325,7 +317,7 @@ export default function ServicesPage() {
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value as TabType)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="catalog">Service Catalog</option>
               <option value="technicians">Technicians</option>
@@ -336,25 +328,27 @@ export default function ServicesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Services */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Services</p>
               <p className="text-2xl font-bold text-gray-900">{totalServices}</p>
+              <p className="text-xs text-green-600 mt-1">{activeServices} active</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Wrench className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+              <Wrench className="w-6 h-6 text-primary-600" />
             </div>
           </div>
         </div>
 
-
-
+        {/* Total Technicians */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Technicians</p>
-              <p className="text-2xl font-bold text-purple-600">{totalTechnicians}</p>
+              <p className="text-2xl font-bold text-gray-900">{totalTechnicians}</p>
+              <p className="text-xs text-green-600 mt-1">{activeTechnicians} active</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <Users className="w-6 h-6 text-purple-600" />
@@ -362,16 +356,38 @@ export default function ServicesPage() {
           </div>
         </div>
 
+        {/* Revenue */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Revenue</p>
-              <p className="text-2xl font-bold text-orange-600">
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">
                 ${(catalogStats as any)?.totalRevenue?.toLocaleString() || '0'}
               </p>
+              <p className="text-xs text-gray-500 mt-1">This month</p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Average Service Rate */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg. Service Rate</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${(() => {
+                  if (!Array.isArray(catalog) || catalog.length === 0) return '0';
+                  const totalRate = catalog.reduce((sum, service) => sum + (service.laborRate || 0), 0);
+                  return Math.round(totalRate / catalog.length).toLocaleString();
+                })()}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Per service</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -383,8 +399,8 @@ export default function ServicesPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Header Section */}
             <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-primary-600" />
-              <h3 className="text-base font-semibold text-secondary-900">Service Management</h3>
+              <Settings className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Service Management</h3>
             </div>
             
             {/* Controls Section */}
@@ -417,28 +433,28 @@ export default function ServicesPage() {
               </div>
               
               {/* View Toggle */}
-              <div className="flex bg-secondary-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'grid' 
                       ? 'bg-primary-600 text-white' 
-                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                   }`}
                   title="Grid View"
                 >
-                  <Grid3X3 className="w-3.5 h-3.5" />
+                  <Grid3X3 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'list' 
                       ? 'bg-primary-600 text-white' 
-                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                   }`}
                   title="List View"
                 >
-                  <List className="w-3.5 h-3.5" />
+                  <List className="w-4 h-4" />
                 </button>
               </div>
             </div>
