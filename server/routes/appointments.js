@@ -9,6 +9,8 @@ const { Service } = require('../models/Service');
 const { Technician } = require('../models/Service');
 const { requireAnyAdmin } = require('../middleware/auth');
 const appointmentCommunicationService = require('../services/appointmentCommunicationService');
+const workOrderService = require('../services/workOrderService');
+const taskService = require('../services/taskService');
 
 const router = express.Router();
 
@@ -1019,6 +1021,339 @@ router.post('/bulk-update', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Bulk update appointments error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// ========================================
+// APPROVAL WORKFLOW ENDPOINTS
+// ========================================
+
+// @route   GET /api/appointments/pending-approval
+// @desc    Get appointments that require approval
+// @access  Private
+router.get('/pending-approval', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'scheduledDate',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Build query for appointments requiring approval
+    const query = {
+      $or: [
+        { status: 'pending_approval' },
+        { approvalStatus: { $in: ['pending', 'requires_followup'] } },
+        { requiresApproval: true }
+      ]
+    };
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const appointments = await Appointment.find(query)
+      .populate('customer', 'name email businessName')
+      .populate('vehicle', 'make model year vin')
+      .populate('serviceType', 'name description')
+      .populate('technician', 'name')
+      .populate('assignedTo', 'name')
+      .populate('approvedBy', 'name')
+      .sort(sort)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Get total count
+    const total = await Appointment.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        appointments,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalAppointments: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get pending approval appointments error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/appointments/:id/approve
+// @desc    Approve an appointment and create work order
+// @access  Private
+router.post('/:id/approve', requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes, createWorkOrder = true } = req.body;
+
+    // Validate appointment ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid appointment ID'
+      });
+    }
+
+    // Find appointment
+    const appointment = await Appointment.findById(id)
+      .populate('customer vehicle serviceType technician');
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Check if appointment requires approval
+    if (appointment.status !== 'pending_approval' && appointment.approvalStatus !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Appointment does not require approval'
+      });
+    }
+
+    // Update appointment status
+    appointment.status = 'confirmed';
+    appointment.approvalStatus = 'approved';
+    appointment.approvalDate = new Date();
+    appointment.approvedBy = req.user.id;
+    appointment.approvalNotes = notes || '';
+
+    await appointment.save();
+
+    let workOrder = null;
+
+    // Create work order if requested
+    if (createWorkOrder) {
+      try {
+        const workOrderResult = await workOrderService.createFromAppointment(id, req.user.id);
+        workOrder = workOrderResult.workOrder;
+      } catch (workOrderError) {
+        console.error('Error creating work order:', workOrderError);
+        // Don't fail the approval if work order creation fails
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Appointment approved successfully',
+      data: {
+        appointment,
+        workOrder
+      }
+    });
+
+  } catch (error) {
+    console.error('Approve appointment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/appointments/:id/decline
+// @desc    Decline an appointment and create follow-up task
+// @access  Private
+router.post('/:id/decline', requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, assignedTo, createFollowUpTask = true } = req.body;
+
+    // Validate appointment ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid appointment ID'
+      });
+    }
+
+    // Validate required fields
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reason for decline is required'
+      });
+    }
+
+    if (createFollowUpTask && !assignedTo) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assigned user is required for follow-up task'
+      });
+    }
+
+    // Find appointment
+    const appointment = await Appointment.findById(id)
+      .populate('customer vehicle serviceType');
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Check if appointment requires approval
+    if (appointment.status !== 'pending_approval' && appointment.approvalStatus !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Appointment does not require approval'
+      });
+    }
+
+    // Update appointment status
+    appointment.status = 'pending_approval';
+    appointment.approvalStatus = 'declined';
+    appointment.approvalDate = new Date();
+    appointment.approvedBy = req.user.id;
+    appointment.approvalNotes = reason;
+
+    await appointment.save();
+
+    let task = null;
+
+    // Create follow-up task if requested
+    if (createFollowUpTask) {
+      try {
+        const taskResult = await taskService.createFollowUpTask(id, assignedTo, reason);
+        task = taskResult.task;
+      } catch (taskError) {
+        console.error('Error creating follow-up task:', taskError);
+        // Don't fail the decline if task creation fails
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Appointment declined and follow-up task created',
+      data: {
+        appointment,
+        task
+      }
+    });
+
+  } catch (error) {
+    console.error('Decline appointment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/appointments/:id/request-approval
+// @desc    Mark appointment as requiring approval
+// @access  Private
+router.post('/:id/request-approval', requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    // Validate appointment ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid appointment ID'
+      });
+    }
+
+    // Find appointment
+    const appointment = await Appointment.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Update appointment to require approval
+    appointment.status = 'pending_approval';
+    appointment.approvalStatus = 'pending';
+    appointment.requiresApproval = true;
+    appointment.approvalNotes = reason || 'Manual approval request';
+
+    await appointment.save();
+
+    res.json({
+      success: true,
+      message: 'Appointment marked for approval',
+      data: { appointment }
+    });
+
+  } catch (error) {
+    console.error('Request approval error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/appointments/:id/approval-history
+// @desc    Get approval history for an appointment
+// @access  Private
+router.get('/:id/approval-history', requireAnyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate appointment ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid appointment ID'
+      });
+    }
+
+    // Find appointment with approval details
+    const appointment = await Appointment.findById(id)
+      .populate('approvedBy', 'name email')
+      .populate('customer', 'name businessName');
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Get related work orders
+    const workOrders = await workOrderService.getWorkOrdersByAppointment(id);
+
+    // Get related tasks
+    const tasks = await taskService.getTasksByAppointment(id);
+
+    res.json({
+      success: true,
+      data: {
+        appointment,
+        workOrders,
+        tasks
+      }
+    });
+
+  } catch (error) {
+    console.error('Get approval history error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

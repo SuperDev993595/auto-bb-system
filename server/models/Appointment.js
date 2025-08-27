@@ -36,8 +36,29 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show'],
+    enum: ['scheduled', 'pending_approval', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show'],
     default: 'scheduled'
+  },
+  
+  // Approval workflow fields
+  approvalStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'declined', 'requires_followup'],
+    default: 'pending'
+  },
+  approvalDate: Date,
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  approvalNotes: String,
+  requiresApproval: {
+    type: Boolean,
+    default: false
+  },
+  approvalThreshold: {
+    type: Number, // Amount above which approval is required
+    default: 500
   },
   priority: {
     type: String,

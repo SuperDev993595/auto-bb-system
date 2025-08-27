@@ -191,7 +191,38 @@ class AppointmentService {
     return response.data;
   }
 
+  // Approval Workflow Methods
+  async getPendingApprovals(page = 1, limit = 10): Promise<ApiResponse<any>> {
+    const response = await api.get(`/appointments/pending-approval?page=${page}&limit=${limit}`);
+    return response.data;
+  }
 
+  async approveAppointment(appointmentId: string, notes: string, createWorkOrder = true): Promise<ApiResponse<any>> {
+    const response = await api.post(`/appointments/${appointmentId}/approve`, {
+      notes,
+      createWorkOrder
+    });
+    return response.data;
+  }
+
+  async declineAppointment(appointmentId: string, reason: string, assignedTo: string, createFollowUpTask = true): Promise<ApiResponse<any>> {
+    const response = await api.post(`/appointments/${appointmentId}/decline`, {
+      reason,
+      assignedTo,
+      createFollowUpTask
+    });
+    return response.data;
+  }
+
+  async requestApproval(appointmentId: string, reason: string): Promise<ApiResponse<any>> {
+    const response = await api.post(`/appointments/${appointmentId}/request-approval`, { reason });
+    return response.data;
+  }
+
+  async getApprovalHistory(appointmentId: string): Promise<ApiResponse<any>> {
+    const response = await api.get(`/appointments/${appointmentId}/approval-history`);
+    return response.data;
+  }
 }
 
 export const appointmentService = new AppointmentService();
