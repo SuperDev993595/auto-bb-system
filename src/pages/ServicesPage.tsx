@@ -1,26 +1,19 @@
 import { useState, useEffect } from "react"
 import { useAppSelector, useAppDispatch } from "../redux"
-import { ServiceCatalogItem, WorkOrder, Technician, CreateWorkOrderData, UpdateWorkOrderData } from "../services/services"
+import { ServiceCatalogItem, Technician } from "../services/services"
 import PageTitle from "../components/Shared/PageTitle"
 import {
   fetchServiceCatalog,
-  fetchWorkOrders,
   fetchTechnicians,
   fetchServiceCatalogStats,
-  fetchWorkOrderStats,
   fetchTechnicianStats,
   fetchServiceCategories,
-  fetchSpecializations,
-  createWorkOrder,
-  updateWorkOrder,
-  deleteWorkOrder
+  fetchSpecializations
 } from "../redux/actions/services"
 import AddServiceModal from "../components/services/AddServiceModal"
 import EditServiceModal from "../components/services/EditServiceModal"
 import DeleteServiceModal from "../components/services/DeleteServiceModal"
-import AddWorkOrderModal from "../components/services/AddWorkOrderModal"
-import EditWorkOrderModal from "../components/services/EditWorkOrderModal"
-import DeleteWorkOrderModal from "../components/services/DeleteWorkOrderModal"
+
 import AddTechnicianModal from "../components/services/AddTechnicianModal"
 import EditTechnicianModal from "../components/services/EditTechnicianModal"
 import DeleteTechnicianModal from "../components/services/DeleteTechnicianModal"
@@ -47,7 +40,7 @@ import {
 } from "lucide-react"
 import { toast } from "react-hot-toast"
 
-type TabType = 'catalog' | 'workorders' | 'technicians'
+type TabType = 'catalog' | 'technicians'
 
 export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('catalog')
@@ -63,11 +56,7 @@ export default function ServicesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
   
-  // Work Order modal states
-  const [showAddWorkOrderModal, setShowAddWorkOrderModal] = useState(false)
-  const [showEditWorkOrderModal, setShowEditWorkOrderModal] = useState(false)
-  const [showDeleteWorkOrderModal, setShowDeleteWorkOrderModal] = useState(false)
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null)
+
 
   // Technician modal states
   const [showAddTechnicianModal, setShowAddTechnicianModal] = useState(false)
@@ -77,18 +66,14 @@ export default function ServicesPage() {
 
   const { 
     catalog, 
-    workOrders, 
     technicians, 
     catalogLoading, 
-    workOrdersLoading, 
     techniciansLoading,
     catalogStats,
-    workOrderStats,
     technicianStats,
     categories,
     specializations,
     catalogError,
-    workOrdersError,
     techniciansError
   } = useAppSelector(state => state.services)
 
@@ -98,10 +83,8 @@ export default function ServicesPage() {
   useEffect(() => {
     console.log('Loading services data...')
     dispatch(fetchServiceCatalog({}))
-    dispatch(fetchWorkOrders({}))
     dispatch(fetchTechnicians({}))
     dispatch(fetchServiceCatalogStats())
-    dispatch(fetchWorkOrderStats({}))
     dispatch(fetchTechnicianStats())
     dispatch(fetchServiceCategories())
     dispatch(fetchSpecializations())
@@ -115,11 +98,7 @@ export default function ServicesPage() {
     return matchesSearch && matchesCategory && service.isActive
   })
 
-  // Filter work orders with safety check
-  const filteredWorkOrders = (Array.isArray(workOrders) ? workOrders : []).filter(order => {
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter
-    return matchesStatus
-  })
+
 
   // Use categories from API with robust safety checks
   const availableCategories = (() => {
@@ -200,49 +179,7 @@ export default function ServicesPage() {
     }
   }
 
-  // Handle work order creation
-  const handleCreateWorkOrder = async (workOrderData: CreateWorkOrderData) => {
-    try {
-      await dispatch(createWorkOrder(workOrderData)).unwrap()
-      setShowAddWorkOrderModal(false)
-      handleWorkOrderSuccess()
-      toast.success('Work order created successfully')
-    } catch (error) {
-      console.error('Error creating work order:', error)
-      toast.error('Failed to create work order')
-      throw error
-    }
-  }
 
-  // Handle work order update
-  const handleUpdateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData) => {
-    try {
-      await dispatch(updateWorkOrder({ id, data: workOrderData })).unwrap()
-      setShowEditWorkOrderModal(false)
-      setSelectedWorkOrder(null)
-      handleWorkOrderSuccess()
-      toast.success('Work order updated successfully')
-    } catch (error) {
-      console.error('Error updating work order:', error)
-      toast.error('Failed to update work order')
-      throw error
-    }
-  }
-
-  // Handle work order deletion
-  const handleDeleteWorkOrder = async (id: string) => {
-    try {
-      await dispatch(deleteWorkOrder(id)).unwrap()
-      setShowDeleteWorkOrderModal(false)
-      setSelectedWorkOrder(null)
-      handleWorkOrderSuccess()
-      toast.success('Work order deleted successfully')
-    } catch (error) {
-      console.error('Error deleting work order:', error)
-      toast.error('Failed to delete work order')
-      throw error
-    }
-  }
 
   // Handle technician creation
   const handleCreateTechnician = async (technicianData: Partial<Technician>) => {
@@ -282,25 +219,7 @@ export default function ServicesPage() {
     }
   }
 
-  // Work Order modal handlers
-  const handleAddWorkOrder = () => {
-    setShowAddWorkOrderModal(true)
-  }
 
-  const handleEditWorkOrder = (workOrder: WorkOrder) => {
-    setSelectedWorkOrder(workOrder)
-    setShowEditWorkOrderModal(true)
-  }
-
-  const handleDeleteWorkOrderClick = (workOrder: WorkOrder) => {
-    setSelectedWorkOrder(workOrder)
-    setShowDeleteWorkOrderModal(true)
-  }
-
-  const handleWorkOrderSuccess = () => {
-    dispatch(fetchWorkOrders({}))
-    dispatch(fetchWorkOrderStats({}))
-  }
 
   // Technician modal handlers
   const handleAddTechnician = () => {
@@ -325,8 +244,6 @@ export default function ServicesPage() {
   // Statistics calculations with safety checks
   const totalServices = (Array.isArray(catalog) ? catalog.length : 0)
   const activeServices = (Array.isArray(catalog) ? catalog.filter(service => service.isActive).length : 0)
-  const totalWorkOrders = (Array.isArray(workOrders) ? workOrders.length : 0)
-  const pendingWorkOrders = (Array.isArray(workOrders) ? workOrders.filter(order => order.status === 'pending').length : 0)
   const totalTechnicians = (Array.isArray(technicians) ? technicians.length : 0)
   const activeTechnicians = (Array.isArray(technicians) ? technicians.filter(tech => tech.isActive).length : 0)
 
@@ -352,10 +269,8 @@ export default function ServicesPage() {
 
   const handleRefresh = () => {
     dispatch(fetchServiceCatalog({}))
-    dispatch(fetchWorkOrders({}))
     dispatch(fetchTechnicians({}))
     dispatch(fetchServiceCatalogStats())
-    dispatch(fetchWorkOrderStats({}))
     dispatch(fetchTechnicianStats())
   }
 
@@ -386,7 +301,6 @@ export default function ServicesPage() {
             <button
               onClick={() => {
                 if (activeTab === 'catalog') handleAddService()
-                else if (activeTab === 'workorders') handleAddWorkOrder()
                 else if (activeTab === 'technicians') setShowAddTechnicianModal(true)
               }}
               className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
@@ -414,7 +328,6 @@ export default function ServicesPage() {
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="catalog">Service Catalog</option>
-              <option value="workorders">Work Orders</option>
               <option value="technicians">Technicians</option>
             </select>
           </div>
@@ -435,17 +348,7 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Work Orders</p>
-              <p className="text-2xl font-bold text-green-600">{totalWorkOrders}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <ClipboardList className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
+
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
@@ -477,12 +380,42 @@ export default function ServicesPage() {
       {/* Tab Navigation */}
       <div className="card">
         <div className="p-6 border-b border-secondary-200">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Header Section */}
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4 text-primary-600" />
               <h3 className="text-base font-semibold text-secondary-900">Service Management</h3>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Controls Section */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* Tab Buttons */}
+              <div className="flex space-x-1">
+            <button
+              onClick={() => setActiveTab('catalog')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'catalog' 
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
+              }`}
+            >
+              <Wrench className="w-4 h-4" />
+              Service Catalog
+            </button>
+
+            <button
+              onClick={() => setActiveTab('technicians')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'technicians' 
+                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
+                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              Technicians
+            </button>
+              </div>
+              
               {/* View Toggle */}
               <div className="flex bg-secondary-100 rounded-lg p-1">
                 <button
@@ -513,42 +446,6 @@ export default function ServicesPage() {
         </div>
         
         <div className="p-6">
-          {/* Tab Buttons */}
-          <div className="flex space-x-1">
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeTab === 'catalog' 
-                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
-                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
-              }`}
-            >
-              <Wrench className="w-4 h-4" />
-              Service Catalog
-            </button>
-            <button
-              onClick={() => setActiveTab('workorders')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeTab === 'workorders' 
-                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
-                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
-              }`}
-            >
-              <ClipboardList className="w-4 h-4" />
-              Work Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('technicians')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeTab === 'technicians' 
-                  ? 'bg-primary-100 text-primary-700 border border-primary-300' 
-                  : 'text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              Technicians
-            </button>
-          </div>
 
           {/* Search and Filters */}
           <div className="bg-gradient-to-r from-secondary-50 to-secondary-100 rounded-xl p-6 mb-6">
@@ -581,21 +478,7 @@ export default function ServicesPage() {
                 </div>
               )}
               
-              {activeTab === 'workorders' && (
-                <div className="lg:w-64">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="form-select w-full"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              )}
+
             </div>
           </div>
 
@@ -729,80 +612,7 @@ export default function ServicesPage() {
               </div>
             )}
 
-            {activeTab === 'workorders' && (
-              <div className="space-y-6">
-                {workOrdersLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                      <p className="text-secondary-600">Loading work orders...</p>
-                    </div>
-                  </div>
-                ) : filteredWorkOrders.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-secondary-800">
-                        {filteredWorkOrders.length} work order{filteredWorkOrders.length !== 1 ? 's' : ''} found
-                      </h3>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {filteredWorkOrders.map((workOrder) => (
-                        <div key={workOrder._id} className="card p-4 hover:bg-secondary-50 transition-all duration-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <ClipboardList className="w-5 h-5 text-blue-600" />
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-secondary-900">{workOrder.workOrderNumber || 'Untitled'}</h4>
-                                <p className="text-sm text-secondary-600">{workOrder.notes || 'No description'}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <span className={`status-badge ${getStatusColor(workOrder.status)}`}>
-                                {workOrder.status}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditWorkOrder(workOrder)}
-                                  className="btn-ghost btn-sm text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteWorkOrderClick(workOrder)}
-                                  className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <div className="empty-state-icon">
-                      <ClipboardList className="w-8 h-8" />
-                    </div>
-                    <h6 className="empty-state-title">No work orders found</h6>
-                    <p className="empty-state-description">Get started by creating your first work order</p>
-                    <button
-                      onClick={handleAddWorkOrder}
-                      className="btn-primary"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Add Work Order
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+
 
             {activeTab === 'technicians' && (
               <div className="space-y-6">
@@ -915,32 +725,7 @@ export default function ServicesPage() {
         onDelete={handleDeleteService}
       />
 
-      <AddWorkOrderModal
-        isOpen={showAddWorkOrderModal}
-        onClose={() => setShowAddWorkOrderModal(false)}
-        onSubmit={handleCreateWorkOrder}
-      />
 
-      {showEditWorkOrderModal && selectedWorkOrder && (
-        <EditWorkOrderModal
-          workOrder={selectedWorkOrder}
-          onClose={() => {
-            setShowEditWorkOrderModal(false)
-            setSelectedWorkOrder(null)
-          }}
-          onSuccess={handleWorkOrderSuccess}
-        />
-      )}
-
-      <DeleteWorkOrderModal
-        isOpen={showDeleteWorkOrderModal}
-        workOrder={selectedWorkOrder}
-        onClose={() => {
-          setShowDeleteWorkOrderModal(false)
-          setSelectedWorkOrder(null)
-        }}
-        onDelete={handleDeleteWorkOrder}
-      />
 
       <AddTechnicianModal
         isOpen={showAddTechnicianModal}

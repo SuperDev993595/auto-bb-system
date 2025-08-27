@@ -47,6 +47,7 @@ import CustomerDetail from "./pages/customers/CustomerDetail";
 import CustomerNew from "./pages/customers/CustomerNew";
 import BusinessClientsPage from "./pages/BusinessClientsPage";
 import ServicesPage from "./pages/ServicesPage";
+import WorkOrdersPage from "./pages/WorkOrdersPage";
 import SystemAdminPage from "./pages/SystemAdminPage";
 import RemindersPage from "./pages/RemindersPage";
 import InventoryPage from "./pages/InventoryPage";
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="customers/:id" element={<CustomerDetail />} />
                               <Route path="business-clients" element={<BusinessClientsPage />} />
         <Route path="services" element={<ServicesPage />} />
+        <Route path="work-orders" element={<WorkOrdersPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route 

@@ -56,6 +56,7 @@ const navGroups: NavGroup[] = [
         items: [
             { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
             { to: "/admin/dashboard/services", label: "Services", icon: <Settings size={18} /> },
+            { to: "/admin/dashboard/work-orders", label: "Work Orders", icon: <ClipboardList size={18} /> },
             { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
         ]
     },

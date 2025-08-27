@@ -422,7 +422,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
           {formData.services.map((service, index) => (
             <div key={index} className="border rounded-lg p-4 mb-4 bg-white">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="font-medium">Service {index + 1}</h4>
+                <h6 className="font-medium">Service {index + 1}</h6>
                 {formData.services.length > 1 && (
                   <button
                     type="button"

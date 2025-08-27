@@ -49,19 +49,6 @@ export default function AdminHeader() {
                         <PendingApprovalsCounter />
                     </Link>
                     
-                                         {/* Notifications */}
-                     <button 
-                         onClick={() => setIsNotificationCenterOpen(true)}
-                         className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200 relative"
-                     >
-                         <HiBell className="w-5 h-5" />
-                     </button>
-                    
-                    {/* Settings */}
-                    <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200">
-                        <HiCog className="w-5 h-5" />
-                    </button>
-                    
                     {/* User Info */}
                     <div className="flex items-center space-x-3 bg-secondary-50 px-4 py-2 rounded-xl">
                         <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
