@@ -146,61 +146,70 @@ const WorkOrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ClipboardList className="w-8 h-8 text-primary-600" />
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Work Orders</h1>
             <p className="text-gray-600">Manage and track work orders</p>
           </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Toggle View"
+            >
+              {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors flex items-center gap-2"
+              title="Add New Work Order"
+            >
+              <Plus className="w-5 h-5" />
+              New Work Order
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          New Work Order
-        </button>
       </div>
 
       {/* Main Content */}
-      <div className="card">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {/* Controls Header */}
-        <div className="p-6 border-b border-secondary-200">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Header Section */}
             <div className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-primary-600" />
-              <h3 className="text-base font-semibold text-secondary-900">Work Order Management</h3>
+              <ClipboardList className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Work Order Management</h3>
             </div>
             
             {/* Controls Section */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {/* View Toggle */}
-              <div className="flex bg-secondary-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'grid' 
-                      ? 'bg-primary-600 text-white' 
-                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                   }`}
                   title="Grid View"
                 >
-                  <Grid3X3 className="w-3.5 h-3.5" />
+                  <Grid3X3 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-all duration-200 ${
                     viewMode === 'list' 
-                      ? 'bg-primary-600 text-white' 
-                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-white'
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white'
                   }`}
                   title="List View"
                 >
-                  <List className="w-3.5 h-3.5" />
+                  <List className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -209,7 +218,7 @@ const WorkOrdersPage: React.FC = () => {
         
         <div className="p-6">
           {/* Search and Filters */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
             <div className="flex flex-col lg:flex-row gap-4 items-center">
               {/* Search Bar */}
               <div className="flex-1 relative max-w-md">
@@ -348,18 +357,18 @@ const WorkOrdersPage: React.FC = () => {
 
           {/* Work Orders List */}
           {filteredWorkOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No work orders found</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="text-center py-16">
+              <ClipboardList className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">No work orders found</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all' 
-                  ? 'Try adjusting your search or filters' 
-                  : 'Get started by creating your first work order'}
+                  ? 'Try adjusting your search or filters to find what you\'re looking for' 
+                  : 'Get started by creating your first work order to begin managing your automotive services'}
               </p>
               {!searchTerm && statusFilter === 'all' && priorityFilter === 'all' && (
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="btn-primary"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Create Work Order
                 </button>
@@ -370,7 +379,7 @@ const WorkOrdersPage: React.FC = () => {
               {filteredWorkOrders.map((workOrder) => (
                 <div
                   key={workOrder._id}
-                  className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 ${
+                  className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${
                     viewMode === 'list' ? 'p-4' : 'p-6'
                   }`}
                 >
