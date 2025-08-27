@@ -41,6 +41,8 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
   const [loading, setLoading] = useState(false)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
   const [formData, setFormData] = useState<UpdateWorkOrderData>({
     services: [],
     technicianId: '',
@@ -74,6 +76,10 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
         customerNotes: workOrder.customerNotes || ''
       })
 
+      // Initialize selected customer and vehicle
+      setSelectedCustomerId(workOrder.customer._id)
+      setSelectedVehicleId((workOrder.vehicle as any)._id || '')
+
       // Load vehicles for this customer
       if (workOrder.customer._id) {
         loadVehiclesByCustomer(workOrder.customer._id)
@@ -86,7 +92,6 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
       const response = await customerService.getVehiclesByCustomerId(customerId)
       if (response.success) {
         setVehicles(response.data.vehicles)
-        // Don't automatically set selectedVehicle - let user choose if they want to change
       }
     } catch (error) {
       console.error('Error loading vehicles:', error)
@@ -101,16 +106,16 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
   const handleServiceChange = (index: number, field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
-      services: prev.services.map((service, i) => 
+      services: prev.services?.map((service, i) => 
         i === index ? { ...service, [field]: value } : service
-      )
+      ) || []
     }))
   }
 
   const addService = () => {
     setFormData(prev => ({
       ...prev,
-      services: [...prev.services, {
+      services: [...(prev.services || []), {
         service: '',
         description: '',
         laborHours: 0,
@@ -122,18 +127,20 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
   }
 
   const removeService = (index: number) => {
-    if (formData.services.length > 1) {
+    if (formData.services && formData.services.length > 1) {
       setFormData(prev => ({
         ...prev,
-        services: prev.services.filter((_, i) => i !== index)
+        services: prev.services?.filter((_, i) => i !== index) || []
       }))
     }
   }
 
   const calculateServiceCost = (index: number) => {
-    const service = formData.services[index]
+    const service = formData.services?.[index]
+    if (!service) return
+    
     const laborCost = service.laborHours * service.laborRate
-    const partsCost = service.parts.reduce((sum, part) => sum + part.totalPrice, 0)
+    const partsCost = service.parts?.reduce((sum, part) => sum + part.totalPrice, 0) || 0
     const totalCost = laborCost + partsCost
     
     handleServiceChange(index, 'totalCost', totalCost)
@@ -144,7 +151,14 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
 
     setLoading(true)
     try {
-      await dispatch(updateWorkOrder(workOrder._id, formData))
+      // Prepare the update data with customer and vehicle IDs
+      const updateData = {
+        ...formData,
+        customerId: selectedCustomerId,
+        vehicleId: selectedVehicleId
+      }
+      
+      await dispatch(updateWorkOrder({ id: workOrder._id, data: updateData }))
       toast.success('Work order updated successfully')
       onSuccess()
       onClose()
@@ -169,65 +183,54 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
       size="2xl"
     >
       <div className="p-6 space-y-6">
-        {/* Customer and Current Vehicle Information */}
+        {/* Customer and Vehicle Selection */}
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">Customer & Current Vehicle</h3>
+          <h3 className="text-lg font-medium mb-4">Customer & Vehicle Selection</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <span className="text-gray-500 text-sm">Customer:</span>
-              <p className="font-medium">{workOrder.customer.name}</p>
-              <p className="text-sm text-gray-600">{workOrder.customer.email}</p>
-            </div>
-            <div>
-              <span className="text-gray-500 text-sm">Phone:</span>
-              <p className="font-medium">{workOrder.customer.phone}</p>
-            </div>
+          {/* Customer Selection */}
+          <div className="mb-4">
+            <label className="form-label">Customer *</label>
+            <select
+              value={selectedCustomerId}
+              onChange={(e) => {
+                const customerId = e.target.value
+                setSelectedCustomerId(customerId)
+                setSelectedVehicleId('') // Reset vehicle when customer changes
+                setSelectedVehicle(null)
+                if (customerId) {
+                  loadVehiclesByCustomer(customerId)
+                } else {
+                  setVehicles([])
+                }
+              }}
+              className="form-select"
+              required
+            >
+              <option value="">Select Customer</option>
+              {customers.map(customer => (
+                <option key={customer._id} value={customer._id}>
+                  {customer.name} - {customer.email}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="p-4 bg-white rounded border">
-            <h4 className="font-medium text-gray-900 mb-3">Current Vehicle</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Make/Model:</span>
-                <p className="font-medium">{workOrder.vehicle.make} {workOrder.vehicle.model}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Year:</span>
-                <p className="font-medium">{workOrder.vehicle.year}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Color:</span>
-                <p className="font-medium">{(workOrder.vehicle as any).color || 'N/A'}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">License Plate:</span>
-                <p className="font-medium">{workOrder.vehicle.licensePlate || 'N/A'}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">VIN:</span>
-                <p className="font-medium font-mono text-xs">{workOrder.vehicle.vin || 'N/A'}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Mileage:</span>
-                <p className="font-medium">{workOrder.vehicle.mileage ? workOrder.vehicle.mileage.toLocaleString() : 'N/A'} miles</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Vehicle Selection (if customer has multiple vehicles) */}
-          {vehicles.length > 1 && (
-            <div className="mt-4">
-              <label className="form-label">Select Different Vehicle (Optional)</label>
+          {/* Vehicle Selection */}
+          {selectedCustomerId && vehicles.length > 0 && (
+            <div className="mb-4">
+              <label className="form-label">Select Vehicle *</label>
               <select
-                value={selectedVehicle?._id || ""}
+                value={selectedVehicleId}
                 onChange={(e) => {
-                  const vehicle = vehicles.find(v => v._id === e.target.value)
+                  const vehicleId = e.target.value
+                  setSelectedVehicleId(vehicleId)
+                  const vehicle = vehicles.find(v => v._id === vehicleId)
                   setSelectedVehicle(vehicle || null)
                 }}
                 className="form-select"
+                required
               >
-                <option value="">Keep current vehicle</option>
+                <option value="">Choose a vehicle...</option>
                 {vehicles.map(vehicle => (
                   <option key={vehicle._id} value={vehicle._id}>
                     {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
@@ -237,7 +240,7 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
             </div>
           )}
 
-          {/* Selected Vehicle Details (if different from work order vehicle) */}
+          {/* Selected Vehicle Details */}
           {selectedVehicle && (
             <div className="mt-4 p-4 bg-blue-50 rounded border border-blue-200">
               <h4 className="font-medium text-blue-900 mb-3">Selected Vehicle Details</h4>
@@ -275,6 +278,15 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
                   <p className="font-medium capitalize">{selectedVehicle.transmission}</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* No vehicles message */}
+          {selectedCustomerId && vehicles.length === 0 && (
+            <div>
+              <p className="text-sm text-gray-600 mb-4">
+                No vehicles found for this customer.
+              </p>
             </div>
           )}
         </div>

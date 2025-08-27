@@ -147,6 +147,8 @@ export interface CreateWorkOrderData {
 }
 
 export interface UpdateWorkOrderData {
+  customerId?: string;
+  vehicleId?: string;
   services?: Array<{
     service: string;
     description?: string;
