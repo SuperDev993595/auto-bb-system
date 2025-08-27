@@ -16,7 +16,7 @@ export default function AdminHeader() {
     // Show loading state if user data is not yet loaded
     if (isLoading || !user) {
         return (
-            <header className="bg-white border-b border-secondary-200 shadow-soft px-6 py-4">
+            <header className="bg-white border-b border-secondary-200 px-6 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center">
                         <Link to="/" className="hover:text-primary-600 transition-colors">
@@ -31,7 +31,7 @@ export default function AdminHeader() {
     }
 
     return (
-        <header className="bg-white border-b border-secondary-200 shadow-soft px-6 py-4">
+        <header className="bg-white border-b border-secondary-200 px-6 py-4">
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
                     <Link to="/" className="hover:text-primary-600 transition-colors">
