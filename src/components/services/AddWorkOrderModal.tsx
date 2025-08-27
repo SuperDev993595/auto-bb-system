@@ -56,12 +56,10 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       totalCost: 0
     }],
     technician: '',
-    status: 'pending',
     priority: 'medium',
     estimatedStartDate: '',
     estimatedCompletionDate: '',
-    notes: '',
-    customerNotes: ''
+    notes: ''
   })
 
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -204,12 +202,10 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
         totalCost: 0
       }],
       technician: '',
-      status: 'pending',
       priority: 'medium',
       estimatedStartDate: '',
       estimatedCompletionDate: '',
-      notes: '',
-      customerNotes: ''
+      notes: ''
     })
     setError(null)
     setFormErrors({})
@@ -595,16 +591,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
             />
           </div>
 
-          <div className="mt-4">
-            <label className="form-label">Customer Notes</label>
-            <textarea
-              value={formData.customerNotes}
-              onChange={(e) => handleChange('customerNotes', e.target.value)}
-              className="form-textarea"
-              rows={3}
-              placeholder="Notes visible to the customer"
-            />
-          </div>
+
         </div>
       </div>
     </ModalWrapper>
