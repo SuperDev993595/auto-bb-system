@@ -12,7 +12,7 @@ interface ModalWrapperProps {
   submitColor?: string
   submitDisabled?: boolean
   disableOutsideClose?: boolean
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
 export default function ModalWrapper({
@@ -34,7 +34,8 @@ export default function ModalWrapper({
     sm: 'max-w-sm',
     md: 'max-w-xl',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    xl: 'max-w-4xl',
+    '2xl': 'max-w-6xl'
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {

@@ -289,8 +289,9 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       submitText={loading ? "Creating..." : "Create Work Order"}
       onSubmit={handleSubmit}
       submitColor="bg-blue-600"
+      size="2xl"
     >
-      <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+      <div className="p-6 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
@@ -322,7 +323,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium mb-4">Vehicle Information</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <label className="form-label">Vehicle Make *</label>
               <input
@@ -353,7 +354,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
             <div>
               <label className="form-label">Year *</label>
               <input
@@ -389,19 +390,20 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                 placeholder="License Plate"
               />
             </div>
+            <div>
+              <label className="form-label">Mileage</label>
+              <input
+                type="number"
+                value={formData.vehicle.mileage}
+                onChange={(e) => handleVehicleChange('mileage', parseInt(e.target.value) || 0)}
+                className="form-input"
+                min="0"
+                placeholder="Current mileage"
+              />
+            </div>
           </div>
 
-          <div className="mt-4">
-            <label className="form-label">Mileage</label>
-            <input
-              type="number"
-              value={formData.vehicle.mileage}
-              onChange={(e) => handleVehicleChange('mileage', parseInt(e.target.value) || 0)}
-              className="form-input"
-              min="0"
-              placeholder="Current mileage"
-            />
-          </div>
+
         </div>
 
         {/* Services */}
@@ -432,7 +434,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                 )}
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Service Type *</label>
                   <select
@@ -464,7 +466,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
                 <div>
                   <label className="form-label">Labor Hours *</label>
                   <input
@@ -501,21 +503,31 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                     <p className="text-red-500 text-sm mt-1">{formErrors[`laborRate${index}`]}</p>
                   )}
                 </div>
-                <div>
-                  <label className="form-label">Total Cost *</label>
-                  <input
-                    type="number"
-                    value={service.totalCost}
-                    onChange={(e) => handleServiceChange(index, 'totalCost', parseFloat(e.target.value) || 0)}
-                    className={`form-input ${formErrors[`totalCost${index}`] ? 'border-red-500' : ''}`}
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                  {formErrors[`totalCost${index}`] && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors[`totalCost${index}`]}</p>
-                  )}
-                </div>
+                                 <div>
+                   <label className="form-label">Total Cost *</label>
+                   <input
+                     type="number"
+                     value={service.totalCost}
+                     onChange={(e) => handleServiceChange(index, 'totalCost', parseFloat(e.target.value) || 0)}
+                     className={`form-input ${formErrors[`totalCost${index}`] ? 'border-red-500' : ''}`}
+                     min="0"
+                     step="0.01"
+                     required
+                   />
+                   {formErrors[`totalCost${index}`] && (
+                     <p className="text-red-500 text-sm mt-1">{formErrors[`totalCost${index}`]}</p>
+                   )}
+                 </div>
+                 <div>
+                   <label className="form-label">Parts Count</label>
+                   <input
+                     type="number"
+                     value={service.parts.length}
+                     className="form-input bg-gray-50"
+                     disabled
+                     placeholder="0"
+                   />
+                 </div>
               </div>
             </div>
           ))}
@@ -525,7 +537,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium mb-4">Work Order Details</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <label className="form-label">Technician</label>
               <select
@@ -556,7 +568,7 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="form-label">Estimated Start Date</label>
               <input
