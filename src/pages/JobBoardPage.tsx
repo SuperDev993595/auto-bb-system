@@ -323,7 +323,7 @@ export default function JobBoardPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Job Board</h1>
           <p className="text-gray-600">Manage work orders and track progress</p>
         </div>
         <div className="flex items-center space-x-3">
