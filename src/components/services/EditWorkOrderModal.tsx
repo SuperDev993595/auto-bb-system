@@ -6,11 +6,31 @@ import { Edit, Plus, Trash2 } from '../../utils/icons'
 import { updateWorkOrder } from '../../redux/actions/services'
 import { useAppDispatch, useAppSelector } from '../../redux'
 import { WorkOrder, UpdateWorkOrderData } from '../../services/services'
+import { customerService } from '../../services/customers'
 
 interface Props {
   workOrder: WorkOrder | null
   onClose: () => void
   onSuccess: () => void
+}
+
+interface Vehicle {
+  _id: string
+  id: string
+  year: number
+  make: string
+  model: string
+  vin: string
+  licensePlate: string
+  color: string
+  mileage: number
+  status: string
+  fuelType: string
+  transmission: string
+  lastServiceDate?: string
+  nextServiceDate?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Props) {
@@ -19,6 +39,8 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
   const { list: customers } = useAppSelector(state => state.customers)
   
   const [loading, setLoading] = useState(false)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [formData, setFormData] = useState<UpdateWorkOrderData>({
     services: [],
     technicianId: '',
@@ -51,8 +73,34 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
         notes: workOrder.notes || '',
         customerNotes: workOrder.customerNotes || ''
       })
+
+      // Load vehicles for this customer
+      if (workOrder.customer._id) {
+        loadVehiclesByCustomer(workOrder.customer._id)
+      }
     }
   }, [workOrder])
+
+  const loadVehiclesByCustomer = async (customerId: string) => {
+    try {
+      const response = await customerService.getVehiclesByCustomerId(customerId)
+      if (response.success) {
+        setVehicles(response.data.vehicles)
+        // Try to find the vehicle that matches the work order vehicle
+        const matchingVehicle = response.data.vehicles.find(v => 
+          v.make === workOrder?.vehicle.make && 
+          v.model === workOrder?.vehicle.model && 
+          v.year === workOrder?.vehicle.year
+        )
+        if (matchingVehicle) {
+          setSelectedVehicle(matchingVehicle)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading vehicles:', error)
+      toast.error('Failed to load customer vehicles')
+    }
+  }
 
   const handleInputChange = (field: keyof UpdateWorkOrderData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -127,6 +175,137 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
       submitColor="bg-gradient-to-r from-blue-600 to-indigo-600"
     >
       <div className="space-y-6 p-4">
+        {/* Customer and Vehicle Information */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium mb-4">Customer & Vehicle Information</h3>
+          
+          {/* Customer Information */}
+          <div className="mb-4">
+            <h4 className="font-medium text-gray-900 mb-2">Customer</h4>
+            <div className="bg-white p-3 rounded border">
+              <p className="font-medium">{workOrder.customer.name}</p>
+              <p className="text-sm text-gray-600">{workOrder.customer.email}</p>
+              <p className="text-sm text-gray-600">{workOrder.customer.phone}</p>
+            </div>
+          </div>
+
+          {/* Vehicle Information */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Vehicle</h4>
+            <div className="bg-white p-3 rounded border">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">Make/Model:</span>
+                  <p className="font-medium">{workOrder.vehicle.make} {workOrder.vehicle.model}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Year:</span>
+                  <p className="font-medium">{workOrder.vehicle.year}</p>
+                </div>
+                {workOrder.vehicle.licensePlate && (
+                  <div>
+                    <span className="text-gray-500">License Plate:</span>
+                    <p className="font-medium">{workOrder.vehicle.licensePlate}</p>
+                  </div>
+                )}
+                {workOrder.vehicle.mileage && (
+                  <div>
+                    <span className="text-gray-500">Mileage:</span>
+                    <p className="font-medium">{workOrder.vehicle.mileage.toLocaleString()} miles</p>
+                  </div>
+                )}
+                {workOrder.vehicle.vin && (
+                  <div className="col-span-2">
+                    <span className="text-gray-500">VIN:</span>
+                    <p className="font-medium font-mono text-xs">{workOrder.vehicle.vin}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Vehicle Selection (if customer has multiple vehicles) */}
+          {vehicles.length > 1 && (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-600 mb-2">
+                Select Different Vehicle (Optional)
+              </label>
+              <select
+                onChange={(e) => {
+                  const vehicle = vehicles.find(v => v._id === e.target.value)
+                  setSelectedVehicle(vehicle || null)
+                }}
+                className="form-select text-sm"
+                defaultValue=""
+              >
+                <option value="">Keep current vehicle</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Selected Vehicle Details (if different from work order vehicle) */}
+          {selectedVehicle && (
+            <div className="mt-4 bg-blue-50 p-3 rounded border border-blue-200">
+              <h4 className="font-medium text-blue-900 mb-2">Selected Vehicle Details</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-600">Make/Model:</span>
+                  <p className="font-medium">{selectedVehicle.make} {selectedVehicle.model}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">Year:</span>
+                  <p className="font-medium">{selectedVehicle.year}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">Color:</span>
+                  <p className="font-medium">{selectedVehicle.color}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">License Plate:</span>
+                  <p className="font-medium">{selectedVehicle.licensePlate}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">VIN:</span>
+                  <p className="font-medium font-mono text-xs">{selectedVehicle.vin}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">Mileage:</span>
+                  <p className="font-medium">{selectedVehicle.mileage.toLocaleString()} miles</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">Fuel Type:</span>
+                  <p className="font-medium capitalize">{selectedVehicle.fuelType}</p>
+                </div>
+                <div>
+                  <span className="text-blue-600">Transmission:</span>
+                  <p className="font-medium capitalize">{selectedVehicle.transmission}</p>
+                </div>
+              </div>
+              {selectedVehicle.lastServiceDate && (
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-600">Last Service:</span>
+                      <p className="font-medium">{new Date(selectedVehicle.lastServiceDate).toLocaleDateString()}</p>
+                    </div>
+                    {selectedVehicle.nextServiceDate && (
+                      <div>
+                        <span className="text-blue-600">Next Service Due:</span>
+                        <p className="font-medium">{new Date(selectedVehicle.nextServiceDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="space-y-2">
           <label className="form-label">
             Services *

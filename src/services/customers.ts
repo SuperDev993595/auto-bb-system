@@ -683,5 +683,33 @@ export const customerService = {
   }> {
     const response = await apiResponse(api.get('/memberships/customer/me'));
     return response;
+  },
+
+  // Get vehicles by customer ID
+  async getVehiclesByCustomerId(customerId: string): Promise<{
+    success: boolean;
+    data: {
+      vehicles: Array<{
+        _id: string;
+        id: string;
+        year: number;
+        make: string;
+        model: string;
+        vin: string;
+        licensePlate: string;
+        color: string;
+        mileage: number;
+        status: string;
+        fuelType: string;
+        transmission: string;
+        lastServiceDate?: string;
+        nextServiceDate?: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    };
+  }> {
+    const response = await apiResponse(api.get(`/customers/${customerId}/vehicles`));
+    return response;
   }
 };

@@ -686,6 +686,61 @@ router.get('/vehicles/all', authenticateToken, requireAnyAdmin, async (req, res)
   }
 });
 
+// Get vehicles by customer ID (for admins)
+router.get('/:customerId/vehicles', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    // Validate customer ID
+    if (!customerId || !mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid customer ID' 
+      });
+    }
+
+    // Check if customer exists
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Customer not found' 
+      });
+    }
+    
+    // Get vehicles for this customer
+    const vehicles = await Vehicle.find({ customer: customerId }).sort({ createdAt: -1 });
+    
+    // Transform vehicles to match frontend expectations
+    const transformedVehicles = vehicles.map(vehicle => ({
+      _id: vehicle._id,
+      id: vehicle._id, // Add id field for frontend compatibility
+      year: vehicle.year,
+      make: vehicle.make,
+      model: vehicle.model,
+      vin: vehicle.vin,
+      licensePlate: vehicle.licensePlate,
+      color: vehicle.color,
+      mileage: vehicle.mileage,
+      status: vehicle.status,
+      fuelType: vehicle.fuelType,
+      transmission: vehicle.transmission,
+      lastServiceDate: vehicle.lastServiceDate,
+      nextServiceDate: vehicle.nextServiceDate,
+      createdAt: vehicle.createdAt,
+      updatedAt: vehicle.updatedAt
+    }));
+    
+    res.json({
+      success: true,
+      data: { vehicles: transformedVehicles }
+    });
+  } catch (error) {
+    console.error('Error fetching customer vehicles:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Add new vehicle (for customers to add their own vehicles)
 router.post('/vehicles', authenticateToken, requireCustomer, async (req, res) => {
   try {

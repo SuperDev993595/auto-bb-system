@@ -4,6 +4,7 @@ import ModalWrapper from '../../utils/ModalWrapper'
 import PartsEditor from './PartsEditor'
 import { toast } from 'react-hot-toast'
 import { API_ENDPOINTS, getAuthHeaders } from '../../services/api'
+import { customerService } from '../../services/customers'
 
 interface AddWorkOrderModalProps {
   isOpen: boolean
@@ -31,6 +32,25 @@ interface ServiceCatalogItem {
   description: string
   estimatedDuration: number
   category: string
+}
+
+interface Vehicle {
+  _id: string
+  id: string
+  year: number
+  make: string
+  model: string
+  vin: string
+  licensePlate: string
+  color: string
+  mileage: number
+  status: string
+  fuelType: string
+  transmission: string
+  lastServiceDate?: string
+  nextServiceDate?: string
+  createdAt: string
+  updatedAt: string
 }
 
 const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
@@ -66,6 +86,8 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
   const [customers, setCustomers] = useState<Customer[]>([])
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [serviceCatalog, setServiceCatalog] = useState<ServiceCatalogItem[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -117,16 +139,8 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       errors.customer = 'Customer is required'
     }
 
-    if (!formData.vehicle.make) {
-      errors.vehicleMake = 'Vehicle make is required'
-    }
-
-    if (!formData.vehicle.model) {
-      errors.vehicleModel = 'Vehicle model is required'
-    }
-
-    if (!formData.vehicle.year || formData.vehicle.year < 1900 || formData.vehicle.year > new Date().getFullYear() + 1) {
-      errors.vehicleYear = 'Valid vehicle year is required'
+    if (!selectedVehicle) {
+      errors.vehicle = 'Please select a vehicle'
     }
 
     if (!formData.services.length) {
@@ -208,6 +222,8 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       estimatedCompletionDate: '',
       notes: ''
     })
+    setVehicles([])
+    setSelectedVehicle(null)
     setError(null)
     setFormErrors({})
   }
@@ -221,21 +237,64 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: '' }))
     }
-  }
 
-  const handleVehicleChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      vehicle: {
-        ...prev.vehicle,
-        [field]: value
-      }
-    }))
-    // Clear error when user starts typing
-    if (formErrors[`vehicle${field.charAt(0).toUpperCase() + field.slice(1)}`]) {
-      setFormErrors(prev => ({ ...prev, [`vehicle${field.charAt(0).toUpperCase() + field.slice(1)}`]: '' }))
+    // Load vehicles when customer changes
+    if (field === 'customer' && value) {
+      loadVehiclesByCustomer(value)
+    } else if (field === 'customer' && !value) {
+      setVehicles([])
+      setSelectedVehicle(null)
+      // Reset vehicle form data
+      setFormData(prev => ({
+        ...prev,
+        vehicle: {
+          make: '',
+          model: '',
+          year: new Date().getFullYear(),
+          vin: '',
+          licensePlate: '',
+          mileage: 0
+        }
+      }))
     }
   }
+
+  const loadVehiclesByCustomer = async (customerId: string) => {
+    try {
+      const response = await customerService.getVehiclesByCustomerId(customerId)
+      if (response.success) {
+        setVehicles(response.data.vehicles)
+      } else {
+        setVehicles([])
+        toast.error('Failed to load customer vehicles')
+      }
+    } catch (error) {
+      console.error('Error loading vehicles:', error)
+      setVehicles([])
+      toast.error('Failed to load customer vehicles')
+    }
+  }
+
+  const handleVehicleSelect = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v._id === vehicleId)
+    if (vehicle) {
+      setSelectedVehicle(vehicle)
+      // Populate vehicle form data
+      setFormData(prev => ({
+        ...prev,
+        vehicle: {
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          vin: vehicle.vin,
+          licensePlate: vehicle.licensePlate,
+          mileage: vehicle.mileage
+        }
+      }))
+    }
+  }
+
+
 
   const handleServiceChange = (index: number, field: string, value: any) => {
     setFormData(prev => ({
@@ -320,89 +379,82 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
           )}
         </div>
 
-        {/* Vehicle Information */}
+        {/* Vehicle Selection and Information */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium mb-4">Vehicle Information</h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label className="form-label">Vehicle Make *</label>
-              <input
-                type="text"
-                value={formData.vehicle.make}
-                onChange={(e) => handleVehicleChange('make', e.target.value)}
-                className={`form-input ${formErrors.vehicleMake ? 'border-red-500' : ''}`}
-                placeholder="e.g., Toyota"
-                required
-              />
-              {formErrors.vehicleMake && (
-                <p className="text-red-500 text-sm mt-1">{formErrors.vehicleMake}</p>
+          {/* Vehicle Selection Dropdown */}
+          {formData.customer && vehicles.length > 0 && (
+            <div className="mb-4">
+              <label className="form-label">Select Vehicle *</label>
+              <select
+                onChange={(e) => handleVehicleSelect(e.target.value)}
+                className={`form-select ${formErrors.vehicle ? 'border-red-500' : ''}`}
+                defaultValue=""
+              >
+                <option value="">Choose a vehicle...</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model} - {vehicle.licensePlate}
+                  </option>
+                ))}
+              </select>
+              {formErrors.vehicle && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.vehicle}</p>
               )}
             </div>
-            <div>
-              <label className="form-label">Vehicle Model *</label>
-              <input
-                type="text"
-                value={formData.vehicle.model}
-                onChange={(e) => handleVehicleChange('model', e.target.value)}
-                className={`form-input ${formErrors.vehicleModel ? 'border-red-500' : ''}`}
-                placeholder="e.g., Camry"
-                required
-              />
-              {formErrors.vehicleModel && (
-                <p className="text-red-500 text-sm mt-1">{formErrors.vehicleModel}</p>
-              )}
-            </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
-            <div>
-              <label className="form-label">Year *</label>
-              <input
-                type="number"
-                value={formData.vehicle.year}
-                onChange={(e) => handleVehicleChange('year', parseInt(e.target.value))}
-                className={`form-input ${formErrors.vehicleYear ? 'border-red-500' : ''}`}
-                min="1900"
-                max={new Date().getFullYear() + 1}
-                required
-              />
-              {formErrors.vehicleYear && (
-                <p className="text-red-500 text-sm mt-1">{formErrors.vehicleYear}</p>
-              )}
+          {/* Vehicle Information Display */}
+          {selectedVehicle && (
+            <div className="p-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">Make/Model:</span>
+                  <p className="font-medium">{selectedVehicle.make} {selectedVehicle.model}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Year:</span>
+                  <p className="font-medium">{selectedVehicle.year}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Color:</span>
+                  <p className="font-medium">{selectedVehicle.color}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">License Plate:</span>
+                  <p className="font-medium">{selectedVehicle.licensePlate}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">VIN:</span>
+                  <p className="font-medium font-mono text-xs">{selectedVehicle.vin}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Mileage:</span>
+                  <p className="font-medium">{selectedVehicle.mileage.toLocaleString()} miles</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Fuel Type:</span>
+                  <p className="font-medium capitalize">{selectedVehicle.fuelType}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Transmission:</span>
+                  <p className="font-medium capitalize">{selectedVehicle.transmission}</p>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* No vehicles message */}
+          {(!formData.customer || vehicles.length === 0) && (
             <div>
-              <label className="form-label">VIN</label>
-              <input
-                type="text"
-                value={formData.vehicle.vin}
-                onChange={(e) => handleVehicleChange('vin', e.target.value)}
-                className="form-input"
-                placeholder="Vehicle Identification Number"
-              />
+              <p className="text-sm text-gray-600 mb-4">
+                {!formData.customer 
+                  ? "Select a customer first to see their vehicles" 
+                  : "No vehicles found for this customer."}
+              </p>
             </div>
-            <div>
-              <label className="form-label">License Plate</label>
-              <input
-                type="text"
-                value={formData.vehicle.licensePlate}
-                onChange={(e) => handleVehicleChange('licensePlate', e.target.value)}
-                className="form-input"
-                placeholder="License Plate"
-              />
-            </div>
-            <div>
-              <label className="form-label">Mileage</label>
-              <input
-                type="number"
-                value={formData.vehicle.mileage}
-                onChange={(e) => handleVehicleChange('mileage', parseInt(e.target.value) || 0)}
-                className="form-input"
-                min="0"
-                placeholder="Current mileage"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Services */}
