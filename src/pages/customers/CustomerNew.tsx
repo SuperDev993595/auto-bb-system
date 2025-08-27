@@ -105,7 +105,7 @@ export default function CustomerNew() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-6">
+    <div className="min-h-screen bg-secondary-50 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Section */}
         <div className="space-y-4">

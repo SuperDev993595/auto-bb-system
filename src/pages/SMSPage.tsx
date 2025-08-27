@@ -191,7 +191,7 @@ export default function SMSPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-6 space-y-8">
+    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
       {/* Page Header */}
       <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
         <div className="mb-4 lg:mb-0">
