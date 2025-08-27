@@ -31,18 +31,18 @@ const workOrderSchema = Joi.object({
     make: Joi.string().required(),
     model: Joi.string().required(),
     year: Joi.number().integer().min(1900).max(new Date().getFullYear() + 1).required(),
-    vin: Joi.string().optional(),
-    licensePlate: Joi.string().optional(),
+    vin: Joi.string().allow('', null).optional(),
+    licensePlate: Joi.string().allow('', null).optional(),
     mileage: Joi.number().min(0).optional()
   }).required(),
   services: Joi.array().items(Joi.object({
     service: Joi.string().required(),
-    description: Joi.string().optional(),
+    description: Joi.string().allow('', null).optional(),
     laborHours: Joi.number().min(0).required(),
     laborRate: Joi.number().min(0).required(),
     parts: Joi.array().items(Joi.object({
       name: Joi.string().required(),
-      partNumber: Joi.string().optional(),
+      partNumber: Joi.string().allow('', null).optional(),
       quantity: Joi.number().min(1).required(),
       unitPrice: Joi.number().min(0).required(),
       totalPrice: Joi.number().min(0).required(),
@@ -50,13 +50,13 @@ const workOrderSchema = Joi.object({
     })).optional(),
     totalCost: Joi.number().min(0).required()
   })).min(1).required(),
-  technician: Joi.string().optional(),
+  technician: Joi.string().allow('', null).optional(),
   status: Joi.string().valid('pending', 'in_progress', 'completed', 'cancelled', 'on_hold').default('pending'),
   priority: Joi.string().valid('low', 'medium', 'high', 'urgent').default('medium'),
   estimatedStartDate: Joi.date().optional(),
   estimatedCompletionDate: Joi.date().optional(),
-  notes: Joi.string().optional(),
-  customerNotes: Joi.string().optional()
+  notes: Joi.string().allow('', null).optional(),
+  customerNotes: Joi.string().allow('', null).optional()
 });
 
 const workOrderUpdateSchema = Joi.object({

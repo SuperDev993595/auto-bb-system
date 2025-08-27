@@ -274,11 +274,11 @@ const WorkOrdersPage: React.FC = () => {
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 cursor-pointer"
                   >
-                    <option value="all">🎯 All Priority</option>
-                    <option value="low">🟢 Low</option>
-                    <option value="medium">🟡 Medium</option>
-                    <option value="high">🟠 High</option>
-                    <option value="urgent">🔴 Urgent</option>
+                    <option value="all">All Priority</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,9 +386,9 @@ const WorkOrdersPage: React.FC = () => {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
+                      <h6 className="font-semibold text-gray-900 mb-1">
                         {workOrder.workOrderNumber}
-                      </h3>
+                      </h6>
                       <p className="text-sm text-gray-600">
                         {workOrder.customer?.name}
                       </p>

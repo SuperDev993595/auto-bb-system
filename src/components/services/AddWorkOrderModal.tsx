@@ -276,6 +276,23 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
   }
 
   const handleVehicleSelect = (vehicleId: string) => {
+    if (!vehicleId) {
+      // Clear selection when empty value is selected
+      setSelectedVehicle(null)
+      setFormData(prev => ({
+        ...prev,
+        vehicle: {
+          make: '',
+          model: '',
+          year: new Date().getFullYear(),
+          vin: '',
+          licensePlate: '',
+          mileage: 0
+        }
+      }))
+      return
+    }
+    
     const vehicle = vehicles.find(v => v._id === vehicleId)
     if (vehicle) {
       setSelectedVehicle(vehicle)
@@ -388,9 +405,9 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
             <div className="mb-4">
               <label className="form-label">Select Vehicle *</label>
               <select
+                value={selectedVehicle?._id || ""}
                 onChange={(e) => handleVehicleSelect(e.target.value)}
                 className={`form-select ${formErrors.vehicle ? 'border-red-500' : ''}`}
-                defaultValue=""
               >
                 <option value="">Choose a vehicle...</option>
                 {vehicles.map(vehicle => (
