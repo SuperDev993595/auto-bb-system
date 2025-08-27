@@ -32,20 +32,58 @@ const ApprovalAnalytics: React.FC = () => {
     try {
       setLoading(true);
       
-      // Mock data for now - replace with actual API call
-      const mockMetrics: ApprovalMetrics = {
-        totalAppointments: 156,
-        pendingApprovals: 23,
-        approvedCount: 118,
-        declinedCount: 15,
-        approvalRate: 88.7,
-        totalValue: 45600,
-        urgentApprovals: 5
-      };
+      // Fetch real analytics data from backend
+      const response = await fetch('/api/appointments/stats/overview', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      setMetrics(mockMetrics);
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Calculate approval metrics from real data
+        const stats = data.data;
+        const totalAppointments = stats.totalAppointments || 0;
+        const pendingAppointments = stats.scheduledAppointments || 0;
+        const completedAppointments = stats.completedAppointments || 0;
+        const cancelledAppointments = stats.cancelledAppointments || 0;
+        
+        // Calculate approval rate (completed vs total)
+        const approvalRate = totalAppointments > 0 ? 
+          ((completedAppointments / totalAppointments) * 100) : 0;
+        
+        const realMetrics: ApprovalMetrics = {
+          totalAppointments,
+          pendingApprovals: pendingAppointments,
+          approvedCount: completedAppointments,
+          declinedCount: cancelledAppointments,
+          approvalRate: Math.round(approvalRate * 10) / 10, // Round to 1 decimal
+          totalValue: stats.totalRevenue || 0,
+          urgentApprovals: 0 // This would need a separate endpoint for urgent approvals
+        };
+        
+        setMetrics(realMetrics);
+      } else {
+        throw new Error(data.message || 'Failed to fetch analytics');
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      // Fallback to empty metrics on error
+      setMetrics({
+        totalAppointments: 0,
+        pendingApprovals: 0,
+        approvedCount: 0,
+        declinedCount: 0,
+        approvalRate: 0,
+        totalValue: 0,
+        urgentApprovals: 0
+      });
     } finally {
       setLoading(false);
     }

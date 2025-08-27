@@ -34,45 +34,108 @@ const SmartAlerts: React.FC = () => {
     try {
       setLoading(true);
       
-      // Mock data for now - replace with actual API call
-      const mockAlerts: Alert[] = [
-        {
-          id: '1',
-          type: 'urgent',
-          title: 'Urgent Approval Required',
-          message: 'High-value appointment ($2,500) waiting for approval - customer is waiting',
-          priority: 'urgent',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          actionUrl: '/admin/dashboard/approvals',
-          dismissed: false
-        },
-        {
-          id: '2',
-          type: 'deadline',
-          title: 'Approval Deadline Approaching',
-          message: '3 appointments will exceed 24-hour approval window in the next 2 hours',
-          priority: 'high',
-          timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-          actionUrl: '/admin/dashboard/approvals',
-          dismissed: false
-        },
-        {
-          id: '3',
-          type: 'reminder',
-          title: 'Follow-up Tasks Due',
-          message: '5 follow-up tasks are due today for declined appointments',
-          priority: 'medium',
-          timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-          actionUrl: '/admin/dashboard/tasks',
-          dismissed: false
+      // Fetch real alerts from backend
+      const response = await fetch('/api/appointments/alerts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
         }
-      ];
+      });
       
-      setAlerts(mockAlerts);
+      if (!response.ok) {
+        throw new Error('Failed to fetch alerts');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        // Transform backend data to frontend Alert format
+        const realAlerts: Alert[] = data.data.map((alert: any) => ({
+          id: alert._id || alert.id,
+          type: alert.type || 'info',
+          title: alert.title || 'Alert',
+          message: alert.message || 'No message provided',
+          priority: alert.priority || 'medium',
+          timestamp: new Date(alert.timestamp || alert.createdAt || Date.now()),
+          actionUrl: alert.actionUrl || '/admin/dashboard/approvals',
+          dismissed: alert.dismissed || false
+        }));
+        
+        setAlerts(realAlerts);
+      } else {
+        // If no alerts endpoint exists yet, create dynamic alerts based on appointment data
+        await createDynamicAlerts();
+      }
     } catch (error) {
       console.error('Error fetching alerts:', error);
+      // Fallback to dynamic alerts on error
+      await createDynamicAlerts();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createDynamicAlerts = async () => {
+    try {
+      // Fetch pending approvals to create dynamic alerts
+      const response = await fetch('/api/appointments/pending-approval?page=1&limit=10', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data && data.data.length > 0) {
+          const pendingAppointments = data.data;
+          
+          // Create dynamic alerts based on real data
+          const dynamicAlerts: Alert[] = [];
+          
+          // Check for urgent approvals (high value or long waiting time)
+          const urgentAppointments = pendingAppointments.filter((apt: any) => 
+            apt.estimatedCost?.total > 1000 || 
+            (new Date().getTime() - new Date(apt.createdAt).getTime()) > 24 * 60 * 60 * 1000
+          );
+          
+          if (urgentAppointments.length > 0) {
+            dynamicAlerts.push({
+              id: 'urgent-1',
+              type: 'urgent',
+              title: 'Urgent Approvals Pending',
+              message: `${urgentAppointments.length} high-priority appointments require immediate attention`,
+              priority: 'urgent',
+              timestamp: new Date(),
+              actionUrl: '/admin/dashboard/approvals',
+              dismissed: false
+            });
+          }
+          
+          // Check for deadline approaching
+          if (pendingAppointments.length > 0) {
+            dynamicAlerts.push({
+              id: 'deadline-1',
+              type: 'deadline',
+              title: 'Approvals Pending',
+              message: `${pendingAppointments.length} appointments are waiting for approval`,
+              priority: pendingAppointments.length > 5 ? 'high' : 'medium',
+              timestamp: new Date(),
+              actionUrl: '/admin/dashboard/approvals',
+              dismissed: false
+            });
+          }
+          
+          setAlerts(dynamicAlerts);
+        } else {
+          setAlerts([]);
+        }
+      } else {
+        setAlerts([]);
+      }
+    } catch (error) {
+      console.error('Error creating dynamic alerts:', error);
+      setAlerts([]);
     }
   };
 
