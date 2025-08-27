@@ -3,6 +3,7 @@ const Joi = require('joi');
 const { ServiceCatalog, WorkOrder, Technician, Service } = require('../models/Service');
 const Customer = require('../models/Customer');
 const { requireAnyAdmin, requireCustomer } = require('../middleware/auth');
+const workOrderService = require('../services/workOrderService'); // Added import for workOrderService
 
 const router = express.Router();
 
@@ -872,6 +873,45 @@ router.get('/catalog/:id', requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Get service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/services/workorders/jobboard
+// @desc    Get work orders for job board display
+// @access  Private
+router.get('/workorders/jobboard', requireAnyAdmin, async (req, res) => {
+  try {
+    const {
+      status = 'all',
+      technician = 'all',
+      priority = 'all',
+      search = '',
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const filters = {
+      status,
+      technician,
+      priority,
+      search,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    };
+
+    const result = await workOrderService.getJobBoardWorkOrders(filters);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Get job board work orders error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -1864,6 +1904,144 @@ router.get('/technicians/available', requireAnyAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Get available technicians error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/workorders/:id/start
+// @desc    Start work on a work order
+// @access  Private
+router.put('/workorders/:id/start', requireAnyAdmin, async (req, res) => {
+  try {
+    const { technicianId } = req.body;
+
+    if (!technicianId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Technician ID is required'
+      });
+    }
+
+    const result = await workOrderService.startWork(req.params.id, technicianId);
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: { workOrder: result.workOrder }
+    });
+
+  } catch (error) {
+    console.error('Start work error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/workorders/:id/progress
+// @desc    Update work order progress
+// @access  Private
+router.put('/workorders/:id/progress', requireAnyAdmin, async (req, res) => {
+  try {
+    const { progress, notes } = req.body;
+
+    if (progress === undefined || progress < 0 || progress > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Progress must be between 0 and 100'
+      });
+    }
+
+    const result = await workOrderService.updateProgress(req.params.id, progress, notes);
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: { workOrder: result.workOrder }
+    });
+
+  } catch (error) {
+    console.error('Update progress error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/workorders/:id/complete
+// @desc    Complete work order with quality control
+// @access  Private
+router.put('/workorders/:id/complete', requireAnyAdmin, async (req, res) => {
+  try {
+    const { testDrive, visualInspection, notes, actualCosts } = req.body;
+
+    const qcData = {
+      testDrive: testDrive || false,
+      visualInspection: visualInspection || false,
+      notes: notes || '',
+      completedBy: req.user.id,
+      actualCosts: actualCosts || null
+    };
+
+    const result = await workOrderService.completeWorkOrder(req.params.id, qcData);
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: { workOrder: result.workOrder }
+    });
+
+  } catch (error) {
+    console.error('Complete work order error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/services/workorders/:id/check-parts
+// @desc    Re-check parts availability for a work order
+// @access  Private
+router.put('/workorders/:id/check-parts', requireAnyAdmin, async (req, res) => {
+  try {
+    const workOrder = await WorkOrder.findById(req.params.id);
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    // Get all parts from all services
+    const allParts = workOrder.services.flatMap(service => service.parts);
+    const partsAvailability = await workOrderService.checkPartsAvailability(allParts);
+
+    // Update work order status if parts are now available
+    if (partsAvailability.allAvailable && workOrder.status === 'on_hold') {
+      workOrder.status = 'pending';
+      workOrder.notes = workOrder.notes ? 
+        `${workOrder.notes}\nParts now available - status updated to pending` : 
+        'Parts now available - status updated to pending';
+      await workOrder.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Parts availability checked',
+      data: {
+        partsAvailability,
+        workOrder
+      }
+    });
+
+  } catch (error) {
+    console.error('Check parts availability error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

@@ -637,7 +637,7 @@ export default function ServicesPage() {
                                   <Wrench className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>
-                                  <h4 className="font-semibold text-secondary-900">{service.name}</h4>
+                                  <h6 className="font-semibold text-secondary-900">{service.name}</h6>
                                   <p className="text-sm text-secondary-600">{service.category}</p>
                                 </div>
                               </div>

@@ -1,4 +1,5 @@
 const { WorkOrder } = require('../models/Service');
+const { InventoryItem } = require('../models/Inventory');
 const Appointment = require('../models/Appointment');
 const Customer = require('../models/Customer');
 const Vehicle = require('../models/Vehicle');
@@ -27,6 +28,9 @@ class WorkOrderService {
         throw new Error('Appointment is not pending approval');
       }
 
+      // Check parts availability before creating work order
+      const partsAvailability = await this.checkPartsAvailability(appointment.partsRequired || []);
+      
       // Calculate estimated costs
       const estimatedCost = appointment.estimatedCost || {
         parts: 0,
@@ -54,12 +58,13 @@ class WorkOrderService {
           totalCost: estimatedCost.total || 0
         }],
         technician: appointment.technician?._id || null,
-        status: 'pending',
+        status: partsAvailability.allAvailable ? 'pending' : 'on_hold',
         priority: appointment.priority || 'medium',
         estimatedStartDate: appointment.scheduledDate,
         estimatedCompletionDate: new Date(appointment.scheduledDate.getTime() + appointment.estimatedDuration * 60000),
         notes: `Created from appointment ${appointment._id}. ${appointment.notes || ''}`,
-        customerNotes: appointment.customerNotes || ''
+        customerNotes: appointment.customerNotes || '',
+        partsAvailability: partsAvailability
       });
 
       // Calculate totals
@@ -80,11 +85,201 @@ class WorkOrderService {
       return {
         success: true,
         workOrder: savedWorkOrder,
-        appointment: appointment
+        appointment: appointment,
+        partsAvailability: partsAvailability
       };
 
     } catch (error) {
       console.error('Error creating work order from appointment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check parts availability for a work order
+   * @param {Array} partsRequired - Array of required parts
+   * @returns {Promise<Object>} Parts availability status
+   */
+  async checkPartsAvailability(partsRequired) {
+    const availability = {
+      allAvailable: true,
+      missingParts: [],
+      availableParts: [],
+      totalMissing: 0
+    };
+
+    for (const part of partsRequired) {
+      try {
+        // Find the part in inventory
+        const inventoryItem = await InventoryItem.findOne({
+          $or: [
+            { partNumber: part.partNumber },
+            { name: { $regex: part.name, $options: 'i' } }
+          ]
+        });
+
+        if (!inventoryItem) {
+          availability.allAvailable = false;
+          availability.missingParts.push({
+            ...part,
+            reason: 'Part not found in inventory'
+          });
+          availability.totalMissing += part.quantity;
+        } else if (inventoryItem.currentStock < part.quantity) {
+          availability.allAvailable = false;
+          availability.missingParts.push({
+            ...part,
+            currentStock: inventoryItem.currentStock,
+            reason: 'Insufficient stock'
+          });
+          availability.totalMissing += (part.quantity - inventoryItem.currentStock);
+        } else {
+          availability.availableParts.push({
+            ...part,
+            currentStock: inventoryItem.currentStock,
+            inventoryItemId: inventoryItem._id
+          });
+        }
+      } catch (error) {
+        console.error(`Error checking availability for part ${part.name}:`, error);
+        availability.allAvailable = false;
+        availability.missingParts.push({
+          ...part,
+          reason: 'Error checking inventory'
+        });
+        availability.totalMissing += part.quantity;
+      }
+    }
+
+    return availability;
+  }
+
+  /**
+   * Start work on a work order
+   * @param {string} workOrderId - The work order ID
+   * @param {string} technicianId - The technician ID
+   * @returns {Promise<Object>} Updated work order
+   */
+  async startWork(workOrderId, technicianId) {
+    try {
+      const workOrder = await WorkOrder.findById(workOrderId);
+      if (!workOrder) {
+        throw new Error('Work order not found');
+      }
+
+      if (workOrder.status === 'on_hold') {
+        // Re-check parts availability
+        const partsAvailability = await this.checkPartsAvailability(
+          workOrder.services.flatMap(service => service.parts)
+        );
+        
+        if (!partsAvailability.allAvailable) {
+          throw new Error('Cannot start work - parts still not available');
+        }
+      }
+
+      // Update work order status
+      await workOrder.updateStatus('in_progress', `Work started by technician ${technicianId}`);
+      
+      // Update technician assignment if different
+      if (workOrder.technician?.toString() !== technicianId) {
+        workOrder.technician = technicianId;
+        await workOrder.save();
+      }
+
+      return {
+        success: true,
+        workOrder: workOrder,
+        message: 'Work started successfully'
+      };
+
+    } catch (error) {
+      console.error('Error starting work:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update work order progress
+   * @param {string} workOrderId - The work order ID
+   * @param {number} progress - Progress percentage (0-100)
+   * @param {string} notes - Optional notes
+   * @returns {Promise<Object>} Updated work order
+   */
+  async updateProgress(workOrderId, progress, notes = '') {
+    try {
+      const workOrder = await WorkOrder.findById(workOrderId);
+      if (!workOrder) {
+        throw new Error('Work order not found');
+      }
+
+      if (workOrder.status !== 'in_progress') {
+        throw new Error('Work order is not in progress');
+      }
+
+      // Add progress note
+      const progressNote = `Progress updated to ${progress}%${notes ? ` - ${notes}` : ''}`;
+      workOrder.notes = workOrder.notes ? `${workOrder.notes}\n${progressNote}` : progressNote;
+
+      // Auto-complete if progress is 100%
+      if (progress >= 100) {
+        await workOrder.updateStatus('completed', 'Work completed');
+      }
+
+      await workOrder.save();
+
+      return {
+        success: true,
+        workOrder: workOrder,
+        message: 'Progress updated successfully'
+      };
+
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Complete work order with quality control
+   * @param {string} workOrderId - The work order ID
+   * @param {Object} qcData - Quality control data
+   * @returns {Promise<Object>} Completed work order
+   */
+  async completeWorkOrder(workOrderId, qcData) {
+    try {
+      const workOrder = await WorkOrder.findById(workOrderId);
+      if (!workOrder) {
+        throw new Error('Work order not found');
+      }
+
+      if (workOrder.status !== 'in_progress') {
+        throw new Error('Work order is not in progress');
+      }
+
+      // Add QC notes
+      const qcNotes = `Quality Control Completed:
+- Test Drive: ${qcData.testDrive ? 'Passed' : 'Failed'}
+- Visual Inspection: ${qcData.visualInspection ? 'Passed' : 'Failed'}
+- QC Notes: ${qcData.notes || 'No issues found'}
+- Completed by: ${qcData.completedBy}`;
+
+      await workOrder.updateStatus('completed', qcNotes);
+
+      // Update actual costs if provided
+      if (qcData.actualCosts) {
+        workOrder.actualCost = qcData.actualCosts;
+        await workOrder.save();
+      }
+
+      return {
+        success: true,
+        workOrder: workOrder,
+        message: 'Work order completed successfully'
+      };
+
+    } catch (error) {
+      console.error('Error completing work order:', error);
       throw error;
     }
   }
@@ -115,6 +310,74 @@ class WorkOrderService {
       return workOrders;
     } catch (error) {
       console.error('Error fetching work orders by appointment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get work orders for job board display
+   * @param {Object} filters - Filter options
+   * @returns {Promise<Object>} Work orders with pagination
+   */
+  async getJobBoardWorkOrders(filters = {}) {
+    try {
+      const {
+        status = 'all',
+        technician = 'all',
+        priority = 'all',
+        search = '',
+        page = 1,
+        limit = 20
+      } = filters;
+
+      const query = {};
+
+      if (status !== 'all') {
+        query.status = status;
+      }
+      if (technician !== 'all') {
+        query.technician = technician;
+      }
+      if (priority !== 'all') {
+        query.priority = priority;
+      }
+
+      // Add search functionality
+      if (search && search.trim()) {
+        const searchRegex = new RegExp(search.trim(), 'i');
+        query.$or = [
+          { workOrderNumber: searchRegex },
+          { 'customer.name': searchRegex },
+          { 'vehicle.make': searchRegex },
+          { 'vehicle.model': searchRegex },
+          { 'vehicle.licensePlate': searchRegex }
+        ];
+      }
+
+      const workOrders = await WorkOrder.find(query)
+        .populate('customer', 'name email phone')
+        .populate('technician', 'name email')
+        .populate('services.service', 'name description')
+        .sort({ priority: -1, estimatedStartDate: 1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+
+      const total = await WorkOrder.countDocuments(query);
+
+      return {
+        workOrders,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalWorkOrders: total,
+          hasNextPage: page * limit < total,
+          hasPrevPage: page > 1
+        }
+      };
+
+    } catch (error) {
+      console.error('Error fetching job board work orders:', error);
       throw error;
     }
   }

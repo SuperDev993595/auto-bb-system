@@ -16,7 +16,8 @@ import {
     Mail,
     Search,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    Wrench
 } from "../../utils/icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -46,6 +47,7 @@ const navGroups: NavGroup[] = [
             { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
             { to: "/admin/dashboard/appointments", label: "Appointments", icon: <Calendar size={18} /> },
             { to: "/admin/dashboard/approvals", label: "Approvals", icon: <ClipboardList size={18} />, roles: ['super_admin', 'admin'] },
+            { to: "/admin/dashboard/job-board", label: "Job Board", icon: <Wrench size={18} /> },
             { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
         ]
     },
