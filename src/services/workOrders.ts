@@ -43,6 +43,7 @@ export interface WorkOrder {
   };
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  progress?: number; // Progress percentage (0-100)
   estimatedStartDate: string;
   estimatedCompletionDate: string;
   actualStartDate?: string;

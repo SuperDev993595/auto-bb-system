@@ -159,6 +159,12 @@ const workOrderSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
+  progress: {
+    type: Number,
+    min: [0, 'Progress cannot be negative'],
+    max: [100, 'Progress cannot exceed 100%'],
+    default: 0
+  },
   estimatedStartDate: {
     type: Date
   },

@@ -20,6 +20,7 @@ import {
 } from '../utils/icons';
 import { workOrderService, WorkOrder, JobBoardFilters } from '../services/workOrders';
 import WorkOrderDetailsModal from '../components/Shared/WorkOrderDetailsModal';
+import ProgressUpdateModal from '../components/Shared/ProgressUpdateModal';
 import { AuthContext } from '../context/AuthContext';
 
 interface WorkOrderCardProps {
@@ -213,6 +214,8 @@ export default function JobBoardPage() {
   });
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [selectedWorkOrderForProgress, setSelectedWorkOrderForProgress] = useState<WorkOrder | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Fetch work orders
@@ -267,8 +270,11 @@ export default function JobBoardPage() {
   };
 
   const handleUpdateProgress = async (workOrderId: string) => {
-    // This would open a progress update modal
-    console.log('Update progress for:', workOrderId);
+    const workOrder = workOrders.find(wo => wo._id === workOrderId);
+    if (workOrder) {
+      setSelectedWorkOrderForProgress(workOrder);
+      setShowProgressModal(true);
+    }
   };
 
   const handleComplete = async (workOrderId: string) => {
@@ -499,6 +505,20 @@ export default function JobBoardPage() {
           workOrder={selectedWorkOrder}
           isOpen={showDetailsModal}
           onClose={() => setShowDetailsModal(false)}
+        />
+      )}
+
+      {/* Progress Update Modal */}
+      {showProgressModal && selectedWorkOrderForProgress && (
+        <ProgressUpdateModal
+          isOpen={showProgressModal}
+          onClose={() => {
+            setShowProgressModal(false);
+            setSelectedWorkOrderForProgress(null);
+          }}
+          workOrderId={selectedWorkOrderForProgress._id}
+          currentProgress={selectedWorkOrderForProgress.progress || 0}
+          onSuccess={fetchWorkOrders}
         />
       )}
     </div>

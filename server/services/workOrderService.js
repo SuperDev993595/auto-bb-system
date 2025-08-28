@@ -217,6 +217,9 @@ class WorkOrderService {
         throw new Error('Work order is not in progress');
       }
 
+      // Update progress
+      workOrder.progress = progress;
+
       // Add progress note
       const progressNote = `Progress updated to ${progress}%${notes ? ` - ${notes}` : ''}`;
       workOrder.notes = workOrder.notes ? `${workOrder.notes}\n${progressNote}` : progressNote;
