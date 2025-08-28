@@ -371,13 +371,23 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
     }
   }
 
-  const calculateServiceCost = (index: number) => {
+  const calculateServiceCost = (index: number, newLaborHours?: number, newLaborRate?: number) => {
     const service = formData.services?.[index]
     if (!service) return
     
-    const laborCost = service.laborHours * service.laborRate
+    const laborHours = newLaborHours !== undefined ? newLaborHours : service.laborHours
+    const laborRate = newLaborRate !== undefined ? newLaborRate : service.laborRate
+    const laborCost = laborHours * laborRate
     const partsCost = service.parts?.reduce((sum, part) => sum + part.totalPrice, 0) || 0
     const totalCost = laborCost + partsCost
+    
+    console.log(`EditWorkOrderModal: Service ${index} calculation:`, {
+      laborHours,
+      laborRate,
+      laborCost,
+      partsCost,
+      totalCost
+    })
     
     handleServiceChange(index, 'totalCost', totalCost)
   }
@@ -720,8 +730,9 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
                     type="number"
                     value={service.laborHours || 0}
                     onChange={(e) => {
-                      handleServiceChange(index, 'laborHours', parseFloat(e.target.value) || 0)
-                      calculateServiceCost(index)
+                      const newLaborHours = parseFloat(e.target.value) || 0
+                      handleServiceChange(index, 'laborHours', newLaborHours)
+                      calculateServiceCost(index, newLaborHours)
                     }}
                     className="form-input"
                     min="0"
@@ -736,8 +747,9 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
                     type="number"
                     value={service.laborRate || 100}
                     onChange={(e) => {
-                      handleServiceChange(index, 'laborRate', parseFloat(e.target.value) || 0)
-                      calculateServiceCost(index)
+                      const newLaborRate = parseFloat(e.target.value) || 0
+                      handleServiceChange(index, 'laborRate', newLaborRate)
+                      calculateServiceCost(index, undefined, newLaborRate)
                     }}
                     className="form-input"
                     min="0"
@@ -763,7 +775,10 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
                   <label className="form-label">Parts</label>
                   <PartsEditor
                     parts={service.parts || []}
-                    onChange={(parts) => handleServiceChange(index, 'parts', parts)}
+                    onChange={(parts) => {
+                      handleServiceChange(index, 'parts', parts)
+                      calculateServiceCost(index)
+                    }}
                     disabled={!isAnyAdmin()}
                   />
                 </div>

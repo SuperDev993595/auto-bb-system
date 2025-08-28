@@ -348,11 +348,21 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
     }
   }
 
-  const calculateServiceCost = (index: number) => {
+  const calculateServiceCost = (index: number, newLaborHours?: number, newLaborRate?: number) => {
     const service = formData.services[index]
-    const laborCost = service.laborHours * service.laborRate
+    const laborHours = newLaborHours !== undefined ? newLaborHours : service.laborHours
+    const laborRate = newLaborRate !== undefined ? newLaborRate : service.laborRate
+    const laborCost = laborHours * laborRate
     const partsCost = service.parts.reduce((sum, part) => sum + part.totalPrice, 0)
     const totalCost = laborCost + partsCost
+    
+    console.log(`AddWorkOrderModal: Service ${index} calculation:`, {
+      laborHours,
+      laborRate,
+      laborCost,
+      partsCost,
+      totalCost
+    })
     
     handleServiceChange(index, 'totalCost', totalCost)
   }
@@ -540,8 +550,9 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                     type="number"
                     value={service.laborHours}
                     onChange={(e) => {
-                      handleServiceChange(index, 'laborHours', parseFloat(e.target.value) || 0)
-                      calculateServiceCost(index)
+                      const newLaborHours = parseFloat(e.target.value) || 0
+                      handleServiceChange(index, 'laborHours', newLaborHours)
+                      calculateServiceCost(index, newLaborHours)
                     }}
                     className={`form-input ${formErrors[`laborHours${index}`] ? 'border-red-500' : ''}`}
                     min="0"
@@ -558,8 +569,9 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                     type="number"
                     value={service.laborRate}
                     onChange={(e) => {
-                      handleServiceChange(index, 'laborRate', parseFloat(e.target.value) || 0)
-                      calculateServiceCost(index)
+                      const newLaborRate = parseFloat(e.target.value) || 0
+                      handleServiceChange(index, 'laborRate', newLaborRate)
+                      calculateServiceCost(index, undefined, newLaborRate)
                     }}
                     className={`form-input ${formErrors[`laborRate${index}`] ? 'border-red-500' : ''}`}
                     min="0"
@@ -589,7 +601,10 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
                    <label className="form-label">Parts</label>
                    <PartsEditor
                      parts={service.parts}
-                     onChange={(parts) => handleServiceChange(index, 'parts', parts)}
+                     onChange={(parts) => {
+                       handleServiceChange(index, 'parts', parts)
+                       calculateServiceCost(index)
+                     }}
                    />
                  </div>
               </div>
