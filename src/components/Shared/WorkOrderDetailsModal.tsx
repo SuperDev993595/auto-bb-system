@@ -61,41 +61,49 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <div className="space-y-6">
-            {/* Status and Priority Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                                     <h4 className="font-medium text-gray-900 text-sm">Status</h4>
-                </div>
-                <span className={`px-3 py-1 text-sm rounded-full font-medium border ${getStatusColor(workOrder.status)}`}>
-                  {formatStatus(workOrder.status)}
-                </span>
-              </div>
-              
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-                <div className="flex items-center space-x-2 mb-2">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                                     <h4 className="font-medium text-gray-900 text-sm">Total Cost</h4>
-                </div>
-                                 <p className="text-2xl font-bold text-green-700">${workOrder.totalCost.toFixed(2)}</p>
-              </div>
-              
-              <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-100">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Clock className="w-5 h-5 text-purple-600" />
-                                     <h4 className="font-medium text-gray-900 text-sm">Labor Hours</h4>
-                </div>
-                                 <p className="text-2xl font-bold text-purple-700">{workOrder.totalLaborHours}h</p>
-              </div>
-            </div>
+                         {/* Status and Priority Section */}
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                 <div className="flex items-center space-x-2 mb-2">
+                   <Clock className="w-5 h-5 text-blue-600" />
+                   <h4 className="font-medium text-gray-900 text-sm">Status</h4>
+                 </div>
+                 <span className={`px-3 py-1 text-sm rounded-full font-medium border ${getStatusColor(workOrder.status)}`}>
+                   {formatStatus(workOrder.status)}
+                 </span>
+               </div>
+               
+               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
+                 <div className="flex items-center space-x-2 mb-2">
+                   <DollarSign className="w-5 h-5 text-green-600" />
+                   <h4 className="font-medium text-gray-900 text-sm">Total Cost</h4>
+                 </div>
+                 <p className="text-2xl font-bold text-green-700">${workOrder.totalCost.toFixed(2)}</p>
+               </div>
+               
+               <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-100">
+                 <div className="flex items-center space-x-2 mb-2">
+                   <DollarSign className="w-5 h-5 text-orange-600" />
+                   <h4 className="font-medium text-gray-900 text-sm">Parts Cost</h4>
+                 </div>
+                 <p className="text-2xl font-bold text-orange-700">${workOrder.totalPartsCost.toFixed(2)}</p>
+               </div>
+               
+               <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-100">
+                 <div className="flex items-center space-x-2 mb-2">
+                   <Clock className="w-5 h-5 text-purple-600" />
+                   <h4 className="font-medium text-gray-900 text-sm">Labor Cost</h4>
+                 </div>
+                 <p className="text-2xl font-bold text-purple-700">${workOrder.totalLaborCost.toFixed(2)}</p>
+               </div>
+             </div>
 
             {/* Customer Information */}
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <User className="w-5 h-5 text-gray-600" />
-                                     <h4 className="font-medium text-gray-900">Customer Information</h4>
+                                     <h6 className="font-medium text-gray-900">Customer Information</h6>
                 </div>
               </div>
               <div className="p-4">
@@ -125,7 +133,7 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <Car className="w-5 h-5 text-gray-600" />
-                                     <h4 className="font-medium text-gray-900">Vehicle Information</h4>
+                                     <h6 className="font-medium text-gray-900">Vehicle Information</h6>
                 </div>
               </div>
               <div className="p-4">
@@ -157,42 +165,101 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <Wrench className="w-5 h-5 text-gray-600" />
-                                     <h4 className="font-medium text-gray-900">Services ({workOrder.services.length})</h4>
+                                     <h6 className="font-medium text-gray-900">Services ({workOrder.services.length})</h6>
                 </div>
               </div>
               <div className="p-4">
                 <div className="space-y-3">
-                  {workOrder.services.map((service, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                      <div className="flex justify-between items-start mb-2">
-                                                 <h5 className="font-medium text-gray-900">{service.service.name}</h5>
-                                                 <span className="text-lg font-bold text-blue-600">${service.totalCost.toFixed(2)}</span>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3">{service.description}</p>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Labor: {service.laborHours}h</span>
-                        <span className="text-gray-500">Parts: ${(service.totalCost - (service.laborHours * 50)).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  ))}
+                                     {workOrder.services.map((service, index) => (
+                     <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                       <div className="flex justify-between items-start mb-2">
+                         <h5 className="font-medium text-gray-900">{service.service.name}</h5>
+                         <span className="text-lg font-bold text-blue-600">${service.totalCost.toFixed(2)}</span>
+                       </div>
+                       <p className="text-gray-600 text-sm mb-3">{service.description}</p>
+                       
+                       {/* Service Cost Breakdown */}
+                       <div className="grid grid-cols-2 gap-4 mb-3 p-3 bg-white rounded border">
+                         <div>
+                           <p className="text-xs text-gray-500 mb-1">Labor</p>
+                           <p className="text-sm font-medium text-gray-900">{service.laborHours}h × ${service.laborRate}/h = ${(service.laborHours * service.laborRate).toFixed(2)}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-gray-500 mb-1">Parts</p>
+                           <p className="text-sm font-medium text-gray-900">${service.parts.reduce((sum, part) => sum + part.totalPrice, 0).toFixed(2)}</p>
+                         </div>
+                       </div>
+                       
+                       {/* Parts List */}
+                       {service.parts && service.parts.length > 0 && (
+                         <div className="mt-3">
+                           <p className="text-xs text-gray-500 mb-2 font-medium">Parts Used:</p>
+                           <div className="space-y-2">
+                             {service.parts.map((part, partIndex) => (
+                               <div key={partIndex} className="flex justify-between items-center text-sm bg-white p-2 rounded border">
+                                 <div className="flex-1">
+                                   <p className="font-medium text-gray-900">{part.name}</p>
+                                   {part.partNumber && (
+                                     <p className="text-xs text-gray-500">Part #: {part.partNumber}</p>
+                                   )}
+                                 </div>
+                                 <div className="text-right">
+                                   <p className="text-gray-600">{part.quantity} × ${part.unitPrice}</p>
+                                   <p className="font-medium text-gray-900">${part.totalPrice.toFixed(2)}</p>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Notes */}
-            {workOrder.notes && (
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5 text-gray-600" />
-                                         <h4 className="font-medium text-gray-900">Notes</h4>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{workOrder.notes}</p>
-                </div>
-              </div>
-            )}
+                         {/* Cost Summary */}
+             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                 <div className="flex items-center space-x-2">
+                   <DollarSign className="w-5 h-5 text-gray-600" />
+                   <h6 className="font-medium text-gray-900">Cost Summary</h6>
+                 </div>
+               </div>
+               <div className="p-4">
+                 <div className="space-y-3">
+                   <div className="flex justify-between items-center">
+                     <span className="text-gray-600">Total Labor Cost:</span>
+                     <span className="font-medium text-gray-900">${workOrder.totalLaborCost.toFixed(2)}</span>
+                   </div>
+                   <div className="flex justify-between items-center">
+                     <span className="text-gray-600">Total Parts Cost:</span>
+                     <span className="font-medium text-gray-900">${workOrder.totalPartsCost.toFixed(2)}</span>
+                   </div>
+                   <div className="border-t pt-3">
+                     <div className="flex justify-between items-center">
+                       <span className="text-lg font-semibold text-gray-900">Total Cost:</span>
+                       <span className="text-xl font-bold text-green-600">${workOrder.totalCost.toFixed(2)}</span>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+
+             {/* Notes */}
+             {workOrder.notes && (
+               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                   <div className="flex items-center space-x-2">
+                     <FileText className="w-5 h-5 text-gray-600" />
+                     <h6 className="font-medium text-gray-900">Notes</h6>
+                   </div>
+                 </div>
+                 <div className="p-4">
+                   <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{workOrder.notes}</p>
+                 </div>
+               </div>
+             )}
           </div>
         </div>
       </div>
