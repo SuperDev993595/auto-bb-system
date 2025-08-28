@@ -15,7 +15,7 @@ interface Props {
 
 export default function DeleteMembershipPlanModal({ onClose, onConfirm, plan }: Props) {
   return (
-    <ModalWrapper onClose={onClose}>
+    <ModalWrapper isOpen={true} onClose={onClose}>
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Delete Membership Plan</h2>

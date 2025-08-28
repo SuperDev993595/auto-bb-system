@@ -38,9 +38,9 @@ export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, pl
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    tier: 'basic' as const,
+    tier: 'basic' as 'basic' | 'premium' | 'vip' | 'enterprise',
     price: '',
-    billingCycle: 'monthly' as const,
+    billingCycle: 'monthly' as 'monthly' | 'quarterly' | 'yearly',
     maxVehicles: 1,
     isActive: true,
     benefits: {
@@ -123,7 +123,7 @@ export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, pl
   }
 
   return (
-    <ModalWrapper onClose={onClose}>
+    <ModalWrapper isOpen={true} onClose={onClose}>
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">

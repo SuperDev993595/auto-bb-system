@@ -23,7 +23,7 @@ interface Props {
 
 export default function DeleteWarrantyModal({ onClose, onConfirm, warranty }: Props) {
   return (
-    <ModalWrapper onClose={onClose}>
+    <ModalWrapper isOpen={true} onClose={onClose}>
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Delete Warranty</h2>

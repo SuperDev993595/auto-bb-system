@@ -60,7 +60,7 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   const [formData, setFormData] = useState({
     customer: '',
     vehicle: '',
-    warrantyType: 'extended' as const,
+    warrantyType: 'extended' as 'manufacturer' | 'extended' | 'powertrain' | 'bumper_to_bumper' | 'custom',
     name: '',
     description: '',
     startDate: new Date().toISOString().split('T')[0],
@@ -159,7 +159,7 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   }
 
   return (
-    <ModalWrapper onClose={onClose}>
+    <ModalWrapper isOpen={true} onClose={onClose}>
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
