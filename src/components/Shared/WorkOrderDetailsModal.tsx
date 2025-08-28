@@ -45,10 +45,10 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
             <div className="p-2 bg-blue-100 rounded-lg">
               <Wrench className="w-6 h-6 text-blue-600" />
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">Work Order Details</h3>
-              <p className="text-base text-gray-600">#{workOrder.workOrderNumber}</p>
-            </div>
+                         <div>
+               <h3 className="text-xl font-bold text-gray-900">Work Order Details</h3>
+               <p className="text-sm text-gray-600">#{workOrder.workOrderNumber}</p>
+             </div>
           </div>
           <button
             onClick={onClose}
@@ -66,7 +66,7 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
                 <div className="flex items-center space-x-2 mb-2">
                   <Clock className="w-5 h-5 text-blue-600" />
-                  <h4 className="font-semibold text-gray-900">Status</h4>
+                                     <h4 className="font-medium text-gray-900 text-sm">Status</h4>
                 </div>
                 <span className={`px-3 py-1 text-sm rounded-full font-medium border ${getStatusColor(workOrder.status)}`}>
                   {formatStatus(workOrder.status)}
@@ -76,17 +76,17 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
                 <div className="flex items-center space-x-2 mb-2">
                   <DollarSign className="w-5 h-5 text-green-600" />
-                  <h4 className="font-semibold text-gray-900">Total Cost</h4>
+                                     <h4 className="font-medium text-gray-900 text-sm">Total Cost</h4>
                 </div>
-                <p className="text-3xl font-bold text-green-700">${workOrder.totalCost.toFixed(2)}</p>
+                                 <p className="text-2xl font-bold text-green-700">${workOrder.totalCost.toFixed(2)}</p>
               </div>
               
               <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-100">
                 <div className="flex items-center space-x-2 mb-2">
                   <Clock className="w-5 h-5 text-purple-600" />
-                  <h4 className="font-semibold text-gray-900">Labor Hours</h4>
+                                     <h4 className="font-medium text-gray-900 text-sm">Labor Hours</h4>
                 </div>
-                <p className="text-3xl font-bold text-purple-700">{workOrder.totalLaborHours}h</p>
+                                 <p className="text-2xl font-bold text-purple-700">{workOrder.totalLaborHours}h</p>
               </div>
             </div>
 
@@ -95,14 +95,14 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <User className="w-5 h-5 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Customer Information</h4>
+                                     <h4 className="font-medium text-gray-900">Customer Information</h4>
                 </div>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Name</p>
-                    <p className="font-semibold text-gray-900 text-lg">{workOrder.customer.name}</p>
+                                         <p className="font-medium text-gray-900">{workOrder.customer.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Email</p>
@@ -125,16 +125,16 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <Car className="w-5 h-5 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Vehicle Information</h4>
+                                     <h4 className="font-medium text-gray-900">Vehicle Information</h4>
                 </div>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Vehicle</p>
-                    <p className="font-semibold text-gray-900 text-lg">
-                      {workOrder.vehicle.year} {workOrder.vehicle.make} {workOrder.vehicle.model}
-                    </p>
+                                         <p className="font-medium text-gray-900">
+                       {workOrder.vehicle.year} {workOrder.vehicle.make} {workOrder.vehicle.model}
+                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">License Plate</p>
@@ -157,7 +157,7 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
                   <Wrench className="w-5 h-5 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Services ({workOrder.services.length})</h4>
+                                     <h4 className="font-medium text-gray-900">Services ({workOrder.services.length})</h4>
                 </div>
               </div>
               <div className="p-4">
@@ -165,8 +165,8 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
                   {workOrder.services.map((service, index) => (
                     <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                       <div className="flex justify-between items-start mb-2">
-                        <h5 className="font-semibold text-gray-900">{service.service.name}</h5>
-                        <span className="text-xl font-bold text-blue-600">${service.totalCost.toFixed(2)}</span>
+                                                 <h5 className="font-medium text-gray-900">{service.service.name}</h5>
+                                                 <span className="text-lg font-bold text-blue-600">${service.totalCost.toFixed(2)}</span>
                       </div>
                       <p className="text-gray-600 text-sm mb-3">{service.description}</p>
                       <div className="flex justify-between text-sm">
@@ -185,7 +185,7 @@ const WorkOrderDetailsModal: React.FC<WorkOrderDetailsModalProps> = ({
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                   <div className="flex items-center space-x-2">
                     <FileText className="w-5 h-5 text-gray-600" />
-                    <h4 className="font-semibold text-gray-900">Notes</h4>
+                                         <h4 className="font-medium text-gray-900">Notes</h4>
                   </div>
                 </div>
                 <div className="p-4">
