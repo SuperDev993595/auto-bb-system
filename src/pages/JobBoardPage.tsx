@@ -19,6 +19,7 @@ import {
   Zap
 } from '../utils/icons';
 import { workOrderService, WorkOrder, JobBoardFilters } from '../services/workOrders';
+import WorkOrderDetailsModal from '../components/Shared/WorkOrderDetailsModal';
 
 interface WorkOrderCardProps {
   workOrder: WorkOrder;
@@ -487,89 +488,11 @@ export default function JobBoardPage() {
 
       {/* Work Order Details Modal */}
       {showDetailsModal && selectedWorkOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Work Order Details</h3>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Work Order</h4>
-                  <p className="text-gray-600">{selectedWorkOrder.workOrderNumber}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Status</h4>
-                  <span className={`px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800`}>
-                    {selectedWorkOrder.status.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Customer</h4>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-900 font-medium">{selectedWorkOrder.customer.name}</p>
-                  <p className="text-gray-600 text-sm">{selectedWorkOrder.customer.email}</p>
-                  <p className="text-gray-600 text-sm">{selectedWorkOrder.customer.phone}</p>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Vehicle</h4>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-900 font-medium">
-                    {selectedWorkOrder.vehicle.year} {selectedWorkOrder.vehicle.make} {selectedWorkOrder.vehicle.model}
-                  </p>
-                  <p className="text-gray-600 text-sm">License: {selectedWorkOrder.vehicle.licensePlate}</p>
-                  <p className="text-gray-600 text-sm">VIN: {selectedWorkOrder.vehicle.vin}</p>
-                  <p className="text-gray-600 text-sm">Mileage: {selectedWorkOrder.vehicle.mileage.toLocaleString()}</p>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Services</h4>
-                <div className="space-y-2">
-                  {selectedWorkOrder.services.map((service, index) => (
-                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-900 font-medium">{service.service.name}</p>
-                      <p className="text-gray-600 text-sm">{service.description}</p>
-                      <div className="flex justify-between text-sm text-gray-600 mt-1">
-                        <span>Labor: {service.laborHours}h</span>
-                        <span>Cost: ${service.totalCost.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-gray-600 whitespace-pre-wrap">{selectedWorkOrder.notes || 'No notes available'}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Total Labor Hours</h4>
-                  <p className="text-gray-600">{selectedWorkOrder.totalLaborHours}h</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Total Cost</h4>
-                  <p className="text-gray-600">${selectedWorkOrder.totalCost.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <WorkOrderDetailsModal
+          workOrder={selectedWorkOrder}
+          isOpen={showDetailsModal}
+          onClose={() => setShowDetailsModal(false)}
+        />
       )}
     </div>
   );
