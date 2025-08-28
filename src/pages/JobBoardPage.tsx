@@ -20,6 +20,7 @@ import {
 } from '../utils/icons';
 import { workOrderService, WorkOrder, JobBoardFilters } from '../services/workOrders';
 import WorkOrderDetailsModal from '../components/Shared/WorkOrderDetailsModal';
+import { AuthContext } from '../context/AuthContext';
 
 interface WorkOrderCardProps {
   workOrder: WorkOrder;
@@ -200,6 +201,8 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
 };
 
 export default function JobBoardPage() {
+  const authContext = React.useContext(AuthContext);
+  const user = authContext?.user;
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -248,7 +251,11 @@ export default function JobBoardPage() {
   // Action handlers
   const handleStartWork = async (workOrderId: string) => {
     try {
-      const response = await workOrderService.startWork(workOrderId, 'current-user-id');
+      if (!user?.id) {
+        setError('User not authenticated');
+        return;
+      }
+      const response = await workOrderService.startWork(workOrderId, user.id);
       if (response.success) {
         await fetchWorkOrders();
       } else {
