@@ -48,7 +48,6 @@ const navGroups: NavGroup[] = [
         items: [
             { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
             { to: "/admin/dashboard/appointments", label: "Appointments", icon: <Calendar size={18} /> },
-            { to: "/admin/dashboard/services", label: "Services", icon: <Settings size={18} /> },
             { to: "/admin/dashboard/approvals", label: "Approvals", icon: <ClipboardList size={18} />, roles: ['super_admin', 'admin'] },
             { to: "/admin/dashboard/work-orders", label: "Work Orders", icon: <ClipboardList size={18} /> },
             { to: "/admin/dashboard/job-board", label: "Job Board", icon: <Wrench size={18} /> },
@@ -58,10 +57,11 @@ const navGroups: NavGroup[] = [
     {
         title: "Business Management",
         items: [
-            { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
-            { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
+            { to: "/admin/dashboard/services", label: "Services", icon: <Settings size={18} /> },
             { to: "/admin/dashboard/membership-plans", label: "Membership Plans", icon: <Crown size={18} />, roles: ['super_admin', 'admin'] },
             { to: "/admin/dashboard/warranty-management", label: "Warranty Management", icon: <Shield size={18} />, roles: ['super_admin', 'admin'] },
+            { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
+            { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
         ]
     },
     {

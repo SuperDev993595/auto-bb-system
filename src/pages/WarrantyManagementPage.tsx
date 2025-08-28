@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
-import PageTitle from '../components/Shared/PageTitle'
 import AddEditWarrantyModal from '../components/Warranty/AddEditWarrantyModal'
 import DeleteWarrantyModal from '../components/Warranty/DeleteWarrantyModal'
 import WarrantyClaimModal from '../components/Warranty/WarrantyClaimModal'
@@ -8,9 +7,7 @@ import WarrantyStats from '../components/Warranty/WarrantyStats'
 import {
   Plus,
   Search,
-  Filter,
   RefreshCw,
-  Eye,
   Edit,
   Trash2,
   Shield,
@@ -20,7 +17,8 @@ import {
   Clock,
   Car,
   DollarSign,
-  Calendar
+  Calendar,
+  Eye
 } from '../utils/icons'
 import api from '../services/api'
 
@@ -96,6 +94,194 @@ interface WarrantyStats {
   }>
 }
 
+interface WarrantyCardProps {
+  warranty: Warranty
+  onEdit: (warranty: Warranty) => void
+  onDelete: (warranty: Warranty) => void
+  onAddClaim: (warranty: Warranty) => void
+}
+
+const WarrantyCard: React.FC<WarrantyCardProps> = ({
+  warranty,
+  onEdit,
+  onDelete,
+  onAddClaim
+}) => {
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle className="w-4 h-4" />, label: 'Active' }
+      case 'expired':
+        return { color: 'bg-red-100 text-red-800 border-red-200', icon: <XCircle className="w-4 h-4" />, label: 'Expired' }
+      case 'cancelled':
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: <XCircle className="w-4 h-4" />, label: 'Cancelled' }
+      case 'suspended':
+        return { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: <AlertTriangle className="w-4 h-4" />, label: 'Suspended' }
+      default:
+        return { color: 'bg-gray-100 text-gray-800 border-gray-200', icon: <Shield className="w-4 h-4" />, label: 'Unknown' }
+    }
+  }
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'manufacturer':
+        return <Shield className="w-5 h-5 text-blue-500" />
+      case 'extended':
+        return <Shield className="w-5 h-5 text-green-500" />
+      case 'powertrain':
+        return <Car className="w-5 h-5 text-purple-500" />
+      case 'bumper_to_bumper':
+        return <Shield className="w-5 h-5 text-orange-500" />
+      default:
+        return <Shield className="w-5 h-5 text-gray-500" />
+    }
+  }
+
+  const isExpiringSoon = (endDate: string) => {
+    const end = new Date(endDate)
+    const now = new Date()
+    const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+  }
+
+  const statusConfig = getStatusConfig(warranty.status)
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {getTypeIcon(warranty.warrantyType)}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">{warranty.name}</h3>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusConfig.color}`}>
+                {statusConfig.icon}
+                {statusConfig.label}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onAddClaim(warranty)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Add Claim"
+            >
+              <DollarSign className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onEdit(warranty)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onDelete(warranty)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-4">{warranty.description}</p>
+
+        {/* Customer & Vehicle */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium text-gray-900">{warranty.customer.name}</span>
+            <span className="text-gray-500">•</span>
+            <span className="text-gray-500">{warranty.customer.email}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Car className="w-4 h-4" />
+            <span>{warranty.vehicle.year} {warranty.vehicle.make} {warranty.vehicle.model}</span>
+          </div>
+        </div>
+
+        {/* Coverage Info */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 text-gray-600">
+              <Calendar className="w-4 h-4" />
+              <span>Expires {new Date(warranty.endDate).toLocaleDateString()}</span>
+            </div>
+            {warranty.mileageLimit && (
+              <div className="flex items-center gap-1 text-gray-600">
+                <Car className="w-4 h-4" />
+                <span>{warranty.currentMileage.toLocaleString()}/{warranty.mileageLimit.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+          <div className="text-right">
+            <div className="font-medium text-gray-900">${warranty.deductible}</div>
+            <div className="text-xs text-gray-500">Deductible</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Claims & Coverage */}
+      <div className="p-6">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <h4 className="font-medium text-gray-900 text-sm mb-2">Claims</h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Claims:</span>
+                <span className="font-medium">{warranty.totalClaims}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Amount:</span>
+                <span className="font-medium">${warranty.totalClaimAmount.toLocaleString()}</span>
+              </div>
+              {warranty.maxClaimAmount && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Max Claim:</span>
+                  <span className="font-medium">${warranty.maxClaimAmount.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-900 text-sm mb-2">Coverage</h4>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              {Object.entries(warranty.coverage).slice(0, 6).map(([key, covered]) => (
+                <div key={key} className="flex items-center gap-1">
+                  {covered ? (
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <XCircle className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className="text-gray-600 capitalize">{key}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Status & Actions */}
+        <div className="pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isExpiringSoon(warranty.endDate) && (
+                <div className="flex items-center gap-1 text-xs text-orange-600">
+                  <Clock className="w-3 h-3" />
+                  <span>Expiring soon</span>
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-gray-500">
+              Provider: {warranty.provider.name}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function WarrantyManagementPage() {
   const [warranties, setWarranties] = useState<Warranty[]>([])
   const [stats, setStats] = useState<WarrantyStats | null>(null)
@@ -103,7 +289,6 @@ export default function WarrantyManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [customerFilter, setCustomerFilter] = useState('')
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false)
@@ -211,258 +396,185 @@ export default function WarrantyManagementPage() {
     }
   }
 
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'expired':
-        return 'bg-red-100 text-red-800 border-red-200'
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-      case 'suspended':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
+  const handleEdit = (warranty: Warranty) => {
+    setSelectedWarranty(warranty)
+    setShowEditModal(true)
   }
 
-  // Get type icon
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'manufacturer':
-        return <Shield className="w-5 h-5 text-blue-500" />
-      case 'extended':
-        return <Shield className="w-5 h-5 text-green-500" />
-      case 'powertrain':
-        return <Car className="w-5 h-5 text-purple-500" />
-      case 'bumper_to_bumper':
-        return <Shield className="w-5 h-5 text-orange-500" />
-      default:
-        return <Shield className="w-5 h-5 text-gray-500" />
-    }
+  const handleDelete = (warranty: Warranty) => {
+    setSelectedWarranty(warranty)
+    setShowDeleteModal(true)
   }
 
-  // Check if warranty is expiring soon
-  const isExpiringSoon = (endDate: string) => {
-    const end = new Date(endDate)
-    const now = new Date()
-    const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+  const handleClaim = (warranty: Warranty) => {
+    setSelectedWarranty(warranty)
+    setShowClaimModal(true)
+  }
+
+  // Calculate stats
+  const warrantyStats = {
+    total: warranties.length,
+    active: warranties.filter(w => w.status === 'active').length,
+    expired: warranties.filter(w => w.status === 'expired').length,
+    expiringSoon: warranties.filter(w => {
+      const end = new Date(w.endDate)
+      const now = new Date()
+      const daysUntilExpiry = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+    }).length
+  }
+
+  if (loading && warranties.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <PageTitle title="Warranty Management" subtitle="Manage vehicle warranties and coverage" />
-      
-      {/* Statistics */}
-      {stats && <WarrantyStats stats={stats} />}
+    <div className="p-8 space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Warranty Management</h1>
+          <p className="text-gray-600">Manage vehicle warranties and coverage</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={fetchWarranties}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Warranty</span>
+          </button>
+        </div>
+      </div>
 
-      {/* Header with actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Warranty
-            </button>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search warranties..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Warranties</p>
+              <p className="text-2xl font-bold text-gray-900">{warrantyStats.total}</p>
             </div>
-
-            {/* Filters */}
-            <div className="flex items-center gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="expired">Expired</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="suspended">Suspended</option>
-              </select>
-
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Types</option>
-                <option value="manufacturer">Manufacturer</option>
-                <option value="extended">Extended</option>
-                <option value="powertrain">Powertrain</option>
-                <option value="bumper_to_bumper">Bumper to Bumper</option>
-                <option value="custom">Custom</option>
-              </select>
-
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setStatusFilter('all')
-                  setTypeFilter('all')
-                }}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Shield className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-2xl font-bold text-green-600">{warrantyStats.active}</p>
+            </div>
+            <div className="p-2 bg-green-100 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Expired</p>
+              <p className="text-2xl font-bold text-red-600">{warrantyStats.expired}</p>
+            </div>
+            <div className="p-2 bg-red-100 rounded-lg">
+              <XCircle className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Expiring Soon</p>
+              <p className="text-2xl font-bold text-orange-600">{warrantyStats.expiringSoon}</p>
+            </div>
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Clock className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Warranties Table */}
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Warranty Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer & Vehicle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Coverage & Limits
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Claims
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredWarranties.map((warranty) => (
-                  <tr key={warranty._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        {getTypeIcon(warranty.warrantyType)}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{warranty.name}</div>
-                          <div className="text-sm text-gray-500">{warranty.warrantyType.replace('_', ' ')}</div>
-                          {isExpiringSoon(warranty.endDate) && (
-                            <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
-                              <Clock className="w-3 h-3" />
-                              Expiring soon
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{warranty.customer.name}</div>
-                        <div className="text-sm text-gray-500">{warranty.customer.email}</div>
-                        <div className="text-sm text-gray-500">
-                          {warranty.vehicle.year} {warranty.vehicle.make} {warranty.vehicle.model}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        <div>Start: {new Date(warranty.startDate).toLocaleDateString()}</div>
-                        <div>End: {new Date(warranty.endDate).toLocaleDateString()}</div>
-                        {warranty.mileageLimit && (
-                          <div className="text-gray-500">
-                            Mileage: {warranty.currentMileage.toLocaleString()}/{warranty.mileageLimit.toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        <div>Claims: {warranty.totalClaims}</div>
-                        <div className="text-gray-500">
-                          Total: ${warranty.totalClaimAmount.toLocaleString()}
-                        </div>
-                        {warranty.maxClaimAmount && (
-                          <div className="text-xs text-gray-400">
-                            Max: ${warranty.maxClaimAmount.toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(warranty.status)}`}>
-                        {warranty.status.charAt(0).toUpperCase() + warranty.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedWarranty(warranty)
-                            setShowClaimModal(true)
-                          }}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="Add Claim"
-                        >
-                          <DollarSign className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedWarranty(warranty)
-                            setShowEditModal(true)
-                          }}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedWarranty(warranty)
-                            setShowDeleteModal(true)
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Types</option>
+              <option value="manufacturer">Manufacturer</option>
+              <option value="extended">Extended</option>
+              <option value="powertrain">Powertrain</option>
+              <option value="bumper_to_bumper">Bumper to Bumper</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search warranties..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Warranties Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        {filteredWarranties.map((warranty) => (
+          <WarrantyCard
+            key={warranty._id}
+            warranty={warranty}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAddClaim={handleClaim}
+          />
+        ))}
+      </div>
 
       {/* Empty State */}
       {!loading && filteredWarranties.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Shield className="w-16 h-16 mx-auto" />
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No warranties found</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 text-lg font-medium">No warranties found</p>
+          <p className="text-gray-400 mb-4">
             {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
               ? 'Try adjusting your filters or search terms.'
               : 'Get started by creating your first warranty.'}
