@@ -187,7 +187,6 @@ const AddWorkOrderModal: React.FC<AddWorkOrderModalProps> = ({
       await onSubmit(formData)
       onClose()
       resetForm()
-      toast.success('Work order created successfully')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create work order'
       setError(errorMessage)

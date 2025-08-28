@@ -11,6 +11,28 @@ import { fetchCustomers } from '../../redux/actions/customers'
 import { fetchServiceCatalog, fetchTechnicians } from '../../redux/actions/services'
 import { useAuth } from '../../context/AuthContext'
 
+// Utility function to format date for datetime-local input
+const formatDateForInput = (dateString: string | undefined): string => {
+  if (!dateString) return ''
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return ''
+    
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return ''
+  }
+}
+
 interface Props {
   workOrder: WorkOrder | null
   onClose: () => void
@@ -70,10 +92,7 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
     priority: 'medium',
     estimatedStartDate: '',
     estimatedCompletionDate: '',
-    actualStartDate: '',
-    actualCompletionDate: '',
-    notes: '',
-    customerNotes: ''
+    notes: ''
   })
 
   // Debug form data changes
@@ -170,7 +189,13 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
       console.log('EditWorkOrderModal: workOrder.vehicle:', workOrder.vehicle)
       console.log('EditWorkOrderModal: workOrder.vehicle._id:', (workOrder.vehicle as any)?._id)
       console.log('EditWorkOrderModal: workOrder.vehicle.id:', (workOrder.vehicle as any)?.id)
-      console.log('EditWorkOrderModal: workOrder.vehicle keys:', workOrder.vehicle ? Object.keys(workOrder.vehicle) : 'No vehicle')
+      console.log('EditWorkOrderModal: workOrder.vehicle.keys:', workOrder.vehicle ? Object.keys(workOrder.vehicle) : 'No vehicle')
+      
+      // Debug date fields
+      console.log('EditWorkOrderModal: workOrder.estimatedStartDate:', workOrder.estimatedStartDate)
+      console.log('EditWorkOrderModal: workOrder.estimatedCompletionDate:', workOrder.estimatedCompletionDate)
+      console.log('EditWorkOrderModal: Formatted estimatedStartDate:', formatDateForInput(workOrder.estimatedStartDate))
+      console.log('EditWorkOrderModal: Formatted estimatedCompletionDate:', formatDateForInput(workOrder.estimatedCompletionDate))
       
       setFormData({
         services: workOrder.services.map(service => ({
@@ -183,8 +208,8 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
         })),
         technicianId: workOrder.technician?._id || '',
         priority: workOrder.priority || 'medium',
-        estimatedStartDate: workOrder.estimatedStartDate || '',
-        estimatedCompletionDate: workOrder.estimatedCompletionDate || '',
+        estimatedStartDate: formatDateForInput(workOrder.estimatedStartDate),
+        estimatedCompletionDate: formatDateForInput(workOrder.estimatedCompletionDate),
         notes: workOrder.notes || ''
       })
 
@@ -368,15 +393,19 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
 
     setLoading(true)
     try {
-      // Prepare the update data with customer and vehicle IDs
+      // Prepare the update data - only include fields that are allowed by the backend
       const updateData = {
-        ...formData,
-        customerId: selectedCustomerId,
-        vehicleId: selectedVehicleId
+        services: formData.services,
+        technician: formData.technicianId, // Backend expects 'technician', not 'technicianId'
+        priority: formData.priority,
+        estimatedStartDate: formData.estimatedStartDate,
+        estimatedCompletionDate: formData.estimatedCompletionDate,
+        notes: formData.notes
       }
       
+      console.log('EditWorkOrderModal: Submitting update data:', updateData)
+      
       await dispatch(updateWorkOrder({ id: workOrder._id, data: updateData }))
-      toast.success('Work order updated successfully')
       onSuccess()
       onClose()
     } catch (error) {
@@ -795,25 +824,27 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="form-label">Estimated Start Date</label>
-                              <input
-                  type="datetime-local"
-                  value={formData.estimatedStartDate || ''}
-                  onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
-                  className="form-input"
-                  disabled={!isAnyAdmin()}
-                />
+              <input
+                type="datetime-local"
+                value={formatDateForInput(formData.estimatedStartDate)}
+                onChange={(e) => handleInputChange('estimatedStartDate', e.target.value)}
+                className="form-input"
+                disabled={!isAnyAdmin()}
+              />
             </div>
             <div>
               <label className="form-label">Estimated Completion Date</label>
-                              <input
-                  type="datetime-local"
-                  value={formData.estimatedCompletionDate || ''}
-                  onChange={(e) => handleInputChange('estimatedCompletionDate', e.target.value)}
-                  className="form-input"
-                  disabled={!isAnyAdmin()}
-                />
+              <input
+                type="datetime-local"
+                value={formatDateForInput(formData.estimatedCompletionDate)}
+                onChange={(e) => handleInputChange('estimatedCompletionDate', e.target.value)}
+                className="form-input"
+                disabled={!isAnyAdmin()}
+              />
             </div>
           </div>
+
+
 
 
 
@@ -828,6 +859,8 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
               disabled={!isAnyAdmin()}
             />
           </div>
+
+
 
 
         </div>

@@ -599,6 +599,35 @@ router.put('/workorders/:id', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// @route   DELETE /api/services/workorders/:id
+// @desc    Delete work order
+// @access  Private
+router.delete('/workorders/:id', requireAnyAdmin, async (req, res) => {
+  try {
+    const workOrder = await WorkOrder.findById(req.params.id);
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    await WorkOrder.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Work order deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete work order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   PUT /api/services/workorders/:id/status
 // @desc    Update work order status
 // @access  Private
