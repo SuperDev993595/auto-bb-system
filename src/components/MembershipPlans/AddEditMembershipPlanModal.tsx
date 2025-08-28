@@ -35,6 +35,7 @@ interface Props {
 }
 
 export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, plan }: Props) {
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -76,21 +77,29 @@ export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, pl
     }
   }, [plan, mode])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleSubmit = async () => {
     if (!formData.name || !formData.price) {
       toast.error('Please fill in all required fields')
       return
     }
 
-    const submitData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      maxVehicles: parseInt(formData.maxVehicles.toString())
-    }
+    setLoading(true)
 
-    onSubmit(submitData)
+    try {
+      const submitData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        maxVehicles: parseInt(formData.maxVehicles.toString())
+      }
+
+      await onSubmit(submitData)
+      onClose()
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to save membership plan'
+      toast.error(message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const addFeature = () => {
@@ -123,319 +132,280 @@ export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, pl
   }
 
   return (
-    <ModalWrapper isOpen={true} onClose={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {mode === 'create' ? 'Create New Membership Plan' : 'Edit Membership Plan'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+    <ModalWrapper
+      isOpen={true}
+      onClose={onClose}
+      title={mode === 'create' ? 'Create New Membership Plan' : 'Edit Membership Plan'}
+      icon={<Crown className="w-5 h-5" />}
+      submitText={mode === 'create' ? 'Create Plan' : 'Update Plan'}
+      submitColor="bg-blue-600"
+      onSubmit={handleSubmit}
+      submitDisabled={loading}
+      size="xl"
+    >
+      <div className="p-6 space-y-6">
+        {/* Basic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Plan Name *</span>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              placeholder="e.g., Premium Auto Care"
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Tier *</span>
+            <select
+              value={formData.tier}
+              onChange={(e) => setFormData(prev => ({ ...prev, tier: e.target.value as any }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <option value="basic">Basic</option>
+              <option value="premium">Premium</option>
+              <option value="vip">VIP</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Price *</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              placeholder="0.00"
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Billing Cycle *</span>
+            <select
+              value={formData.billingCycle}
+              onChange={(e) => setFormData(prev => ({ ...prev, billingCycle: e.target.value as any }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+            >
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Max Vehicles</span>
+            <input
+              type="number"
+              min="1"
+              value={formData.maxVehicles}
+              onChange={(e) => setFormData(prev => ({ ...prev, maxVehicles: parseInt(e.target.value) }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Status</span>
+            <select
+              value={formData.isActive ? 'active' : 'inactive'}
+              onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.value === 'active' }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700 mb-2 block">Description</span>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white resize-none"
+            placeholder="Describe the benefits and features of this plan..."
+          />
+        </label>
+
+        {/* Benefits Configuration */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Benefits Configuration</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Discount Percentage (%)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={formData.benefits.discountPercentage}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, discountPercentage: parseInt(e.target.value) }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Free Inspections</span>
+              <input
+                type="number"
+                min="0"
+                value={formData.benefits.freeInspections}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, freeInspections: parseInt(e.target.value) }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.benefits.priorityBooking}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, priorityBooking: e.target.checked }
+                }))}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Priority Booking</span>
+            </label>
+
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.benefits.roadsideAssistance}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, roadsideAssistance: e.target.checked }
+                }))}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Roadside Assistance</span>
+            </label>
+
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.benefits.extendedWarranty}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, extendedWarranty: e.target.checked }
+                }))}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Extended Warranty Coverage</span>
+            </label>
+
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.benefits.conciergeService}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  benefits: { ...prev.benefits, conciergeService: e.target.checked }
+                }))}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Concierge Services</span>
+            </label>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Plan Name *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Premium Auto Care"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tier *
-              </label>
-              <select
-                value={formData.tier}
-                onChange={(e) => setFormData(prev => ({ ...prev, tier: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="basic">Basic</option>
-                <option value="premium">Premium</option>
-                <option value="vip">VIP</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Billing Cycle *
-              </label>
-              <select
-                value={formData.billingCycle}
-                onChange={(e) => setFormData(prev => ({ ...prev, billingCycle: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Vehicles
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxVehicles}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxVehicles: parseInt(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                value={formData.isActive ? 'active' : 'inactive'}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.value === 'active' }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Describe the benefits and features of this plan..."
-            />
-          </div>
-
-          {/* Benefits Configuration */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Benefits Configuration</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discount Percentage (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.benefits.discountPercentage}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, discountPercentage: parseInt(e.target.value) }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Free Inspections
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.benefits.freeInspections}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, freeInspections: parseInt(e.target.value) }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.benefits.priorityBooking}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, priorityBooking: e.target.checked }
-                  }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Priority Booking</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.benefits.roadsideAssistance}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, roadsideAssistance: e.target.checked }
-                  }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Roadside Assistance</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.benefits.extendedWarranty}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, extendedWarranty: e.target.checked }
-                  }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Extended Warranty Coverage</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.benefits.conciergeService}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    benefits: { ...prev.benefits, conciergeService: e.target.checked }
-                  }))}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Concierge Services</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Custom Features */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Custom Features</h3>
-            
-            <div className="space-y-4">
-              {formData.features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={feature.name}
-                      onChange={(e) => updateFeature(index, 'name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-                      placeholder="Feature name"
-                    />
-                    <input
-                      type="text"
-                      value={feature.description}
-                      onChange={(e) => updateFeature(index, 'description', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Feature description"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={feature.included}
-                        onChange={(e) => updateFeature(index, 'included', e.target.checked)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Included</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removeFeature(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+        {/* Custom Features */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Custom Features</h3>
+          
+          <div className="space-y-4">
+            {formData.features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
                 <div className="flex-1">
                   <input
                     type="text"
-                    value={newFeature.name}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-                    placeholder="New feature name"
+                    value={feature.name}
+                    onChange={(e) => updateFeature(index, 'name', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 mb-2"
+                    placeholder="Feature name"
                   />
                   <input
                     type="text"
-                    value={newFeature.description}
-                    onChange={(e) => setNewFeature(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="New feature description"
+                    value={feature.description}
+                    onChange={(e) => updateFeature(index, 'description', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    placeholder="Feature description"
                   />
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={newFeature.included}
-                      onChange={(e) => setNewFeature(prev => ({ ...prev, included: e.target.checked }))}
+                      checked={feature.included}
+                      onChange={(e) => updateFeature(index, 'included', e.target.checked)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="ml-2 text-sm text-gray-700">Included</span>
                   </label>
                   <button
                     type="button"
-                    onClick={addFeature}
-                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => removeFeature(index)}
+                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-all duration-200"
                   >
-                    <Plus className="w-4 h-4" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
+            ))}
+
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={newFeature.name}
+                  onChange={(e) => setNewFeature(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 mb-2"
+                  placeholder="New feature name"
+                />
+                <input
+                  type="text"
+                  value={newFeature.description}
+                  onChange={(e) => setNewFeature(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  placeholder="New feature description"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={newFeature.included}
+                    onChange={(e) => setNewFeature(prev => ({ ...prev, included: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Included</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={addFeature}
+                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Form Actions */}
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              {mode === 'create' ? 'Create Plan' : 'Update Plan'}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </ModalWrapper>
   )

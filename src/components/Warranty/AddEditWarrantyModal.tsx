@@ -72,6 +72,7 @@ interface Props {
 }
 
 export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty }: Props) {
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     customer: '',
     vehicle: '',
@@ -112,24 +113,33 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   const [newExclusion, setNewExclusion] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [loading, setLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(true)
 
   // Fetch customers and vehicles
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
+        setDataLoading(true)
         const [customersResponse, vehiclesResponse] = await Promise.all([
           api.get('/customers'),
           api.get('/vehicles')
         ])
-        setCustomers(customersResponse.data)
-        setVehicles(vehiclesResponse.data)
+        
+        // Ensure we get arrays from the API responses
+        const customersData = Array.isArray(customersResponse.data) ? customersResponse.data : 
+                           Array.isArray(customersResponse.data?.data) ? customersResponse.data.data : []
+        const vehiclesData = Array.isArray(vehiclesResponse.data) ? vehiclesResponse.data : 
+                           Array.isArray(vehiclesResponse.data?.data) ? vehiclesResponse.data.data : []
+        
+        setCustomers(customersData)
+        setVehicles(vehiclesData)
       } catch (error) {
         console.error('Error fetching data:', error)
         toast.error('Failed to fetch customers and vehicles')
+        setCustomers([])
+        setVehicles([])
       } finally {
-        setLoading(false)
+        setDataLoading(false)
       }
     }
 
@@ -159,23 +169,31 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
     }
   }, [warranty, mode])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleSubmit = async () => {
     if (!formData.customer || !formData.vehicle || !formData.name || !formData.endDate) {
       toast.error('Please fill in all required fields')
       return
     }
 
-    const submitData = {
-      ...formData,
-      mileageLimit: formData.mileageLimit ? parseInt(formData.mileageLimit) : undefined,
-      currentMileage: parseInt(formData.currentMileage),
-      deductible: parseFloat(formData.deductible),
-      maxClaimAmount: formData.maxClaimAmount ? parseFloat(formData.maxClaimAmount) : undefined
-    }
+    setLoading(true)
 
-    onSubmit(submitData)
+    try {
+      const submitData = {
+        ...formData,
+        mileageLimit: formData.mileageLimit ? parseInt(formData.mileageLimit) : undefined,
+        currentMileage: parseInt(formData.currentMileage),
+        deductible: parseFloat(formData.deductible),
+        maxClaimAmount: formData.maxClaimAmount ? parseFloat(formData.maxClaimAmount) : undefined
+      }
+
+      await onSubmit(submitData)
+      onClose()
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to save warranty'
+      toast.error(message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const addExclusion = () => {
@@ -199,396 +217,338 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   }
 
   return (
-    <ModalWrapper isOpen={true} onClose={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {mode === 'create' ? 'Create New Warranty' : 'Edit Warranty'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+    <ModalWrapper
+      isOpen={true}
+      onClose={onClose}
+      title={mode === 'create' ? 'Create New Warranty' : 'Edit Warranty'}
+      icon={<Shield className="w-5 h-5" />}
+      submitText={mode === 'create' ? 'Create Warranty' : 'Update Warranty'}
+      submitColor="bg-blue-600"
+      onSubmit={handleSubmit}
+      submitDisabled={loading || dataLoading}
+      size="xl"
+    >
+      <div className="p-6 space-y-6">
+        {/* Customer and Vehicle Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Customer *</span>
+            <select
+              value={formData.customer}
+              onChange={(e) => setFormData(prev => ({ ...prev, customer: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              required
+              disabled={loading || dataLoading}
             >
-              <X className="w-5 h-5" />
-            </button>
+              <option value="">{dataLoading ? 'Loading...' : 'Select Customer'}</option>
+              {Array.isArray(customers) && customers.map(customer => (
+                <option key={customer._id} value={customer._id}>
+                  {customer.name} ({customer.email})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Vehicle *</span>
+            <select
+              value={formData.vehicle}
+              onChange={(e) => setFormData(prev => ({ ...prev, vehicle: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              required
+              disabled={loading || dataLoading}
+            >
+              <option value="">{dataLoading ? 'Loading...' : 'Select Vehicle'}</option>
+              {Array.isArray(vehicles) && vehicles.map(vehicle => (
+                <option key={vehicle._id} value={vehicle._id}>
+                  {vehicle.year} {vehicle.make} {vehicle.model} ({vehicle.vin})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Warranty Type *</span>
+            <select
+              value={formData.warrantyType}
+              onChange={(e) => setFormData(prev => ({ ...prev, warrantyType: e.target.value as any }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+            >
+              <option value="manufacturer">Manufacturer</option>
+              <option value="extended">Extended</option>
+              <option value="powertrain">Powertrain</option>
+              <option value="bumper_to_bumper">Bumper to Bumper</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Warranty Name *</span>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              placeholder="e.g., Premium Extended Warranty"
+              required
+            />
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700 mb-2 block">Description</span>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white resize-none"
+            placeholder="Describe the warranty coverage..."
+          />
+        </label>
+
+        {/* Dates and Mileage */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Start Date *</span>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">End Date *</span>
+            <input
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Mileage Limit</span>
+            <input
+              type="number"
+              min="0"
+              value={formData.mileageLimit}
+              onChange={(e) => setFormData(prev => ({ ...prev, mileageLimit: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              placeholder="e.g., 50000"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Current Mileage</span>
+            <input
+              type="number"
+              min="0"
+              value={formData.currentMileage}
+              onChange={(e) => setFormData(prev => ({ ...prev, currentMileage: e.target.value }))}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+              placeholder="e.g., 25000"
+            />
+          </label>
+        </div>
+
+        {/* Coverage Details */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Coverage Details</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {Object.entries(formData.coverage).map(([key, value]) => (
+              <label key={key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    coverage: { ...prev.coverage, [key]: e.target.checked }
+                  }))}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700 capitalize">{key}</span>
+              </label>
+            ))}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Information */}
+        {/* Financial Details */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Financial Details</h3>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Customer *
-              </label>
-              <select
-                value={formData.customer}
-                onChange={(e) => setFormData(prev => ({ ...prev, customer: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-                disabled={loading}
-              >
-                <option value="">{loading ? 'Loading...' : 'Select Customer'}</option>
-                {customers.map(customer => (
-                  <option key={customer._id} value={customer._id}>
-                    {customer.name} ({customer.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vehicle *
-              </label>
-              <select
-                value={formData.vehicle}
-                onChange={(e) => setFormData(prev => ({ ...prev, vehicle: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-                disabled={loading}
-              >
-                <option value="">{loading ? 'Loading...' : 'Select Vehicle'}</option>
-                {vehicles.map(vehicle => (
-                  <option key={vehicle._id} value={vehicle._id}>
-                    {vehicle.year} {vehicle.make} {vehicle.model} ({vehicle.vin})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Warranty Type *
-              </label>
-              <select
-                value={formData.warrantyType}
-                onChange={(e) => setFormData(prev => ({ ...prev, warrantyType: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="manufacturer">Manufacturer</option>
-                <option value="extended">Extended</option>
-                <option value="powertrain">Powertrain</option>
-                <option value="bumper_to_bumper">Bumper to Bumper</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Warranty Name *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Premium Extended Warranty"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Describe the warranty coverage..."
-            />
-          </div>
-
-          {/* Dates and Mileage */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Date *
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Date *
-              </label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mileage Limit
-              </label>
-              <input
-                type="number"
-                value={formData.mileageLimit}
-                onChange={(e) => setFormData(prev => ({ ...prev, mileageLimit: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., 100000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Current Mileage
-              </label>
-              <input
-                type="number"
-                value={formData.currentMileage}
-                onChange={(e) => setFormData(prev => ({ ...prev, currentMileage: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., 50000"
-              />
-            </div>
-          </div>
-
-          {/* Coverage Options */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Coverage Options</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {Object.entries(formData.coverage).map(([key, value]) => (
-                <label key={key} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={value}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      coverage: { ...prev.coverage, [key]: e.target.checked }
-                    }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Financial Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Deductible ($)
-              </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Deductible ($)</span>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.deductible}
                 onChange={(e) => setFormData(prev => ({ ...prev, deductible: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
                 placeholder="0.00"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Claim Amount ($)
-              </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Max Claim Amount ($)</span>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.maxClaimAmount}
                 onChange={(e) => setFormData(prev => ({ ...prev, maxClaimAmount: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
                 placeholder="0.00"
               />
-            </div>
-          </div>
-
-          {/* Provider Information */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Provider Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Provider Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.provider.name}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    provider: { ...prev.provider, name: e.target.value }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Warranty Provider Name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Provider Phone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.provider.contact.phone}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    provider: { 
-                      ...prev.provider, 
-                      contact: { ...prev.provider.contact, phone: e.target.value }
-                    }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="(555) 123-4567"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Provider Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.provider.contact.email}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    provider: { 
-                      ...prev.provider, 
-                      contact: { ...prev.provider.contact, email: e.target.value }
-                    }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="provider@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Provider Address
-                </label>
-                <input
-                  type="text"
-                  value={formData.provider.contact.address}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    provider: { 
-                      ...prev.provider, 
-                      contact: { ...prev.provider.contact, address: e.target.value }
-                    }
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="123 Provider St, City, State"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Terms and Exclusions */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Terms and Exclusions</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Terms and Conditions
-              </label>
-              <textarea
-                value={formData.terms}
-                onChange={(e) => setFormData(prev => ({ ...prev, terms: e.target.value }))}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter warranty terms and conditions..."
-              />
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Exclusions
-              </label>
-              <div className="space-y-2">
-                {formData.exclusions.map((exclusion, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={exclusion}
-                      onChange={(e) => {
-                        const newExclusions = [...formData.exclusions]
-                        newExclusions[index] = e.target.value
-                        setFormData(prev => ({ ...prev, exclusions: newExclusions }))
-                      }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExclusion(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newExclusion}
-                    onChange={(e) => setNewExclusion(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Add new exclusion..."
-                  />
-                  <button
-                    type="button"
-                    onClick={addExclusion}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
             </label>
+          </div>
+        </div>
+
+        {/* Provider Information */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Provider Information</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Provider Name</span>
+              <input
+                type="text"
+                value={formData.provider.name}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  provider: { ...prev.provider, name: e.target.value }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+                placeholder="Provider name"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Provider Phone</span>
+              <input
+                type="tel"
+                value={formData.provider.contact.phone}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  provider: {
+                    ...prev.provider,
+                    contact: { ...prev.provider.contact, phone: e.target.value }
+                  }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+                placeholder="Phone number"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Provider Email</span>
+              <input
+                type="email"
+                value={formData.provider.contact.email}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  provider: {
+                    ...prev.provider,
+                    contact: { ...prev.provider.contact, email: e.target.value }
+                  }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+                placeholder="Email address"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">Provider Address</span>
+              <input
+                type="text"
+                value={formData.provider.contact.address}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  provider: {
+                    ...prev.provider,
+                    contact: { ...prev.provider.contact, address: e.target.value }
+                  }
+                }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
+                placeholder="Address"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Terms and Conditions */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Terms and Conditions</h3>
+          
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Terms</span>
+            <textarea
+              value={formData.terms}
+              onChange={(e) => setFormData(prev => ({ ...prev, terms: e.target.value }))}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white resize-none"
+              placeholder="Enter warranty terms and conditions..."
+            />
+          </label>
+        </div>
+
+        {/* Exclusions */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Exclusions</h3>
+          
+          <div className="space-y-4">
+            {formData.exclusions.map((exclusion, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                <span className="flex-1 text-sm text-gray-800">{exclusion}</span>
+                <button
+                  type="button"
+                  onClick={() => removeExclusion(index)}
+                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-all duration-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+              <input
+                type="text"
+                value={newExclusion}
+                onChange={(e) => setNewExclusion(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                placeholder="Add new exclusion"
+                onKeyPress={(e) => e.key === 'Enter' && addExclusion()}
+              />
+              <button
+                type="button"
+                onClick={addExclusion}
+                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-all duration-200"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div className="border-t border-gray-200 pt-6">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">Notes</span>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white resize-none"
               placeholder="Additional notes..."
             />
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              {mode === 'create' ? 'Create Warranty' : 'Update Warranty'}
-            </button>
-          </div>
-        </form>
+          </label>
+        </div>
       </div>
     </ModalWrapper>
   )
