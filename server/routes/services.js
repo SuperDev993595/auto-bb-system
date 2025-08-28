@@ -560,12 +560,24 @@ router.put('/workorders/:id', requireAnyAdmin, async (req, res) => {
       delete updateData.technicianId;
     }
 
+    // Handle customer and vehicle updates
+    if (updateData.customerId) {
+      updateData.customer = updateData.customerId;
+      delete updateData.customerId;
+    }
+    
+    if (updateData.vehicleId) {
+      updateData.vehicle = updateData.vehicleId;
+      delete updateData.vehicleId;
+    }
+
     // Update work order
     Object.assign(workOrder, updateData);
     await workOrder.save();
 
     // Populate references
     await workOrder.populate('customer', 'name email phone');
+    await workOrder.populate('vehicle', 'make model year vin licensePlate mileage color');
     if (workOrder.technician) {
       await workOrder.populate('technician', 'name email');
     }

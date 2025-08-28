@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { ServiceCatalogItem, WorkOrder, Technician } from '../../utils/CustomerTypes'
+import { fetchServiceCatalog, fetchTechnicians } from '../actions/services'
 
 interface ServicesState {
   catalog: ServiceCatalogItem[]
@@ -114,7 +115,38 @@ const initialState: ServicesState = {
       completedDate: '2024-08-01'
     }
   ],
-  technicians: [],
+  technicians: [
+    {
+      id: 'tech1',
+      name: 'John Smith',
+      email: 'john.smith@autobb.com',
+      phone: '+1-555-0101',
+      hourlyRate: 120,
+      specialties: ['Engine Repair', 'Transmission'],
+      isActive: true,
+      hireDate: '2023-01-15'
+    },
+    {
+      id: 'tech2',
+      name: 'Sarah Johnson',
+      email: 'sarah.johnson@autobb.com',
+      phone: '+1-555-0102',
+      hourlyRate: 110,
+      specialties: ['Electrical Systems', 'Diagnostics'],
+      isActive: true,
+      hireDate: '2023-03-20'
+    },
+    {
+      id: 'tech3',
+      name: 'Mike Davis',
+      email: 'mike.davis@autobb.com',
+      phone: '+1-555-0103',
+      hourlyRate: 105,
+      specialties: ['Brake Systems', 'Suspension'],
+      isActive: true,
+      hireDate: '2023-06-10'
+    }
+  ],
   loading: false,
   error: null
 }
@@ -173,6 +205,41 @@ const servicesSlice = createSlice({
       state.error = action.payload
       state.loading = false
     }
+  },
+  extraReducers: (builder) => {
+    // Service Catalog
+    builder
+      .addCase(fetchServiceCatalog.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchServiceCatalog.fulfilled, (state, action) => {
+        state.loading = false
+        if (action.payload.success && action.payload.data) {
+          state.catalog = action.payload.data.services || action.payload.data
+        }
+      })
+      .addCase(fetchServiceCatalog.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch service catalog'
+      })
+      
+    // Technicians
+    builder
+      .addCase(fetchTechnicians.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchTechnicians.fulfilled, (state, action) => {
+        state.loading = false
+        if (action.payload.success && action.payload.data) {
+          state.technicians = action.payload.data.technicians || action.payload.data
+        }
+      })
+      .addCase(fetchTechnicians.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string || 'Failed to fetch technicians'
+      })
   }
 })
 
