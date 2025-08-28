@@ -1,247 +1,139 @@
-import { toast } from 'react-hot-toast';
+import api from './api'
 
 export interface Notification {
-  id: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'approval' | 'urgent';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  actionUrl?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: 'approval' | 'followup' | 'system' | 'reminder';
+  id: string
+  type: 'warranty_expiry' | 'membership_expiry' | 'warranty_mileage' | 'membership_renewal'
+  title: string
+  message: string
+  priority: 'low' | 'medium' | 'high'
+  read: boolean
+  createdAt: string
+  data?: any
 }
 
-export interface NotificationPreferences {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-  inApp: boolean;
-  categories: string[];
+export interface NotificationSettings {
+  emailNotifications: boolean
+  smsNotifications: boolean
+  pushNotifications: boolean
+  warrantyExpiryDays: number
+  membershipExpiryDays: number
+  mileageWarningPercentage: number
 }
 
 class NotificationService {
-  private notifications: Notification[] = [];
-  private listeners: Array<(notifications: Notification[]) => void> = [];
-  private ws: WebSocket | null = null;
-
-  constructor() {
-    this.initializeWebSocket();
-    this.loadNotifications();
-  }
-
-  private initializeWebSocket() {
-    try {
-      // Connect to WebSocket for real-time notifications
-      this.ws = new WebSocket(`${process.env.REACT_APP_WS_URL || 'ws://localhost:3001'}/notifications`);
-      
-      this.ws.onmessage = (event) => {
-        const notification = JSON.parse(event.data);
-        this.addNotification(notification);
-      };
-
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      this.ws.onclose = () => {
-        // Reconnect after 5 seconds
-        setTimeout(() => this.initializeWebSocket(), 5000);
-      };
-    } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
-    }
-  }
-
-  // Add a new notification
-  addNotification(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) {
-    const newNotification: Notification = {
-      ...notification,
-      id: this.generateId(),
-      timestamp: new Date(),
-      read: false,
-    };
-
-    this.notifications.unshift(newNotification);
-    this.notifyListeners();
-    this.showToast(newNotification);
-    this.saveNotifications();
-  }
-
-  // Show toast notification
-  private showToast(notification: Notification) {
-    const toastOptions = {
-      duration: notification.priority === 'urgent' ? 8000 : 4000,
-      position: 'top-right' as const,
-    };
-
-    switch (notification.type) {
-      case 'success':
-        toast.success(notification.message, toastOptions);
-        break;
-      case 'error':
-        toast.error(notification.message, toastOptions);
-        break;
-      case 'warning':
-        toast(notification.message, { ...toastOptions, icon: '⚠️' });
-        break;
-      case 'approval':
-        toast(notification.message, { 
-          ...toastOptions, 
-          icon: '📋',
-          style: { background: '#3B82F6', color: 'white' }
-        });
-        break;
-      case 'urgent':
-        toast(notification.message, { 
-          ...toastOptions, 
-          icon: '🚨',
-          style: { background: '#DC2626', color: 'white' }
-        });
-        break;
-      default:
-        toast(notification.message, toastOptions);
-    }
-  }
-
   // Get all notifications
-  getNotifications(): Notification[] {
-    return this.notifications;
-  }
-
-  // Get unread notifications
-  getUnreadNotifications(): Notification[] {
-    return this.notifications.filter(n => !n.read);
-  }
-
-  // Get notifications by category
-  getNotificationsByCategory(category: string): Notification[] {
-    return this.notifications.filter(n => n.category === category);
-  }
-
-  // Get urgent notifications
-  getUrgentNotifications(): Notification[] {
-    return this.notifications.filter(n => n.priority === 'urgent' && !n.read);
+  async getNotifications(): Promise<Notification[]> {
+    try {
+      const response = await api.get('/notifications')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
+      return []
+    }
   }
 
   // Mark notification as read
-  markAsRead(id: string) {
-    const notification = this.notifications.find(n => n.id === id);
-    if (notification) {
-      notification.read = true;
-      this.notifyListeners();
-      this.saveNotifications();
+  async markAsRead(notificationId: string): Promise<void> {
+    try {
+      await api.patch(`/notifications/${notificationId}/read`)
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
     }
   }
 
   // Mark all notifications as read
-  markAllAsRead() {
-    this.notifications.forEach(n => n.read = true);
-    this.notifyListeners();
-    this.saveNotifications();
-  }
-
-  // Delete notification
-  deleteNotification(id: string) {
-    this.notifications = this.notifications.filter(n => n.id !== id);
-    this.notifyListeners();
-    this.saveNotifications();
-  }
-
-  // Clear all notifications
-  clearAllNotifications() {
-    this.notifications = [];
-    this.notifyListeners();
-    this.saveNotifications();
-  }
-
-  // Subscribe to notification changes
-  subscribe(listener: (notifications: Notification[]) => void) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
-  }
-
-  // Notify all listeners
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener([...this.notifications]));
-  }
-
-  // Generate unique ID
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
-
-  // Save notifications to localStorage
-  private saveNotifications() {
+  async markAllAsRead(): Promise<void> {
     try {
-      localStorage.setItem('notifications', JSON.stringify(this.notifications));
+      await api.patch('/notifications/read-all')
     } catch (error) {
-      console.error('Failed to save notifications:', error);
+      console.error('Error marking all notifications as read:', error)
     }
   }
 
-  // Load notifications from localStorage
-  private loadNotifications() {
+  // Get notification settings
+  async getNotificationSettings(): Promise<NotificationSettings> {
     try {
-      const saved = localStorage.getItem('notifications');
-      if (saved) {
-        this.notifications = JSON.parse(saved).map((n: any) => ({
-          ...n,
-          timestamp: new Date(n.timestamp)
-        }));
+      const response = await api.get('/notifications/settings')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching notification settings:', error)
+      return {
+        emailNotifications: true,
+        smsNotifications: false,
+        pushNotifications: true,
+        warrantyExpiryDays: 30,
+        membershipExpiryDays: 7,
+        mileageWarningPercentage: 90
       }
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
     }
   }
 
-  // Send approval request notification
-  sendApprovalRequest(customerName: string, serviceName: string, cost: number) {
-    this.addNotification({
-      type: 'approval',
-      title: 'Approval Required',
-      message: `${customerName} - ${serviceName} ($${cost}) requires approval`,
-      priority: cost > 1000 ? 'urgent' : 'high',
-      category: 'approval',
-      actionUrl: '/admin/dashboard/approvals'
-    });
+  // Update notification settings
+  async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<void> {
+    try {
+      await api.put('/notifications/settings', settings)
+    } catch (error) {
+      console.error('Error updating notification settings:', error)
+    }
   }
 
-  // Send follow-up task notification
-  sendFollowUpTaskNotification(customerName: string, assignedTo: string) {
-    this.addNotification({
-      type: 'warning',
-      title: 'Follow-up Task Assigned',
-      message: `Follow-up task for ${customerName} assigned to ${assignedTo}`,
-      priority: 'medium',
-      category: 'followup',
-      actionUrl: '/admin/dashboard/tasks'
-    });
+  // Get expiring warranties
+  async getExpiringWarranties(days: number = 30): Promise<any[]> {
+    try {
+      const response = await api.get(`/warranties/expiring?days=${days}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching expiring warranties:', error)
+      return []
+    }
   }
 
-  // Send urgent reminder
-  sendUrgentReminder(message: string, actionUrl?: string) {
-    this.addNotification({
-      type: 'urgent',
-      title: 'Urgent Reminder',
-      message,
-      priority: 'urgent',
-      category: 'reminder',
-      actionUrl
-    });
+  // Get expiring memberships
+  async getExpiringMemberships(days: number = 7): Promise<any[]> {
+    try {
+      const response = await api.get(`/memberships/expiring?days=${days}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching expiring memberships:', error)
+      return []
+    }
   }
 
-  // Get notification count
-  getNotificationCount(): number {
-    return this.notifications.filter(n => !n.read).length;
+  // Get warranties approaching mileage limit
+  async getWarrantiesApproachingMileage(percentage: number = 90): Promise<any[]> {
+    try {
+      const response = await api.get(`/warranties/mileage-warning?percentage=${percentage}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching warranties approaching mileage limit:', error)
+      return []
+    }
   }
 
-  // Get urgent notification count
-  getUrgentNotificationCount(): number {
-    return this.notifications.filter(n => n.priority === 'urgent' && !n.read).length;
+  // Send test notification
+  async sendTestNotification(type: 'email' | 'sms' | 'push'): Promise<void> {
+    try {
+      await api.post('/notifications/test', { type })
+    } catch (error) {
+      console.error('Error sending test notification:', error)
+    }
+  }
+
+  // Get notification statistics
+  async getNotificationStats(): Promise<any> {
+    try {
+      const response = await api.get('/notifications/stats')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching notification stats:', error)
+      return {
+        total: 0,
+        unread: 0,
+        byType: {},
+        byPriority: {}
+      }
+    }
   }
 }
 
-export default new NotificationService();
+export default new NotificationService()

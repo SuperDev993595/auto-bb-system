@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import ModalWrapper from '../../utils/ModalWrapper'
 import { Shield, Plus, X } from '../../utils/icons'
+import api from '../../services/api'
+
+interface Customer {
+  _id: string
+  name: string
+  email: string
+}
+
+interface Vehicle {
+  _id: string
+  make: string
+  model: string
+  year: number
+  vin: string
+}
 
 interface Warranty {
   _id: string
@@ -95,6 +110,31 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   })
 
   const [newExclusion, setNewExclusion] = useState('')
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // Fetch customers and vehicles
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [customersResponse, vehiclesResponse] = await Promise.all([
+          api.get('/customers'),
+          api.get('/vehicles')
+        ])
+        setCustomers(customersResponse.data)
+        setVehicles(vehiclesResponse.data)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        toast.error('Failed to fetch customers and vehicles')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   useEffect(() => {
     if (warranty && mode === 'edit') {
@@ -187,9 +227,14 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
                 onChange={(e) => setFormData(prev => ({ ...prev, customer: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={loading}
               >
-                <option value="">Select Customer</option>
-                {/* Customer options would be populated from API */}
+                <option value="">{loading ? 'Loading...' : 'Select Customer'}</option>
+                {customers.map(customer => (
+                  <option key={customer._id} value={customer._id}>
+                    {customer.name} ({customer.email})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -202,9 +247,14 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
                 onChange={(e) => setFormData(prev => ({ ...prev, vehicle: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
+                disabled={loading}
               >
-                <option value="">Select Vehicle</option>
-                {/* Vehicle options would be populated from API */}
+                <option value="">{loading ? 'Loading...' : 'Select Vehicle'}</option>
+                {vehicles.map(vehicle => (
+                  <option key={vehicle._id} value={vehicle._id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model} ({vehicle.vin})
+                  </option>
+                ))}
               </select>
             </div>
 
