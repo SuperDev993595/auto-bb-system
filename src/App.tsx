@@ -66,6 +66,8 @@ import PublicAboutPage from "./pages/PublicWebsite/AboutPage";
 import PublicContactPage from "./pages/PublicWebsite/ContactPage";
 import CustomerMemberships from "./pages/customer/CustomerMemberships";
 import CustomerWarranties from "./pages/customer/CustomerWarranties";
+import MembershipsPage from "./pages/MembershipsPage";
+import WarrantiesPage from "./pages/WarrantiesPage";
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -141,6 +143,8 @@ export default function App() {
         <Route path="sms" element={<SMSPage />} />
         <Route path="live-chat" element={<LiveChatPage />} />
         <Route path="yellowpages" element={<YellowPagesPage />} />
+        <Route path="memberships" element={<MembershipsPage />} />
+        <Route path="warranties" element={<WarrantiesPage />} />
         {/* <Route path="files" element={<FileUploadPage />} />
         <Route path="pdf-generation" element={<PDFGenerationPage />} /> */}
         <Route 

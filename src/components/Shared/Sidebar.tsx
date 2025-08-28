@@ -17,7 +17,9 @@ import {
     Search,
     ChevronDown,
     ChevronRight,
-    Wrench
+    Wrench,
+    Shield,
+    Car
 } from "../../utils/icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -46,7 +48,9 @@ const navGroups: NavGroup[] = [
         items: [
             { to: "/admin/dashboard/customers", label: "Customers", icon: <Users size={18} /> },
             { to: "/admin/dashboard/appointments", label: "Appointments", icon: <Calendar size={18} /> },
+            { to: "/admin/dashboard/services", label: "Services", icon: <Settings size={18} /> },
             { to: "/admin/dashboard/approvals", label: "Approvals", icon: <ClipboardList size={18} />, roles: ['super_admin', 'admin'] },
+            { to: "/admin/dashboard/work-orders", label: "Work Orders", icon: <ClipboardList size={18} /> },
             { to: "/admin/dashboard/job-board", label: "Job Board", icon: <Wrench size={18} /> },
             { to: "/admin/dashboard/tasks", label: "Tasks", icon: <ClipboardList size={18} /> },
         ]
@@ -55,9 +59,9 @@ const navGroups: NavGroup[] = [
         title: "Business Management",
         items: [
             { to: "/admin/dashboard/business-clients", label: "Business Clients", icon: <Building2 size={18} />, roles: ['super_admin', 'admin'] },
-            { to: "/admin/dashboard/services", label: "Services", icon: <Settings size={18} /> },
-            { to: "/admin/dashboard/work-orders", label: "Work Orders", icon: <ClipboardList size={18} /> },
             { to: "/admin/dashboard/inventory", label: "Inventory", icon: <Package size={18} /> },
+            { to: "/admin/dashboard/memberships", label: "Memberships", icon: <Shield size={18} /> },
+            { to: "/admin/dashboard/warranties", label: "Warranties", icon: <Car size={18} /> },
         ]
     },
     {
