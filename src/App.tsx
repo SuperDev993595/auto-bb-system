@@ -57,6 +57,8 @@ import PDFGenerationPage from "./pages/PDFGenerationPage";
 import Dashboard from "./pages/dashboard/Dashboard";
 import ApprovalDashboard from "./pages/ApprovalDashboard";
 import JobBoardPage from "./pages/JobBoardPage";
+import MembershipPlansPage from "./pages/MembershipPlansPage";
+import WarrantyManagementPage from "./pages/WarrantyManagementPage";
 
 // Public Website Pages
 import PublicLayout from "./components/PublicWebsite/PublicLayout";
@@ -141,6 +143,8 @@ export default function App() {
         <Route path="sms" element={<SMSPage />} />
         <Route path="live-chat" element={<LiveChatPage />} />
         <Route path="yellowpages" element={<YellowPagesPage />} />
+        <Route path="membership-plans" element={<MembershipPlansPage />} />
+        <Route path="warranty-management" element={<WarrantyManagementPage />} />
         {/* <Route path="files" element={<FileUploadPage />} />
         <Route path="pdf-generation" element={<PDFGenerationPage />} /> */}
         <Route 
