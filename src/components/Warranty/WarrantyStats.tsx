@@ -1,4 +1,4 @@
-import { Shield, AlertTriangle, CheckCircle, Clock } from '../utils/icons'
+import { Shield, AlertTriangle, CheckCircle, Clock } from '../../utils/icons'
 
 interface WarrantyStats {
   totalWarranties: number
