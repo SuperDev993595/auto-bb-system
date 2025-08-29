@@ -104,7 +104,9 @@ router.post('/login', async (req, res) => {
           role: user.role,
           businessName: user.businessName,
           permissions: user.permissions || [],
-          avatar: user.avatar
+          avatar: user.avatar,
+          customerId: user.customerId,
+          businessClientId: user.businessClientId
         },
         token
       }
@@ -189,7 +191,12 @@ router.post('/register', async (req, res) => {
           }
         });
         await customer.save();
-        console.log('Customer record created for user:', newUser._id);
+        
+        // Update the User record with the customerId
+        newUser.customerId = customer._id;
+        await newUser.save();
+        
+        console.log('Customer record created and linked to user:', newUser._id);
       } catch (customerError) {
         console.error('Error creating customer record:', customerError);
         // Don't fail the registration if customer creation fails
@@ -210,7 +217,9 @@ router.post('/register', async (req, res) => {
           email: newUser.email,
           role: newUser.role,
           businessName: newUser.businessName,
-          permissions: newUser.permissions || []
+          permissions: newUser.permissions || [],
+          customerId: newUser.customerId,
+          businessClientId: newUser.businessClientId
         },
         token
       }
@@ -604,7 +613,9 @@ router.get('/me', authenticateToken, async (req, res) => {
           permissions: user.permissions || [],
           avatar: user.avatar,
           phone: user.phone,
-          lastLogin: user.lastLogin
+          lastLogin: user.lastLogin,
+          customerId: user.customerId,
+          businessClientId: user.businessClientId
         }
       }
     });

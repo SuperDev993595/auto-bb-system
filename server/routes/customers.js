@@ -2641,4 +2641,207 @@ router.delete('/:customerId/call-logs/:callLogId', authenticateToken, requireAny
   }
 });
 
+// Get customer memberships
+router.get('/:customerId/memberships', authenticateToken, async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ success: false, message: 'Invalid customer ID format' });
+    }
+
+    // Check if user has access to this customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    // If user is not admin, they can only access their own customer record
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      if (customer.userId?.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
+    // Import CustomerMembership model
+    const CustomerMembership = require('../models/CustomerMembership');
+    
+    const memberships = await CustomerMembership.find({
+      customer: customerId
+    })
+    .populate('membershipPlan')
+    .populate('customer', 'name email phone')
+    .populate('createdBy', 'name email')
+    .sort({ createdAt: -1 });
+
+    // Return memberships in the format the frontend expects
+    const formattedMemberships = memberships.map(membership => ({
+      id: membership._id,
+      planName: membership.membershipPlan?.name || 'Unknown Plan',
+      tier: membership.membershipPlan?.tier || 'basic',
+      status: membership.status,
+      startDate: membership.startDate,
+      endDate: membership.endDate,
+      monthlyFee: membership.price || 0,
+      benefitsUsed: membership.benefitsUsed?.inspections || 0,
+      totalBenefits: membership.membershipPlan?.benefits?.inspections || 0,
+      autoRenew: membership.autoRenew || false,
+      paymentMethod: 'Credit Card', // This would come from payment system
+      nextBillingDate: membership.nextBillingDate
+    }));
+
+    res.json({
+      success: true,
+      memberships: formattedMemberships
+    });
+  } catch (error) {
+    console.error('Error fetching customer memberships:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Cancel customer membership
+router.post('/:customerId/memberships/:membershipId/cancel', authenticateToken, async (req, res) => {
+  try {
+    const { customerId, membershipId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(membershipId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Check if user has access to this customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      if (customer.userId?.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
+    // Import CustomerMembership model
+    const CustomerMembership = require('../models/CustomerMembership');
+    
+    const membership = await CustomerMembership.findById(membershipId);
+    if (!membership) {
+      return res.status(404).json({ success: false, message: 'Membership not found' });
+    }
+
+    if (membership.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Membership does not belong to this customer' });
+    }
+
+    membership.status = 'cancelled';
+    membership.autoRenew = false;
+    await membership.save();
+
+    res.json({
+      success: true,
+      message: 'Membership cancelled successfully'
+    });
+  } catch (error) {
+    console.error('Error cancelling membership:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Renew customer membership
+router.post('/:customerId/memberships/:membershipId/renew', authenticateToken, async (req, res) => {
+  try {
+    const { customerId, membershipId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(membershipId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Check if user has access to this customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      if (customer.userId?.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
+    // Import CustomerMembership model
+    const CustomerMembership = require('../models/CustomerMembership');
+    
+    const membership = await CustomerMembership.findById(membershipId);
+    if (!membership) {
+      return res.status(404).json({ success: false, message: 'Membership not found' });
+    }
+
+    if (membership.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Membership does not belong to this customer' });
+    }
+
+    // Set new dates for renewal
+    const now = new Date();
+    membership.startDate = now;
+    membership.endDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+    membership.nextBillingDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    membership.status = 'active';
+    membership.autoRenew = true;
+    await membership.save();
+
+    res.json({
+      success: true,
+      message: 'Membership renewed successfully'
+    });
+  } catch (error) {
+    console.error('Error renewing membership:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Delete customer membership
+router.delete('/:customerId/memberships/:membershipId', authenticateToken, async (req, res) => {
+  try {
+    const { customerId, membershipId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(membershipId)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    // Check if user has access to this customer
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      if (customer.userId?.toString() !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
+    // Import CustomerMembership model
+    const CustomerMembership = require('../models/CustomerMembership');
+    
+    const membership = await CustomerMembership.findById(membershipId);
+    if (!membership) {
+      return res.status(404).json({ success: false, message: 'Membership not found' });
+    }
+
+    if (membership.customer.toString() !== customerId) {
+      return res.status(403).json({ success: false, message: 'Membership does not belong to this customer' });
+    }
+
+    await CustomerMembership.findByIdAndDelete(membershipId);
+
+    res.json({
+      success: true,
+      message: 'Membership deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting membership:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

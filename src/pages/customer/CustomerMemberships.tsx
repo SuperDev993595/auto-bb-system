@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Shield, 
   Crown, 
@@ -19,6 +19,7 @@ import {
 } from '../../utils/icons';
 import MembershipCard from '../../components/customer/MembershipCard';
 import MembershipComparison from '../../components/customer/MembershipComparison';
+import { AuthContext } from '../../context/AuthContext';
 
 interface Membership {
   id: string;
@@ -36,55 +37,195 @@ interface Membership {
 }
 
 export default function CustomerMemberships() {
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [selectedMembership, setSelectedMembership] = useState<Membership | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
-    loadMemberships();
-  }, []);
+    if (user) {
+      loadMemberships();
+    }
+  }, [user]);
+
+  // Ensure memberships is always an array
+  useEffect(() => {
+    if (!Array.isArray(memberships)) {
+      setMemberships([]);
+    }
+  }, [memberships]);
+
+  // Show loading if user is not yet loaded
+  if (!user && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user is not a customer
+  if (user && user.role !== 'customer') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
+          <p className="text-gray-600">This page is only available for customers.</p>
+        </div>
+      </div>
+    );
+  }
 
   const loadMemberships = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockMemberships: Membership[] = [
-        {
-          id: '1',
-          planName: 'Premium Membership',
-          tier: 'premium',
-          status: 'active',
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          monthlyFee: 49.99,
-          benefitsUsed: 8,
-          totalBenefits: 12,
-          autoRenew: true,
-          paymentMethod: 'Credit Card ****1234',
-          nextBillingDate: '2024-02-01'
-        },
-        {
-          id: '2',
-          planName: 'Basic Membership',
-          tier: 'basic',
-          status: 'expired',
-          startDate: '2023-01-01',
-          endDate: '2023-12-31',
-          monthlyFee: 19.99,
-          benefitsUsed: 5,
-          totalBenefits: 8,
-          autoRenew: false,
-          paymentMethod: 'Credit Card ****5678',
-          nextBillingDate: '2023-12-31'
-        }
-      ];
+      setError(null);
       
-      setMemberships(mockMemberships);
+      // Get customer ID from the authenticated user
+      if (!user || user.role !== 'customer') {
+        throw new Error('User not authenticated or not a customer.');
+      }
+
+      let customerId = user.customerId;
+      
+      // If customerId is not set, try to get it from the server
+      if (!customerId) {
+        console.log('Customer ID not found in user object, attempting to fetch from server...');
+        
+        try {
+          const userResponse = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            if (userData.success && userData.data?.user?.customerId) {
+              customerId = userData.data.user.customerId;
+              console.log('Retrieved customer ID from server:', customerId);
+            }
+          }
+        } catch (fetchError) {
+          console.log('Could not fetch updated user data:', fetchError);
+        }
+      }
+      
+      if (!customerId) {
+        throw new Error('Customer ID not found. This usually means your account needs to be properly linked. Please contact support or try logging out and back in.');
+      }
+
+      const response = await fetch(`/api/customers/${customerId}/memberships`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        } else if (response.status === 404) {
+          // No memberships found, set empty array
+          setMemberships([]);
+          return;
+        } else {
+          throw new Error(`Failed to fetch memberships: ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      console.log('Memberships data:', data.memberships);
+      setMemberships(data.memberships || []);
     } catch (error) {
       console.error('Error loading memberships:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load memberships');
+      setMemberships([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMembershipAction = async (membershipId: string, action: 'cancel' | 'renew' | 'delete') => {
+    try {
+      setLoading(true);
+      
+      if (!user || user.role !== 'customer') {
+        throw new Error('User not authenticated or not a customer.');
+      }
+
+      let customerId = user.customerId;
+      
+      // If customerId is not set, try to get it from the server
+      if (!customerId) {
+        try {
+          const userResponse = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            if (userData.success && userData.data?.user?.customerId) {
+              customerId = userData.data.user.customerId;
+            }
+          }
+        } catch (fetchError) {
+          console.log('Could not fetch updated user data:', fetchError);
+        }
+      }
+      
+      if (!customerId) {
+        throw new Error('Customer ID not found. This usually means your account needs to be properly linked. Please contact support or try logging out and back in.');
+      }
+
+      let endpoint = '';
+      let method = 'POST';
+      
+      switch (action) {
+        case 'cancel':
+          endpoint = `/api/customers/${customerId}/memberships/${membershipId}/cancel`;
+          break;
+        case 'renew':
+          endpoint = `/api/customers/${customerId}/memberships/${membershipId}/renew`;
+          break;
+        case 'delete':
+          endpoint = `/api/customers/${customerId}/memberships/${membershipId}`;
+          method = 'DELETE';
+          break;
+      }
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} membership: ${response.statusText}`);
+      }
+
+      // Reload memberships after successful action
+      await loadMemberships();
+    } catch (error) {
+      console.error(`Error ${action}ing membership:`, error);
+      setError(error instanceof Error ? error.message : `Failed to ${action} membership`);
     } finally {
       setLoading(false);
     }
@@ -118,13 +259,19 @@ export default function CustomerMemberships() {
     }
   };
 
-  const filteredMemberships = memberships.filter(membership => {
+  // Ensure memberships is always an array
+  const membershipsArray = Array.isArray(memberships) ? memberships : [];
+  
+  console.log('Memberships state:', memberships);
+  console.log('MembershipsArray:', membershipsArray);
+  
+  const filteredMemberships = membershipsArray.filter(membership => {
     const matchesSearch = membership.planName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || membership.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) {
+  if (loading && membershipsArray.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -149,13 +296,49 @@ export default function CustomerMemberships() {
               <Plus className="w-4 h-4" />
               <span>Compare Plans</span>
             </button>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={loadMemberships}
+              disabled={loading}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
               <Download className="w-4 h-4" />
-              <span>Export</span>
+              <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
             </button>
           </div>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <X className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+                {error.includes('Customer ID not found') && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                    <p className="text-yellow-800 text-xs">
+                      <strong>Solution:</strong> Try logging out and logging back in. If the problem persists, contact support.
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={loadMemberships}
+                  className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -164,7 +347,7 @@ export default function CustomerMemberships() {
             <div>
               <p className="text-sm font-medium text-gray-600">Active Memberships</p>
               <p className="text-2xl font-bold text-blue-600">
-                {memberships.filter(m => m.status === 'active').length}
+                {membershipsArray.filter(m => m.status === 'active').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -178,7 +361,7 @@ export default function CustomerMemberships() {
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Cost</p>
               <p className="text-2xl font-bold text-green-600">
-                ${memberships.filter(m => m.status === 'active').reduce((sum, m) => sum + m.monthlyFee, 0).toFixed(2)}
+                ${membershipsArray.filter(m => m.status === 'active').reduce((sum, m) => sum + m.monthlyFee, 0).toFixed(2)}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -192,7 +375,7 @@ export default function CustomerMemberships() {
             <div>
               <p className="text-sm font-medium text-gray-600">Benefits Used</p>
               <p className="text-2xl font-bold text-purple-600">
-                {memberships.reduce((sum, m) => sum + m.benefitsUsed, 0)}
+                {membershipsArray.reduce((sum, m) => sum + m.benefitsUsed, 0)}
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -206,8 +389,8 @@ export default function CustomerMemberships() {
             <div>
               <p className="text-sm font-medium text-gray-600">Next Billing</p>
               <p className="text-2xl font-bold text-orange-600">
-                {memberships.filter(m => m.status === 'active').length > 0 
-                  ? new Date(memberships.filter(m => m.status === 'active')[0].nextBillingDate).toLocaleDateString()
+                {membershipsArray.filter(m => m.status === 'active').length > 0 
+                  ? new Date(membershipsArray.filter(m => m.status === 'active')[0].nextBillingDate).toLocaleDateString()
                   : 'N/A'
                 }
               </p>
@@ -247,9 +430,9 @@ export default function CustomerMemberships() {
           </div>
           <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">
-              {filteredMemberships.length} of {memberships.length} memberships
-            </span>
+                         <span className="text-sm text-gray-600">
+               {filteredMemberships.length} of {membershipsArray.length} memberships
+             </span>
           </div>
         </div>
       </div>
@@ -259,15 +442,24 @@ export default function CustomerMemberships() {
         {filteredMemberships.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No memberships found</h3>
-            <p className="text-gray-600 mb-6">Get started with a membership plan to unlock exclusive benefits.</p>
-            <button
-              onClick={() => setShowComparison(true)}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Browse Plans</span>
-            </button>
+                         <h3 className="text-lg font-medium text-gray-900 mb-2">
+               {membershipsArray.length === 0 ? 'No memberships found' : 'No memberships match your filters'}
+             </h3>
+             <p className="text-gray-600 mb-6">
+               {membershipsArray.length === 0 
+                 ? 'Get started with a membership plan to unlock exclusive benefits.'
+                 : 'Try adjusting your search or filter criteria.'
+               }
+             </p>
+             {membershipsArray.length === 0 && (
+              <button
+                onClick={() => setShowComparison(true)}
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Browse Plans</span>
+              </button>
+            )}
           </div>
         ) : (
           filteredMemberships.map((membership) => (
@@ -296,12 +488,33 @@ export default function CustomerMemberships() {
                   <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                     <Eye className="w-4 h-4" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 text-red-400 hover:text-red-600 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {membership.status === 'active' && (
+                    <button 
+                      onClick={() => handleMembershipAction(membership.id, 'cancel')}
+                      className="p-2 text-yellow-400 hover:text-yellow-600 transition-colors"
+                      title="Cancel Membership"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  {membership.status === 'expired' && (
+                    <button 
+                      onClick={() => handleMembershipAction(membership.id, 'renew')}
+                      className="p-2 text-green-400 hover:text-green-600 transition-colors"
+                      title="Renew Membership"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  )}
+                  {membership.status === 'cancelled' && (
+                    <button 
+                      onClick={() => handleMembershipAction(membership.id, 'delete')}
+                      className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                      title="Delete Membership"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -350,6 +563,8 @@ export default function CustomerMemberships() {
                 onSelectPlan={(plan) => {
                   console.log('Selected plan:', plan);
                   setShowComparison(false);
+                  // Reload memberships after selecting a new plan
+                  loadMemberships();
                 }}
               />
             </div>
