@@ -7,19 +7,17 @@ import {
   X, 
   Calendar, 
   DollarSign, 
-  Users, 
   TrendingUp,
   Plus,
-  Edit,
   Trash2,
   Eye,
   Download,
   Filter,
   Search
 } from '../../utils/icons';
-import MembershipCard from '../../components/customer/MembershipCard';
 import MembershipComparison from '../../components/customer/MembershipComparison';
 import { AuthContext } from '../../context/AuthContext';
+import { User } from '../../services/auth';
 
 interface Membership {
   id: string;
@@ -43,12 +41,16 @@ export default function CustomerMemberships() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
-  const [selectedMembership, setSelectedMembership] = useState<Membership | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
+  // Type guard to ensure user exists and is a customer
+  const isCustomerUser = (user: any): user is User & { customerId?: string } => {
+    return user && user.role === 'customer';
+  };
+
   useEffect(() => {
-    if (user) {
+    if (user && isCustomerUser(user)) {
       loadMemberships();
     }
   }, [user]);
@@ -73,7 +75,7 @@ export default function CustomerMemberships() {
   }
 
   // Show error if user is not a customer
-  if (user && user.role !== 'customer') {
+  if (user && !isCustomerUser(user)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -93,7 +95,7 @@ export default function CustomerMemberships() {
       setError(null);
       
       // Get customer ID from the authenticated user
-      if (!user || user.role !== 'customer') {
+      if (!user || !isCustomerUser(user)) {
         throw new Error('User not authenticated or not a customer.');
       }
 
@@ -147,8 +149,6 @@ export default function CustomerMemberships() {
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
-      console.log('Memberships data:', data.memberships);
       setMemberships(data.memberships || []);
     } catch (error) {
       console.error('Error loading memberships:', error);
@@ -163,7 +163,7 @@ export default function CustomerMemberships() {
     try {
       setLoading(true);
       
-      if (!user || user.role !== 'customer') {
+      if (!user || !isCustomerUser(user)) {
         throw new Error('User not authenticated or not a customer.');
       }
 
@@ -261,9 +261,6 @@ export default function CustomerMemberships() {
 
   // Ensure memberships is always an array
   const membershipsArray = Array.isArray(memberships) ? memberships : [];
-  
-  console.log('Memberships state:', memberships);
-  console.log('MembershipsArray:', membershipsArray);
   
   const filteredMemberships = membershipsArray.filter(membership => {
     const matchesSearch = membership.planName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -561,7 +558,6 @@ export default function CustomerMemberships() {
             <div className="p-6">
               <MembershipComparison 
                 onSelectPlan={(plan) => {
-                  console.log('Selected plan:', plan);
                   setShowComparison(false);
                   // Reload memberships after selecting a new plan
                   loadMemberships();

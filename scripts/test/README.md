@@ -1,6 +1,6 @@
 # Test Scripts
 
-This folder contains test scripts for various features of the auto-bb-system.
+This folder contains test scripts for various features of the auto-repair-crm.
 
 ## Available Test Scripts
 

@@ -138,6 +138,10 @@ const MembershipPlanCard: React.FC<MembershipPlanCardProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Price badge for sorting visibility */}
+            <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold border border-green-200">
+              ${plan.price}
+            </div>
             <button
               onClick={() => onEdit(plan)}
               className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -247,6 +251,7 @@ export default function MembershipPlansPage() {
   const [tierFilter, setTierFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [billingFilter, setBillingFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'name' | 'tier'>('price-asc')
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false)
@@ -283,18 +288,36 @@ export default function MembershipPlansPage() {
     fetchStats()
   }, [])
 
-  // Filter plans
-  const filteredPlans = plans.filter(plan => {
-    const matchesSearch = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         plan.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesTier = tierFilter === 'all' || plan.tier === tierFilter
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && plan.isActive) ||
-                         (statusFilter === 'inactive' && !plan.isActive)
-    const matchesBilling = billingFilter === 'all' || plan.billingCycle === billingFilter
 
-    return matchesSearch && matchesTier && matchesStatus && matchesBilling
-  })
+
+  // Filter and sort plans
+  const filteredPlans = plans
+    .filter(plan => {
+      const matchesSearch = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           plan.description.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesTier = tierFilter === 'all' || plan.tier === tierFilter
+      const matchesStatus = statusFilter === 'all' || 
+                           (statusFilter === 'active' && plan.isActive) ||
+                           (statusFilter === 'inactive' && !plan.isActive)
+      const matchesBilling = billingFilter === 'all' || plan.billingCycle === billingFilter
+
+      return matchesSearch && matchesTier && matchesStatus && matchesBilling
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc':
+          return a.price - b.price
+        case 'price-desc':
+          return b.price - a.price
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'tier':
+          const tierOrder = { basic: 1, premium: 2, vip: 3, enterprise: 4 }
+          return tierOrder[a.tier] - tierOrder[b.tier]
+        default:
+          return 0
+      }
+    })
 
   // Handle plan operations
   const handleCreatePlan = async (planData: any) => {
@@ -441,7 +464,7 @@ export default function MembershipPlansPage() {
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tier</label>
             <select
@@ -482,6 +505,19 @@ export default function MembershipPlansPage() {
             </select>
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'price-asc' | 'price-desc' | 'name' | 'tier')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name">Name: A to Z</option>
+              <option value="tier">Tier: Basic to Enterprise</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -494,6 +530,19 @@ export default function MembershipPlansPage() {
               />
             </div>
           </div>
+        </div>
+        {/* Sort indicator */}
+        <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <span>Sorted by:</span>
+          <span className="font-medium">
+            {sortBy === 'price-asc' && 'Price (Low to High)'}
+            {sortBy === 'price-desc' && 'Price (High to Low)'}
+            {sortBy === 'name' && 'Name (A to Z)'}
+            {sortBy === 'tier' && 'Tier (Basic to Enterprise)'}
+          </span>
+          {(sortBy === 'price-asc' || sortBy === 'price-desc') && (
+            <span className="text-green-600 font-medium">• Plans are now arranged by price</span>
+          )}
         </div>
       </div>
 

@@ -6,7 +6,7 @@ const taskService = require('./server/services/taskService');
 const workOrderService = require('./server/services/workOrderService');
 
 // Test configuration
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-bb-system';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-repair-crm';
 
 async function testApprovalWorkflow() {
   try {

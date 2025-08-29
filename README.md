@@ -62,7 +62,7 @@ The system now uses a **standardized Lucide React icon library** for consistent 
 ## 📁 Project Structure
 
 ```
-auto-bb-system/
+auto-repair-crm/
 ├── src/                    # Frontend source code
 │   ├── components/        # Reusable UI components
 │   ├── pages/            # Page components
@@ -90,7 +90,7 @@ auto-bb-system/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd auto-bb-system
+   cd auto-repair-crm
    ```
 
 2. **Install dependencies**

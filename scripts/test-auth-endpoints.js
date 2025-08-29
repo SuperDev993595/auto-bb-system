@@ -6,7 +6,7 @@ require('dotenv').config();
 async function testAuthEndpoints() {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-bb-system');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-repair-crm');
     console.log('Connected to MongoDB');
 
     // Find a customer user

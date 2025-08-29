@@ -6,7 +6,7 @@ require('dotenv').config();
 async function fixCustomerIds() {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-bb-system');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auto-repair-crm');
     console.log('Connected to MongoDB');
 
     // Find all users with role 'customer' who don't have customerId set
