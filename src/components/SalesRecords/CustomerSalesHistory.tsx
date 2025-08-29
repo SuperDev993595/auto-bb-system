@@ -9,7 +9,7 @@ import {
   Eye,
   Edit,
   Trash2
-} from '../utils/icons';
+} from '../../utils/icons';
 import { 
   fetchCustomerSalesRecords, 
   deleteSalesRecordAction 

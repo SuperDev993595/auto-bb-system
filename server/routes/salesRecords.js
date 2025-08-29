@@ -140,8 +140,8 @@ router.get('/', authenticateToken, requireRole(['staff', 'admin', 'super_admin']
     const salesRecords = await SalesRecord.find(query)
       .populate('customer', 'businessName contactPerson.name email phone')
       .populate('salesPerson', 'name email')
-      .populate('inventoryItem', 'name partNumber')
-      .populate('service', 'name description')
+      .populate('items.inventoryItem', 'name partNumber')
+      .populate('items.service', 'name description')
       .sort(sort)
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -181,8 +181,8 @@ router.get('/:id', authenticateToken, requireRole(['staff', 'admin', 'super_admi
     const salesRecord = await SalesRecord.findById(req.params.id)
       .populate('customer', 'businessName contactPerson.name email phone address')
       .populate('salesPerson', 'name email')
-      .populate('inventoryItem', 'name partNumber sku')
-      .populate('service', 'name description')
+      .populate('items.inventoryItem', 'name partNumber sku')
+      .populate('items.service', 'name description')
       .populate('originalLeadId', 'title description');
 
     if (!salesRecord) {
