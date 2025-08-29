@@ -241,7 +241,9 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
               >
                 <option value="product">Product</option>
                 <option value="service">Service</option>
-                <option value="both">Product & Service</option>
+                <option value="package">Package</option>
+                <option value="consultation">Consultation</option>
+                <option value="other">Other</option>
               </select>
             </div>
 
@@ -258,7 +260,9 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
                 <option value="phone">Phone</option>
                 <option value="online">Online</option>
                 <option value="referral">Referral</option>
-                <option value="appointment">Appointment</option>
+                <option value="marketing_campaign">Marketing Campaign</option>
+                <option value="repeat_customer">Repeat Customer</option>
+                <option value="other">Other</option>
               </select>
             </div>
           </div>
@@ -469,7 +473,7 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
                     <option value="pending">Pending</option>
                     <option value="partial">Partial</option>
                     <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
+                    <option value="refunded">Refunded</option>
                   </select>
                 </div>
 
@@ -610,6 +614,7 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                   <option value="overdue">Overdue</option>
+                  <option value="no_follow_up">No Follow-up</option>
                 </select>
               </div>
             </div>

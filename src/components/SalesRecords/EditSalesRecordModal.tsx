@@ -3,6 +3,9 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { updateSalesRecordAction } from '../../redux/actions/salesRecords';
+import { fetchCustomers } from '../../redux/actions/customers';
+import { fetchInventoryItems } from '../../redux/actions/inventory';
+import { fetchServiceCatalog } from '../../redux/actions/services';
 import { RootState } from '../../redux/store';
 import { SalesRecord, UpdateSalesRecordData } from '../../services/salesRecords';
 
@@ -28,10 +31,10 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
   onSuccess,
   salesRecord
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { loading } = useSelector((state: RootState) => state.salesRecords);
-  const { list: customers } = useSelector((state: RootState) => state.customers);
-  const { items: inventory } = useSelector((state: RootState) => state.inventory);
+  const { list: customers, loading: customersLoading } = useSelector((state: RootState) => state.customers);
+  const { items: inventory, loading: inventoryLoading } = useSelector((state: RootState) => state.inventory);
   const { catalog: services } = useSelector((state: RootState) => state.services);
 
   const [formData, setFormData] = useState<Partial<UpdateSalesRecordData>>({
@@ -76,6 +79,11 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
 
   useEffect(() => {
     if (isOpen && salesRecord) {
+      // Fetch data when modal opens
+      dispatch(fetchCustomers({ limit: 1000 }));
+      dispatch(fetchInventoryItems({ limit: 1000 }));
+      dispatch(fetchServiceCatalog({ limit: 1000 }));
+
       // Populate form with existing data
       setFormData({
         customer: salesRecord.customer._id,
@@ -86,9 +94,20 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
         discount: salesRecord.discount,
         total: salesRecord.total,
         paymentStatus: salesRecord.paymentStatus,
+        paymentMethod: salesRecord.paymentMethod,
+        paymentDate: salesRecord.paymentDate,
+        paymentReference: salesRecord.paymentReference,
         salesSource: salesRecord.salesSource,
+        convertedFromLead: salesRecord.convertedFromLead,
+        originalLeadId: salesRecord.originalLeadId,
         status: salesRecord.status,
-        notes: salesRecord.notes || ''
+        saleDate: salesRecord.saleDate,
+        completionDate: salesRecord.completionDate,
+        notes: salesRecord.notes || '',
+        nextFollowUp: salesRecord.nextFollowUp,
+        followUpStatus: salesRecord.followUpStatus,
+        customerSatisfaction: salesRecord.customerSatisfaction,
+        warranty: salesRecord.warranty
       });
 
       // Convert existing items to form format
@@ -102,7 +121,7 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
       }));
       setFormItems(existingItems);
     }
-  }, [isOpen, salesRecord]);
+  }, [isOpen, salesRecord, dispatch]);
 
   useEffect(() => {
     // Calculate totals when items change
@@ -221,8 +240,11 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
                 onChange={(e) => handleInputChange('customer', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                disabled={customersLoading}
               >
-                <option value="">Select Customer</option>
+                <option value="">
+                  {customersLoading ? 'Loading customers...' : 'Select Customer'}
+                </option>
                 {customers.map((customer: any) => (
                   <option key={customer._id} value={customer._id}>
                     {customer.name} - {customer.phone}
@@ -242,7 +264,9 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
               >
                 <option value="product">Product</option>
                 <option value="service">Service</option>
-                <option value="both">Product & Service</option>
+                <option value="package">Package</option>
+                <option value="consultation">Consultation</option>
+                <option value="other">Other</option>
               </select>
             </div>
 
@@ -259,7 +283,9 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
                 <option value="phone">Phone</option>
                 <option value="online">Online</option>
                 <option value="referral">Referral</option>
-                <option value="appointment">Appointment</option>
+                <option value="marketing_campaign">Marketing Campaign</option>
+                <option value="repeat_customer">Repeat Customer</option>
+                <option value="other">Other</option>
               </select>
             </div>
           </div>
@@ -299,8 +325,16 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
                       setItemUnitPrice(selectedItemType === 'inventory' ? (item as any)?.sellingPrice || 0 : (item as any)?.laborRate || 0);
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={selectedItemType === 'inventory' ? inventoryLoading : false}
                   >
-                    <option value="">Select Item</option>
+                    <option value="">
+                      {selectedItemType === 'inventory' && inventoryLoading 
+                        ? 'Loading inventory...' 
+                        : selectedItemType === 'service' 
+                        ? 'Select Service' 
+                        : 'Select Item'
+                      }
+                    </option>
                     {selectedItemType === 'inventory' 
                       ? inventory.map((item: any) => (
                           <option key={item._id} value={item._id}>
@@ -462,7 +496,7 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
                     <option value="pending">Pending</option>
                     <option value="partial">Partial</option>
                     <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
+                    <option value="refunded">Refunded</option>
                   </select>
                 </div>
 
@@ -603,6 +637,7 @@ const EditSalesRecordModal: React.FC<EditSalesRecordModalProps> = ({
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                   <option value="overdue">Overdue</option>
+                  <option value="no_follow_up">No Follow-up</option>
                 </select>
               </div>
             </div>
