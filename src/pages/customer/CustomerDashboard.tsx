@@ -245,7 +245,7 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       {/* Smart Welcome Section with Notifications */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
         <div className="flex items-start justify-between">

@@ -186,7 +186,7 @@ export default function CustomerPreferences() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-8 space-y-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-center">
@@ -201,14 +201,14 @@ export default function CustomerPreferences() {
 
   if (!user?.customerId) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-8 space-y-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-center text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-                <p className="text-gray-600">You need to be logged in as a customer to access preferences.</p>
+                <p className="text-gray-500">You need to be logged in as a customer to access preferences.</p>
               </div>
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function CustomerPreferences() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">

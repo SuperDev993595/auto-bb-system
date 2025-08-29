@@ -532,7 +532,7 @@ export default function CustomerAppointments() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       {/* Smart Header */}
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-l-4 border-green-500">
         <div className="flex justify-between items-start">

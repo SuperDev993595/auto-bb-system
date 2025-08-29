@@ -501,7 +501,7 @@ export default function CustomerVehicles() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       {/* Smart Header */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border-l-4 border-blue-500">
         <div className="flex justify-between items-start">
