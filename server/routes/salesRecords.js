@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const SalesRecord = require('../models/SalesRecord');
 const Customer = require('../models/Customer');
-const { requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -80,7 +80,7 @@ const updateSalesRecordSchema = Joi.object({
 // @route   GET /api/sales-records
 // @desc    Get all sales records with filtering and pagination
 // @access  Private
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const {
       page = 1,
@@ -176,7 +176,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // @route   GET /api/sales-records/:id
 // @desc    Get single sales record by ID
 // @access  Private
-router.get('/:id', requireAdmin, async (req, res) => {
+router.get('/:id', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const salesRecord = await SalesRecord.findById(req.params.id)
       .populate('customer', 'businessName contactPerson.name email phone address')
@@ -209,7 +209,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/sales-records
 // @desc    Create new sales record
 // @access  Private
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     // Validate input
     const { error, value } = salesRecordSchema.validate(req.body);
@@ -260,7 +260,7 @@ router.post('/', requireAdmin, async (req, res) => {
 // @route   PUT /api/sales-records/:id
 // @desc    Update sales record
 // @access  Private
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     // Validate input
     const { error, value } = updateSalesRecordSchema.validate(req.body);
@@ -317,7 +317,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 // @route   DELETE /api/sales-records/:id
 // @desc    Delete sales record
 // @access  Private
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const salesRecord = await SalesRecord.findById(req.params.id);
     if (!salesRecord) {
@@ -346,7 +346,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 // @route   POST /api/sales-records/:id/follow-up
 // @desc    Add follow-up note to sales record
 // @access  Private
-router.post('/:id/follow-up', requireAdmin, async (req, res) => {
+router.post('/:id/follow-up', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { content } = req.body;
 
@@ -384,7 +384,7 @@ router.post('/:id/follow-up', requireAdmin, async (req, res) => {
 // @route   PUT /api/sales-records/:id/payment
 // @desc    Update payment status
 // @access  Private
-router.put('/:id/payment', requireAdmin, async (req, res) => {
+router.put('/:id/payment', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { paymentStatus, paymentMethod, paymentDate } = req.body;
 
@@ -415,7 +415,7 @@ router.put('/:id/payment', requireAdmin, async (req, res) => {
 // @route   GET /api/sales-records/stats/overview
 // @desc    Get sales statistics overview
 // @access  Private
-router.get('/stats/overview', requireAdmin, async (req, res) => {
+router.get('/stats/overview', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { startDate, endDate, salesPerson } = req.query;
 
@@ -484,7 +484,7 @@ router.get('/stats/overview', requireAdmin, async (req, res) => {
 // @route   GET /api/sales-records/customer/:customerId
 // @desc    Get sales records for a specific customer
 // @access  Private
-router.get('/customer/:customerId', requireAdmin, async (req, res) => {
+router.get('/customer/:customerId', authenticateToken, requireRole(['staff', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
