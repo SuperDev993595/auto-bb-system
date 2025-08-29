@@ -129,9 +129,25 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             console.log(`Attempt ${attempt} to fetch customers and vehicles`)
+            
+            // Try different endpoints based on user role
+            const userRole = localStorage.getItem('role') || sessionStorage.getItem('role')
+            console.log('Current user role:', userRole)
+            
+            let customersEndpoint = '/customers'
+            let vehiclesEndpoint = '/appointments/vehicles'
+            
+            // If user is a customer, try customer-specific endpoints
+            if (userRole === 'customer') {
+              customersEndpoint = '/customers/profile'
+              vehiclesEndpoint = '/customers/vehicles'
+            }
+            
+            console.log(`Using endpoints: ${customersEndpoint}, ${vehiclesEndpoint}`)
+            
             ;[customersResponse, vehiclesResponse] = await Promise.all([
-              api.get('/customers'),
-              api.get('/vehicles')
+              api.get(customersEndpoint),
+              api.get(vehiclesEndpoint)
             ])
             break // Success, exit retry loop
           } catch (error: any) {
@@ -167,6 +183,8 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
           hasVehicles: !!vehiclesResponse.data?.data?.vehicles,
           vehiclesLength: vehiclesData?.length || 0
         })
+        console.log('Full customers response:', customersResponse)
+        console.log('Full vehicles response:', vehiclesResponse)
         console.log('Customers data:', customersData)
         console.log('Vehicles data:', vehiclesData)
         
@@ -187,6 +205,25 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
           toast.error('Access denied. Admin privileges required.')
         } else {
           toast.error('Failed to fetch customers and vehicles')
+        }
+        
+        // Try to load sample data as fallback
+        try {
+          console.log('Attempting to load sample data as fallback...')
+          const sampleCustomersResponse = await api.get('/customers/sample')
+          const sampleVehiclesResponse = await api.get('/vehicles/sample')
+          
+          const sampleCustomers = sampleCustomersResponse.data?.data || sampleCustomersResponse.data || []
+          const sampleVehicles = sampleVehiclesResponse.data?.data || sampleVehiclesResponse.data || []
+          
+          if (sampleCustomers.length > 0 || sampleVehicles.length > 0) {
+            console.log('Loaded sample data as fallback')
+            setCustomers(sampleCustomers)
+            setVehicles(sampleVehicles)
+            return
+          }
+        } catch (fallbackError) {
+          console.log('Sample data fallback also failed:', fallbackError)
         }
         
         setCustomers([])
@@ -284,6 +321,14 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
       <div className="p-6 space-y-6">
         {/* Customer and Vehicle Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {(customers.length === 0 || vehicles.length === 0) && !dataLoading && (
+            <div className="col-span-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> Admin privileges are required to access customer and vehicle data. 
+                If you're not seeing any options, please contact your administrator or ensure you have the proper permissions.
+              </p>
+            </div>
+          )}
           <label className="block">
             <span className="text-sm font-medium text-gray-700 mb-2 block">Customer *</span>
             <select
@@ -295,7 +340,7 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
             >
               <option value="">
                 {dataLoading ? 'Loading...' : 
-                 customers.length === 0 ? 'No customers available' : 'Select Customer'}
+                 customers.length === 0 ? 'No customers available (Admin access required)' : 'Select Customer'}
               </option>
               {Array.isArray(customers) && customers.map(customer => (
                 <option key={customer._id} value={customer._id}>
@@ -316,7 +361,7 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
             >
               <option value="">
                 {dataLoading ? 'Loading...' : 
-                 vehicles.length === 0 ? 'No vehicles available' : 'Select Vehicle'}
+                 vehicles.length === 0 ? 'No vehicles available (Admin access required)' : 'Select Vehicle'}
               </option>
               {Array.isArray(vehicles) && vehicles.map(vehicle => (
                 <option key={vehicle._id} value={vehicle._id}>
