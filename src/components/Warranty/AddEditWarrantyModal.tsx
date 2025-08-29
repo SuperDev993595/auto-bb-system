@@ -114,41 +114,37 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   const [customers, setCustomers] = useState<Customer[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [dataLoading, setDataLoading] = useState(true)
+  const [vehiclesLoading, setVehiclesLoading] = useState(false)
 
-  // Fetch customers and vehicles
+  // Fetch customers only
   useEffect(() => {
-    const fetchData = async () => {
-      let customersResponse: any, vehiclesResponse: any
+    const fetchCustomers = async () => {
+      let customersResponse: any
       try {
         setDataLoading(true)
         
-        // Try to fetch data with retry logic
+        // Try to fetch customers with retry logic
         const maxRetries = 3
         let lastError: any = null
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
-            console.log(`Attempt ${attempt} to fetch customers and vehicles`)
+            console.log(`Attempt ${attempt} to fetch customers`)
             
             // Try different endpoints based on user role
             const userRole = localStorage.getItem('role') || sessionStorage.getItem('role')
             console.log('Current user role:', userRole)
             
             let customersEndpoint = '/customers'
-            let vehiclesEndpoint = '/appointments/vehicles'
             
             // If user is a customer, try customer-specific endpoints
             if (userRole === 'customer') {
               customersEndpoint = '/customers/profile'
-              vehiclesEndpoint = '/customers/vehicles'
             }
             
-            console.log(`Using endpoints: ${customersEndpoint}, ${vehiclesEndpoint}`)
+            console.log(`Using customers endpoint: ${customersEndpoint}`)
             
-            ;[customersResponse, vehiclesResponse] = await Promise.all([
-              api.get(customersEndpoint),
-              api.get(vehiclesEndpoint)
-            ])
+            customersResponse = await api.get(customersEndpoint)
             break // Success, exit retry loop
           } catch (error: any) {
             lastError = error
@@ -167,9 +163,6 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
         const customersData = customersResponse.data?.data?.customers || 
                            customersResponse.data?.customers || 
                            (Array.isArray(customersResponse.data) ? customersResponse.data : [])
-        const vehiclesData = vehiclesResponse.data?.data?.vehicles || 
-                           vehiclesResponse.data?.vehicles || 
-                           (Array.isArray(vehiclesResponse.data) ? vehiclesResponse.data : [])
         
         console.log('Customers response structure:', {
           hasData: !!customersResponse.data,
@@ -177,26 +170,16 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
           hasCustomers: !!customersResponse.data?.data?.customers,
           customersLength: customersData?.length || 0
         })
-        console.log('Vehicles response structure:', {
-          hasData: !!vehiclesResponse.data,
-          hasDataData: !!vehiclesResponse.data?.data,
-          hasVehicles: !!vehiclesResponse.data?.data?.vehicles,
-          vehiclesLength: vehiclesData?.length || 0
-        })
         console.log('Full customers response:', customersResponse)
-        console.log('Full vehicles response:', vehiclesResponse)
         console.log('Customers data:', customersData)
-        console.log('Vehicles data:', vehiclesData)
         
         setCustomers(customersData)
-        setVehicles(vehiclesData)
         
         // Log success
-        console.log(`Successfully loaded ${customersData.length} customers and ${vehiclesData.length} vehicles`)
+        console.log(`Successfully loaded ${customersData.length} customers`)
       } catch (error: any) {
-        console.error('Error fetching data:', error)
+        console.error('Error fetching customers:', error)
         console.error('Customers response:', customersResponse)
-        console.error('Vehicles response:', vehiclesResponse)
         
         // Show more specific error message
         if (error.response?.status === 401) {
@@ -204,37 +187,104 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
         } else if (error.response?.status === 403) {
           toast.error('Access denied. Admin privileges required.')
         } else {
-          toast.error('Failed to fetch customers and vehicles')
+          toast.error('Failed to fetch customers')
         }
         
         // Try to load sample data as fallback
         try {
-          console.log('Attempting to load sample data as fallback...')
+          console.log('Attempting to load sample customers as fallback...')
           const sampleCustomersResponse = await api.get('/customers/sample')
-          const sampleVehiclesResponse = await api.get('/vehicles/sample')
           
           const sampleCustomers = sampleCustomersResponse.data?.data || sampleCustomersResponse.data || []
-          const sampleVehicles = sampleVehiclesResponse.data?.data || sampleVehiclesResponse.data || []
           
-          if (sampleCustomers.length > 0 || sampleVehicles.length > 0) {
-            console.log('Loaded sample data as fallback')
+          if (sampleCustomers.length > 0) {
+            console.log('Loaded sample customers as fallback')
             setCustomers(sampleCustomers)
-            setVehicles(sampleVehicles)
             return
           }
         } catch (fallbackError) {
-          console.log('Sample data fallback also failed:', fallbackError)
+          console.log('Sample customers fallback also failed:', fallbackError)
         }
         
         setCustomers([])
-        setVehicles([])
       } finally {
         setDataLoading(false)
       }
     }
 
-    fetchData()
+    fetchCustomers()
   }, [])
+
+  // Fetch vehicles for selected customer
+  const fetchVehiclesForCustomer = async (customerId: string) => {
+    if (!customerId) {
+      setVehicles([])
+      return
+    }
+
+    try {
+      setVehiclesLoading(true)
+      console.log(`Fetching vehicles for customer: ${customerId}`)
+      
+      // Try different endpoints based on user role
+      const userRole = localStorage.getItem('role') || sessionStorage.getItem('role')
+      let vehiclesEndpoint = `/customers/${customerId}/vehicles`
+      
+      // If user is a customer, try customer-specific endpoints
+      if (userRole === 'customer') {
+        vehiclesEndpoint = '/customers/vehicles'
+      }
+      
+      console.log(`Using vehicles endpoint: ${vehiclesEndpoint}`)
+      
+      const vehiclesResponse = await api.get(vehiclesEndpoint)
+      
+      // Extract data from API responses - handle nested data structure
+      const vehiclesData = vehiclesResponse.data?.data?.vehicles || 
+                         vehiclesResponse.data?.vehicles || 
+                         (Array.isArray(vehiclesResponse.data) ? vehiclesResponse.data : [])
+      
+      console.log('Vehicles response structure:', {
+        hasData: !!vehiclesResponse.data,
+        hasDataData: !!vehiclesResponse.data?.data,
+        hasVehicles: !!vehiclesResponse.data?.data?.vehicles,
+        vehiclesLength: vehiclesData?.length || 0
+      })
+      console.log('Full vehicles response:', vehiclesResponse)
+      console.log('Vehicles data:', vehiclesData)
+      
+      setVehicles(vehiclesData)
+      
+      // Log success
+      console.log(`Successfully loaded ${vehiclesData.length} vehicles for customer ${customerId}`)
+    } catch (error: any) {
+      console.error('Error fetching vehicles for customer:', error)
+      
+      // Show more specific error message
+      if (error.response?.status === 401) {
+        toast.error('Authentication required. Please login again.')
+      } else if (error.response?.status === 403) {
+        toast.error('Access denied. Admin privileges required.')
+      } else {
+        toast.error('Failed to fetch vehicles for selected customer')
+      }
+      
+      setVehicles([])
+    } finally {
+      setVehiclesLoading(false)
+    }
+  }
+
+  // Handle customer selection change
+  useEffect(() => {
+    if (formData.customer) {
+      fetchVehiclesForCustomer(formData.customer)
+      // Clear vehicle selection when customer changes
+      setFormData(prev => ({ ...prev, vehicle: '' }))
+    } else {
+      setVehicles([])
+    }
+  }, [formData.customer])
 
   useEffect(() => {
     if (warranty && mode === 'edit') {
@@ -321,11 +371,19 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
       <div className="p-6 space-y-6">
         {/* Customer and Vehicle Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(customers.length === 0 || vehicles.length === 0) && !dataLoading && (
+          {customers.length === 0 && !dataLoading && (
             <div className="col-span-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
               <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> Admin privileges are required to access customer and vehicle data. 
-                If you're not seeing any options, please contact your administrator or ensure you have the proper permissions.
+                <strong>Note:</strong> Admin privileges are required to access customer data. 
+                If you're not seeing any customers, please contact your administrator or ensure you have the proper permissions.
+              </p>
+            </div>
+          )}
+          {formData.customer && vehicles.length === 0 && !vehiclesLoading && (
+            <div className="col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-sm text-blue-800">
+                <strong>Info:</strong> No vehicles found for the selected customer. 
+                You may need to add vehicles to this customer's profile first.
               </p>
             </div>
           )}
@@ -357,11 +415,12 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
               onChange={(e) => setFormData(prev => ({ ...prev, vehicle: e.target.value }))}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-white"
               required
-              disabled={loading || dataLoading}
+              disabled={loading || dataLoading || vehiclesLoading || !formData.customer}
             >
               <option value="">
-                {dataLoading ? 'Loading...' : 
-                 vehicles.length === 0 ? 'No vehicles available (Admin access required)' : 'Select Vehicle'}
+                {!formData.customer ? 'Please select a customer first' :
+                 vehiclesLoading ? 'Loading vehicles...' : 
+                 vehicles.length === 0 ? 'No vehicles available for this customer' : 'Select Vehicle'}
               </option>
               {Array.isArray(vehicles) && vehicles.map(vehicle => (
                 <option key={vehicle._id} value={vehicle._id}>

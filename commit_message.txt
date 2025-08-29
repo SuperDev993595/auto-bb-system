@@ -1,0 +1,10 @@
+Implement customer-based vehicle loading in AddEditWarrantyModal
+
+- Changed from loading all vehicles to loading vehicles based on selected customer
+- Added separate loading states for customers and vehicles
+- Implemented customer selection change handler to fetch vehicles dynamically
+- Added vehicle dropdown that is disabled until a customer is selected
+- Updated UI messages to guide users through the customer-first selection process
+- Added helpful info messages when no vehicles are found for selected customer
+- Maintained all existing error handling and retry logic
+- Improved user experience with clearer workflow and feedback
