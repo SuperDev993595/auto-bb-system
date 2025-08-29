@@ -1,5 +1,10 @@
-Fix vehicle loading in edit mode for AddEditWarrantyModal
+Fix warranty creation error and vehicle loading in edit mode
 
+Backend fixes:
+- Fixed TypeError in warranty creation: replaced warranty.populate() with Warranty.findById().populate()
+- Updated deprecated warranty.remove() to warranty.deleteOne() for better compatibility
+
+Frontend fixes:
 - Fixed issue where vehicles weren't loading properly when editing a warranty
 - Added proper vehicle fetching when warranty data is loaded in edit mode
 - Prevented vehicle selection from being cleared when customer changes in edit mode

@@ -92,7 +92,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
     await warranty.save();
 
-    const populatedWarranty = await warranty
+    // Fetch the saved warranty with populated fields
+    const populatedWarranty = await Warranty.findById(warranty._id)
       .populate('customer', 'name email phone')
       .populate('vehicle', 'make model year vin')
       .populate('createdBy', 'name email');
@@ -149,7 +150,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    await warranty.remove();
+    await warranty.deleteOne();
     res.json({ message: 'Warranty deleted successfully' });
   } catch (error) {
     console.error('Error deleting warranty:', error);
