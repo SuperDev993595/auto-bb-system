@@ -576,9 +576,8 @@ export default function CustomerMemberships() {
         <div className="p-6">
           <MembershipComparison 
             onSelectPlan={(plan) => {
-              setShowComparison(false);
-              // Reload memberships after selecting a new plan
-              loadMemberships();
+              // Just handle plan selection, don't close modal yet
+              // The modal will close when user clicks "Subscribe Now"
             }}
             onCheckout={handleCheckout}
           />
