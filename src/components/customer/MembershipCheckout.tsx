@@ -21,7 +21,7 @@ import {
 } from '../../utils/icons';
 
 // Load Stripe (replace with your publishable key)
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here');
 
 interface MembershipCheckoutProps {
   selectedPlan: any;

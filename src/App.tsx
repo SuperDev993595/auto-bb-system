@@ -191,7 +191,7 @@ export default function App() {
       </Routes>
       
       {/* Performance Monitor - Only show in development */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <PerformanceMonitor enabled={true} showDetails={true} />
       )}
       
