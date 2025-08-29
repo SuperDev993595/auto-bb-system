@@ -490,6 +490,8 @@ router.get('/customer/:customerId', authenticateToken, requireRole(['staff', 'ad
 
     const salesRecords = await SalesRecord.find({ customer: req.params.customerId })
       .populate('salesPerson', 'name email')
+      .populate('items.inventoryItem', 'name partNumber')
+      .populate('items.service', 'name description')
       .sort({ saleDate: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
