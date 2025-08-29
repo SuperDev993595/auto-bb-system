@@ -47,6 +47,7 @@ export default function CustomerMemberships() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<any>(null);
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -60,6 +61,11 @@ export default function CustomerMemberships() {
       loadMemberships();
     }
   }, [user]);
+
+  // Debug: Track selectedPlanId changes
+  useEffect(() => {
+    console.log("Parent: selectedPlanId changed to:", selectedPlanId);
+  }, [selectedPlanId]);
 
   // Ensure memberships is always an array
   useEffect(() => {
@@ -282,6 +288,12 @@ export default function CustomerMemberships() {
   const handleCheckoutCancel = () => {
     setShowCheckout(false);
     setSelectedPlanForCheckout(null);
+  };
+
+  // Get current active membership
+  const getCurrentMembership = () => {
+    const activeMembership = membershipsArray.find(m => m.status === 'active');
+    return activeMembership;
   };
 
   // Ensure memberships is always an array
@@ -568,16 +580,21 @@ export default function CustomerMemberships() {
       {/* Membership Comparison Modal */}
       <ModalWrapper
         isOpen={showComparison}
-        onClose={() => setShowComparison(false)}
+        onClose={() => {
+          setShowComparison(false);
+          setSelectedPlanId(''); // Reset selected plan when modal closes
+        }}
         title="Compare Membership Plans"
         icon={<Crown className="w-6 h-6" />}
         size="2xl"
       >
         <div className="p-6">
           <MembershipComparison 
+            selectedPlanId={selectedPlanId}
+            currentMembership={getCurrentMembership()}
             onSelectPlan={(plan) => {
-              // Just handle plan selection, don't close modal yet
-              // The modal will close when user clicks "Subscribe Now"
+              console.log("Parent: onSelectPlan called with plan._id:", plan._id);
+              setSelectedPlanId(plan._id);
             }}
             onCheckout={handleCheckout}
           />

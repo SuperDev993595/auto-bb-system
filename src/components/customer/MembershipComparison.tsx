@@ -37,9 +37,14 @@ interface MembershipComparisonProps {
   onSelectPlan?: (plan: MembershipPlan) => void;
   selectedPlanId?: string;
   onCheckout?: (plan: MembershipPlan, billingCycle: 'monthly' | 'quarterly' | 'yearly') => void;
+  currentMembership?: {
+    planName: string;
+    tier: string;
+    status: string;
+  };
 }
 
-export default function MembershipComparison({ onSelectPlan, selectedPlanId, onCheckout }: MembershipComparisonProps) {
+export default function MembershipComparison({ onSelectPlan, selectedPlanId, onCheckout, currentMembership }: MembershipComparisonProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<string>(selectedPlanId || '');
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
@@ -67,6 +72,27 @@ export default function MembershipComparison({ onSelectPlan, selectedPlanId, onC
   useEffect(() => {
     fetchPlans();
   }, []);
+
+  // Sync selectedPlan with selectedPlanId prop
+  useEffect(() => {
+    console.log("useEffect triggered - selectedPlanId:", selectedPlanId);
+    setSelectedPlan(selectedPlanId || '');
+  }, [selectedPlanId]);
+
+  // Pre-select current membership plan if no plan is selected
+  useEffect(() => {
+    if (!selectedPlan && currentMembership && plans.length > 0) {
+      const matchingPlan = plans.find(plan => 
+        plan.name.toLowerCase().includes(currentMembership.planName.toLowerCase()) ||
+        plan.tier.toLowerCase() === currentMembership.tier.toLowerCase()
+      );
+      if (matchingPlan) {
+        console.log("Pre-selecting current membership plan:", matchingPlan._id);
+        setSelectedPlan(matchingPlan._id);
+        onSelectPlan?.(matchingPlan);
+      }
+    }
+  }, [plans, currentMembership, selectedPlan, onSelectPlan]);
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
@@ -99,6 +125,7 @@ export default function MembershipComparison({ onSelectPlan, selectedPlanId, onC
   };
 
   const handlePlanSelect = (plan: MembershipPlan) => {
+    console.log("handlePlanSelect called with plan._id:", plan._id);
     setSelectedPlan(plan._id);
     onSelectPlan?.(plan);
   };
@@ -256,6 +283,10 @@ export default function MembershipComparison({ onSelectPlan, selectedPlanId, onC
           const pricing = calculatePrice(plan);
           const isSelected = selectedPlan === plan._id;
           const isPopular = plan.tier === 'premium' || plan.tier === 'vip';
+          const isCurrentMembership = currentMembership && (
+            plan.name.toLowerCase().includes(currentMembership.planName.toLowerCase()) ||
+            plan.tier.toLowerCase() === currentMembership.tier.toLowerCase()
+          );
           
           return (
             <div
@@ -267,8 +298,17 @@ export default function MembershipComparison({ onSelectPlan, selectedPlanId, onC
               } ${isPopular ? 'ring-2 ring-blue-200' : ''}`}
               onClick={() => handlePlanSelect(plan)}
             >
+              {/* Current Membership Badge */}
+              {isCurrentMembership && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-green-600 text-white px-4 py-1 rounded-full text-xs font-medium">
+                    Current Plan
+                  </span>
+                </div>
+              )}
+              
               {/* Popular Badge */}
-              {isPopular && (
+              {isPopular && !isCurrentMembership && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-medium">
                     {plan.tier === 'vip' ? 'VIP' : 'Popular'}
