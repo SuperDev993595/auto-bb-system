@@ -174,6 +174,12 @@ const customerSchema = new mongoose.Schema({
     ref: 'User'
   },
   
+  // Stripe integration
+  stripeCustomerId: {
+    type: String,
+    trim: true
+  },
+  
   // Timestamps
   lastContact: {
     type: Date

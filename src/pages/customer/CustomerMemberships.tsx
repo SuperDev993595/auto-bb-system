@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { toast } from 'react-hot-toast';
 import { 
   Shield, 
   Crown, 
@@ -16,6 +17,7 @@ import {
   Search
 } from '../../utils/icons';
 import MembershipComparison from '../../components/customer/MembershipComparison';
+import MembershipCheckout from '../../components/customer/MembershipCheckout';
 import { AuthContext } from '../../context/AuthContext';
 import { User } from '../../services/auth';
 import ModalWrapper from '../../utils/ModalWrapper';
@@ -42,6 +44,9 @@ export default function CustomerMemberships() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<any>(null);
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -258,6 +263,25 @@ export default function CustomerMemberships() {
       default:
         return <Shield className="w-5 h-5" />;
     }
+  };
+
+  const handleCheckout = (plan: any, billingCycle: 'monthly' | 'quarterly' | 'yearly') => {
+    setSelectedPlanForCheckout(plan);
+    setSelectedBillingCycle(billingCycle);
+    setShowCheckout(true);
+    setShowComparison(false);
+  };
+
+  const handleCheckoutSuccess = (membership: any) => {
+    setShowCheckout(false);
+    setSelectedPlanForCheckout(null);
+    toast.success('Membership activated successfully!');
+    loadMemberships(); // Reload memberships to show the new one
+  };
+
+  const handleCheckoutCancel = () => {
+    setShowCheckout(false);
+    setSelectedPlanForCheckout(null);
   };
 
   // Ensure memberships is always an array
@@ -556,9 +580,26 @@ export default function CustomerMemberships() {
               // Reload memberships after selecting a new plan
               loadMemberships();
             }}
+            onCheckout={handleCheckout}
           />
         </div>
       </ModalWrapper>
+
+      {/* Membership Checkout Modal */}
+      {showCheckout && selectedPlanForCheckout && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <MembershipCheckout
+                selectedPlan={selectedPlanForCheckout}
+                billingCycle={selectedBillingCycle}
+                onSuccess={handleCheckoutSuccess}
+                onCancel={handleCheckoutCancel}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

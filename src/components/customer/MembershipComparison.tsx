@@ -36,9 +36,10 @@ interface MembershipPlan {
 interface MembershipComparisonProps {
   onSelectPlan?: (plan: MembershipPlan) => void;
   selectedPlanId?: string;
+  onCheckout?: (plan: MembershipPlan, billingCycle: 'monthly' | 'quarterly' | 'yearly') => void;
 }
 
-export default function MembershipComparison({ onSelectPlan, selectedPlanId }: MembershipComparisonProps) {
+export default function MembershipComparison({ onSelectPlan, selectedPlanId, onCheckout }: MembershipComparisonProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<string>(selectedPlanId || '');
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
@@ -365,15 +366,22 @@ export default function MembershipComparison({ onSelectPlan, selectedPlanId }: M
                   </ul>
                 </div>
 
-                {/* Select Button */}
+                {/* Select/Checkout Button */}
                 <button
                   className={`w-full mt-6 py-3 px-4 rounded-lg font-medium transition-colors ${
                     isSelected
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
+                  onClick={() => {
+                    if (isSelected && onCheckout) {
+                      onCheckout(plan, billingCycle);
+                    } else {
+                      handlePlanSelect(plan);
+                    }
+                  }}
                 >
-                  {isSelected ? 'Selected' : 'Select Plan'}
+                  {isSelected ? 'Subscribe Now' : 'Select Plan'}
                 </button>
               </div>
             </div>
