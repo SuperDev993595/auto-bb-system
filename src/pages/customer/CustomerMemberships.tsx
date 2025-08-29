@@ -50,6 +50,8 @@ export default function CustomerMemberships() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedMembership, setSelectedMembership] = useState<Membership | null>(null);
 
   // Type guard to ensure user exists and is a customer
   const isCustomerUser = (user: any): user is User & { customerId?: string } => {
@@ -290,6 +292,11 @@ export default function CustomerMemberships() {
     setSelectedPlanForCheckout(null);
   };
 
+  const handleViewDetails = (membership: Membership) => {
+    setSelectedMembership(membership);
+    setShowDetailsModal(true);
+  };
+
   // Get current active membership
   const getCurrentMembership = () => {
     const activeMembership = membershipsArray.find(m => m.status === 'active');
@@ -519,7 +526,11 @@ export default function CustomerMemberships() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <button 
+                    onClick={() => handleViewDetails(membership)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="View Membership Details"
+                  >
                     <Eye className="w-4 h-4" />
                   </button>
                   {membership.status === 'active' && (
@@ -614,8 +625,148 @@ export default function CustomerMemberships() {
               />
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                 </div>
+       )}
+
+       {/* Membership Details Modal */}
+       <ModalWrapper
+         isOpen={showDetailsModal}
+         onClose={() => {
+           setShowDetailsModal(false);
+           setSelectedMembership(null);
+         }}
+         title="Membership Details"
+         icon={<Eye className="w-6 h-6" />}
+         size="lg"
+       >
+         {selectedMembership && (
+           <div className="p-6 space-y-6">
+             {/* Header */}
+             <div className="flex items-center space-x-4">
+               <div className="p-3 bg-blue-100 rounded-lg">
+                 {getTierIcon(selectedMembership.tier)}
+               </div>
+               <div>
+                 <h3 className="text-xl font-semibold text-gray-900">{selectedMembership.planName}</h3>
+                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedMembership.status)}`}>
+                   {selectedMembership.status.charAt(0).toUpperCase() + selectedMembership.status.slice(1)}
+                 </span>
+               </div>
+             </div>
+
+             {/* Key Information */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-4">
+                 <div>
+                   <h4 className="text-sm font-medium text-gray-600 mb-2">Pricing</h4>
+                   <div className="bg-gray-50 rounded-lg p-3">
+                     <div className="text-2xl font-bold text-green-600">${selectedMembership.monthlyFee}</div>
+                     <div className="text-sm text-gray-600">per month</div>
+                   </div>
+                 </div>
+                 
+                 <div>
+                   <h4 className="text-sm font-medium text-gray-600 mb-2">Benefits Usage</h4>
+                   <div className="bg-gray-50 rounded-lg p-3">
+                     <div className="flex justify-between items-center mb-2">
+                       <span className="text-sm text-gray-600">Used</span>
+                       <span className="text-sm font-medium">{selectedMembership.benefitsUsed}</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm text-gray-600">Total</span>
+                       <span className="text-sm font-medium">{selectedMembership.totalBenefits}</span>
+                     </div>
+                     <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                       <div 
+                         className="bg-blue-600 h-2 rounded-full" 
+                         style={{ width: `${(selectedMembership.benefitsUsed / selectedMembership.totalBenefits) * 100}%` }}
+                       ></div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               <div className="space-y-4">
+                 <div>
+                   <h4 className="text-sm font-medium text-gray-600 mb-2">Dates</h4>
+                   <div className="space-y-2">
+                     <div className="flex justify-between">
+                       <span className="text-sm text-gray-600">Start Date:</span>
+                       <span className="text-sm font-medium">{new Date(selectedMembership.startDate).toLocaleDateString()}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-sm text-gray-600">End Date:</span>
+                       <span className="text-sm font-medium">{new Date(selectedMembership.endDate).toLocaleDateString()}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-sm text-gray-600">Next Billing:</span>
+                       <span className="text-sm font-medium">{new Date(selectedMembership.nextBillingDate).toLocaleDateString()}</span>
+                     </div>
+                   </div>
+                 </div>
+
+                 <div>
+                   <h4 className="text-sm font-medium text-gray-600 mb-2">Settings</h4>
+                   <div className="space-y-2">
+                     <div className="flex justify-between items-center">
+                       <span className="text-sm text-gray-600">Auto Renew:</span>
+                       <span className="text-sm font-medium">
+                         {selectedMembership.autoRenew ? (
+                           <span className="flex items-center text-green-600">
+                             <Check className="w-4 h-4 mr-1" />
+                             Enabled
+                           </span>
+                         ) : (
+                           <span className="flex items-center text-red-600">
+                             <X className="w-4 h-4 mr-1" />
+                             Disabled
+                           </span>
+                         )}
+                       </span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-sm text-gray-600">Payment Method:</span>
+                       <span className="text-sm font-medium">{selectedMembership.paymentMethod}</span>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+
+             {/* Actions */}
+             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+               <button
+                 onClick={() => setShowDetailsModal(false)}
+                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+               >
+                 Close
+               </button>
+               {selectedMembership.status === 'active' && (
+                 <button 
+                   onClick={() => {
+                     setShowDetailsModal(false);
+                     handleMembershipAction(selectedMembership.id, 'cancel');
+                   }}
+                   className="px-4 py-2 text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition-colors"
+                 >
+                   Cancel Membership
+                 </button>
+               )}
+               {selectedMembership.status === 'expired' && (
+                 <button 
+                   onClick={() => {
+                     setShowDetailsModal(false);
+                     handleMembershipAction(selectedMembership.id, 'renew');
+                   }}
+                   className="px-4 py-2 text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                 >
+                   Renew Membership
+                 </button>
+               )}
+             </div>
+           </div>
+         )}
+       </ModalWrapper>
+     </div>
+   );
+ }
