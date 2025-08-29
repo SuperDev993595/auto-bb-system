@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { createSalesRecordAction } from '../../redux/actions/salesRecords';
@@ -8,6 +8,7 @@ import { fetchInventoryItems } from '../../redux/actions/inventory';
 import { fetchServiceCatalog } from '../../redux/actions/services';
 import { RootState } from '../../redux/store';
 import { SalesRecord, CreateSalesRecordData, SalesRecordItem } from '../../services/salesRecords';
+import ModalWrapper from '../../utils/ModalWrapper';
 
 interface CreateSalesRecordModalProps {
   isOpen: boolean;
@@ -157,9 +158,7 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
     setFormItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     if (!formData.customer) {
       toast.error('Please select a customer');
       return;
@@ -180,36 +179,34 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
       }))
     };
 
-    try {
-      await dispatch(createSalesRecordAction(salesRecordData) as any);
-      toast.success('Sales record created successfully');
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      console.error('Error creating sales record:', error);
-    }
+    dispatch(createSalesRecordAction(salesRecordData) as any)
+      .then(() => {
+        toast.success('Sales record created successfully');
+        onSuccess?.();
+        onClose();
+      })
+      .catch((error: any) => {
+        console.error('Error creating sales record:', error);
+        toast.error('Failed to create sales record');
+      });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Create Sales Record</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create Sales Record"
+      submitText="Create Sales Record"
+      onSubmit={handleSubmit}
+      submitColor="bg-blue-600"
+      submitDisabled={loading}
+      size="2xl"
+    >
+      <div className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Customer *
               </label>
               <select
@@ -755,26 +752,8 @@ const CreateSalesRecordModal: React.FC<CreateSalesRecordModalProps> = ({
             </div>
           </div>
 
-          {/* Form Actions */}
-          <div className="border-t pt-6 flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Sales Record'}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </ModalWrapper>
   );
 };
 
