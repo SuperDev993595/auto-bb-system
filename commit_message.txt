@@ -1,10 +1,9 @@
-Implement customer-based vehicle loading in AddEditWarrantyModal
+Fix vehicle loading in edit mode for AddEditWarrantyModal
 
-- Changed from loading all vehicles to loading vehicles based on selected customer
-- Added separate loading states for customers and vehicles
-- Implemented customer selection change handler to fetch vehicles dynamically
-- Added vehicle dropdown that is disabled until a customer is selected
-- Updated UI messages to guide users through the customer-first selection process
-- Added helpful info messages when no vehicles are found for selected customer
-- Maintained all existing error handling and retry logic
-- Improved user experience with clearer workflow and feedback
+- Fixed issue where vehicles weren't loading properly when editing a warranty
+- Added proper vehicle fetching when warranty data is loaded in edit mode
+- Prevented vehicle selection from being cleared when customer changes in edit mode
+- Added additional useEffect to ensure vehicle selection is maintained after vehicles load
+- Enhanced debugging logs to track vehicle loading in edit mode
+- Improved edit mode workflow to maintain data integrity
+- Fixed indentation issues in console logging

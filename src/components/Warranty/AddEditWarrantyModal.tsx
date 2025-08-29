@@ -244,19 +244,29 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
                          vehiclesResponse.data?.vehicles || 
                          (Array.isArray(vehiclesResponse.data) ? vehiclesResponse.data : [])
       
-      console.log('Vehicles response structure:', {
-        hasData: !!vehiclesResponse.data,
-        hasDataData: !!vehiclesResponse.data?.data,
-        hasVehicles: !!vehiclesResponse.data?.data?.vehicles,
-        vehiclesLength: vehiclesData?.length || 0
-      })
-      console.log('Full vehicles response:', vehiclesResponse)
-      console.log('Vehicles data:', vehiclesData)
-      
-      setVehicles(vehiclesData)
-      
-      // Log success
-      console.log(`Successfully loaded ${vehiclesData.length} vehicles for customer ${customerId}`)
+        console.log('Vehicles response structure:', {
+          hasData: !!vehiclesResponse.data,
+          hasDataData: !!vehiclesResponse.data?.data,
+          hasVehicles: !!vehiclesResponse.data?.data?.vehicles,
+          vehiclesLength: vehiclesData?.length || 0
+        })
+        console.log('Full vehicles response:', vehiclesResponse)
+        console.log('Vehicles data:', vehiclesData)
+        
+        setVehicles(vehiclesData)
+        
+        // Log success
+        console.log(`Successfully loaded ${vehiclesData.length} vehicles for customer ${customerId}`)
+        
+        // In edit mode, ensure the vehicle is still selected after loading
+        if (mode === 'edit' && warranty && warranty.vehicle._id) {
+          console.log('Edit mode: Ensuring vehicle selection is maintained')
+          // The vehicle should already be selected in formData, but let's verify
+          if (formData.vehicle !== warranty.vehicle._id) {
+            console.log('Vehicle selection mismatch, updating...')
+            setFormData(prev => ({ ...prev, vehicle: warranty.vehicle._id }))
+          }
+        }
     } catch (error: any) {
       console.error('Error fetching vehicles for customer:', error)
       
@@ -279,16 +289,18 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
   useEffect(() => {
     if (formData.customer) {
       fetchVehiclesForCustomer(formData.customer)
-      // Clear vehicle selection when customer changes
-      setFormData(prev => ({ ...prev, vehicle: '' }))
+      // Only clear vehicle selection when customer changes (not in edit mode)
+      if (mode !== 'edit') {
+        setFormData(prev => ({ ...prev, vehicle: '' }))
+      }
     } else {
       setVehicles([])
     }
-  }, [formData.customer])
+  }, [formData.customer, mode])
 
   useEffect(() => {
     if (warranty && mode === 'edit') {
-      setFormData({
+      const editFormData = {
         customer: warranty.customer._id,
         vehicle: warranty.vehicle._id,
         warrantyType: warranty.warrantyType,
@@ -305,9 +317,24 @@ export default function AddEditWarrantyModal({ onClose, onSubmit, mode, warranty
         terms: warranty.terms,
         exclusions: warranty.exclusions,
         notes: warranty.notes
-      })
+      }
+      
+      setFormData(editFormData)
+      
+      // Fetch vehicles for the customer in edit mode
+      if (warranty.customer._id) {
+        fetchVehiclesForCustomer(warranty.customer._id)
+      }
     }
   }, [warranty, mode])
+
+  // Handle vehicle selection in edit mode when vehicles are loaded
+  useEffect(() => {
+    if (mode === 'edit' && warranty && vehicles.length > 0 && formData.vehicle !== warranty.vehicle._id) {
+      console.log('Edit mode: Vehicles loaded, ensuring correct vehicle is selected')
+      setFormData(prev => ({ ...prev, vehicle: warranty.vehicle._id }))
+    }
+  }, [vehicles, mode, warranty, formData.vehicle])
 
   const handleSubmit = async () => {
     if (!formData.customer || !formData.vehicle || !formData.name || !formData.endDate) {
