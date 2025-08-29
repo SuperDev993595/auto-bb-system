@@ -542,20 +542,30 @@ export default function CustomerMemberships() {
 
       {/* Membership Comparison Modal */}
       {showComparison && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Compare Membership Plans</h2>
-                <button
-                  onClick={() => setShowComparison(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Crown className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Compare Membership Plans</h2>
+                  <p className="text-sm text-gray-600">Choose the perfect plan for your needs</p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowComparison(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                aria-label="Close comparison modal"
+              >
+                <X className="w-6 h-6" />
+              </button>
             </div>
-            <div className="p-6">
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(95vh-120px)]">
               <MembershipComparison 
                 onSelectPlan={(plan) => {
                   setShowComparison(false);
@@ -563,6 +573,21 @@ export default function CustomerMemberships() {
                   loadMemberships();
                 }}
               />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-500">
+                  All plans include our standard service guarantees
+                </p>
+                <button
+                  onClick={() => setShowComparison(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
