@@ -428,12 +428,19 @@ router.delete('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
 
+    // Import SalesRecord model for cleanup
+    const SalesRecord = require('../models/SalesRecord');
+
+    // Delete related sales records
+    const salesRecordsDeleted = await SalesRecord.deleteMany({ customer: id });
+    console.log(`Deleted ${salesRecordsDeleted.deletedCount} sales records for customer ${id}`);
+
     // Delete customer
     await Customer.findByIdAndDelete(id);
 
     res.json({
       success: true,
-      message: 'Customer deleted successfully'
+      message: `Customer deleted successfully. Also deleted ${salesRecordsDeleted.deletedCount} related sales records.`
     });
   } catch (error) {
     console.error('Error deleting customer:', error);

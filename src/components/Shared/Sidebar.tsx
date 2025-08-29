@@ -68,6 +68,7 @@ const navGroups: NavGroup[] = [
         title: "Financial",
         items: [
             { to: "/admin/dashboard/invoices", label: "Invoices", icon: <FileText size={18} /> },
+            { to: "/admin/dashboard/sales-records", label: "Sales Records", icon: <BarChart3 size={18} /> },
             { to: "/admin/dashboard/reports", label: "Reports", icon: <BarChart3 />, roles: ['super_admin', 'admin'] },
         ]
     },

@@ -15,6 +15,7 @@ import vehiclesReducer from "./actions/vehicles";
 import communicationLogsReducer from "./reducer/communicationLogsReducer";
 import smsReducer from "./actions/sms";
 import chatReducer from "./actions/chat";
+import salesRecordsReducer from "./reducer/salesRecordsReducer";
 
 const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ const store = configureStore({
     communicationLogs: communicationLogsReducer,
     sms: smsReducer,
     chat: chatReducer,
+    salesRecords: salesRecordsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

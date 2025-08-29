@@ -9,6 +9,7 @@ import ArrangementsSection from '../../components/customers/section/Arrangements
 import AppointmentsSection from '../../components/customers/section/AppointmentsSection'
 import TowingSection from '../../components/customers/section/TowingSection'
 import CallLogsSection from '../../components/customers/section/CallLogsSection'
+import CustomerSalesHistory from '../../components/SalesRecords/CustomerSalesHistory'
 
 import EditCustomerModal from '../../components/customers/modal/EditCustomerModal'
 import DeleteCustomerModal from '../../components/customers/modal/DeleteCustomerModal'
@@ -37,7 +38,8 @@ const tabs = [
   { key: 'Arrangements', label: 'Arrangements', icon: FileText, color: 'from-purple-500 to-pink-500' },
   { key: 'Appointments', label: 'Appointments', icon: Calendar, color: 'from-orange-500 to-red-500' },
   { key: 'Towing', label: 'Towing', icon: Truck, color: 'from-amber-500 to-yellow-500' },
-  { key: 'Call Logs', label: 'Call Logs', icon: Phone, color: 'from-cyan-500 to-blue-500' }
+  { key: 'Call Logs', label: 'Call Logs', icon: Phone, color: 'from-cyan-500 to-blue-500' },
+  { key: 'SalesHistory', label: 'Sales History', icon: DollarSign, color: 'from-green-500 to-emerald-500' }
 ]
 
 export default function CustomerDetail() {
@@ -276,6 +278,14 @@ export default function CustomerDetail() {
             {activeTab === 'Call Logs' && (
               <div className="min-h-[400px]">
                 <CallLogsSection customer={actualCustomer} />
+              </div>
+            )}
+            {activeTab === 'SalesHistory' && (
+              <div className="min-h-[400px]">
+                <CustomerSalesHistory 
+                  customerId={actualCustomer._id || ''} 
+                  customerName={actualCustomer.name || actualCustomer.businessName || 'Customer'} 
+                />
               </div>
             )}
           </div>
