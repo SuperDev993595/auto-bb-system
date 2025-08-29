@@ -90,20 +90,41 @@ function CustomerList() {
   })
 
   return (
-    <div className="min-h-screen bg-secondary-50 p-8 space-y-8">
-      {/* Header Section */}
-      <div className="min-h-32 flex flex-col lg:flex-row justify-between items-start lg:items-center p-6">
-        <div className="mb-4 lg:mb-0">
-          <h1 className="text-3xl font-bold text-secondary-900 mb-2">Customer Management</h1>
-          <p className="text-secondary-600">Manage and organize your customer database</p>
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
+            <p className="text-gray-600">Manage and organize your customer database</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setView(view === 'grid' ? 'list' : 'grid')}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Toggle View"
+            >
+              {view === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => {
+                dispatch(fetchCustomers({ page: currentPage, limit: 8, ...filters }));
+                dispatch(fetchCustomerStats());
+              }}
+              className="p-3 bg-white text-gray-600 hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors"
+              title="Refresh Data"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <Link
+              to="/admin/dashboard/customers/new"
+              className="p-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-colors"
+              title="New Customer"
+            >
+              <Plus className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
-        <Link
-          to="/admin/dashboard/customers/new"
-          className="btn-primary"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add New Customer
-        </Link>
       </div>
 
       {/* Stats Cards */}
@@ -169,52 +190,14 @@ function CustomerList() {
               <Search className="w-4 h-4 text-blue-600" />
               <h3 className="text-base font-semibold text-gray-800">Search & Filters</h3>
             </div>
-            <div className="flex items-center gap-2">
-              {/* View Toggle */}
-              <div className="flex bg-white rounded-lg p-1 shadow-sm">
-                <button
-                  onClick={() => setView('grid')}
-                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                    view === 'grid' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title="Grid View"
-                >
-                  <Grid className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setView('list')}
-                  className={`p-1.5 rounded-md transition-all duration-200 ${
-                    view === 'list' 
-                      ? 'bg-primary-100 text-primary-600' 
-                      : 'text-secondary-600 hover:text-secondary-900'
-                  }`}
-                  title="List View"
-                >
-                  <List className="w-3.5 h-3.5" />
-                </button>
-              </div>
 
-              {/* Refresh Button */}
-              <button
-                onClick={() => {
-                  dispatch(fetchCustomers({ page: currentPage, limit: 8, ...filters }));
-                  dispatch(fetchCustomerStats());
-                }}
-                className="p-1.5 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
-                title="Refresh data"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
         
         <div className="p-6 space-y-6">
           {/* Search Bar */}
           <div className="relative">
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400">
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
               <Search className="w-5 h-5" />
             </div>
             <input
@@ -493,7 +476,7 @@ function CustomerList() {
                     className={`px-6 py-3 rounded-xl transition-all duration-200 shadow-lg ${
                       page === currentPage
                         ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
-                        : 'text-secondary-700 bg-white border border-secondary-200 hover:bg-secondary-50'
+                        : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     {page}
@@ -513,15 +496,7 @@ function CustomerList() {
         </div>
       )}
 
-      {/* Add Customer Button (Mobile) */}
-      <div className="md:hidden fixed bottom-6 right-6">
-        <Link
-          to="/admin/dashboard/customers/new"
-          className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-200 hover-lift"
-        >
-          <Plus className="w-7 h-7" />
-        </Link>
-      </div>
+
     </div>
   )
 }

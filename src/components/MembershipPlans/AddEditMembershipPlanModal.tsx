@@ -140,6 +140,7 @@ export default function AddEditMembershipPlanModal({ onClose, onSubmit, mode, pl
       submitText={mode === 'create' ? 'Create Plan' : 'Update Plan'}
       submitColor="bg-blue-600"
       onSubmit={handleSubmit}
+      
       submitDisabled={loading}
       size="xl"
     >

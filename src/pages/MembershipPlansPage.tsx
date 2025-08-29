@@ -366,7 +366,7 @@ export default function MembershipPlansPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="min-h-screen bg-gray-50 p-8 space-y-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
