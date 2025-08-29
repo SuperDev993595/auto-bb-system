@@ -70,7 +70,7 @@ export default function SmartFeatures({ currentRole, isLoginMode }: SmartFeature
                 <span className="text-blue-600 text-lg">🚀</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-800">Quick Access</h4>
+                <h6 className="font-medium text-gray-800">Quick Access</h6>
                 <p className="text-sm text-gray-600">Get to your dashboard in seconds</p>
               </div>
             </div>
@@ -82,7 +82,7 @@ export default function SmartFeatures({ currentRole, isLoginMode }: SmartFeature
                 <span className="text-green-600 text-lg">🔐</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-800">Secure Login</h4>
+                <h6 className="font-medium text-gray-800">Secure Login</h6>
                 <p className="text-sm text-gray-600">Your data is protected with industry-standard security</p>
               </div>
             </div>
@@ -94,7 +94,7 @@ export default function SmartFeatures({ currentRole, isLoginMode }: SmartFeature
                 <span className="text-purple-600 text-lg">📱</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-800">Mobile Ready</h4>
+                <h6 className="font-medium text-gray-800">Mobile Ready</h6>
                 <p className="text-sm text-gray-600">Access your account from any device</p>
               </div>
             </div>

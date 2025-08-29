@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { HiPlus } from 'react-icons/hi';
 import { 
   Mail, 
   Phone, 
@@ -39,8 +40,14 @@ export default function MarketingDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<MarketingCampaign | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dateRange, setDateRange] = useState('30d');
 
   const { campaigns, stats, loading } = useAppSelector(state => state.marketing);
+
+  // Calculate derived stats
+  const activeCampaigns = campaigns.filter(campaign => campaign.status === 'sent' || campaign.status === 'scheduled').length;
+  const totalLeads = stats?.totalRecipients || 0;
+  const conversionRate = stats?.totalSent && stats.totalOpened ? ((stats.totalOpened / stats.totalSent) * 100).toFixed(1) : '0.0';
 
   // Fetch campaigns and stats on component mount
   useEffect(() => {
