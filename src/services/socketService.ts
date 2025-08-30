@@ -28,6 +28,9 @@ class SocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
+  
+  // Track processed messages to prevent duplicates
+  private processedMessages = new Set<string>();
 
   // Event listeners
   private messageListeners: ((data: SocketMessage) => void)[] = [];
@@ -77,6 +80,26 @@ class SocketService {
     });
 
     this.socket.on('new-message', (data: SocketMessage) => {
+      // Create unique message identifier
+      const messageKey = `${data.chatId}_${data.message._id || data.message.content}_${data.senderId}_${data.timestamp}`;
+      
+      // Check if this message was already processed
+      if (this.processedMessages.has(messageKey)) {
+        console.log('SocketService: Duplicate message detected, skipping:', messageKey);
+        return;
+      }
+      
+      // Mark message as processed
+      this.processedMessages.add(messageKey);
+      
+      // Clean up old processed messages (keep only last 500)
+      if (this.processedMessages.size > 500) {
+        const messagesArray = Array.from(this.processedMessages);
+        this.processedMessages.clear();
+        messagesArray.slice(-250).forEach(msg => this.processedMessages.add(msg));
+      }
+      
+      console.log('SocketService: Processing new message:', data.message.content);
       this.notifyMessageListeners(data);
     });
 

@@ -85,6 +85,9 @@ app.use('/api/metrics', metricsRoutes);
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
   
+  // Track processed messages to prevent duplicates
+  const processedMessages = new Set();
+  
   // Join user to their personal room
   socket.on('join-user', (userId) => {
     socket.join(`user_${userId}`);
@@ -102,6 +105,25 @@ io.on('connection', (socket) => {
     try {
       const { chatId, message, senderId } = data;
       
+      // Create unique message identifier
+      const messageKey = `${chatId}_${message._id || message.content}_${senderId}_${Date.now()}`;
+      
+      // Check if this message was already processed
+      if (processedMessages.has(messageKey)) {
+        console.log('Duplicate message detected, skipping emission:', messageKey);
+        return;
+      }
+      
+      // Mark message as processed
+      processedMessages.add(messageKey);
+      
+      // Clean up old processed messages (keep only last 1000)
+      if (processedMessages.size > 1000) {
+        const messagesArray = Array.from(processedMessages);
+        processedMessages.clear();
+        messagesArray.slice(-500).forEach(msg => processedMessages.add(msg));
+      }
+      
       // Emit to chat room
       io.to(`chat_${chatId}`).emit('new-message', {
         chatId,
@@ -109,6 +131,8 @@ io.on('connection', (socket) => {
         senderId,
         timestamp: new Date()
       });
+      
+      console.log(`Message emitted to chat ${chatId}:`, message.content);
       
       // Notify assigned user if different from sender
       const chat = await Chat.findById(chatId).populate('assignedTo');

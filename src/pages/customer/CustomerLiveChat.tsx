@@ -31,6 +31,9 @@ export default function CustomerLiveChat() {
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Track processed message IDs to prevent duplicates
+  const processedMessageIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) {
@@ -47,28 +50,37 @@ export default function CustomerLiveChat() {
     // Set up socket listeners
     const unsubscribeMessage = socketService.onMessage((data) => {
       if (data.chatId === chat?._id) {
-        // Check if message already exists to prevent duplicates
+        // Enhanced duplicate prevention
+        const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
+        
+        if (processedMessageIds.current.has(messageId)) {
+          console.log('Message already processed, skipping duplicate:', messageId);
+          return;
+        }
+        
+        // Mark message as processed
+        processedMessageIds.current.add(messageId);
+        
+        // Add new message to current chat
         setChat(prev => {
           if (!prev) return null;
           
-          // Check if this message already exists (by ID first, then by content and timestamp)
+          // Additional safety check - ensure message doesn't already exist
           const messageExists = prev.messages.some(msg => {
-            // If both messages have IDs, compare by ID
             if (msg._id && data.message._id && msg._id === data.message._id) {
               return true;
             }
-            // Fallback: check by content, sender, and timestamp
             return msg.content === data.message.content && 
                    msg.sender.name === data.message.sender.name &&
-                   Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000; // Within 1 second
+                   Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000;
           });
           
           if (messageExists) {
-            console.log('Message already exists, skipping duplicate');
+            console.log('Message already exists in chat, skipping duplicate');
             return prev;
           }
           
-          // Add new message to current chat
+          console.log('Adding new message to chat:', data.message.content);
           return {
             ...prev,
             messages: [...prev.messages, data.message]
@@ -94,6 +106,19 @@ export default function CustomerLiveChat() {
       }
     };
   }, [user, chat?._id]);
+
+  // Clear processed message IDs when chat changes
+  useEffect(() => {
+    if (chat) {
+      // Initialize processed IDs with existing messages
+      processedMessageIds.current.clear();
+      chat.messages.forEach(msg => {
+        const messageId = msg._id || `${msg.content}_${msg.sender.name}_${msg.createdAt}`;
+        processedMessageIds.current.add(messageId);
+      });
+      console.log('Initialized processed message IDs for chat:', chat._id);
+    }
+  }, [chat?._id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
