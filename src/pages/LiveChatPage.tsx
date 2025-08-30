@@ -87,17 +87,18 @@ export default function LiveChatPage() {
        
        // Only update selected chat if this message is for the currently selected chat
        if (data.chatId === selectedChat?._id) {
-         // Enhanced duplicate prevention with better logging
-         const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
-         
-         if (processedMessageIds.current.has(messageId)) {
-           console.log('🚫 Socket: Message already processed, skipping duplicate:', messageId);
-           return;
-         }
-         
-         // Mark message as processed
-         processedMessageIds.current.add(messageId);
-         console.log('✅ Socket: Message marked as processed:', messageId);
+                 // Enhanced duplicate prevention with better logging
+        // Use MongoDB-generated _id if available, otherwise use content-based fingerprint
+        const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
+        
+        if (processedMessageIds.current.has(messageId)) {
+          console.log('🚫 Socket: Message already processed, skipping duplicate:', messageId);
+          return;
+        }
+        
+        // Mark message as processed
+        processedMessageIds.current.add(messageId);
+        console.log('✅ Socket: Message marked as processed:', messageId);
          
          // Add new message to current chat
          setSelectedChat(prev => {

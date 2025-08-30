@@ -397,10 +397,8 @@ router.post('/:id/messages', authenticateToken, requireAnyAdmin, async (req, res
       });
     }
 
-    // Create message with unique identifier
-    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Create message (let MongoDB generate _id)
     const message = {
-      _id: messageId,
       sender: {
         name: req.user.name,
         email: req.user.email
@@ -488,10 +486,8 @@ router.post('/:id/customer-messages', authenticateToken, requireCustomer, async 
       });
     }
 
-    // Create message with unique identifier
-    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Create message (let MongoDB generate _id)
     const message = {
-      _id: messageId,
       sender: {
         name: 'Customer',
         email: req.user.email
