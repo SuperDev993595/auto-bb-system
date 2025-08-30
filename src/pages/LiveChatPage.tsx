@@ -117,15 +117,16 @@ export default function LiveChatPage() {
             return prev;
           }
           
-          console.log('✅ Socket: Adding new message to chat:', data.message.content);
-          return {
-            ...prev,
-            messages: [...prev.messages, data.message]
-          };
-        });
-        
-        // Refresh customers list to update unread counts
-        loadCustomers();
+                   console.log('✅ Socket: Adding new message to chat:', data.message.content);
+         return {
+           ...prev,
+           messages: [...prev.messages, data.message]
+         };
+       });
+       
+       // Refresh customers list to update unread counts
+       console.log('🔄 Refreshing customers list after new message');
+       loadCustomers();
       }
     });
 
@@ -184,18 +185,22 @@ export default function LiveChatPage() {
         const customerMap = new Map();
         response.data.data.chats.forEach((chat: any) => {
           const customerId = chat.customer._id || chat.customer.email;
+          
+          // Calculate unread count for this chat using debug function
+          const unreadCount = debugUnreadCount(chat);
+          
           if (!customerMap.has(customerId)) {
             customerMap.set(customerId, {
               _id: customerId,
               name: chat.customer.name,
               email: chat.customer.email,
-              lastActivity: chat.lastActivity,
-              unreadCount: chat.messages?.filter((m: any) => !m.isRead && m.sender.name === 'Customer').length || 0
+              lastActivity: chat.lastActivity || chat.createdAt,
+              unreadCount: unreadCount
             });
           } else {
             // Update unread count and last activity
             const existing = customerMap.get(customerId);
-            existing.unreadCount += chat.messages?.filter((m: any) => !m.isRead && m.sender.name === 'Customer').length || 0;
+            existing.unreadCount = unreadCount; // Use current unread count, don't add
             if (chat.lastActivity > existing.lastActivity) {
               existing.lastActivity = chat.lastActivity;
             }
@@ -205,6 +210,7 @@ export default function LiveChatPage() {
         const customersList = Array.from(customerMap.values())
           .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
         
+        console.log('Updated customers list with unread counts:', customersList);
         setCustomers(customersList);
       }
     } catch (error) {
@@ -257,6 +263,33 @@ export default function LiveChatPage() {
       console.error('Error marking chat as read:', error);
       // Don't show error toast for this - it's not critical
     }
+  };
+
+  // Debug function to check unread count calculation
+  const debugUnreadCount = (chat: any) => {
+    console.log('🔍 Debug: Chat messages for unread count calculation:', {
+      chatId: chat._id,
+      customerName: chat.customer.name,
+      totalMessages: chat.messages?.length || 0,
+      messages: chat.messages?.map((m: any) => ({
+        content: m.content,
+        sender: m.sender,
+        isRead: m.isRead,
+        createdAt: m.createdAt
+      }))
+    });
+    
+    const unreadCount = chat.messages?.filter((m: any) => {
+      const isFromCustomer = m.sender?.name === 'Customer' || 
+                           m.sender?.name === chat.customer.name ||
+                           m.sender?.email === chat.customer.email;
+      const isUnread = !m.isRead;
+      console.log(`🔍 Message: "${m.content}" - From Customer: ${isFromCustomer}, Unread: ${isUnread}`);
+      return isUnread && isFromCustomer;
+    }).length || 0;
+    
+    console.log(`🔍 Calculated unread count: ${unreadCount}`);
+    return unreadCount;
   };
 
   const sendMessage = async () => {
@@ -377,7 +410,7 @@ export default function LiveChatPage() {
               <div className="bg-blue-600 text-white p-4 rounded-t-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{selectedCustomer.name}</h3>
+                    <h3 className="text-lg font-semibold text-white m">{selectedCustomer.name}</h3>
                     <p className="text-sm text-blue-100">{selectedCustomer.email}</p>
                   </div>
                   <div className="text-right">
