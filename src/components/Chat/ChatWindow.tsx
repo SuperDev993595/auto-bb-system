@@ -60,7 +60,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // Mark messages as read when chat is opened
   useEffect(() => {
-    markAsRead(chat._id);
+    const markMessagesAsRead = async () => {
+      await markAsRead(chat._id);
+    };
+    markMessagesAsRead();
   }, [chat._id, markAsRead]);
 
   const handleSendMessage = async () => {
@@ -266,7 +269,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   })}
                 </span>
               </div>
-              <p className="text-sm text-white">{message.content}</p>
+              <p className={`text-sm ${message.sender.name === 'Customer' ? 'text-gray-800' : 'text-white'}`}>{message.content}</p>
             </div>
           </div>
         ))}

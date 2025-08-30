@@ -85,6 +85,8 @@ const ChatDashboard: React.FC<ChatDashboardProps> = ({ className = '' }) => {
         if (selectedChat?._id === chatId) {
           setSelectedChat(response.data.chat);
         }
+        // Refresh the chat list to get updated message statuses
+        loadChats();
       }
     } catch (error) {
       console.error('Error assigning chat:', error);
@@ -97,15 +99,17 @@ const ChatDashboard: React.FC<ChatDashboardProps> = ({ className = '' }) => {
       if (response.success) {
         // Update the chat in the list
         setChats(prev => 
-          prev.map(chat => 
-            chat._id === chatId 
-              ? { ...chat, status: 'resolved' }
-              : chat
+          prev.map(prev => 
+            prev._id === chatId 
+              ? { ...prev, status: 'resolved' }
+              : prev
           )
         );
         if (selectedChat?._id === chatId) {
           setSelectedChat(response.data.chat);
         }
+        // Refresh the chat list to get updated message statuses
+        loadChats();
       }
     } catch (error) {
       console.error('Error resolving chat:', error);
@@ -127,14 +131,54 @@ const ChatDashboard: React.FC<ChatDashboardProps> = ({ className = '' }) => {
         if (selectedChat?._id === chatId) {
           setSelectedChat(response.data.chat);
         }
+        // Refresh the chat list to get updated message statuses
+        loadChats();
       }
     } catch (error) {
       console.error('Error closing chat:', error);
     }
   };
 
-  const handleChatSelect = (chat: Chat) => {
+  const handleChatSelect = async (chat: Chat) => {
     setSelectedChat(chat);
+    
+    // Mark messages as read when chat is selected
+    if (chat.messages.some(msg => !msg.isRead && msg.sender.name === 'Customer')) {
+      try {
+        // Call server API to mark messages as read
+        console.log('Marking messages as read for chat:', chat._id);
+        const token = localStorage.getItem('authToken');
+        console.log('Auth token found:', !!token);
+        
+        const response = await fetch(`/api/chat/${chat._id}/mark-read`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        console.log('Mark as read response status:', response.status);
+        if (response.ok) {
+          // Update the chat in the list to mark messages as read
+          setChats(prev => 
+            prev.map(c => 
+              c._id === chat._id 
+                ? {
+                    ...c,
+                    messages: c.messages.map(msg => ({
+                      ...msg,
+                      isRead: msg.sender.name === 'Customer' ? true : msg.isRead
+                    }))
+                  }
+                : c
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    }
   };
 
   const handleFilterChange = (key: keyof ChatFilters, value: string | number) => {
@@ -395,7 +439,11 @@ const ChatDashboard: React.FC<ChatDashboardProps> = ({ className = '' }) => {
         {selectedChat ? (
           <ChatWindow
             chat={selectedChat}
-            onClose={() => setSelectedChat(null)}
+            onClose={() => {
+              setSelectedChat(null);
+              // Refresh chat list when closing chat window to update unread statuses
+              loadChats();
+            }}
             onAssign={handleAssignChat}
             onResolve={handleResolveChat}
             onCloseChat={handleCloseChat}

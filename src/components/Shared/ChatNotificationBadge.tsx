@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Bell } from '../../utils/icons';
 import { chatService } from '../../services/chatService';
+import { API_ENDPOINTS, getAuthHeaders } from '../../services/api';
 
 interface ChatNotificationBadgeProps {
   className?: string;
@@ -13,22 +14,16 @@ const ChatNotificationBadge: React.FC<ChatNotificationBadgeProps> = ({ className
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        if (token) {
-          const response = await fetch(`http://localhost:3001/api/chat?status=waiting&limit=1`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-              const count = data.data.pagination.totalChats;
-              setUnreadCount(count);
-              setIsVisible(count > 0);
-            }
+        const response = await fetch(`${API_ENDPOINTS.CHAT}/unread-count`, {
+          headers: getAuthHeaders(),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            const count = data.data.unreadCount;
+            setUnreadCount(count);
+            setIsVisible(count > 0);
           }
         }
       } catch (error) {
@@ -62,6 +57,11 @@ const ChatNotificationBadge: React.FC<ChatNotificationBadgeProps> = ({ className
 
       socket.on('chat-resolved', () => {
         // Chat resolved, refresh count
+        fetchUnreadCount();
+      });
+
+      socket.on('chat-message-read', () => {
+        // Message marked as read, refresh count
         fetchUnreadCount();
       });
 

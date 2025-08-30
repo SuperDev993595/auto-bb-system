@@ -22,6 +22,7 @@ import {
     Shield
 } from "../../utils/icons";
 import { useAuth } from "../../context/AuthContext";
+import { API_ENDPOINTS, getAuthHeaders } from "../../services/api";
 
 type NavItem = {
     to: string;
@@ -109,20 +110,14 @@ export default function Sidebar() {
     useEffect(() => {
         const fetchUnreadChats = async () => {
             try {
-                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-                if (token) {
-                    const response = await fetch(`http://localhost:3001/api/chat?status=waiting&limit=1`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                            setUnreadChats(data.data.pagination.totalChats);
-                        }
+                const response = await fetch(`${API_ENDPOINTS.CHAT}/unread-count`, {
+                    headers: getAuthHeaders(),
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setUnreadChats(data.data.unreadCount);
                     }
                 }
             } catch (error) {

@@ -2,7 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const Chat = require('../models/Chat');
 const User = require('../models/User');
-const { authenticateToken, requireAnyAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAnyAdmin, requireCustomer } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -111,10 +111,144 @@ router.get('/', authenticateToken, requireAnyAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/chat/unread-count
+// @desc    Get total unread message count for admin
+// @access  Private
+router.get('/unread-count', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    // Build query based on user role
+    const query = {};
+    
+    if (req.user.role === 'admin') {
+      // Admin can see all unread messages
+      query.$or = [
+        { assignedTo: req.user.id },
+        { status: 'waiting' }
+      ];
+    } else {
+      // Sub admin can only see their assigned chats
+      query.assignedTo = req.user.id;
+    }
+
+    // Get all chats that match the query
+    const chats = await Chat.find(query).lean();
+    
+    // Calculate total unread messages manually since virtual properties don't work with .lean()
+    let totalUnread = 0;
+    chats.forEach(chat => {
+      const unreadCount = chat.messages.filter(message => 
+        !message.isRead && message.sender.name === 'Customer'
+      ).length;
+      totalUnread += unreadCount;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        unreadCount: totalUnread
+      }
+    });
+
+  } catch (error) {
+    console.error('Get unread count error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   GET /api/chat/customer
+// @desc    Get customer's own chats
+// @access  Private (Customer only)
+router.get('/customer', authenticateToken, requireCustomer, async (req, res) => {
+  try {
+    const chats = await Chat.find({ 'customer.email': req.user.email })
+      .sort({ lastActivity: -1 })
+      .populate('assignedTo', 'name email');
+
+    res.json({
+      success: true,
+      data: { chats }
+    });
+  } catch (error) {
+    console.error('Get customer chats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   PUT /api/chat/:id/mark-read
+// @desc    Mark chat messages as read
+// @access  Private
+router.put('/:id/mark-read', authenticateToken, requireAnyAdmin, async (req, res) => {
+  try {
+    console.log('Server: Mark as read request received for chat:', req.params.id);
+    console.log('Server: User:', req.user.id, req.user.name);
+    
+    const chat = await Chat.findById(req.params.id);
+    if (!chat) {
+      console.log('Server: Chat not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Chat not found'
+      });
+    }
+
+    // Check if user has access to this chat
+    if (req.user.role === 'admin' && 
+        chat.assignedTo && 
+        chat.assignedTo.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    // Mark all customer messages as read
+    let markedCount = 0;
+    chat.messages.forEach(message => {
+      if (message.sender.name === 'Customer') {
+        message.isRead = true;
+        markedCount++;
+      }
+    });
+
+    console.log('Server: Marked', markedCount, 'customer messages as read');
+
+    await chat.save();
+    console.log('Server: Chat saved successfully');
+
+    // Emit Socket.io event for real-time updates
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('chat-message-read', { 
+        chatId: chat._id,
+        userId: req.user.id 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Messages marked as read successfully',
+      data: { chat }
+    });
+
+  } catch (error) {
+    console.error('Mark as read error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   GET /api/chat/:id
 // @desc    Get single chat with messages
-// @access  Private
-router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
+// @access  Private (Admin or Customer for their own chats)
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const chat = await Chat.findById(req.params.id)
       .populate('assignedTo', 'name email')
@@ -128,13 +262,28 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
     }
 
     // Check if user has access to this chat
-    if (req.user.role === 'admin' && 
-        chat.assignedTo && 
-        chat.assignedTo._id.toString() !== req.user.id &&
-        chat.status !== 'waiting') {
+    if (req.user.role === 'customer') {
+      // Customers can only view their own chats
+      if (chat.customer.email !== req.user.email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied - you can only view your own chats'
+        });
+      }
+    } else if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      // Admins can view chats they're assigned to or waiting chats
+      if (chat.assignedTo && 
+          chat.assignedTo._id.toString() !== req.user.id &&
+          chat.status !== 'waiting') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
+      }
+    } else {
       return res.status(403).json({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied - invalid user role'
       });
     }
 
@@ -153,9 +302,9 @@ router.get('/:id', authenticateToken, requireAnyAdmin, async (req, res) => {
 });
 
 // @route   POST /api/chat
-// @desc    Create new chat (publicly accessible)
-// @access  Public
-router.post('/', async (req, res) => {
+// @desc    Create new chat (requires customer authentication)
+// @access  Private (Customer only)
+router.post('/', authenticateToken, requireCustomer, async (req, res) => {
   try {
     // Validate input
     const { error, value } = chatSchema.validate(req.body);
@@ -170,7 +319,7 @@ router.post('/', async (req, res) => {
     const initialMessage = {
       sender: {
         name: 'Customer',
-        email: value.customer.email
+        email: req.user.email
       },
       content: value.initialMessage,
       messageType: 'text',
@@ -180,7 +329,11 @@ router.post('/', async (req, res) => {
 
     // Create chat
     const chat = new Chat({
-      customer: value.customer,
+      customer: {
+        name: req.user.name,
+        email: req.user.email,
+        sessionId: value.customer.sessionId
+      },
       subject: value.subject,
       category: value.category,
       priority: value.priority,
@@ -286,6 +439,85 @@ router.post('/:id/messages', authenticateToken, requireAnyAdmin, async (req, res
 
   } catch (error) {
     console.error('Add message error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/chat/:id/customer-messages
+// @desc    Add message to chat from customer
+// @access  Private (Customer only)
+router.post('/:id/customer-messages', authenticateToken, requireCustomer, async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = messageSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    const chat = await Chat.findById(req.params.id);
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat not found'
+      });
+    }
+
+    // Verify this customer owns this chat (by email)
+    if (chat.customer.email !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied - you can only send messages to your own chats'
+      });
+    }
+
+    // Create message
+    const message = {
+      sender: {
+        name: 'Customer',
+        email: req.user.email
+      },
+      content: value.content,
+      messageType: value.messageType,
+      attachments: value.attachments || [],
+      isRead: false,
+      createdAt: new Date()
+    };
+
+    // Add message to chat
+    chat.messages.push(message);
+    chat.lastActivity = new Date();
+    
+    // Update status if it was waiting
+    if (chat.status === 'waiting') {
+      chat.status = 'active';
+    }
+
+    await chat.save();
+
+    // Emit to Socket.io if available
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat_${chat._id}`).emit('new-message', {
+        chatId: chat._id,
+        message,
+        senderId: req.user.id
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Message added successfully',
+      data: { message }
+    });
+
+  } catch (error) {
+    console.error('Add customer message error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

@@ -185,7 +185,7 @@ chatSchema.index({
 
 // Virtual for unread message count
 chatSchema.virtual('unreadCount').get(function() {
-  return this.messages.filter(message => !message.isRead && message.sender.name !== 'Customer').length;
+  return this.messages.filter(message => !message.isRead && message.sender.name === 'Customer').length;
 });
 
 // Virtual for last message

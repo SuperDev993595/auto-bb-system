@@ -17,7 +17,7 @@ import CustomerVehicles from "./pages/customer/CustomerVehicles";
 import CustomerAppointments from "./pages/customer/CustomerAppointments";
 import CustomerServices from "./pages/customer/CustomerServices";
 import CustomerInvoices from "./pages/customer/CustomerInvoices";
-import CustomerMessages from "./pages/customer/CustomerMessages";
+import CustomerLiveChat from "./pages/customer/CustomerLiveChat";
 import CustomerNotifications from "./pages/customer/CustomerNotifications";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 
@@ -175,7 +175,7 @@ export default function App() {
         <Route path="appointments" element={<CustomerAppointments />} />
         <Route path="services" element={<CustomerServices />} />
         <Route path="invoices" element={<CustomerInvoices />} />
-        <Route path="messages" element={<CustomerMessages />} />
+        <Route path="live-chat" element={<CustomerLiveChat />} />
         <Route path="notifications" element={<CustomerNotifications />} />
         <Route path="profile" element={<CustomerProfile />} />
 

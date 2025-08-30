@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Chat, ChatMessage } from '../../services/chatService';
+import { API_ENDPOINTS, getAuthHeaders } from '../../services/api';
 
 interface ChatContextType {
   activeChats: Chat[];
@@ -103,18 +104,34 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     }
   }, [socket]);
 
-  const markAsRead = useCallback((chatId: string) => {
-    setActiveChats(prev => 
-      prev.map(chat => 
-        chat._id === chatId 
-          ? {
-              ...chat,
-              messages: chat.messages.map(msg => ({ ...msg, isRead: true }))
-            }
-          : chat
-      )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    const markAsRead = useCallback(async (chatId: string) => {
+    try {
+      console.log('ChatProvider: Marking messages as read for chat:', chatId);
+      
+      // Call server API to mark messages as read
+      const response = await fetch(`${API_ENDPOINTS.CHAT}/${chatId}/mark-read`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      });
+
+      console.log('ChatProvider: Mark as read response status:', response.status);
+      if (response.ok) {
+        // Update local state
+        setActiveChats(prev => 
+          prev.map(chat => 
+            chat._id === chatId 
+              ? {
+                  ...chat,
+                  messages: chat.messages.map(msg => ({ ...msg, isRead: true }))
+                }
+              : chat
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
   }, []);
 
   const updateChatStatus = useCallback((chatId: string, status: string) => {

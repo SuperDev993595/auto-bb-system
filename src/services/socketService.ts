@@ -36,7 +36,7 @@ class SocketService {
   private statusChangeListeners: ((data: ChatStatusChange) => void)[] = [];
   private connectionListeners: ((connected: boolean) => void)[] = [];
 
-  connect(url: string = import.meta.env.VITE_API_URL || 'http://localhost:5000') {
+  connect(url: string = import.meta.env.VITE_API_URL || 'http://localhost:3001') {
     if (this.socket?.connected) {
       return;
     }
