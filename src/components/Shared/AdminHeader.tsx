@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { HiUser, HiLogout, HiBell, HiCog } from 'react-icons/hi';
 import PendingApprovalsCounter from './PendingApprovalsCounter';
 import NotificationCenter from './NotificationCenter';
+import ChatNotificationBadge from './ChatNotificationBadge';
 
 export default function AdminHeader() {
     const { user, logout, isLoading } = useAuth();
@@ -41,6 +42,14 @@ export default function AdminHeader() {
                 </div>
                 
                 <div className="flex items-center space-x-4">
+                    {/* Chat Notification Badge */}
+                    <Link 
+                        to="/admin/dashboard/live-chat"
+                        className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg transition-all duration-200"
+                    >
+                        <ChatNotificationBadge />
+                    </Link>
+                    
                     {/* Pending Approvals Counter */}
                     <Link 
                         to="/admin/dashboard/approvals"

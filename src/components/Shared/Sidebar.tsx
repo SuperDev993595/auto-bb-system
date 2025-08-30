@@ -28,6 +28,7 @@ type NavItem = {
     label: string;
     icon: JSX.Element;
     roles?: string[];
+    badge?: number;
 };
 
 interface NavGroup {
@@ -102,6 +103,40 @@ export default function Sidebar() {
     const location = useLocation();
     const { user } = useAuth();
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+    const [unreadChats, setUnreadChats] = useState(0);
+
+    // Fetch unread chat count
+    useEffect(() => {
+        const fetchUnreadChats = async () => {
+            try {
+                const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                if (token) {
+                    const response = await fetch(`http://localhost:3001/api/chat?status=waiting&limit=1`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            setUnreadChats(data.data.pagination.totalChats);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching unread chats:', error);
+            }
+        };
+
+        fetchUnreadChats();
+        
+        // Set up interval to refresh unread count
+        const interval = setInterval(fetchUnreadChats, 30000); // Refresh every 30 seconds
+        
+        return () => clearInterval(interval);
+    }, []);
 
     // Auto-expand groups that contain the current active page
     useEffect(() => {
@@ -118,6 +153,16 @@ export default function Sidebar() {
             }
         });
     }, [location.pathname, user?.role, collapsedGroups]);
+
+    // Update navGroups with unread chat count
+    const updatedNavGroups = navGroups.map(group => ({
+        ...group,
+        items: group.items.map(item => 
+            item.to === "/admin/dashboard/live-chat" 
+                ? { ...item, badge: unreadChats }
+                : item
+        )
+    }));
 
     const toggleGroup = (groupTitle: string) => {
         setCollapsedGroups(prev => {
@@ -149,7 +194,7 @@ export default function Sidebar() {
 
             {/* Scrollable Navigation */}
             <nav className="flex-1 overflow-y-auto p-4 space-y-4 sidebar-scrollbar sidebar-nav min-h-0">
-                {navGroups
+                {updatedNavGroups
                     .filter(group => !group.roles || group.roles.includes(user?.role || ''))
                     .map(group => {
                         const isCollapsed = collapsedGroups.has(group.title);
@@ -193,6 +238,11 @@ export default function Sidebar() {
                                                 >
                                                     {item.icon}
                                                     <span>{item.label}</span>
+                                                    {item.badge && item.badge > 0 && (
+                                                        <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                                                            {item.badge > 99 ? '99+' : item.badge}
+                                                        </span>
+                                                    )}
                                                 </Link>
                                             ))}
                                     </div>

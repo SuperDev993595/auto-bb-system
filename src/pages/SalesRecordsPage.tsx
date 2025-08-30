@@ -325,9 +325,9 @@ export default function SalesRecordsPage() {
                     <td className="table-cell">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {record.customer.businessName || record.customer.contactPerson.name}
+                          {record.customer?.businessName || record.customer?.contactPerson?.name || 'Unknown Customer'}
                         </div>
-                        <div className="text-sm text-gray-500">{record.customer.email}</div>
+                        <div className="text-sm text-gray-500">{record.customer?.email || 'No email'}</div>
                       </div>
                     </td>
                     <td className="table-cell">
@@ -427,7 +427,7 @@ export default function SalesRecordsPage() {
       <CreateSalesRecordModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSave={() => {
+        onSuccess={() => {
           setShowCreateModal(false);
           loadSalesRecords();
         }}

@@ -307,17 +307,17 @@ technicianSchema.index({
 // Virtual for service catalog total price
 serviceCatalogSchema.virtual('totalPrice').get(function() {
   const laborCost = (this.estimatedDuration / 60) * this.laborRate;
-  const partsCost = this.parts.reduce((sum, part) => sum + part.totalPrice, 0);
+  const partsCost = this.parts ? this.parts.reduce((sum, part) => sum + part.totalPrice, 0) : 0;
   return laborCost + partsCost;
 });
 
 // Methods for work orders
 workOrderSchema.methods.calculateTotals = function() {
-  this.totalLaborHours = this.services.reduce((sum, service) => sum + service.laborHours, 0);
-  this.totalLaborCost = this.services.reduce((sum, service) => sum + (service.laborHours * service.laborRate), 0);
-  this.totalPartsCost = this.services.reduce((sum, service) => 
-    sum + service.parts.reduce((partSum, part) => partSum + part.totalPrice, 0), 0
-  );
+  this.totalLaborHours = this.services ? this.services.reduce((sum, service) => sum + service.laborHours, 0) : 0;
+  this.totalLaborCost = this.services ? this.services.reduce((sum, service) => sum + (service.laborHours * service.laborRate), 0) : 0;
+  this.totalPartsCost = this.services ? this.services.reduce((sum, service) => 
+    sum + (service.parts ? service.parts.reduce((partSum, part) => partSum + part.totalPrice, 0) : 0), 0
+  ) : 0;
   this.totalCost = this.totalLaborCost + this.totalPartsCost;
   return this;
 };
@@ -557,7 +557,7 @@ serviceSchema.set('toObject', { virtuals: true });
 // Pre-save middleware to calculate totals
 serviceSchema.pre('save', function(next) {
   // Calculate parts total
-  const partsTotal = this.parts.reduce((sum, part) => sum + part.totalPrice, 0);
+  const partsTotal = this.parts ? this.parts.reduce((sum, part) => sum + part.totalPrice, 0) : 0;
   
   // Calculate labor cost
   this.laborCost = (this.laborHours || 0) * (this.laborRate || 0);

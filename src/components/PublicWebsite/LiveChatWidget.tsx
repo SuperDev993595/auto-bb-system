@@ -5,8 +5,10 @@ import {
   Send, 
   User, 
   Cog,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from '../../utils/icons';
+import { chatService, Chat, ChatMessage, CreateChatData } from '../../services/chatService';
 
 interface Message {
   id: string;
@@ -18,16 +20,19 @@ interface Message {
 const LiveChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! Welcome to Auto Repair Pro. How can we help you today?',
-      sender: 'agent',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [currentChat, setCurrentChat] = useState<Chat | null>(null);
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const [showCustomerForm, setShowCustomerForm] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,13 +45,71 @@ const LiveChatWidget: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (isOpen && inputRef.current && !showCustomerForm) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isOpen, showCustomerForm]);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  // Generate unique session ID for customer
+  const generateSessionId = () => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const handleCustomerInfoSubmit = async () => {
+    if (!customerInfo.name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const chatData: CreateChatData = {
+        customer: {
+          name: customerInfo.name,
+          email: customerInfo.email || undefined,
+          phone: customerInfo.phone || undefined,
+          sessionId: generateSessionId()
+        },
+        subject: 'Customer Inquiry',
+        category: 'general',
+        priority: 'medium',
+        initialMessage: 'Hello! I need assistance.'
+      };
+
+      const response = await chatService.createChat(chatData);
+      
+      if (response.success) {
+        setCurrentChat(response.data.chat);
+        setShowCustomerForm(false);
+        
+        // Add initial messages
+        setMessages([
+          {
+            id: '1',
+            text: 'Hello! Welcome to Auto Repair Pro. How can we help you today?',
+            sender: 'agent',
+            timestamp: new Date()
+          },
+          {
+            id: '2',
+            text: 'Thank you for contacting us. An agent will be with you shortly.',
+            sender: 'agent',
+            timestamp: new Date()
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      setError('Failed to start chat. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || !currentChat) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -59,17 +122,37 @@ const LiveChatWidget: React.FC = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate agent response
-    setTimeout(() => {
-      const agentMessage: Message = {
+    try {
+      // Send message to backend
+      await chatService.sendMessage(currentChat._id, {
+        content: inputMessage,
+        messageType: 'text'
+      });
+
+      // Simulate agent response (in real implementation, this would come from socket.io)
+      setTimeout(() => {
+        const agentMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: getAutoResponse(inputMessage),
+          sender: 'agent',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, agentMessage]);
+        setIsTyping(false);
+      }, 1000 + Math.random() * 2000);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setIsTyping(false);
+      // Add error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAutoResponse(inputMessage),
+        text: 'Sorry, there was an error sending your message. Please try again.',
         sender: 'agent',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, agentMessage]);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 2000);
+      setMessages(prev => [...prev, errorMessage]);
+    }
   };
 
   const getAutoResponse = (userMessage: string): string => {
@@ -100,8 +183,21 @@ const LiveChatWidget: React.FC = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSendMessage();
+      if (showCustomerForm) {
+        handleCustomerInfoSubmit();
+      } else {
+        handleSendMessage();
+      }
     }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setShowCustomerForm(true);
+    setMessages([]);
+    setCurrentChat(null);
+    setCustomerInfo({ name: '', email: '', phone: '' });
+    setError(null);
   };
 
   if (isMinimized) {
@@ -143,7 +239,7 @@ const LiveChatWidget: React.FC = () => {
                 <ChevronDown className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="hover:bg-blue-700 p-1 rounded-lg transition-all duration-300"
               >
                 <X className="w-4 h-4" />
@@ -151,83 +247,159 @@ const LiveChatWidget: React.FC = () => {
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-xs px-4 py-3 rounded-xl shadow-sm ${
-                    message.sender === 'user'
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                      : 'bg-gray-50 text-gray-800 border border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 mb-2">
-                    {message.sender === 'user' ? (
-                      <User className="w-3 h-3" />
-                    ) : (
-                      <Cog className="w-3 h-3" />
-                    )}
-                    <span className="text-xs opacity-75">
-                      {message.sender === 'user' ? 'You' : 'Auto Repair Pro'}
-                    </span>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+            {showCustomerForm ? (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Start a Chat</h3>
+                  <p className="text-sm text-gray-600">Please provide your information to begin</p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={customerInfo.name}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Your name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isLoading}
+                    />
                   </div>
-                  <p className="text-sm">{message.text}</p>
-                  <p className="text-xs opacity-75 mt-2">
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email (optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={customerInfo.email}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                      onKeyPress={handleKeyPress}
+                      placeholder="your.email@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone (optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      onKeyPress={handleKeyPress}
+                      placeholder="(555) 123-4567"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="flex items-center space-x-2 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleCustomerInfoSubmit}
+                  disabled={isLoading || !customerInfo.name.trim()}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-2 px-4 rounded-lg transition-all duration-300 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Starting chat...' : 'Start Chat'}
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Messages */}
+                <div className="space-y-3 mb-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-xs px-4 py-3 rounded-xl shadow-sm ${
+                          message.sender === 'user'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
+                            : 'bg-gray-50 text-gray-800 border border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 mb-2">
+                          {message.sender === 'user' ? (
+                            <User className="w-3 h-3" />
+                          ) : (
+                            <Cog className="w-3 h-3" />
+                          )}
+                          <span className="text-xs opacity-75">
+                            {message.sender === 'user' ? 'You' : 'Auto Repair Pro'}
+                          </span>
+                        </div>
+                        <p className="text-sm">{message.text}</p>
+                        <p className="text-xs opacity-75 mt-2">
+                          {message.timestamp.toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-50 text-gray-800 px-4 py-3 rounded-xl border border-gray-200">
+                        <div className="flex items-center space-x-2">
+                          <Cog className="w-3 h-3" />
+                          <span className="text-xs">Agent is typing...</span>
+                        </div>
+                        <div className="flex space-x-1 mt-2">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex space-x-2">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!inputMessage.trim()}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white p-2 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Press Enter to send • Usually responds in a few seconds
                   </p>
                 </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-gray-50 text-gray-800 px-4 py-3 rounded-xl border border-gray-200">
-                  <div className="flex items-center space-x-2">
-                    <Cog className="w-3 h-3" />
-                    <span className="text-xs">Agent is typing...</span>
-                  </div>
-                  <div className="flex space-x-1 mt-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
+              </>
             )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex space-x-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim()}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white p-2 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Press Enter to send • Usually responds in a few seconds
-            </p>
           </div>
         </div>
       )}

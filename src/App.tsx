@@ -60,6 +60,7 @@ import JobBoardPage from "./pages/JobBoardPage";
 import MembershipPlansPage from "./pages/MembershipPlansPage";
 import WarrantyManagementPage from "./pages/WarrantyManagementPage";
 import SalesRecordsPage from "./pages/SalesRecordsPage";
+import CollectionsManagementPage from "./pages/CollectionsManagementPage";
 
 // Public Website Pages
 import PublicLayout from "./components/PublicWebsite/PublicLayout";
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="work-orders" element={<WorkOrdersPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="sales-records" element={<SalesRecordsPage />} />
+        <Route path="collections" element={<CollectionsManagementPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route 
           path="reports" 
