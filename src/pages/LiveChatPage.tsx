@@ -232,12 +232,30 @@ export default function LiveChatPage() {
         
         // Join new chat room
         socketService.joinChat(chat._id);
+        
+        // Auto-mark customer messages as read when viewing the chat
+        await markChatAsRead(chat._id);
       } else {
         setSelectedChat(null);
       }
     } catch (error) {
       console.error('Error loading customer chat:', error);
       toast.error('Failed to load chat');
+    }
+  };
+
+  const markChatAsRead = async (chatId: string) => {
+    try {
+      console.log('Marking chat as read:', chatId);
+      const response = await api.put(`/chat/${chatId}/mark-read`);
+      if (response.data.success) {
+        console.log('Chat marked as read successfully');
+        // Refresh customers list to update unread counts
+        loadCustomers();
+      }
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+      // Don't show error toast for this - it's not critical
     }
   };
 
