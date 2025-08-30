@@ -139,10 +139,18 @@ export default function LiveChatPage() {
       }
     });
 
+    // Listen for chat message read events to update unread counts
+    const unsubscribeMessageRead = socketService.onMessageRead((data: any) => {
+      console.log('🔔 Socket: Messages marked as read for chat:', data.chatId);
+      // Refresh customers list to update unread counts
+      loadCustomers();
+    });
+
     // Cleanup
     return () => {
       unsubscribeMessage();
       unsubscribeConnection();
+      unsubscribeMessageRead();
       if (selectedChat) {
         socketService.leaveChat(selectedChat._id);
       }
@@ -351,7 +359,7 @@ export default function LiveChatPage() {
               <div className="bg-blue-600 text-white p-4 rounded-t-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-semibold">{selectedCustomer.name}</h3>
+                    <h3 className="text-lg font-semibold text-white">{selectedCustomer.name}</h3>
                     <p className="text-sm text-blue-100">{selectedCustomer.email}</p>
                   </div>
                   <div className="text-right">

@@ -22,6 +22,11 @@ export interface ChatStatusChange {
   status: string;
 }
 
+export interface ChatMessageRead {
+  chatId: string;
+  userId: string;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
@@ -37,6 +42,7 @@ class SocketService {
   private typingListeners: ((data: TypingEvent) => void)[] = [];
   private assignmentListeners: ((data: ChatAssignment) => void)[] = [];
   private statusChangeListeners: ((data: ChatStatusChange) => void)[] = [];
+  private messageReadListeners: ((data: ChatMessageRead) => void)[] = [];
   private connectionListeners: ((connected: boolean) => void)[] = [];
 
   connect(url: string = import.meta.env.VITE_API_URL || 'http://localhost:3001') {
@@ -118,6 +124,10 @@ class SocketService {
     this.socket.on('chat-closed', (data: ChatStatusChange) => {
       this.notifyStatusChangeListeners(data);
     });
+
+    this.socket.on('chat-message-read', (data: ChatMessageRead) => {
+      this.notifyMessageReadListeners(data);
+    });
   }
 
   disconnect() {
@@ -197,6 +207,13 @@ class SocketService {
     };
   }
 
+  onMessageRead(callback: (data: ChatMessageRead) => void) {
+    this.messageReadListeners.push(callback);
+    return () => {
+      this.messageReadListeners = this.messageReadListeners.filter(cb => cb !== callback);
+    };
+  }
+
   onConnection(callback: (connected: boolean) => void) {
     this.connectionListeners.push(callback);
     return () => {
@@ -219,6 +236,10 @@ class SocketService {
 
   private notifyStatusChangeListeners(data: ChatStatusChange) {
     this.statusChangeListeners.forEach(callback => callback(data));
+  }
+
+  private notifyMessageReadListeners(data: ChatMessageRead) {
+    this.messageReadListeners.forEach(callback => callback(data));
   }
 
   private notifyConnectionListeners(connected: boolean) {

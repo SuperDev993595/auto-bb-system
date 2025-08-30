@@ -145,7 +145,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <h5 className="font-semibold text-white">{chat.customer.name}</h5>
+              <h5 className="font-semibold text-gray-900">{chat.customer.name}</h5>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(chat.status)}`}>
                 {chat.status}
               </span>
