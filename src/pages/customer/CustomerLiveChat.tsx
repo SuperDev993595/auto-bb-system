@@ -49,17 +49,25 @@ export default function CustomerLiveChat() {
 
     // Set up socket listeners
     const unsubscribeMessage = socketService.onMessage((data) => {
+      console.log('🔔 Customer Socket: Received new message:', {
+        chatId: data.chatId,
+        messageContent: data.message.content,
+        sender: data.message.sender.name,
+        messageId: data.message._id
+      });
+      
       if (data.chatId === chat?._id) {
-        // Enhanced duplicate prevention
+        // Enhanced duplicate prevention with better logging
         const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
         
         if (processedMessageIds.current.has(messageId)) {
-          console.log('Message already processed, skipping duplicate:', messageId);
+          console.log('🚫 Customer Socket: Message already processed, skipping duplicate:', messageId);
           return;
         }
         
         // Mark message as processed
         processedMessageIds.current.add(messageId);
+        console.log('✅ Customer Socket: Message marked as processed:', messageId);
         
         // Add new message to current chat
         setChat(prev => {
@@ -68,19 +76,24 @@ export default function CustomerLiveChat() {
           // Additional safety check - ensure message doesn't already exist
           const messageExists = prev.messages.some(msg => {
             if (msg._id && data.message._id && msg._id === data.message._id) {
+              console.log('🚫 Customer Socket: Message with same ID already exists:', msg._id);
               return true;
             }
-            return msg.content === data.message.content && 
-                   msg.sender.name === data.message.sender.name &&
-                   Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000;
+            if (msg.content === data.message.content && 
+                msg.sender.name === data.message.sender.name &&
+                Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000) {
+              console.log('🚫 Customer Socket: Message with same content/sender/timestamp already exists');
+              return true;
+            }
+            return false;
           });
           
           if (messageExists) {
-            console.log('Message already exists in chat, skipping duplicate');
+            console.log('🚫 Customer Socket: Message already exists in chat, skipping duplicate');
             return prev;
           }
           
-          console.log('Adding new message to chat:', data.message.content);
+          console.log('✅ Customer Socket: Adding new message to chat:', data.message.content);
           return {
             ...prev,
             messages: [...prev.messages, data.message]
@@ -191,18 +204,11 @@ export default function CustomerLiveChat() {
 
       const message = response.data.data.message;
       
-      // Update local state immediately for better UX
-      setChat(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, message]
-      } : null);
-
+      // Don't update local state here - let Socket.io handle it
+      // This prevents duplicate messages from API response + Socket.io event
+      
       setNewMessage('');
       toast.success('Message sent!');
-      
-      // Note: We don't need to send via socket for our own messages
-      // The API response already updated the database, and other users will receive it via socket
-      // This prevents duplicate messages on our own side
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

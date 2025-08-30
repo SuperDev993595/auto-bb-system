@@ -423,14 +423,24 @@ router.post('/:id/messages', authenticateToken, requireAnyAdmin, async (req, res
 
     await chat.save();
 
-    // Emit to Socket.io if available
+    // Emit to Socket.io if available (ADMIN MESSAGE)
     const io = req.app.get('io');
     if (io) {
+      console.log(`🔔 Server: Emitting new-message to chat ${chat._id}:`, {
+        content: message.content,
+        sender: message.sender.name,
+        messageId: message._id
+      });
+      
       io.to(`chat_${chat._id}`).emit('new-message', {
         chatId: chat._id,
         message,
         senderId: req.user.id
       });
+      
+      console.log(`✅ Server: Message emitted successfully to chat ${chat._id}`);
+    } else {
+      console.log('⚠️ Server: Socket.io not available for message emission');
     }
 
     res.json({
@@ -504,14 +514,24 @@ router.post('/:id/customer-messages', authenticateToken, requireCustomer, async 
 
     await chat.save();
 
-    // Emit to Socket.io if available
+    // Emit to Socket.io if available (CUSTOMER MESSAGE)
     const io = req.app.get('io');
     if (io) {
+      console.log(`🔔 Server: Emitting new-message to chat ${chat._id}:`, {
+        content: message.content,
+        sender: message.sender.name,
+        messageId: message._id
+      });
+      
       io.to(`chat_${chat._id}`).emit('new-message', {
         chatId: chat._id,
         message,
         senderId: req.user.id
       });
+      
+      console.log(`✅ Server: Message emitted successfully to chat ${chat._id}`);
+    } else {
+      console.log('⚠️ Server: Socket.io not available for message emission');
     }
 
     res.json({
