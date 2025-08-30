@@ -291,7 +291,7 @@ export class ChatSocketService {
   private initializeSocket() {
     // Check if socket.io is available
     if (typeof window !== 'undefined' && (window as any).io) {
-      this.socket = (window as any).io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001');
+      this.socket = (window as any).io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001');
       
       this.socket.on('connect', () => {
         console.log('Connected to chat socket');

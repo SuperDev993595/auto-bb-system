@@ -1,4 +1,4 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createAction } from '@reduxjs/toolkit';
 import collectionsApi, { 
   CollectionsFilters, 
   CreateCollectionsTaskData, 
@@ -123,3 +123,7 @@ export const fetchCollectionsByRiskLevel = createAsyncThunk(
     }
   }
 );
+
+// Filter actions
+export const setFilters = createAction<Partial<CollectionsFilters>>('collections/setFilters');
+export const clearFilters = createAction('collections/clearFilters');

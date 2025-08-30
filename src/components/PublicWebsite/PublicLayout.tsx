@@ -1,7 +1,7 @@
 import React from 'react';
 import PublicNavbar from './PublicNavbar';
 import PublicFooter from './PublicFooter';
-import LiveChatWidget from './LiveChatWidget';
+import ChatWidget from '../Chat/ChatWidget';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         {children}
       </main>
       <PublicFooter />
-      <LiveChatWidget />
+      <ChatWidget />
     </div>
   );
 };

@@ -144,7 +144,9 @@ import {
   Camera,
   CameraOff,
   Minimize,
+  Minimize2,
   Maximize,
+  Maximize2,
   FileSpreadsheet,
   FileType,
   Target,
@@ -167,6 +169,9 @@ import {
   Video,
   MicOff,
   Mic,
+  Archive,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 
 // Export all icons for direct use
@@ -311,7 +316,9 @@ export {
   Camera,
   CameraOff,
   Minimize,
+  Minimize2,
   Maximize,
+  Maximize2,
   FileSpreadsheet,
   FileType,
   Target,
@@ -334,6 +341,9 @@ export {
   Video,
   MicOff,
   Mic,
+  Archive,
+  Volume2,
+  VolumeX,
 }
 
 // Icon size constants for consistency
@@ -510,4 +520,7 @@ export const ACTION_ICONS = {
   video: { icon: Video, color: ICON_COLORS.primary, size: ICON_SIZES.md },
   micOff: { icon: MicOff, color: ICON_COLORS.danger, size: ICON_SIZES.md },
   mic: { icon: Mic, color: ICON_COLORS.success, size: ICON_SIZES.md },
+  archive: { icon: Archive, color: ICON_COLORS.danger, size: ICON_SIZES.md },
+  volume2: { icon: Volume2, color: ICON_COLORS.success, size: ICON_SIZES.md },
+  volumeX: { icon: VolumeX, color: ICON_COLORS.danger, size: ICON_SIZES.md },
 } as const
