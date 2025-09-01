@@ -15,7 +15,7 @@ import {
   downloadInvoicePDF,
   sendInvoiceEmail
 } from '../redux/actions/invoices'
-import { Invoice } from '../utils/CustomerTypes'
+import { Invoice } from '../redux/reducer/invoicesReducer'
 import PageTitle from '../components/Shared/PageTitle'
 import AddInvoiceModal from '../components/invoices/AddInvoiceModal'
 import EditInvoiceModal from '../components/invoices/EditInvoiceModal'
@@ -71,7 +71,7 @@ export default function InvoicesPage() {
 
   // Load data on component mount
   useEffect(() => {
-    dispatch(fetchInvoices())
+    dispatch(fetchInvoices({}))
     dispatch(fetchInvoiceStats())
     dispatch(fetchPaymentStats())
     dispatch(fetchInvoiceTemplates())
@@ -79,8 +79,8 @@ export default function InvoicesPage() {
 
   // Filter invoices with safety check
   const filteredInvoices = (invoices || []).filter(invoice => {
-    const matchesSearch = (invoice.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (invoice.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (invoice.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (invoice._id || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -115,7 +115,7 @@ export default function InvoicesPage() {
     }
     
     dispatch(addPayment({
-      invoiceId,
+      id: invoiceId,
       paymentData: {
         amount: parseFloat(paymentAmount),
         paymentMethod: paymentMethod,
@@ -155,11 +155,11 @@ export default function InvoicesPage() {
   }
 
   const handleSendEmail = (invoiceId: string) => {
-    dispatch(sendInvoiceEmail(invoiceId))
+    dispatch(sendInvoiceEmail({ id: invoiceId, emailData: {} }))
   }
 
   const handleInvoiceSuccess = () => {
-    dispatch(fetchInvoices())
+    dispatch(fetchInvoices({}))
     dispatch(fetchInvoiceStats())
   }
 
@@ -198,7 +198,7 @@ export default function InvoicesPage() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => dispatch(markAsOverdue())}
+            onClick={() => dispatch(markAsOverdue('all'))}
             className="btn-secondary"
           >
             <HiRefresh className="w-4 h-4" />
@@ -323,8 +323,8 @@ export default function InvoicesPage() {
                 <tr key={invoice._id} className="table-row hover:bg-secondary-50">
                   <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber}</div>
-                      <div className="text-sm text-secondary-600">WO: {invoice.workOrder || 'N/A'}</div>
+                      <div className="text-sm font-medium text-secondary-900">#{invoice._id}</div>
+                      <div className="text-sm text-secondary-600">WO: {invoice.workOrderId || 'N/A'}</div>
                       {invoice.notes && (
                         <div className="text-xs text-secondary-500 mt-1 max-w-xs truncate">
                           {invoice.notes}
@@ -334,16 +334,16 @@ export default function InvoicesPage() {
                   </td>
                   <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-secondary-900">{invoice.customer?.name}</div>
+                      <div className="text-sm font-medium text-secondary-900">{invoice.customerName}</div>
                       <div className="text-sm text-secondary-600">
-                        {invoice.vehicle ? `${invoice.vehicle.year} ${invoice.vehicle.make} ${invoice.vehicle.model}` : 'Vehicle info not available'}
+                        {invoice.vehicleInfo || 'Vehicle info not available'}
                       </div>
                     </div>
                   </td>
                   <td className="table-cell">
                     <div>
                       <div className="text-sm text-secondary-900">
-                        Created: {new Date(invoice.issueDate).toLocaleDateString()}
+                        Created: {new Date(invoice.date).toLocaleDateString()}
                       </div>
                       <div className="text-sm text-secondary-600">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
@@ -485,10 +485,10 @@ export default function InvoicesPage() {
                       </div>
                     </td>
                     <td className="table-cell whitespace-nowrap">
-                      <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber}</div>
+                      <div className="text-sm font-medium text-secondary-900">#{invoice._id}</div>
                     </td>
                     <td className="table-cell whitespace-nowrap">
-                      <div className="text-sm text-secondary-900">{invoice.customer?.name}</div>
+                      <div className="text-sm text-secondary-900">{invoice.customerName}</div>
                     </td>
                     <td className="table-cell whitespace-nowrap">
                       <div className="text-sm font-medium text-green-600">

@@ -1,36 +1,55 @@
 import React, { useState } from 'react'
-import { Invoice } from '../../services/invoices'
+import { useAppDispatch } from '../../redux'
+import { deleteInvoice } from '../../redux/actions/invoices'
+import { Invoice } from '../../redux/reducer/invoicesReducer'
 import {
   HiExclamation,
   HiTrash
 } from 'react-icons/hi'
 import ModalWrapper from '../../utils/ModalWrapper'
+import { toast } from 'react-hot-toast'
 
 interface DeleteInvoiceModalProps {
-  invoice: Invoice
+  invoice: Invoice | null
   onClose: () => void
-  onDelete: (id: string) => Promise<void>
+  onSuccess?: () => void
 }
 
 const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
   invoice,
   onClose,
-  onDelete
+  onSuccess
 }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const dispatch = useAppDispatch()
 
   const handleDelete = async () => {
+    if (!invoice) return
+    
     try {
       setLoading(true)
       setError(null)
-      await onDelete(invoice.id)
-      onClose()
+      
+      // Dispatch the delete action
+      const result = await dispatch(deleteInvoice(invoice._id))
+      
+      if (deleteInvoice.fulfilled.match(result)) {
+        toast.success('Invoice deleted successfully')
+        onSuccess?.()
+        onClose()
+      } else {
+        setError('Failed to delete invoice')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete invoice')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!invoice) {
+    return null
   }
 
   return (
@@ -40,8 +59,8 @@ const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
       title="Delete Invoice"
       submitText="Delete Invoice"
       onSubmit={handleDelete}
-      isLoading={loading}
-      submitButtonVariant="error"
+      submitColor="bg-red-600"
+      submitDisabled={loading}
     >
       <div className="p-4 space-y-4">
         {error && (
@@ -65,12 +84,12 @@ const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
         <div className="bg-secondary-50 p-4 rounded-lg">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-secondary-600">Invoice Number:</span>
-              <span className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber}</span>
+              <span className="text-sm text-secondary-600">Invoice ID:</span>
+              <span className="text-sm font-medium text-secondary-900">#{invoice._id}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Customer:</span>
-              <span className="text-sm font-medium text-secondary-900">{invoice.customer?.name}</span>
+              <span className="text-sm font-medium text-secondary-900">{invoice.customerName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Amount:</span>
