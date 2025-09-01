@@ -326,24 +326,24 @@ export default function InvoicesPage() {
             <tbody className="table-body">
               {filteredInvoices.map(invoice => (
                 <tr key={invoice._id} className="table-row hover:bg-secondary-50">
-                                     <td className="table-cell">
+                  <td className="table-cell">
                      <div>
-                       <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
-                       <div className="text-sm text-secondary-600">
+                       <div className="text-xs font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
+                       <div className="text-xs text-secondary-600">
                          WO: {(() => {
                            const workOrder = workOrders.find(wo => wo._id === invoice.workOrderId);
                            return workOrder ? workOrder.workOrderNumber : (invoice.workOrderId || 'N/A');
                          })()}
                        </div>
                      </div>
-                   </td>
+                  </td>
                   <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-secondary-900">
+                      <div className="text-xs font-medium text-secondary-900">
                         {typeof invoice.customerId === 'object' ? invoice.customerId.name : 
                          invoice.customer?.name || invoice.customerName || 'Customer not available'}
                       </div>
-                      <div className="text-sm text-secondary-600">
+                      <div className="text-xs text-secondary-600">
                         {typeof invoice.vehicleId === 'object' ? invoice.vehicleId.fullName :
                          invoice.vehicle?.fullName || invoice.vehicleInfo || 'Vehicle info not available'}
                       </div>
@@ -351,10 +351,10 @@ export default function InvoicesPage() {
                   </td>
                   <td className="table-cell">
                     <div>
-                      <div className="text-sm text-secondary-900">
+                      <div className="text-xs text-secondary-900">
                         Created: {new Date(invoice.date).toLocaleDateString()}
                       </div>
-                      <div className="text-sm text-secondary-600">
+                      <div className="text-xs text-secondary-600">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
                       </div>
                       {invoice.paidDate && (
