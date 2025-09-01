@@ -76,7 +76,7 @@ export default function InvoicesPage() {
     dispatch(fetchInvoiceStats())
     dispatch(fetchPaymentStats())
     dispatch(fetchInvoiceTemplates())
-    dispatch(fetchWorkOrders())
+    dispatch(fetchWorkOrders({}))
   }, [dispatch])
 
   // Filter invoices with safety check
@@ -155,17 +155,38 @@ export default function InvoicesPage() {
   }
 
   const handleDownloadPDF = (invoiceId: string) => {
-    dispatch(downloadInvoicePDF(invoiceId))
+    toast.promise(
+      dispatch(downloadInvoicePDF(invoiceId)).unwrap(),
+      {
+        loading: 'Downloading PDF...',
+        success: 'PDF downloaded successfully!',
+        error: 'Failed to download PDF'
+      }
+    )
   }
 
   const handleSendEmail = (invoiceId: string) => {
-    dispatch(sendInvoiceEmail({ id: invoiceId, emailData: {} }))
+    toast.promise(
+      dispatch(sendInvoiceEmail({ id: invoiceId, emailData: {} })).unwrap(),
+      {
+        loading: 'Sending email...',
+        success: 'Email sent successfully!',
+        error: 'Failed to send email'
+      }
+    )
+  }
+
+  const handleViewInvoice = (invoice: Invoice) => {
+    // For now, we'll just show a toast with invoice details
+    // In the future, this could open a detailed view modal or navigate to a view page
+    toast.success(`Viewing invoice ${invoice.invoiceNumber || invoice._id}`)
+    console.log('View invoice:', invoice)
   }
 
   const handleInvoiceSuccess = () => {
     dispatch(fetchInvoices({}))
     dispatch(fetchInvoiceStats())
-    dispatch(fetchWorkOrders())
+    dispatch(fetchWorkOrders({}))
   }
 
   const handleGenerateFromWorkOrder = (workOrderId: string) => {
@@ -389,6 +410,7 @@ export default function InvoicesPage() {
                   <td className="table-cell text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button 
+                        onClick={() => handleViewInvoice(invoice)}
                         className="text-secondary-600 hover:text-secondary-900"
                         title="View invoice"
                       >
