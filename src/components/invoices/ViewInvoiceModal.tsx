@@ -65,7 +65,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
               <HiUser className="w-5 h-5 text-blue-600 mr-2" />
-              <h4 className="font-semibold text-gray-900">Customer Information</h4>
+              <h6 className="font-semibold text-gray-900">Customer Information</h6>
             </div>
             <div className="space-y-2 text-sm">
               <p><span className="font-medium">Name:</span> {customerName}</p>
@@ -81,7 +81,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex items-center mb-3">
               <HiTruck className="w-5 h-5 text-green-600 mr-2" />
-              <h4 className="font-semibold text-gray-900">Vehicle Information</h4>
+              <h6 className="font-semibold text-gray-900">Vehicle Information</h6>
             </div>
             <div className="space-y-2 text-sm">
               <p><span className="font-medium">Vehicle:</span> {vehicleInfo}</p>
@@ -93,7 +93,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center mb-3">
             <HiCalendar className="w-5 h-5 text-purple-600 mr-2" />
-            <h4 className="font-semibold text-gray-900">Important Dates</h4>
+            <h6 className="font-semibold text-gray-900">Important Dates</h6>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
@@ -117,7 +117,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center mb-3">
             <HiCurrencyDollar className="w-5 h-5 text-green-600 mr-2" />
-            <h4 className="font-semibold text-gray-900">Financial Summary</h4>
+            <h6 className="font-semibold text-gray-900">Financial Summary</h6>
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -146,7 +146,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
         {/* Notes */}
         {invoice.notes && (
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-2">Notes</h4>
+            <h6 className="font-semibold text-gray-900 mb-2">Notes</h6>
             <p className="text-sm text-gray-700">{invoice.notes}</p>
           </div>
         )}

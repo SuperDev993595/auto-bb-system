@@ -210,8 +210,66 @@ export default function InvoicesPage() {
         total: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
         status: 'draft' as const
       }
-      dispatch(createInvoice(invoiceData))
+      
+      toast.promise(
+        dispatch(createInvoice(invoiceData)).unwrap(),
+        {
+          loading: 'Generating invoice from work order...',
+          success: 'Invoice generated successfully!',
+          error: 'Failed to generate invoice'
+        }
+      ).then(() => {
+        handleInvoiceSuccess()
+      })
+    } else {
+      toast.error('Work order or customer not found')
     }
+  }
+
+  const handleGenerateInvoicesFromCompletedWorkOrders = () => {
+    const completedWorkOrders = workOrders.filter(wo => 
+      wo.status === 'completed' && 
+      !invoices.some(inv => inv.workOrderId === wo._id)
+    )
+    
+    if (completedWorkOrders.length === 0) {
+      toast.error('No completed work orders found that need invoicing')
+      return
+    }
+    
+    const promises = completedWorkOrders.map(workOrder => {
+      const customer = customers.find(c => c._id === workOrder.customer?._id)
+      if (!customer) return Promise.reject(`Customer not found for work order ${workOrder.workOrderNumber}`)
+      
+      const invoiceData = {
+        customerId: customer._id,
+        customerName: customer.name,
+        workOrderId: workOrder._id,
+        items: workOrder.services.map(service => ({
+          description: service.service?.name || service.description || 'Service',
+          quantity: 1,
+          unitPrice: service.laborRate,
+          total: service.totalCost
+        })),
+        subtotal: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
+        tax: 0,
+        total: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
+        status: 'draft' as const
+      }
+      
+      return dispatch(createInvoice(invoiceData)).unwrap()
+    })
+    
+    toast.promise(
+      Promise.all(promises),
+      {
+        loading: `Generating ${completedWorkOrders.length} invoices from completed work orders...`,
+        success: `Successfully generated ${completedWorkOrders.length} invoices!`,
+        error: 'Failed to generate some invoices'
+      }
+    ).then(() => {
+      handleInvoiceSuccess()
+    })
   }
 
   const renderInvoices = () => (
@@ -222,22 +280,36 @@ export default function InvoicesPage() {
           <h2 className="text-2xl font-bold text-secondary-900 mb-2">Invoices</h2>
           <p className="text-secondary-600">Manage customer invoices and payments</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => dispatch(markAsOverdue('all'))}
-            className="btn-secondary"
-          >
-            <HiRefresh className="w-4 h-4" />
-            Update Overdue
-          </button>
-          <button 
-            onClick={() => setShowAddInvoiceModal(true)}
-            className="btn-primary"
-          >
-            <HiPlus className="w-4 h-4" />
-            Create Invoice
-          </button>
-        </div>
+                 <div className="flex items-center gap-3">
+           <button 
+             onClick={() => dispatch(markAsOverdue('all'))}
+             className="btn-secondary"
+           >
+             <HiRefresh className="w-4 h-4" />
+             Update Overdue
+           </button>
+           <button 
+             onClick={() => setShowAddInvoiceModal(true)}
+             className="btn-primary"
+           >
+             <HiPlus className="w-4 h-4" />
+             Create Invoice
+           </button>
+                       {workOrders.filter(wo => wo.status === 'completed' && !invoices.some(inv => inv.workOrderId === wo._id)).length > 0 && (
+              <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                <HiDocumentText className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm text-yellow-800">
+                  {workOrders.filter(wo => wo.status === 'completed' && !invoices.some(inv => inv.workOrderId === wo._id)).length} completed work orders ready for invoicing
+                </span>
+                <button
+                  onClick={handleGenerateInvoicesFromCompletedWorkOrders}
+                  className="ml-2 px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors"
+                >
+                  Generate All
+                </button>
+              </div>
+            )}
+         </div>
       </div>
 
       {/* Stats Cards */}
@@ -449,13 +521,22 @@ export default function InvoicesPage() {
                       >
                         <HiPencil className="w-4 h-4" />
                       </button>
-                      <button 
-                        onClick={() => handleDeleteInvoice(invoice._id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <HiTrash className="w-4 h-4" />
-                      </button>
+                                             <button 
+                         onClick={() => handleDeleteInvoice(invoice._id)}
+                         className="text-red-600 hover:text-red-900"
+                         title="Delete"
+                       >
+                         <HiTrash className="w-4 h-4" />
+                       </button>
+                       {invoice.workOrderId && !invoice.invoiceNumber && (
+                         <button 
+                           onClick={() => handleGenerateFromWorkOrder(invoice.workOrderId!)}
+                           className="text-blue-600 hover:text-blue-900"
+                           title="Generate Invoice from Work Order"
+                         >
+                           <HiDocumentText className="w-4 h-4" />
+                         </button>
+                       )}
                     </div>
                   </td>
                 </tr>
