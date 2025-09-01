@@ -32,12 +32,17 @@ export default function ProgressUpdateModal({
     setLoading(true);
 
     try {
-      await workOrderService.updateProgress(workOrderId, {
+      const response = await workOrderService.updateProgress(workOrderId, {
         progress,
         notes: notes.trim() || undefined
       });
 
-      toast.success('Progress updated successfully');
+      if (progress >= 100) {
+        toast.success('Work completed! Invoice has been automatically generated.');
+      } else {
+        toast.success('Progress updated successfully');
+      }
+      
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -140,7 +145,14 @@ export default function ProgressUpdateModal({
                 </h3>
                 <div className="mt-2 text-sm text-yellow-700">
                   <p>
-                    Setting progress to 100% will automatically mark this work order as completed.
+                    Setting progress to 100% will automatically:
+                  </p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>Mark this work order as completed</li>
+                    <li>Generate an invoice for the customer</li>
+                    <li>Set the invoice status to draft</li>
+                  </ul>
+                  <p className="mt-2">
                     Make sure all work has been finished and quality control checks are complete.
                   </p>
                 </div>

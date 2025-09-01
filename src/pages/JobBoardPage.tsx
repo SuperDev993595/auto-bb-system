@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import { 
   Play, 
   Pause, 
@@ -134,19 +135,27 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="px-4 pb-4">
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="flex items-center space-x-1 text-gray-600">
-            <Clock className="w-3 h-3" />
-            <span>{totalLaborHours}h total</span>
+              {/* Stats */}
+        <div className="px-4 pb-4">
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="flex items-center space-x-1 text-gray-600">
+              <Clock className="w-3 h-3" />
+              <span>{totalLaborHours}h total</span>
+            </div>
+            <div className="flex items-center space-x-1 text-gray-600">
+              <DollarSign className="w-3 h-3" />
+              <span>${workOrder.totalCost.toFixed(2)}</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-1 text-gray-600">
-            <DollarSign className="w-3 h-3" />
-            <span>${workOrder.totalCost.toFixed(2)}</span>
-          </div>
+          
+          {/* Invoice indicator for completed work orders */}
+          {workOrder.status === 'completed' && (
+            <div className="mt-3 flex items-center space-x-1 text-xs text-green-600">
+              <DollarSign className="w-3 h-3" />
+              <span>Invoice Generated</span>
+            </div>
+          )}
         </div>
-      </div>
 
       {/* Actions */}
       <div className="px-4 pb-4 space-y-2">
@@ -278,8 +287,28 @@ export default function JobBoardPage() {
   };
 
   const handleComplete = async (workOrderId: string) => {
-    // This would open a completion modal
-    console.log('Complete work order:', workOrderId);
+    try {
+      if (!user?.id) {
+        setError('User not authenticated');
+        return;
+      }
+      
+      // Update progress to 100% which will automatically complete the work order and generate invoice
+      const response = await workOrderService.updateProgress(workOrderId, {
+        progress: 100,
+        notes: 'Work completed via complete button'
+      });
+      
+      if (response.success) {
+        // Show success message
+        toast.success('Work completed! Invoice has been automatically generated.');
+        await fetchWorkOrders();
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete work order');
+    }
   };
 
   const handleCheckParts = async (workOrderId: string) => {
