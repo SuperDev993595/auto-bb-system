@@ -202,7 +202,7 @@ app.use('/api/promotions', authenticateToken, promotionRoutes);
 app.use('/api/reports', authenticateToken, reportRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
-app.use('/api/chat', authenticateToken, chatRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api/yellowpages', authenticateToken, yellowPagesRoutes);
 app.use('/api/mailchimp', authenticateToken, mailchimpRoutes);
 app.use('/api/services', authenticateToken, servicesRoutes);

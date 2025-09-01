@@ -24,8 +24,17 @@ class WorkOrderService {
         throw new Error('Appointment not found');
       }
 
-      if (appointment.status !== 'pending_approval') {
-        throw new Error('Appointment is not pending approval');
+      if (appointment.approvalStatus !== 'approved') {
+        throw new Error('Appointment must be approved before creating a work order');
+      }
+
+      // Check if a work order already exists for this appointment
+      const existingWorkOrder = await WorkOrder.findOne({ 
+        'notes': { $regex: `Created from appointment ${appointmentId}`, $options: 'i' }
+      });
+      
+      if (existingWorkOrder) {
+        throw new Error('A work order has already been created from this appointment');
       }
 
       // Check parts availability before creating work order
@@ -37,6 +46,11 @@ class WorkOrderService {
         labor: 0,
         total: 0
       };
+
+      // Ensure we have a valid service type
+      if (!appointment.serviceType?._id) {
+        throw new Error('Appointment must have a valid service type to create a work order');
+      }
 
       // Create work order
       const workOrder = new WorkOrder({
@@ -50,10 +64,10 @@ class WorkOrderService {
           mileage: appointment.vehicle?.mileage || 0
         },
         services: [{
-          service: appointment.serviceType?._id || null,
+          service: appointment.serviceType._id,
           description: appointment.serviceDescription || 'Service from appointment',
           laborHours: Math.ceil(appointment.estimatedDuration / 60), // Convert minutes to hours
-          laborRate: 100, // Default labor rate per hour
+          laborRate: appointment.serviceType.laborRate || 100, // Use service type labor rate or default
           parts: appointment.partsRequired || [],
           totalCost: estimatedCost.total || 0
         }],
@@ -64,7 +78,8 @@ class WorkOrderService {
         estimatedCompletionDate: new Date(appointment.scheduledDate.getTime() + appointment.estimatedDuration * 60000),
         notes: `Created from appointment ${appointment._id}. ${appointment.notes || ''}`,
         customerNotes: appointment.customerNotes || '',
-        partsAvailability: partsAvailability
+        partsAvailability: partsAvailability,
+        createdBy: approvedBy
       });
 
       // Calculate totals
@@ -73,11 +88,11 @@ class WorkOrderService {
       // Save the work order
       const savedWorkOrder = await workOrder.save();
 
-      // Update appointment status to confirmed
+      // Update appointment status to confirmed and mark as work order created
       appointment.status = 'confirmed';
       appointment.approvalStatus = 'approved';
-      appointment.approvalDate = new Date();
-      appointment.approvedBy = approvedBy;
+      appointment.approvalDate = appointment.approvalDate || new Date();
+      appointment.approvedBy = appointment.approvedBy || approvedBy;
       await appointment.save();
 
       console.log(`Work order ${savedWorkOrder.workOrderNumber} created from appointment ${appointmentId}`);

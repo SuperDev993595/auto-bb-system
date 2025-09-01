@@ -158,12 +158,19 @@ export default function CustomerLiveChat() {
     try {
       const response = await api.get('/chat/customer');
       if (response.data.success && response.data.data.chats.length > 0) {
-        // Use the most recent chat
-        const chatData = response.data.data.chats[0];
-        setChat(chatData);
+        // Find the most recent active chat (waiting or active status)
+        const activeChat = response.data.data.chats.find((chat: any) => 
+          chat.status === 'waiting' || chat.status === 'active'
+        );
         
-        // Join chat room for real-time updates
-        socketService.joinChat(chatData._id);
+        if (activeChat) {
+          // Use the active chat
+          setChat(activeChat);
+          socketService.joinChat(activeChat._id);
+        } else {
+          // No active chats, create a new one
+          createNewChat();
+        }
       } else {
         // No existing chats, create a new one automatically
         createNewChat();
@@ -266,7 +273,7 @@ export default function CustomerLiveChat() {
         {/* Chat Header */}
         <div className="bg-blue-600 text-white p-4 rounded-t-lg">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold">Chat: {chat.subject}</h1>
+            <h1 className="text-xl font-semibold text-white">Chat: {chat.subject}</h1>
             <div className="flex items-center gap-2">
               <span className="text-sm bg-white bg-opacity-20 px-2 py-1 rounded">
                 {chat.status}

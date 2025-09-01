@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useRoleAccess from '../../hooks/useRoleAccess';
 import notificationService from '../../services/notificationService';
 import { appointmentService } from '../../services/appointments';
+import { workOrderService } from '../../services/workOrders';
 import { 
   HiCheckCircle, 
   HiXCircle, 
@@ -13,7 +14,8 @@ import {
   HiExclamationCircle,
   HiDocumentText,
   HiCheck,
-  HiX
+  HiX,
+  HiCog
 } from 'react-icons/hi';
 
 interface ApprovalWorkflowProps {
@@ -29,9 +31,14 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
   const [loading, setLoading] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showWorkOrderModal, setShowWorkOrderModal] = useState(false);
   const [approvalNotes, setApprovalNotes] = useState('');
   const [declineReason, setDeclineReason] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [workOrderCreating, setWorkOrderCreating] = useState(false);
+  const [workOrderCreated, setWorkOrderCreated] = useState(false);
+  const [workOrderData, setWorkOrderData] = useState<any>(null);
+  const [hasExistingWorkOrder, setHasExistingWorkOrder] = useState(false);
   const { canApproveAppointments, canDeclineAppointments } = useRoleAccess();
 
   useEffect(() => {
@@ -60,21 +67,16 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
     try {
       const response = await appointmentService.approveAppointment(appointmentId, approvalNotes, true);
       if (response.success) {
-        // Send success notification
-        notificationService.addNotification({
-          type: 'success',
-          title: 'Appointment Approved',
-          message: `Appointment for ${appointment.customer?.name} has been approved and work order created`,
-          priority: 'medium',
-          category: 'approval'
-        });
-        
+        // Close modal and reset form immediately after successful approval
         setShowApprovalModal(false);
         setApprovalNotes('');
         onApprovalComplete();
+      } else {
+        console.error('Appointment approval failed:', response);
       }
     } catch (error) {
       console.error('Error approving appointment:', error);
+      // Keep modal open on error so user can try again
     } finally {
       setLoading(false);
     }
@@ -88,21 +90,53 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
       const response = await appointmentService.declineAppointment(appointmentId, declineReason, assignedTo, true);
 
       if (response.success) {
-        // Send follow-up task notification
-        notificationService.sendFollowUpTaskNotification(
-          appointment.customer?.name || 'Customer',
-          assignedTo || 'Sub Admin'
-        );
-        
+        // Close modal and reset form immediately after successful decline
         setShowDeclineModal(false);
         setDeclineReason('');
         setAssignedTo('');
         onApprovalComplete();
+      } else {
+        console.error('Appointment decline failed:', response);
       }
     } catch (error) {
       console.error('Error declining appointment:', error);
+      // Keep modal open on error so user can try again
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateWorkOrder = async () => {
+    setWorkOrderCreating(true);
+    try {
+      const response = await workOrderService.createFromAppointment(appointmentId);
+      
+      if (response.success) {
+        setWorkOrderData(response);
+        setWorkOrderCreated(true);
+        setShowWorkOrderModal(true);
+        // Refresh appointment data to show updated status
+        await fetchAppointment();
+      } else {
+        console.error('Work order creation failed:', response);
+      }
+    } catch (error: any) {
+      console.error('Error creating work order:', error);
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to create work order';
+      
+      // Provide more specific error messages
+      if (errorMessage.includes('valid service type')) {
+        alert('Cannot create work order: Appointment must have a valid service type selected.');
+      } else if (errorMessage.includes('already been created')) {
+        alert('A work order has already been created from this appointment.');
+      } else if (errorMessage.includes('must be approved')) {
+        alert('Cannot create work order: Appointment must be approved first.');
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setWorkOrderCreating(false);
     }
   };
 
@@ -359,6 +393,40 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
             )}
           </div>
         )}
+
+        {/* Create Work Order Button for Approved Appointments */}
+        {appointment.approvalStatus === 'approved' && !workOrderCreated && !hasExistingWorkOrder && (
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+            <button
+              onClick={handleCreateWorkOrder}
+              disabled={workOrderCreating}
+              className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <HiCog className="h-5 w-5" />
+              <span>{workOrderCreating ? 'Creating Work Order...' : 'Create Work Order'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Work Order Created Success Message */}
+        {(workOrderCreated || hasExistingWorkOrder) && workOrderData && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <HiCheckCircle className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h4 className="text-lg font-medium text-green-900">Work Order Available</h4>
+                <p className="text-sm text-green-700">
+                  Work Order #{workOrderData.workOrder?.workOrderNumber} is associated with this appointment.
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  Status: {workOrderData.workOrder?.status === 'on_hold' ? 'On Hold (Parts Unavailable)' : 'Ready to Start'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Approval Modal */}
@@ -458,6 +526,90 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Declining...' : 'Decline'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Work Order Creation Modal */}
+      {showWorkOrderModal && workOrderData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+            <div className="bg-green-50 px-6 py-4 rounded-t-xl border-b border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <HiCheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <h4 className="text-lg font-semibold text-green-900">Work Order Created Successfully!</h4>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-medium text-gray-900 mb-2">Work Order Details</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Work Order #:</span>
+                      <span className="font-medium text-gray-900">{workOrderData.workOrder?.workOrderNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <span className={`font-medium ${
+                        workOrderData.workOrder?.status === 'on_hold' ? 'text-orange-600' : 'text-green-600'
+                      }`}>
+                        {workOrderData.workOrder?.status === 'on_hold' ? 'On Hold (Parts Unavailable)' : 'Ready to Start'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Priority:</span>
+                      <span className="font-medium text-gray-900 capitalize">{workOrderData.workOrder?.priority}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Estimated Start:</span>
+                      <span className="font-medium text-gray-900">
+                        {workOrderData.workOrder?.estimatedStartDate ? 
+                          new Date(workOrderData.workOrder.estimatedStartDate).toLocaleDateString() : 'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {workOrderData.partsAvailability && !workOrderData.partsAvailability.allAvailable && (
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <h5 className="font-medium text-orange-900 mb-2">Parts Availability Warning</h5>
+                    <p className="text-sm text-orange-700 mb-2">
+                      {workOrderData.partsAvailability.totalMissing} parts are currently unavailable.
+                    </p>
+                    <div className="text-xs text-orange-600">
+                      <p>Missing parts:</p>
+                      <ul className="list-disc list-inside mt-1">
+                        {workOrderData.partsAvailability.missingParts?.map((part: any, index: number) => (
+                          <li key={index}>{part.name} (Qty: {part.quantity})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-sm text-gray-600">
+                  <p>The work order has been created and is ready for assignment to a technician.</p>
+                  {workOrderData.workOrder?.status === 'on_hold' && (
+                    <p className="text-orange-600 mt-1">
+                      Note: The work order is on hold due to missing parts. Please order the required parts before starting work.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button 
+                  onClick={() => setShowWorkOrderModal(false)}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

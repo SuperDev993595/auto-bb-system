@@ -81,7 +81,7 @@ export const chatService = {
   // Create new chat (public)
   async createChat(chatData: CreateChatData): Promise<{ success: boolean; data: { chat: Chat } }> {
     try {
-      const response = await fetch(API_ENDPOINTS.CHAT, {
+      const response = await fetch(`${API_ENDPOINTS.CHAT}/public`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

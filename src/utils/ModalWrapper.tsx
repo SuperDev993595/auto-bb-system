@@ -39,22 +39,22 @@ export default function ModalWrapper({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !disableOutsideClose && !submitDisabled) {
+    if (e.target === e.currentTarget && !disableOutsideClose) {
       onClose()
     }
   }
 
-  // Handle escape key to close modal (disabled while saving)
+  // Handle escape key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !submitDisabled) {
+      if (e.key === 'Escape') {
         onClose()
       }
     };
     
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose, submitDisabled]);
+  }, [onClose]);
 
   return (
     <div 
@@ -71,8 +71,8 @@ export default function ModalWrapper({
             </div>
             <button
               onClick={onClose}
-              disabled={submitDisabled}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -89,8 +89,7 @@ export default function ModalWrapper({
           <div className="flex justify-end gap-3 p-6 border-t border-gray-100">
             <button
               onClick={onClose}
-              disabled={submitDisabled}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
             >
               Cancel
             </button>

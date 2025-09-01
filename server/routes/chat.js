@@ -186,7 +186,7 @@ router.get('/customer', authenticateToken, requireCustomer, async (req, res) => 
 router.put('/:id/mark-read', authenticateToken, requireAnyAdmin, async (req, res) => {
   try {
     console.log('Server: Mark as read request received for chat:', req.params.id);
-    console.log('Server: User:', req.user.id, req.user.name);
+    console.log('Server: User:', req.user.id, req.user.name, req.user.role);
     
     const chat = await Chat.findById(req.params.id);
     if (!chat) {
@@ -196,24 +196,44 @@ router.put('/:id/mark-read', authenticateToken, requireAnyAdmin, async (req, res
         message: 'Chat not found'
       });
     }
+    
+    console.log('Server: Chat found:', {
+      chatId: chat._id,
+      assignedTo: chat.assignedTo,
+      status: chat.status,
+      customerEmail: chat.customer.email
+    });
 
     // Check if user has access to this chat
-    if (req.user.role === 'admin' && 
+    console.log('Server: Checking access control:', {
+      userRole: req.user.role,
+      chatAssignedTo: chat.assignedTo,
+      userId: req.user.id,
+      chatStatus: chat.status,
+      isAssignedToUser: chat.assignedTo ? chat.assignedTo.toString() === req.user.id : false,
+      isWaiting: chat.status === 'waiting'
+    });
+    
+    if ((req.user.role === 'admin' || req.user.role === 'super_admin') && 
         chat.assignedTo && 
-        chat.assignedTo.toString() !== req.user.id) {
+        chat.assignedTo.toString() !== req.user.id &&
+        chat.status !== 'waiting') {
+      console.log('Server: Access denied - chat assigned to different user and not waiting');
       return res.status(403).json({
         success: false,
         message: 'Access denied'
       });
     }
+    
+    console.log('Server: Access granted');
 
     // Mark all customer messages as read
     let markedCount = 0;
     chat.messages.forEach(message => {
-      if (message.sender.name === 'Customer') {
+      //if (message.sender.name === 'Customer') {
         message.isRead = true;
         markedCount++;
-      }
+      //}
     });
 
     console.log('Server: Marked', markedCount, 'customer messages as read');
@@ -312,6 +332,21 @@ router.post('/', authenticateToken, requireCustomer, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: error.details[0].message
+      });
+    }
+
+    // Check if customer already has an active chat
+    const existingChat = await Chat.findOne({
+      'customer.email': req.user.email,
+      status: { $in: ['waiting', 'active'] }
+    }).sort({ lastActivity: -1 });
+
+    if (existingChat) {
+      // Return existing chat instead of creating a new one
+      return res.status(200).json({
+        success: true,
+        message: 'Existing chat found',
+        data: { chat: existingChat }
       });
     }
 
@@ -820,6 +855,88 @@ router.get('/stats', authenticateToken, requireAnyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Get chat stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/chat/public
+// @desc    Create new chat (public - no authentication required)
+// @access  Public
+router.post('/public', async (req, res) => {
+  try {
+    // Validate input
+    const { error, value } = chatSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message
+      });
+    }
+
+    // Check if customer already has an active chat
+    let existingChat = null;
+    if (value.customer.email && value.customer.email !== 'anonymous@example.com') {
+      existingChat = await Chat.findOne({
+        'customer.email': value.customer.email,
+        status: { $in: ['waiting', 'active'] }
+      }).sort({ lastActivity: -1 });
+    }
+
+    if (existingChat) {
+      // Return existing chat instead of creating a new one
+      return res.status(200).json({
+        success: true,
+        message: 'Existing chat found',
+        data: { chat: existingChat }
+      });
+    }
+
+    // Create initial message
+    const initialMessage = {
+      sender: {
+        name: 'Customer',
+        email: value.customer.email || 'anonymous@example.com'
+      },
+      content: value.initialMessage,
+      messageType: 'text',
+      isRead: false,
+      createdAt: new Date()
+    };
+
+    // Create chat
+    const chat = new Chat({
+      customer: {
+        name: value.customer.name,
+        email: value.customer.email || 'anonymous@example.com',
+        sessionId: value.customer.sessionId
+      },
+      subject: value.subject,
+      category: value.category,
+      priority: value.priority,
+      status: 'waiting',
+      messages: [initialMessage],
+      lastActivity: new Date()
+    });
+
+    await chat.save();
+
+    // Emit to Socket.io if available
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new-chat', { chat });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Chat created successfully',
+      data: { chat }
+    });
+
+  } catch (error) {
+    console.error('Create public chat error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

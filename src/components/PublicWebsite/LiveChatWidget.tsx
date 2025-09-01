@@ -84,21 +84,17 @@ const LiveChatWidget: React.FC = () => {
         setCurrentChat(response.data.chat);
         setShowCustomerForm(false);
         
-        // Add initial messages
-        setMessages([
-          {
-            id: '1',
-            text: 'Hello! Welcome to Auto Repair Pro. How can we help you today?',
-            sender: 'agent',
-            timestamp: new Date()
-          },
-          {
-            id: '2',
-            text: 'Thank you for contacting us. An agent will be with you shortly.',
-            sender: 'agent',
-            timestamp: new Date()
-          }
-        ]);
+        // Don't add duplicate welcome messages - the server already created the initial message
+        // Just initialize messages with the chat's existing messages
+        if (response.data.chat.messages && response.data.chat.messages.length > 0) {
+          const initialMessages = response.data.chat.messages.map((msg: any, index: number) => ({
+            id: msg._id || `msg_${index}`,
+            text: msg.content,
+            sender: msg.sender.name === 'Customer' ? 'user' : 'agent',
+            timestamp: new Date(msg.createdAt)
+          }));
+          setMessages(initialMessages);
+        }
       }
     } catch (error) {
       console.error('Error creating chat:', error);

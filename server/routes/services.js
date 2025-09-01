@@ -514,6 +514,40 @@ router.post('/workorders', requireAnyAdmin, async (req, res) => {
   }
 });
 
+// @route   POST /api/services/workorders/from-appointment
+// @desc    Create work order from approved appointment
+// @access  Private
+router.post('/workorders/from-appointment', requireAnyAdmin, async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+    
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Appointment ID is required'
+      });
+    }
+
+    const WorkOrderService = require('../services/workOrderService');
+    const workOrderService = new WorkOrderService();
+    
+    const result = await workOrderService.createFromAppointment(appointmentId, req.user.id);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Work order created successfully from appointment',
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Create work order from appointment error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+});
+
 // @route   PUT /api/services/workorders/:id
 // @desc    Update work order
 // @access  Private

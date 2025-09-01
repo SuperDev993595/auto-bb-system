@@ -15,6 +15,7 @@ interface Customer {
   email: string;
   lastActivity?: string;
   unreadCount?: number;
+  lastMessageTime?: string;
 }
 
 interface Message {
@@ -65,114 +66,56 @@ export default function LiveChatPage() {
     const user = authService.getCurrentUserFromStorage();
     if (user) {
       socketService.joinUser(user.id);
-      console.log('Joined user room:', user.id);
     }
 
     // Load customers list
     loadCustomers();
 
          // Set up socket listeners
-     const unsubscribeMessage = socketService.onMessage((data: any) => {
-       console.log('🔔 Socket: Received new message:', {
-         chatId: data.chatId,
-         messageContent: data.message.content,
-         sender: data.message.sender.name,
-         messageId: data.message._id
-       });
-       
-       // Always refresh customers list when ANY new message arrives
-       // This ensures unread badges update even when no customer is selected
-       console.log('🔄 Refreshing customers list after new message (any chat)');
-       loadCustomers();
-       
-       // Only update selected chat if this message is for the currently selected chat
-       if (data.chatId === selectedChat?._id) {
-                 // Enhanced duplicate prevention with better logging
-        // Use MongoDB-generated _id if available, otherwise use content-based fingerprint
-        const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
-        
-        if (processedMessageIds.current.has(messageId)) {
-          console.log('🚫 Socket: Message already processed, skipping duplicate:', messageId);
-          return;
-        }
-        
-        // Mark message as processed
-        processedMessageIds.current.add(messageId);
-        console.log('✅ Socket: Message marked as processed:', messageId);
-         
-         // Add new message to current chat
-         setSelectedChat(prev => {
-           if (!prev) return null;
-           
-           // Additional safety check - ensure message doesn't already exist
-           const messageExists = prev.messages.some(msg => {
-             if (msg._id && data.message._id && msg._id === data.message._id) {
-               console.log('🚫 Socket: Message with same ID already exists:', msg._id);
-               return true;
-             }
-             if (msg.content === data.message.content && 
-                 msg.sender.name === data.message.sender.name &&
-                 Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000) {
-               console.log('🚫 Socket: Message with same content/sender/timestamp already exists');
-               return true;
-             }
-             return false;
-           });
-           
-           if (messageExists) {
-             console.log('🚫 Socket: Message already exists in chat, skipping duplicate');
-             return prev;
-           }
-           
-           console.log('✅ Socket: Adding new message to chat:', data.message.content);
-           return {
-             ...prev,
-             messages: [...prev.messages, data.message]
-           };
-         });
-       }
-     });
+     const unsubscribeMessage = socketService.onMessage(handleNewMessage);
 
     const unsubscribeConnection = socketService.onConnection((connected: boolean) => {
       if (connected) {
-        console.log('Socket connected successfully');
         toast.success('Real-time chat connected!');
       } else {
-        console.log('Socket disconnected');
         toast.error('Real-time chat disconnected');
       }
     });
 
     // Listen for chat message read events to update unread counts
     const unsubscribeMessageRead = socketService.onMessageRead((data: any) => {
-      console.log('🔔 Socket: Messages marked as read for chat:', data.chatId);
-      // Refresh customers list to update unread counts
-      loadCustomers();
+      // Reorder customers list when messages are marked as read
+      reorderCustomersOnRead(data.chatId);
     });
+
+    // Set up periodic refresh of unread counts to prevent drift
+    const refreshInterval = setInterval(() => {
+      loadCustomers();
+    }, 60000); // Refresh every minute
 
     // Cleanup
     return () => {
       unsubscribeMessage();
       unsubscribeConnection();
       unsubscribeMessageRead();
+      clearInterval(refreshInterval);
       if (selectedChat) {
         socketService.leaveChat(selectedChat._id);
       }
     };
   }, [navigate, selectedChat?._id]);
 
-  // Clear processed message IDs when chat changes
-  useEffect(() => {
-    if (selectedChat) {
-      // Initialize processed IDs with existing messages
-      processedMessageIds.current.clear();
-      selectedChat.messages.forEach(msg => {
-        const messageId = msg._id || `${msg.content}_${msg.sender.name}_${msg.createdAt}`;
-        processedMessageIds.current.add(messageId);
-      });
-      console.log('Initialized processed message IDs for chat:', selectedChat._id);
-    }
-  }, [selectedChat?._id]);
+      // Clear processed message IDs when chat changes
+    useEffect(() => {
+      if (selectedChat) {
+        // Initialize processed IDs with existing messages
+        processedMessageIds.current.clear();
+        selectedChat.messages.forEach(msg => {
+          const messageId = msg._id || `${msg.content}_${msg.sender.name}_${msg.createdAt}`;
+          processedMessageIds.current.add(messageId);
+        });
+      }
+    }, [selectedChat?._id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -188,9 +131,13 @@ export default function LiveChatPage() {
         const customerMap = new Map();
         response.data.data.chats.forEach((chat: any) => {
           const customerId = chat.customer._id || chat.customer.email;
-          
-          // Calculate unread count for this chat using debug function
-          const unreadCount = debugUnreadCount(chat);
+
+          // Calculate unread count for this chat`
+          const unreadCount = calculateUnreadCount(chat);
+
+          if (chat.customer.email == "pioneer200082@gmail.com"){
+            console.log(`email: ${chat.customer.email}, unread count: ${unreadCount}`); 
+          }
           
           if (!customerMap.has(customerId)) {
             customerMap.set(customerId, {
@@ -213,7 +160,6 @@ export default function LiveChatPage() {
         const customersList = Array.from(customerMap.values())
           .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
         
-        console.log('Updated customers list with unread counts:', customersList);
         setCustomers(customersList);
       }
     } catch (error) {
@@ -235,14 +181,30 @@ export default function LiveChatPage() {
       
       const response = await api.get(`/chat?customer=${customer.email}`);
       if (response.data.success && response.data.data.chats.length > 0) {
-        // Get the most recent chat for this customer
-        const chat = response.data.data.chats[0];
+        // Find the most recent active chat for this customer, or fall back to most recent
+        const activeChat = response.data.data.chats.find((chat: any) => 
+          chat.status === 'waiting' || chat.status === 'active'
+        );
+        const chat = activeChat || response.data.data.chats[0];
         setSelectedChat(chat);
         
         // Join new chat room
         socketService.joinChat(chat._id);
         
-        // Auto-mark customer messages as read when viewing the chat
+        // Mark messages as read locally for immediate visual feedback
+        markChatMessagesAsReadLocally(chat._id);
+        
+        // Update local customer state to reflect read status
+        setCustomers(prevCustomers => 
+          prevCustomers.map(c => 
+            c.email === customer.email 
+              ? { ...c, unreadCount: 0 }
+              : c
+          )
+        );
+        
+        // Auto-mark customer messages as read on server when admin clicks on customer
+        console.log('About to mark chat as read, chat object:', chat);
         await markChatAsRead(chat._id);
       } else {
         setSelectedChat(null);
@@ -255,12 +217,21 @@ export default function LiveChatPage() {
 
   const markChatAsRead = async (chatId: string) => {
     try {
-      console.log('Marking chat as read:', chatId);
+      console.log('Marking chat as read, chatId:', chatId);
       const response = await api.put(`/chat/${chatId}/mark-read`);
+      console.log('Mark as read response:', response.data);
+      
       if (response.data.success) {
-        console.log('Chat marked as read successfully');
-        // Refresh customers list to update unread counts
+        console.log('Successfully marked chat as read');
+        // Reset unread count for the selected customer immediately
+        if (selectedCustomer) {
+          resetCustomerUnreadCount(selectedCustomer.email);
+        }
+        
+        // Also refresh customers list to ensure consistency
         loadCustomers();
+      } else {
+        console.error('Failed to mark chat as read:', response.data.message);
       }
     } catch (error) {
       console.error('Error marking chat as read:', error);
@@ -268,31 +239,28 @@ export default function LiveChatPage() {
     }
   };
 
-  // Debug function to check unread count calculation
-  const debugUnreadCount = (chat: any) => {
-    console.log('🔍 Debug: Chat messages for unread count calculation:', {
-      chatId: chat._id,
-      customerName: chat.customer.name,
-      totalMessages: chat.messages?.length || 0,
-      messages: chat.messages?.map((m: any) => ({
-        content: m.content,
-        sender: m.sender,
-        isRead: m.isRead,
-        createdAt: m.createdAt
-      }))
-    });
-    
-    const unreadCount = chat.messages?.filter((m: any) => {
+  // Function to manually refresh unread counts
+  const refreshUnreadCounts = async () => {
+    try {
+      await loadCustomers();
+      toast.success('Unread counts refreshed');
+    } catch (error) {
+      console.error('Error refreshing unread counts:', error);
+      toast.error('Failed to refresh unread counts');
+    }
+  };
+
+
+
+  // Calculate unread count for a chat
+  const calculateUnreadCount = (chat: any) => {
+    return chat.messages?.filter((m: any) => {
       const isFromCustomer = m.sender?.name === 'Customer' || 
                            m.sender?.name === chat.customer.name ||
                            m.sender?.email === chat.customer.email;
       const isUnread = !m.isRead;
-      console.log(`🔍 Message: "${m.content}" - From Customer: ${isFromCustomer}, Unread: ${isUnread}`);
       return isUnread && isFromCustomer;
     }).length || 0;
-    
-    console.log(`🔍 Calculated unread count: ${unreadCount}`);
-    return unreadCount;
   };
 
   const sendMessage = async () => {
@@ -300,16 +268,11 @@ export default function LiveChatPage() {
 
     setSendingMessage(true);
     try {
-      console.log('Sending message via API:', newMessage);
-      
       const response = await api.post(`/chat/${selectedChat._id}/messages`, {
         content: newMessage,
         messageType: 'text'
       });
 
-      const message = response.data.data.message;
-      console.log('API response message:', message);
-      
       // Don't update local state here - let Socket.io handle it
       // This prevents duplicate messages from API response + Socket.io event
       
@@ -337,20 +300,208 @@ export default function LiveChatPage() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Function to reorder customers when new messages arrive
+  const reorderCustomersOnNewMessage = (chatId: string, newMessage: any) => {
+    setCustomers(prevCustomers => {
+      // Find the customer for this chat by matching email or name
+      const customerIndex = prevCustomers.findIndex(customer => 
+        customer.email === newMessage.sender.email || 
+        customer.name === newMessage.sender.name
+      );
+
+      if (customerIndex === -1) {
+        // Customer not found, return current list
+        return prevCustomers;
+      }
+
+      // Create a copy of the customers array
+      const updatedCustomers = [...prevCustomers];
+      const customer = { ...updatedCustomers[customerIndex] };
+      
+      // Update customer's unread count and last message time
+      // Only increment if this is a customer message (not from admin/agent)
+      if (newMessage.sender.name === 'Customer' || 
+          newMessage.sender.email === customer.email) {
+        customer.unreadCount = (customer.unreadCount || 0) + 1;
+      }
+      customer.lastMessageTime = newMessage.createdAt;
+      customer.lastActivity = newMessage.createdAt;
+
+      // Remove customer from current position
+      updatedCustomers.splice(customerIndex, 1);
+
+      // Find new position based on updated unread count and last message time
+      let newIndex = 0;
+      for (let i = 0; i < updatedCustomers.length; i++) {
+        const otherCustomer = updatedCustomers[i];
+        const otherUnreadCount = otherCustomer.unreadCount || 0;
+        
+        // If this customer has unread messages and the other doesn't, insert before
+        if ((customer.unreadCount || 0) > 0 && otherUnreadCount === 0) {
+          newIndex = i;
+          break;
+        }
+        
+        // If both have unread messages, compare by last message time
+        if ((customer.unreadCount || 0) > 0 && otherUnreadCount > 0) {
+          const customerTime = customer.lastMessageTime || customer.lastActivity || '';
+          const otherTime = otherCustomer.lastMessageTime || otherCustomer.lastActivity || '';
+          if (new Date(customerTime) > new Date(otherTime)) {
+            newIndex = i;
+            break;
+          }
+        }
+        
+        // If neither has unread messages, compare by last activity
+        if ((customer.unreadCount || 0) === 0 && otherUnreadCount === 0) {
+          const customerTime = customer.lastActivity || '';
+          const otherTime = otherCustomer.lastActivity || '';
+          if (new Date(customerTime) > new Date(otherTime)) {
+            newIndex = i;
+            break;
+          }
+        }
+        
+        newIndex = i + 1;
+      }
+
+      // Insert customer at new position
+      updatedCustomers.splice(newIndex, 0, customer);
+
+      return updatedCustomers;
+    });
+  };
+
+  // Function to reorder customers when messages are marked as read
+  const reorderCustomersOnRead = (chatId: string) => {
+    setCustomers(prevCustomers => {
+      // Find the customer for this chat by checking if they have a chat with this ID
+      // This is a simplified approach - we'll need to find the customer differently
+      // For now, we'll refresh the entire list to ensure accuracy
+      loadCustomers();
+      return prevCustomers;
+    });
+  };
+
+  // Function to reset unread count for a specific customer
+  const resetCustomerUnreadCount = (customerEmail: string) => {
+    setCustomers(prevCustomers => {
+      return prevCustomers.map(customer => {
+        if (customer.email === customerEmail) {
+          return { ...customer, unreadCount: 0 };
+        }
+        return customer;
+      });
+    });
+  };
+
+  // Function to mark all messages in a chat as read locally
+  const markChatMessagesAsReadLocally = (chatId: string) => {
+    setSelectedChat(prev => {
+      if (!prev || prev._id !== chatId) return prev;
+      return {
+        ...prev,
+        messages: prev.messages.map(msg => ({
+          ...msg,
+          isRead: true
+        }))
+      };
+    });
+  };
+
+  // Enhanced message handler with real-time reordering
+  const handleNewMessage = (data: any) => {
+    
+    // Always try to reorder customers list in real-time when new message arrives
+    // This ensures unread counts update even when no customer is selected
+    // Only reorder if this is a customer message (not from admin/agent)
+    if (data.message.sender.name === 'Customer' || 
+        data.message.sender.name !== 'Admin' && 
+        data.message.sender.name !== 'Agent') {
+      reorderCustomersOnNewMessage(data.chatId, data.message);
+    }
+    
+    // Only update selected chat if this message is for the currently selected chat
+    if (data.chatId === selectedChat?._id) {
+      // Enhanced duplicate prevention
+      // Use MongoDB-generated _id if available, otherwise use content-based fingerprint
+      const messageId = data.message._id || `${data.message.content}_${data.message.sender.name}_${data.message.createdAt}`;
+      
+      if (processedMessageIds.current.has(messageId)) {
+        return;
+      }
+      
+      // Mark message as processed
+      processedMessageIds.current.add(messageId);
+       
+      // Add new message to current chat
+      setSelectedChat(prev => {
+        if (!prev) return null;
+        
+        // Additional safety check - ensure message doesn't already exist
+        const messageExists = prev.messages.some(msg => {
+          if (msg._id && data.message._id && msg._id === data.message._id) {
+            return true;
+          }
+          if (msg.content === data.message.content && 
+              msg.sender.name === data.message.sender.name &&
+              Math.abs(new Date(msg.createdAt).getTime() - new Date(data.message.createdAt).getTime()) < 1000) {
+            return true;
+          }
+          return false;
+        });
+        
+        if (messageExists) {
+          return prev;
+        }
+        return {
+          ...prev,
+          messages: [...prev.messages, data.message]
+        };
+      });
+    } else {
+      // Message is for a different chat - ensure unread counts are updated
+      // If the reordering didn't work, fallback to refreshing the list
+      setTimeout(() => {
+        const customerWithUnread = customers.find(c => 
+          c.email === data.message.sender.email || 
+          c.name === data.message.sender.name
+        );
+        
+        if (!customerWithUnread || (customerWithUnread.unreadCount || 0) === 0) {
+          loadCustomers();
+        }
+      }, 500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
       <div className="mb-6">
         <PageTitle title="Live Chat Management" />
         <p className="text-gray-600">Manage and monitor live chat conversations with customers</p>
+        
+
       </div>
 
       <div className="flex gap-6 h-[calc(100vh-200px)]">
         {/* Left Side - Customers List */}
         <div className="w-80 bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Customers</h3>
-            <p className="text-sm text-gray-600">{customers.length} active customers</p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Customers</h3>
+                <p className="text-sm text-gray-600">{customers.length} active customers</p>
+              </div>
+              <button
+                onClick={refreshUnreadCounts}
+                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                title="Refresh unread counts"
+              >
+                🔄
+              </button>
+            </div>
           </div>
           
           <div className="overflow-y-auto h-[calc(100%-80px)]">
@@ -372,11 +523,12 @@ export default function LiveChatPage() {
                       <User className="w-4 h-4 text-gray-400" />
                       <span className="font-medium text-gray-900">{customer.name}</span>
                     </div>
-                    {(customer.unreadCount || 0) > 0 && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                        {customer.unreadCount || 0}
-                      </span>
-                    )}
+                                         {(customer.unreadCount || 0) > 0 && (
+                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                         {customer.unreadCount || 0}
+                       </span>
+                     )}
+
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{customer.email}</p>
                   <div className="flex items-center space-x-1 text-xs text-gray-500">

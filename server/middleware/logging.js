@@ -51,7 +51,7 @@ const morganFormat = ':remote-addr - :remote-user [:date[clf]] ":method :url HTT
 const requestLogger = morgan(morganFormat, {
   stream: {
     write: (message) => {
-      logger.info(message.trim());
+      //logger.info(message.trim()); //DIOS_TEST
     }
   }
 });
@@ -79,13 +79,13 @@ const performanceMonitor = (req, res, next) => {
     const [seconds, nanoseconds] = process.hrtime(start);
     const duration = seconds * 1000 + nanoseconds / 1000000;
     
-    logger.info('Request completed', {
-      method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration: `${duration.toFixed(2)}ms`,
-      userId: req.user?.id || 'anonymous'
-    });
+    //logger.debug('Request completed', {
+    //  method: req.method,
+    //  url: req.url,
+    //  statusCode: res.statusCode,
+    //  duration: `${duration.toFixed(2)}ms`,
+    //  userId: req.user?.id || 'anonymous'
+    //});
     
     // Log slow requests
     if (duration > 1000) {

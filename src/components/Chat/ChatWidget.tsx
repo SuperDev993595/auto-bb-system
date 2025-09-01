@@ -201,16 +201,18 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         setCurrentChat(response.data.chat);
         setShowCustomerForm(false);
         
-        // Add welcome message
-        setMessages([
-          {
-            id: '1',
-            text: welcomeMessage,
-            sender: 'agent',
-            timestamp: new Date(),
+        // Don't add duplicate welcome message - the server already created the initial message
+        // Just initialize messages with the chat's existing messages
+        if (response.data.chat.messages && response.data.chat.messages.length > 0) {
+          const initialMessages = response.data.chat.messages.map((msg: any, index: number) => ({
+            id: msg._id || `msg_${index}`,
+            text: msg.content,
+            sender: msg.sender.name === 'Customer' ? 'user' : 'agent',
+            timestamp: new Date(msg.createdAt),
             status: 'delivered'
-          }
-        ]);
+          }));
+          setMessages(initialMessages);
+        }
 
         // Join chat room
         if (typeof window !== 'undefined' && (window as any).io) {

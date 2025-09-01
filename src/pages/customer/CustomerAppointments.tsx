@@ -766,8 +766,11 @@ export default function CustomerAppointments() {
                         </button>
                       </>
                     )}
-                    {appointment.status === 'completed' && (
-                      <button className="text-green-600 hover:text-green-900">
+                    {appointment.status !== 'scheduled' && (
+                      <button
+                        onClick={() => handleEdit(appointment)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
                         View Details
                       </button>
                     )}
@@ -818,18 +821,19 @@ export default function CustomerAppointments() {
         )}
       </div>
 
-      {/* Add/Edit Appointment Modal */}
-      {showAddModal && (
-        <ModalWrapper
-          isOpen={showAddModal}
-          onClose={handleCloseModal}
-          title={editingAppointment ? 'Edit Appointment' : 'Schedule New Appointment'}
-          icon={<Calendar className="w-5 h-5" />}
-          submitText={editingAppointment ? 'Update Appointment' : 'Schedule Appointment'}
-          onSubmit={handleSubmit}
-          submitColor="bg-blue-600"
-          size="xl"
-                 >
+             {/* Add/Edit Appointment Modal */}
+       {showAddModal && (
+         <ModalWrapper
+           isOpen={showAddModal}
+           onClose={handleCloseModal}
+           title={editingAppointment ? 'Edit Appointment' : 'Schedule New Appointment'}
+           icon={<Calendar className="w-5 h-5" />}
+           submitText={editingAppointment ? 'Update Appointment' : 'Schedule Appointment'}
+           onSubmit={handleSubmit}
+           submitColor="bg-blue-600"
+           size="xl"
+           submitDisabled={!!(editingAppointment && editingAppointment.status !== 'scheduled')}
+         >
            <div className="p-6 space-y-6">
             {/* Date and Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
