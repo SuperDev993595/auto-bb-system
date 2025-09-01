@@ -198,7 +198,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }:
             <div className={`p-4 flex-shrink-0 ${
                 isCollapsed ? 'px-2' : 'px-4'
             }`}>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between">
                     <Link to="/" className="block">
                         <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -211,16 +211,14 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }:
                             )}
                         </div>
                     </Link>
-                </div>
-                
-                {/* Toggle Button - Positioned below the logo */}
-                <div className="flex justify-center">
+                    
+                    {/* Toggle Button - Positioned in the top right */}
                     <button
                         onClick={onToggle}
-                        className={`p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
+                        className={`p-1.5 rounded-md transition-all duration-200 ${
                             isCollapsed 
-                                ? 'bg-blue-100 text-blue-600' 
-                                : 'bg-secondary-100 text-secondary-600 hover:bg-blue-50'
+                                ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                         }`}
                         title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     >
@@ -229,11 +227,8 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }:
                 </div>
             </div>
 
-            {/* Separator */}
-            <div className="border-b border-secondary-200 mx-4"></div>
-
             {/* Scrollable Navigation */}
-            <nav className={`flex-1 overflow-y-auto space-y-4 sidebar-scrollbar sidebar-nav min-h-0 ${
+            <nav className={`flex-1 overflow-y-auto space-y-4 sidebar-scrollbar sidebar-nav min-h-0 pt-4 ${
                 isCollapsed ? 'px-2' : 'px-4'
             }`}>
                 {updatedNavGroups
