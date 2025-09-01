@@ -174,6 +174,80 @@ router.get("/stats/overview", authenticateToken, async (req, res) => {
   }
 });
 
+// Get payment statistics
+router.get("/payment-stats", authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const filter = {};
+    if (startDate || endDate) {
+      filter.paidDate = {};
+      if (startDate) filter.paidDate.$gte = new Date(startDate);
+      if (endDate) filter.paidDate.$lte = new Date(endDate);
+    }
+
+    // Get payment statistics
+    const totalPayments = await Invoice.countDocuments({ 
+      ...filter, 
+      status: 'paid' 
+    });
+    
+    const totalPaidAmount = await Invoice.aggregate([
+      { $match: { ...filter, status: 'paid' } },
+      { $group: { _id: null, total: { $sum: '$paidAmount' } } }
+    ]);
+
+    const paymentMethods = await Invoice.aggregate([
+      { $match: { ...filter, status: 'paid' } },
+      { $group: { _id: '$paymentMethod', count: { $sum: 1 }, total: { $sum: '$paidAmount' } } }
+    ]);
+
+    const monthlyPayments = await Invoice.aggregate([
+      { $match: { ...filter, status: 'paid' } },
+      { 
+        $group: { 
+          _id: { 
+            year: { $year: '$paidDate' }, 
+            month: { $month: '$paidDate' } 
+          }, 
+          count: { $sum: 1 }, 
+          total: { $sum: '$paidAmount' } 
+        } 
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 }
+    ]);
+
+    const overduePayments = await Invoice.countDocuments({ 
+      ...filter, 
+      status: 'overdue' 
+    });
+
+    const overdueAmount = await Invoice.aggregate([
+      { $match: { ...filter, status: 'overdue' } },
+      { $group: { _id: null, total: { $sum: { $subtract: ['$total', '$paidAmount'] } } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalPayments,
+        totalPaidAmount: totalPaidAmount[0]?.total || 0,
+        paymentMethods,
+        monthlyPayments,
+        overduePayments,
+        overdueAmount: overdueAmount[0]?.total || 0,
+        averagePayment: totalPayments > 0 ? (totalPaidAmount[0]?.total || 0) / totalPayments : 0
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching payment stats:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch payment statistics" });
+  }
+});
+
 // Get invoice templates
 router.get("/templates", authenticateToken, async (req, res) => {
   try {
@@ -746,6 +820,7 @@ router.post("/:id/send", authenticateToken, async (req, res) => {
 // Generate PDF for invoice
 router.get("/:id/pdf", authenticateToken, async (req, res) => {
   try {
+    console.log("Generating PDF for invoice:", req.params.id);
     const invoice = await Invoice.findById(req.params.id)
       .populate("customerId", "name email phone address")
       .populate("vehicleId", "year make model vin licensePlate");
