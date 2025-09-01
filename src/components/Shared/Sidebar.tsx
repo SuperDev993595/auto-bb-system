@@ -198,19 +198,19 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }:
             <div className={`p-4 flex-shrink-0 ${
                 isCollapsed ? 'px-2' : 'px-4'
             }`}>
-                <div className="flex items-center justify-between">
-                    <Link to="/" className="block">
-                        <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Settings className="w-6 h-6 text-white" />
-                            </div>
-                            {!isCollapsed && (
+                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+                    {!isCollapsed && (
+                        <Link to="/" className="block">
+                            <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Settings className="w-6 h-6 text-white" />
+                                </div>
                                 <span className="text-blue-600 whitespace-nowrap">
                                     AutoCRM Pro
                                 </span>
-                            )}
-                        </div>
-                    </Link>
+                            </div>
+                        </Link>
+                    )}
                     
                     {/* Toggle Button - Positioned in the top right */}
                     <button
