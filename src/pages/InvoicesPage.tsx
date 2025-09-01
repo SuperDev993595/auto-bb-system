@@ -326,22 +326,17 @@ export default function InvoicesPage() {
             <tbody className="table-body">
               {filteredInvoices.map(invoice => (
                 <tr key={invoice._id} className="table-row hover:bg-secondary-50">
-                  <td className="table-cell">
-                    <div>
-                      <div className="text-sm font-medium text-secondary-900">#{invoice._id}</div>
-                      <div className="text-sm text-secondary-600">
-                        WO: {(() => {
-                          const workOrder = workOrders.find(wo => wo._id === invoice.workOrderId);
-                          return workOrder ? workOrder.workOrderNumber : (invoice.workOrderId || 'N/A');
-                        })()}
-                      </div>
-                      {invoice.notes && (
-                        <div className="text-xs text-secondary-500 mt-1 max-w-xs truncate">
-                          {invoice.notes}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                                     <td className="table-cell">
+                     <div>
+                       <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
+                       <div className="text-sm text-secondary-600">
+                         WO: {(() => {
+                           const workOrder = workOrders.find(wo => wo._id === invoice.workOrderId);
+                           return workOrder ? workOrder.workOrderNumber : (invoice.workOrderId || 'N/A');
+                         })()}
+                       </div>
+                     </div>
+                   </td>
                   <td className="table-cell">
                     <div>
                       <div className="text-sm font-medium text-secondary-900">
@@ -498,9 +493,9 @@ export default function InvoicesPage() {
                         {new Date(invoice.paidDate!).toLocaleTimeString()}
                       </div>
                     </td>
-                    <td className="table-cell whitespace-nowrap">
-                      <div className="text-sm font-medium text-secondary-900">#{invoice._id}</div>
-                    </td>
+                                         <td className="table-cell whitespace-nowrap">
+                       <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
+                     </td>
                     <td className="table-cell whitespace-nowrap">
                       <div className="text-sm text-secondary-900">{invoice.customerName}</div>
                     </td>

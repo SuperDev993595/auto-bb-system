@@ -14,6 +14,7 @@ import {
 
 export interface Invoice {
   _id: string
+  invoiceNumber?: string
   workOrderId?: string
   customerId: string | {
     _id: string
