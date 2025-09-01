@@ -15,6 +15,7 @@ import {
   downloadInvoicePDF,
   sendInvoiceEmail
 } from '../redux/actions/invoices'
+import { fetchWorkOrders } from '../redux/actions/services'
 import { Invoice } from '../redux/reducer/invoicesReducer'
 import PageTitle from '../components/Shared/PageTitle'
 import AddInvoiceModal from '../components/invoices/AddInvoiceModal'
@@ -75,11 +76,14 @@ export default function InvoicesPage() {
     dispatch(fetchInvoiceStats())
     dispatch(fetchPaymentStats())
     dispatch(fetchInvoiceTemplates())
+    dispatch(fetchWorkOrders())
   }, [dispatch])
 
   // Filter invoices with safety check
   const filteredInvoices = (invoices || []).filter(invoice => {
-    const matchesSearch = (invoice.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const customerName = typeof invoice.customerId === 'object' ? invoice.customerId.name : 
+                        invoice.customer?.name || invoice.customerName || ''
+    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (invoice._id || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter
     return matchesSearch && matchesStatus
@@ -161,6 +165,7 @@ export default function InvoicesPage() {
   const handleInvoiceSuccess = () => {
     dispatch(fetchInvoices({}))
     dispatch(fetchInvoiceStats())
+    dispatch(fetchWorkOrders())
   }
 
   const handleGenerateFromWorkOrder = (workOrderId: string) => {
@@ -339,9 +344,13 @@ export default function InvoicesPage() {
                   </td>
                   <td className="table-cell">
                     <div>
-                      <div className="text-sm font-medium text-secondary-900">{invoice.customerName}</div>
+                      <div className="text-sm font-medium text-secondary-900">
+                        {typeof invoice.customerId === 'object' ? invoice.customerId.name : 
+                         invoice.customer?.name || invoice.customerName || 'Customer not available'}
+                      </div>
                       <div className="text-sm text-secondary-600">
-                        {invoice.vehicleInfo || 'Vehicle info not available'}
+                        {typeof invoice.vehicleId === 'object' ? invoice.vehicleId.fullName :
+                         invoice.vehicle?.fullName || invoice.vehicleInfo || 'Vehicle info not available'}
                       </div>
                     </div>
                   </td>

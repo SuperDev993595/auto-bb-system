@@ -15,26 +15,58 @@ import {
 export interface Invoice {
   _id: string
   workOrderId?: string
-  customerId: string
-  customerName: string
-  vehicleInfo: string
+  customerId: string | {
+    _id: string
+    name: string
+    email: string
+    phone: string
+    fullAddress?: string
+  }
+  customerName?: string
+  customer?: {
+    _id: string
+    name: string
+    email: string
+    phone: string
+  }
+  vehicleId?: string | {
+    _id: string
+    year: number
+    make: string
+    model: string
+    fullName: string
+  }
+  vehicleInfo?: string
+  vehicle?: {
+    make: string
+    model: string
+    year: number
+    fullName?: string
+  }
   date: string
   dueDate: string
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
-  services: Array<{
+  items?: Array<{
+    description: string
+    quantity: number
+    unitPrice: number
+    total: number
+    _id?: string
+  }>
+  services?: Array<{
     description: string
     quantity: number
     rate: number
     amount: number
   }>
-  parts: Array<{
+  parts?: Array<{
     description: string
     quantity: number
     rate: number
     amount: number
   }>
-  laborHours: number
-  laborRate: number
+  laborHours?: number
+  laborRate?: number
   subtotal: number
   tax: number
   total: number
