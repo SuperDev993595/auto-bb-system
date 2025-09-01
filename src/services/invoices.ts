@@ -139,6 +139,13 @@ class InvoiceService {
     return api.get(`/invoices/stats/overview?${params.toString()}`);
   }
 
+  async getPaymentStats(startDate?: string, endDate?: string): Promise<AxiosResponse<any>> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    return api.get(`/invoices/payment-stats?${params.toString()}`);
+  }
+
   // Invoice Generation Methods
   async generateInvoiceFromWorkOrder(workOrderId: string): Promise<AxiosResponse<Invoice>> {
     return api.post('/invoices/generate-from-workorder', { workOrderId });

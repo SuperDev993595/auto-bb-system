@@ -178,7 +178,7 @@ router.get("/stats/overview", authenticateToken, async (req, res) => {
 router.get("/payment-stats", authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     const filter = {};
     if (startDate || endDate) {
       filter.paidDate = {};
@@ -187,45 +187,56 @@ router.get("/payment-stats", authenticateToken, async (req, res) => {
     }
 
     // Get payment statistics
-    const totalPayments = await Invoice.countDocuments({ 
-      ...filter, 
-      status: 'paid' 
+    const totalPayments = await Invoice.countDocuments({
+      ...filter,
+      status: "paid",
     });
-    
+
     const totalPaidAmount = await Invoice.aggregate([
-      { $match: { ...filter, status: 'paid' } },
-      { $group: { _id: null, total: { $sum: '$paidAmount' } } }
+      { $match: { ...filter, status: "paid" } },
+      { $group: { _id: null, total: { $sum: "$paidAmount" } } },
     ]);
 
     const paymentMethods = await Invoice.aggregate([
-      { $match: { ...filter, status: 'paid' } },
-      { $group: { _id: '$paymentMethod', count: { $sum: 1 }, total: { $sum: '$paidAmount' } } }
+      { $match: { ...filter, status: "paid" } },
+      {
+        $group: {
+          _id: "$paymentMethod",
+          count: { $sum: 1 },
+          total: { $sum: "$paidAmount" },
+        },
+      },
     ]);
 
     const monthlyPayments = await Invoice.aggregate([
-      { $match: { ...filter, status: 'paid' } },
-      { 
-        $group: { 
-          _id: { 
-            year: { $year: '$paidDate' }, 
-            month: { $month: '$paidDate' } 
-          }, 
-          count: { $sum: 1 }, 
-          total: { $sum: '$paidAmount' } 
-        } 
+      { $match: { ...filter, status: "paid" } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$paidDate" },
+            month: { $month: "$paidDate" },
+          },
+          count: { $sum: 1 },
+          total: { $sum: "$paidAmount" },
+        },
       },
-      { $sort: { '_id.year': -1, '_id.month': -1 } },
-      { $limit: 12 }
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
+      { $limit: 12 },
     ]);
 
-    const overduePayments = await Invoice.countDocuments({ 
-      ...filter, 
-      status: 'overdue' 
+    const overduePayments = await Invoice.countDocuments({
+      ...filter,
+      status: "overdue",
     });
 
     const overdueAmount = await Invoice.aggregate([
-      { $match: { ...filter, status: 'overdue' } },
-      { $group: { _id: null, total: { $sum: { $subtract: ['$total', '$paidAmount'] } } } }
+      { $match: { ...filter, status: "overdue" } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $subtract: ["$total", "$paidAmount"] } },
+        },
+      },
     ]);
 
     res.json({
@@ -237,8 +248,11 @@ router.get("/payment-stats", authenticateToken, async (req, res) => {
         monthlyPayments,
         overduePayments,
         overdueAmount: overdueAmount[0]?.total || 0,
-        averagePayment: totalPayments > 0 ? (totalPaidAmount[0]?.total || 0) / totalPayments : 0
-      }
+        averagePayment:
+          totalPayments > 0
+            ? (totalPaidAmount[0]?.total || 0) / totalPayments
+            : 0,
+      },
     });
   } catch (error) {
     console.error("Error fetching payment stats:", error);

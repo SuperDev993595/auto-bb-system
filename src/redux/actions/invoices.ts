@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { invoiceService } from '../../services/invoices';
+import { downloadPDF } from '../../utils/pdfDownload';
 
 export const fetchInvoices = createAsyncThunk(
   'invoices/fetchInvoices',
@@ -53,7 +54,7 @@ export const markAsOverdue = createAsyncThunk(
   'invoices/markAsOverdue',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.markAsOverdue(id);
+      const response = await invoiceService.markAsOverdue();
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark invoice as overdue');
@@ -66,7 +67,11 @@ export const downloadInvoicePDF = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await invoiceService.downloadInvoicePDF(id);
-      return response.data;
+      
+      // Download the PDF file
+      downloadPDF(response.data, `invoice-${id}.pdf`);
+      
+      return { success: true, message: 'PDF downloaded successfully' };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to download invoice PDF');
     }
@@ -77,7 +82,7 @@ export const sendInvoiceEmail = createAsyncThunk(
   'invoices/sendInvoiceEmail',
   async ({ id, emailData }: { id: string; emailData: any }, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.sendInvoiceEmail(id, emailData);
+      const response = await invoiceService.sendInvoiceEmail(id);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to send invoice email');
@@ -125,7 +130,7 @@ export const sendInvoice = createAsyncThunk(
   'invoices/sendInvoice',
   async ({ id, emailData }: { id: string; emailData: any }, { rejectWithValue }) => {
     try {
-      const response = await invoiceService.sendInvoice(id, emailData);
+      const response = await invoiceService.sendInvoice(id);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to send invoice');

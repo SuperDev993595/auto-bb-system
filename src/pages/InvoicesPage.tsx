@@ -160,7 +160,7 @@ export default function InvoicesPage() {
     toast.promise(
       dispatch(downloadInvoicePDF(invoiceId)).unwrap(),
       {
-        loading: 'Downloading PDF...',
+        loading: 'Generating and downloading PDF...',
         success: 'PDF downloaded successfully!',
         error: 'Failed to download PDF'
       }
