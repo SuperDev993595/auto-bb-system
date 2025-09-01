@@ -22,6 +22,7 @@ import AddInvoiceModal from '../components/invoices/AddInvoiceModal'
 import EditInvoiceModal from '../components/invoices/EditInvoiceModal'
 import DeleteInvoiceModal from '../components/invoices/DeleteInvoiceModal'
 import PaymentModal from '../components/invoices/PaymentModal';
+import ViewInvoiceModal from '../components/invoices/ViewInvoiceModal';
 import {
   HiDocumentText,
   HiCurrencyDollar,
@@ -57,6 +58,7 @@ export default function InvoicesPage() {
   const [showAddInvoiceModal, setShowAddInvoiceModal] = useState(false)
   const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false)
   const [showDeleteInvoiceModal, setShowDeleteInvoiceModal] = useState(false)
+  const [showViewInvoiceModal, setShowViewInvoiceModal] = useState(false)
   
   const { 
     invoices, 
@@ -177,10 +179,8 @@ export default function InvoicesPage() {
   }
 
   const handleViewInvoice = (invoice: Invoice) => {
-    // For now, we'll just show a toast with invoice details
-    // In the future, this could open a detailed view modal or navigate to a view page
-    toast.success(`Viewing invoice ${invoice.invoiceNumber || invoice._id}`)
-    console.log('View invoice:', invoice)
+    setSelectedInvoice(invoice)
+    setShowViewInvoiceModal(true)
   }
 
   const handleInvoiceSuccess = () => {
@@ -893,6 +893,18 @@ export default function InvoicesPage() {
             setSelectedInvoice(null)
           }}
           onSuccess={handleInvoiceSuccess}
+        />
+      )}
+
+      {showViewInvoiceModal && (
+        <ViewInvoiceModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowViewInvoiceModal(false)
+            setSelectedInvoice(null)
+          }}
+          onDownload={handleDownloadPDF}
+          onSendEmail={handleSendEmail}
         />
       )}
     </div>
