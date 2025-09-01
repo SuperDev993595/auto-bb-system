@@ -1,7 +1,7 @@
 import React from 'react';
 import { HiCurrencyDollar } from 'react-icons/hi';
 import ModalWrapper from '../../utils/ModalWrapper';
-import { Invoice } from '../../utils/CustomerTypes';
+import { Invoice } from '../../redux/reducer/invoicesReducer';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -42,8 +42,8 @@ export default function PaymentModal({
     >
       <div className="p-6 space-y-4">
         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-          <p className="text-sm text-gray-600">Invoice: #{invoice.invoiceNumber}</p>
-          <p className="text-sm text-gray-600">Customer: {invoice.customer?.name}</p>
+          <p className="text-sm text-gray-600">Invoice: #{invoice._id}</p>
+          <p className="text-sm text-gray-600">Customer: {invoice.customerName}</p>
           <p className="text-sm font-medium text-gray-900">Amount Due: ${amountDue.toFixed(2)}</p>
         </div>
         

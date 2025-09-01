@@ -68,6 +68,13 @@ export interface InvoiceSettings {
     includeLogo: boolean
     includeTerms: boolean
   }
+  paymentMethods: {
+    cash: boolean
+    check: boolean
+    creditCard: boolean
+    bankTransfer: boolean
+    online: boolean
+  }
 }
 
 interface InvoicesState {
@@ -102,6 +109,13 @@ const initialState: InvoicesState = {
       footerText: 'Thank you for your business!',
       includeLogo: true,
       includeTerms: true
+    },
+    paymentMethods: {
+      cash: true,
+      check: true,
+      creditCard: true,
+      bankTransfer: true,
+      online: true
     }
   },
   loading: false,
