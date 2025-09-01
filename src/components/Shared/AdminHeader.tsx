@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HiUser, HiLogout, HiBell, HiCog } from 'react-icons/hi';
+import { HiUser, HiLogout, HiBell, HiCog, HiMenu } from 'react-icons/hi';
 import PendingApprovalsCounter from './PendingApprovalsCounter';
 import NotificationCenter from './NotificationCenter';
 import ChatNotificationBadge from './ChatNotificationBadge';
 
-export default function AdminHeader() {
+interface AdminHeaderProps {
+    onToggleSidebar?: () => void;
+}
+
+export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
     const { user, logout, isLoading } = useAuth();
     const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
 
@@ -35,6 +39,15 @@ export default function AdminHeader() {
         <header className="bg-white border-b border-secondary-200 px-6 py-4">
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
+                    {/* Mobile Sidebar Toggle */}
+                    <button
+                        onClick={onToggleSidebar}
+                        className="lg:hidden p-2 rounded-lg hover:bg-secondary-100 transition-colors mr-3"
+                        title="Toggle sidebar"
+                    >
+                        <HiMenu className="w-5 h-5" />
+                    </button>
+                    
                     <Link to="/" className="hover:text-primary-600 transition-colors">
                         <h1 className="text-xl font-bold text-primary-600">AutoCRM Pro</h1>
                     </Link>

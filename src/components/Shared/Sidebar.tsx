@@ -19,7 +19,9 @@ import {
     ChevronRight,
     Wrench,
     Crown,
-    Shield
+    Shield,
+    Menu,
+    X
 } from "../../utils/icons";
 import { useAuth } from "../../context/AuthContext";
 import { API_ENDPOINTS, getAuthHeaders } from "../../services/api";
@@ -100,7 +102,13 @@ const navGroups: NavGroup[] = [
     }
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+    isCollapsed: boolean;
+    onToggle: () => void;
+    isMobileOpen?: boolean;
+}
+
+export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }: SidebarProps) {
     const location = useLocation();
     const { user } = useAuth();
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -172,27 +180,55 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="bg-white text-secondary-900 w-64 flex flex-col h-screen border-r border-secondary-200">
+        <>
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div 
+                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={onToggle}
+                />
+            )}
+            
+            <aside className={`bg-white text-secondary-900 flex flex-col h-screen border-r border-secondary-200 transition-all duration-300 ease-in-out ${
+                isCollapsed ? 'w-16' : 'w-64'
+            } lg:relative lg:translate-x-0 ${
+                isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+            } lg:translate-x-0 fixed lg:static z-50`}>
             {/* Fixed Header */}
-            <div className="p-6 flex-shrink-0">
+            <div className={`p-6 flex-shrink-0 flex items-center justify-between ${
+                isCollapsed ? 'px-2' : 'px-6'
+            }`}>
                 <Link to="/" className="block">
                     <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Settings className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-blue-600">
-                            AutoCRM Pro
-                        </span>
+                        {!isCollapsed && (
+                            <span className="text-blue-600 whitespace-nowrap">
+                                AutoCRM Pro
+                            </span>
+                        )}
                     </div>
                 </Link>
+                
+                {/* Toggle Button */}
+                <button
+                    onClick={onToggle}
+                    className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
+                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+                </button>
             </div>
 
             {/* Scrollable Navigation */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-4 sidebar-scrollbar sidebar-nav min-h-0">
+            <nav className={`flex-1 overflow-y-auto p-4 space-y-4 sidebar-scrollbar sidebar-nav min-h-0 ${
+                isCollapsed ? 'px-2' : 'px-4'
+            }`}>
                 {updatedNavGroups
                     .filter(group => !group.roles || group.roles.includes(user?.role || ''))
                     .map(group => {
-                        const isCollapsed = collapsedGroups.has(group.title);
+                        const isGroupCollapsed = collapsedGroups.has(group.title);
                         const hasActiveItem = group.items.some(item => 
                             location.pathname === item.to && (!item.roles || item.roles.includes(user?.role || ''))
                         );
@@ -200,24 +236,26 @@ export default function Sidebar() {
                         return (
                             <div key={group.title} className="space-y-2">
                                 {/* Group Header - Clickable for Collapse */}
-                                <button
-                                    onClick={() => toggleGroup(group.title)}
-                                    className={`w-full px-3 py-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider transition-colors rounded-lg ${
-                                        hasActiveItem 
-                                            ? 'text-blue-600 bg-blue-50' 
-                                            : 'text-secondary-500 hover:text-secondary-700 hover:bg-secondary-50'
-                                    }`}
-                                >
-                                    <span>{group.title}</span>
-                                    {isCollapsed ? (
-                                        <ChevronRight size={14} />
-                                    ) : (
-                                        <ChevronDown size={14} />
-                                    )}
-                                </button>
+                                {!isCollapsed && (
+                                    <button
+                                        onClick={() => toggleGroup(group.title)}
+                                        className={`w-full px-3 py-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider transition-colors rounded-lg ${
+                                            hasActiveItem 
+                                                ? 'text-blue-600 bg-blue-50' 
+                                                : 'text-secondary-500 hover:text-secondary-700 hover:bg-secondary-50'
+                                        }`}
+                                    >
+                                        <span>{group.title}</span>
+                                        {isGroupCollapsed ? (
+                                            <ChevronRight size={14} />
+                                        ) : (
+                                            <ChevronDown size={14} />
+                                        )}
+                                    </button>
+                                )}
                                 
                                 {/* Group Items */}
-                                {!isCollapsed && (
+                                {(!isCollapsed && !isGroupCollapsed) && (
                                     <div className="space-y-1 ml-2">
                                         {group.items
                                             .filter(item => !item.roles || item.roles.includes(user?.role || ''))
@@ -242,17 +280,49 @@ export default function Sidebar() {
                                             ))}
                                     </div>
                                 )}
+                                
+                                {/* Collapsed Sidebar - Show only icons */}
+                                {isCollapsed && (
+                                    <div className="space-y-1">
+                                        {group.items
+                                            .filter(item => !item.roles || item.roles.includes(user?.role || ''))
+                                            .map(item => (
+                                                <Link
+                                                    key={item.to}
+                                                    to={item.to}
+                                                    className={`flex items-center justify-center p-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 relative ${
+                                                        location.pathname === item.to 
+                                                            ? "bg-blue-50 text-blue-700 border border-blue-300" 
+                                                            : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                                                    }`}
+                                                    title={item.label}
+                                                >
+                                                    {item.icon}
+                                                    {item.badge && item.badge > 0 && (
+                                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                                                            {item.badge > 99 ? '99+' : item.badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            ))}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-secondary-200 bg-secondary-50 flex-shrink-0">
-                <div className="text-xs text-secondary-600 text-center">
-                    v2.0.0 • AutoCRM Pro
-                </div>
-            </div>
-        </aside>
+            <div className={`p-4 border-t border-secondary-200 bg-secondary-50 flex-shrink-0 ${
+                isCollapsed ? 'px-2' : 'px-4'
+            }`}>
+                {!isCollapsed && (
+                    <div className="text-xs text-secondary-600 text-center">
+                        v2.0.0 • AutoCRM Pro
+                    </div>
+                )}
+                            </div>
+            </aside>
+        </>
     );
 }
