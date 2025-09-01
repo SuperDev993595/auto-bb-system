@@ -3,10 +3,6 @@ import Sidebar from "../../components/Shared/Sidebar";
 import AdminHeader from "../../components/Shared/AdminHeader";
 import { useEffect, useState } from "react";
 
-import { Outlet } from "react-router-dom";
-import Sidebar from "../../components/Shared/Sidebar";
-import AdminHeader from "../../components/Shared/AdminHeader";
-import { useEffect, useState } from "react";
 
 export default function DashboardLayout() {
     const [role, setRole] = useState<string>("");

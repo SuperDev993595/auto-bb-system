@@ -195,34 +195,45 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen = false }:
                 isMobileOpen ? 'translate-x-0' : '-translate-x-full'
             } lg:translate-x-0 fixed lg:static z-50`}>
             {/* Fixed Header */}
-            <div className={`p-6 flex-shrink-0 flex items-center justify-between ${
-                isCollapsed ? 'px-2' : 'px-6'
+            <div className={`p-4 flex-shrink-0 ${
+                isCollapsed ? 'px-2' : 'px-4'
             }`}>
-                <Link to="/" className="block">
-                    <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Settings className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-between mb-4">
+                    <Link to="/" className="block">
+                        <div className="text-xl font-bold text-blue-800 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Settings className="w-6 h-6 text-white" />
+                            </div>
+                            {!isCollapsed && (
+                                <span className="text-blue-600 whitespace-nowrap">
+                                    AutoCRM Pro
+                                </span>
+                            )}
                         </div>
-                        {!isCollapsed && (
-                            <span className="text-blue-600 whitespace-nowrap">
-                                AutoCRM Pro
-                            </span>
-                        )}
-                    </div>
-                </Link>
+                    </Link>
+                </div>
                 
-                {/* Toggle Button */}
-                <button
-                    onClick={onToggle}
-                    className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
-                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                >
-                    {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
-                </button>
+                {/* Toggle Button - Positioned below the logo */}
+                <div className="flex justify-center">
+                    <button
+                        onClick={onToggle}
+                        className={`p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
+                            isCollapsed 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'bg-secondary-100 text-secondary-600 hover:bg-blue-50'
+                        }`}
+                        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    </button>
+                </div>
             </div>
 
+            {/* Separator */}
+            <div className="border-b border-secondary-200 mx-4"></div>
+
             {/* Scrollable Navigation */}
-            <nav className={`flex-1 overflow-y-auto p-4 space-y-4 sidebar-scrollbar sidebar-nav min-h-0 ${
+            <nav className={`flex-1 overflow-y-auto space-y-4 sidebar-scrollbar sidebar-nav min-h-0 ${
                 isCollapsed ? 'px-2' : 'px-4'
             }`}>
                 {updatedNavGroups
