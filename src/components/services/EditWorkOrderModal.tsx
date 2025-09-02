@@ -401,6 +401,12 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
       return
     }
 
+    // Validate required fields
+    if (!formData.technicianId) {
+      toast.error('Please select a technician')
+      return
+    }
+
     setLoading(true)
     try {
       // Prepare the update data - only include fields that are allowed by the backend
@@ -793,12 +799,13 @@ export default function EditWorkOrderModal({ workOrder, onClose, onSuccess }: Pr
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label className="form-label">Technician</label>
+              <label className="form-label">Technician *</label>
               <select
                 value={formDataLoaded ? formData.technicianId || '' : ''}
                 onChange={(e) => handleInputChange('technicianId', e.target.value)}
                 className="form-select"
                 disabled={!isAnyAdmin() || !formDataLoaded}
+                required
               >
                 <option value="">
                   {!formDataLoaded ? 'Loading...' : 'Select Technician'}
