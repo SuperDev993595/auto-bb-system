@@ -20,6 +20,7 @@ import {
   Zap
 } from '../utils/icons';
 import { workOrderService, WorkOrder, JobBoardFilters } from '../services/workOrders';
+import { invoiceService } from '../services/invoices';
 import WorkOrderDetailsModal from '../components/Shared/WorkOrderDetailsModal';
 import ProgressUpdateModal from '../components/Shared/ProgressUpdateModal';
 import { AuthContext } from '../context/AuthContext';
@@ -31,6 +32,7 @@ interface WorkOrderCardProps {
   onComplete: (id: string) => void;
   onCheckParts: (id: string) => void;
   onViewDetails: (workOrder: WorkOrder) => void;
+  onGenerateInvoice: (id: string) => void;
 }
 
 const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
@@ -39,7 +41,8 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
   onUpdateProgress,
   onComplete,
   onCheckParts,
-  onViewDetails
+  onViewDetails,
+  onGenerateInvoice
 }) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -198,6 +201,16 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
           </div>
         )}
         
+        {workOrder.status === 'completed' && (
+          <button
+            onClick={() => onGenerateInvoice(workOrder._id)}
+            className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center space-x-2"
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Generate Invoice</span>
+          </button>
+        )}
+        
         <button
           onClick={() => onViewDetails(workOrder)}
           className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center space-x-2"
@@ -321,6 +334,20 @@ export default function JobBoardPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to check parts');
+    }
+  };
+
+  const handleGenerateInvoice = async (workOrderId: string) => {
+    try {
+      const response = await invoiceService.generateInvoiceFromWorkOrder(workOrderId);
+      if (response.data) {
+        toast.success('Invoice generated successfully!');
+        await fetchWorkOrders();
+      } else {
+        setError('Failed to generate invoice');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate invoice');
     }
   };
 
@@ -514,6 +541,7 @@ export default function JobBoardPage() {
             onComplete={handleComplete}
             onCheckParts={handleCheckParts}
             onViewDetails={handleViewDetails}
+            onGenerateInvoice={handleGenerateInvoice}
           />
         ))}
       </div>

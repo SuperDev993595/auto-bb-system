@@ -4,7 +4,7 @@ const Joi = require("joi");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 const Invoice = require("../models/Invoice");
 const Customer = require("../models/Customer");
-const ServiceCatalog = require("../models/Service");
+
 const InventoryItem = require("../models/Inventory");
 
 // Validation schemas
@@ -540,7 +540,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     }
 
     // Import WorkOrder model
-    const WorkOrder = require("../models/Service");
+    const { WorkOrder } = require("../models/Service");
 
     // Find the work order
     const workOrder = await WorkOrder.findById(workOrderId)
