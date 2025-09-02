@@ -241,19 +241,71 @@ export default function InvoicesPage() {
       const customer = customers.find(c => c._id === workOrder.customer?._id)
       if (!customer) return Promise.reject(`Customer not found for work order ${workOrder.workOrderNumber}`)
       
+      // Create detailed invoice items from work order services and parts
+      const items: Array<{
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        total: number;
+        type: 'labor' | 'part' | 'overhead';
+        partNumber?: string | null;
+      }> = [];
+      
+      workOrder.services.forEach(service => {
+        // Add service as an item (labor + overhead)
+        const laborCost = service.laborHours * service.laborRate;
+        const partsCost = service.parts ? service.parts.reduce((sum, part) => sum + part.totalPrice, 0) : 0;
+        const serviceOverhead = service.totalCost - laborCost - partsCost;
+        
+        if (laborCost > 0) {
+          items.push({
+            description: `${service.service?.name || service.description || 'Service'} - Labor`,
+            quantity: service.laborHours,
+            unitPrice: service.laborRate,
+            total: laborCost,
+            type: 'labor'
+          });
+        }
+        
+        // Add individual parts
+        if (service.parts && service.parts.length > 0) {
+          service.parts.forEach(part => {
+            items.push({
+              description: `Part: ${part.name}`,
+              quantity: part.quantity,
+              unitPrice: part.unitPrice,
+              total: part.totalPrice,
+              type: 'part',
+              partNumber: part.partNumber || null
+            });
+          });
+        }
+        
+        // Add service overhead if any
+        if (serviceOverhead > 0) {
+          items.push({
+            description: `${service.service?.name || service.description || 'Service'} - Overhead`,
+            quantity: 1,
+            unitPrice: serviceOverhead,
+            total: serviceOverhead,
+            type: 'overhead'
+          });
+        }
+      });
+      
+      // Calculate totals from items
+      const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+      const tax = subtotal * 0.08; // 8% tax rate
+      const total = subtotal + tax;
+      
       const invoiceData = {
         customerId: customer._id,
         customerName: customer.name,
         workOrderId: workOrder._id,
-        items: workOrder.services.map(service => ({
-          description: service.service?.name || service.description || 'Service',
-          quantity: 1,
-          unitPrice: service.laborRate,
-          total: service.totalCost
-        })),
-        subtotal: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
-        tax: 0,
-        total: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
+        items: items,
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
         status: 'draft' as const
       }
       

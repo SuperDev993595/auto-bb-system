@@ -542,7 +542,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     // Import WorkOrder model
     const { WorkOrder } = require("../models/Service");
 
-    // Find the work order
+    // Find the work order with populated parts information
     const workOrder = await WorkOrder.findById(workOrderId)
       .populate("customer", "name email phone")
       .populate("services.service", "name description");
@@ -573,18 +573,61 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     // Generate invoice number
     const invoiceNumber = await Invoice.generateInvoiceNumber();
 
-    // Calculate totals
-    const subtotal = workOrder.totalCost || 0;
+    // Create detailed invoice items from work order services and parts
+    const items = [];
+
+    workOrder.services.forEach((service) => {
+      // Add service as an item (labor + overhead)
+      const laborCost = service.laborHours * service.laborRate;
+      const partsCost = service.parts
+        ? service.parts.reduce((sum, part) => sum + part.totalPrice, 0)
+        : 0;
+      const serviceOverhead = service.totalCost - laborCost - partsCost;
+
+      if (laborCost > 0) {
+        items.push({
+          description: `${
+            service.service?.name || service.description || "Service"
+          } - Labor`,
+          quantity: service.laborHours,
+          unitPrice: service.laborRate,
+          total: laborCost,
+          type: "labor",
+        });
+      }
+
+      // Add individual parts
+      if (service.parts && service.parts.length > 0) {
+        service.parts.forEach((part) => {
+          items.push({
+            description: `Part: ${part.name}`,
+            quantity: part.quantity,
+            unitPrice: part.unitPrice,
+            total: part.totalPrice,
+            type: "part",
+            partNumber: part.partNumber || null,
+          });
+        });
+      }
+
+      // Add service overhead if any
+      if (serviceOverhead > 0) {
+        items.push({
+          description: `${
+            service.service?.name || service.description || "Service"
+          } - Overhead`,
+          quantity: 1,
+          unitPrice: serviceOverhead,
+          total: serviceOverhead,
+          type: "overhead",
+        });
+      }
+    });
+
+    // Calculate totals from items
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const tax = subtotal * 0.08; // 8% tax rate - you can make this configurable
     const total = subtotal + tax;
-
-    // Create invoice items from work order services
-    const items = workOrder.services.map((service) => ({
-      description: service.service?.name || service.description || "Service",
-      quantity: 1,
-      unitPrice: service.totalCost,
-      total: service.totalCost,
-    }));
 
     // Create the invoice
     const invoice = new Invoice({
@@ -613,6 +656,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
       subtotal,
       tax,
       total,
+      itemsCount: items.length,
     });
 
     await invoice.save();

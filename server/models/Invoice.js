@@ -64,6 +64,16 @@ const invoiceSchema = new mongoose.Schema(
           required: true,
           min: 0,
         },
+        type: {
+          type: String,
+          enum: ["service", "part", "labor", "overhead"],
+          default: "service",
+        },
+        partNumber: {
+          type: String,
+          trim: true,
+          maxlength: 50,
+        },
       },
     ],
     subtotal: {

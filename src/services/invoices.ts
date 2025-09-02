@@ -86,6 +86,15 @@ export interface InvoiceStats {
   }[];
 }
 
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  type?: 'service' | 'part' | 'labor' | 'overhead';
+  partNumber?: string | null;
+}
+
 class InvoiceService {
   // Invoice Methods
   async getInvoices(filters: InvoiceFilters = {}): Promise<AxiosResponse<{ data: Invoice[]; pagination: any }>> {
