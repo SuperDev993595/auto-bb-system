@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -29,13 +29,27 @@ import {
   MapPin,
   Gauge,
   Zap,
-  Database
+  Database,
+  Menu,
+  X
 } from '../../utils/icons';
 
 export default function CustomerLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Sidebar state management
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Load sidebar state from localStorage on component mount
+  useEffect(() => {
+    const storedSidebarState = localStorage.getItem('customerSidebarCollapsed');
+    if (storedSidebarState) {
+      setSidebarCollapsed(JSON.parse(storedSidebarState));
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -45,6 +59,16 @@ export default function CustomerLayout() {
     navigate('/');
   };
 
+  const toggleSidebar = () => {
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    localStorage.setItem('customerSidebarCollapsed', JSON.stringify(newState));
+  };
+
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen);
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -52,6 +76,15 @@ export default function CustomerLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
+              {/* Mobile Sidebar Toggle */}
+              <button
+                onClick={toggleMobileSidebar}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors mr-2"
+                title="Toggle sidebar"
+              >
+                <Menu className="w-5 h-5 text-gray-600" />
+              </button>
+              
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Car className="w-5 h-5 text-white" />
               </div>
@@ -83,16 +116,57 @@ export default function CustomerLayout() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
+        {/* Mobile Overlay */}
+        {mobileSidebarOpen && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={toggleMobileSidebar}
+          />
+        )}
+        
         {/* Sidebar */}
-        <nav className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col flex-shrink-0">
+        <nav className={`bg-white shadow-lg border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? 'w-16' : 'w-64'
+        } lg:relative lg:translate-x-0 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 fixed lg:static z-50 h-full`}>
+          
+          {/* Sidebar Header with Toggle */}
+          <div className={`p-4 flex-shrink-0 border-b border-gray-200 ${
+            sidebarCollapsed ? 'px-2' : 'px-4'
+          }`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+              {!sidebarCollapsed && (
+                <div className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                  Navigation
+                </div>
+              )}
+              
+              {/* Toggle Button */}
+              <button
+                onClick={toggleSidebar}
+                className={`p-1.5 rounded-md transition-all duration-200 ${
+                  sidebarCollapsed 
+                    ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                }`}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {sidebarCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          
           <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
             <nav className="space-y-6">
               
               {/* Main Dashboard */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Overview
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Overview
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard"
@@ -103,16 +177,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <BarChart3 className="w-5 h-5" />
-                    <span>Dashboard</span>
+                    {!sidebarCollapsed && <span>Dashboard</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Vehicle Management */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Vehicles
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Vehicles
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/vehicles"
@@ -123,7 +199,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Car className="w-5 h-5" />
-                    <span>My Vehicles</span>
+                    {!sidebarCollapsed && <span>My Vehicles</span>}
                   </Link>
                   
                   <Link
@@ -135,16 +211,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <FileText className="w-5 h-5" />
-                    <span>Service History</span>
+                    {!sidebarCollapsed && <span>Service History</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Services & Appointments */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Services
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Services
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/appointments"
@@ -155,7 +233,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Calendar className="w-5 h-5" />
-                    <span>Appointments</span>
+                    {!sidebarCollapsed && <span>Appointments</span>}
                   </Link>
                   
                   <Link
@@ -167,16 +245,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Wrench className="w-5 h-5" />
-                    <span>Service Catalog</span>
+                    {!sidebarCollapsed && <span>Service Catalog</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Financial */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Financial
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Financial
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/invoices"
@@ -187,7 +267,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <DollarSign className="w-5 h-5" />
-                    <span>Invoices</span>
+                    {!sidebarCollapsed && <span>Invoices</span>}
                   </Link>
                   
                   <Link
@@ -199,7 +279,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <CreditCard className="w-5 h-5" />
-                    <span>Payments</span>
+                    {!sidebarCollapsed && <span>Payments</span>}
                   </Link>
                   
                   <Link
@@ -211,7 +291,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Star className="w-5 h-5" />
-                    <span>Rewards</span>
+                    {!sidebarCollapsed && <span>Rewards</span>}
                   </Link>
                   
                   <Link
@@ -223,16 +303,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Shield className="w-5 h-5" />
-                    <span>Memberships</span>
+                    {!sidebarCollapsed && <span>Memberships</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Vehicle Management */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Vehicle Services
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Vehicle Services
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/warranties"
@@ -243,16 +325,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <CheckCircle className="w-5 h-5" />
-                    <span>Warranties</span>
+                    {!sidebarCollapsed && <span>Warranties</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Communication */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Communication
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Communication
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/messages"
@@ -263,7 +347,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <MessageCircle className="w-5 h-5" />
-                    <span>Messages</span>
+                    {!sidebarCollapsed && <span>Messages</span>}
                   </Link>
                   
                   <Link
@@ -275,7 +359,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <MessageCircle className="w-5 h-5" />
-                    <span>Live Chat</span>
+                    {!sidebarCollapsed && <span>Live Chat</span>}
                   </Link>
                   
                   <Link
@@ -287,7 +371,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Bell className="w-5 h-5" />
-                    <span>Notifications</span>
+                    {!sidebarCollapsed && <span>Notifications</span>}
                   </Link>
                   
                   <Link
@@ -299,16 +383,18 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Phone className="w-5 h-5" />
-                    <span>Support</span>
+                    {!sidebarCollapsed && <span>Support</span>}
                   </Link>
                 </div>
               </div>
 
               {/* Account */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Account
-                </h3>
+                {!sidebarCollapsed && (
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Account
+                  </h3>
+                )}
                 <div className="space-y-1">
                   <Link
                     to="/customer/dashboard/profile"
@@ -319,7 +405,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <User className="w-5 h-5" />
-                    <span>Profile</span>
+                    {!sidebarCollapsed && <span>Profile</span>}
                   </Link>
                   
                   <Link
@@ -331,7 +417,7 @@ export default function CustomerLayout() {
                     }`}
                   >
                     <Settings className="w-5 h-5" />
-                    <span>Preferences</span>
+                    {!sidebarCollapsed && <span>Preferences</span>}
                   </Link>
                 </div>
               </div>
