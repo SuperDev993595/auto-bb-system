@@ -52,6 +52,8 @@ export interface Invoice {
     quantity: number
     unitPrice: number
     total: number
+    type?: 'service' | 'part' | 'labor' | 'overhead'
+    partNumber?: string | null
     _id?: string
   }>
   services?: Array<{
@@ -70,6 +72,7 @@ export interface Invoice {
   laborRate?: number
   subtotal: number
   tax: number
+  discount?: number
   total: number
   paidAmount: number
   paymentMethod?: 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'online'

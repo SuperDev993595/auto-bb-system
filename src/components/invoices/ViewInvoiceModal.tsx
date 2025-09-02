@@ -113,21 +113,129 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
           </div>
         </div>
 
-        {/* Financial Summary */}
+        {/* Detailed Financial Summary */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center mb-3">
             <HiCurrencyDollar className="w-5 h-5 text-green-600 mr-2" />
-            <h6 className="font-semibold text-gray-900">Financial Summary</h6>
+            <h6 className="font-semibold text-gray-900">Detailed Financial Summary</h6>
           </div>
-          <div className="space-y-2 text-sm">
+          
+          {/* Invoice Items Breakdown */}
+          {invoice.items && invoice.items.length > 0 ? (
+            <div className="space-y-3 mb-4">
+              <h6 className="font-medium text-gray-700 text-sm">Service Breakdown:</h6>
+              
+              {/* Group items by type for better organization */}
+              {(() => {
+                const laborItems = invoice.items.filter(item => item.type === 'labor');
+                const partItems = invoice.items.filter(item => item.type === 'part');
+                const overheadItems = invoice.items.filter(item => item.type === 'overhead');
+                const otherItems = invoice.items.filter(item => !item.type || item.type === 'service');
+                
+                return (
+                  <div className="space-y-4">
+                    {/* Labor Items */}
+                    {laborItems.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-blue-700 text-sm mb-2">Labor Charges:</h6>
+                        <div className="space-y-2">
+                          {laborItems.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm bg-blue-50 px-3 py-2 rounded">
+                              <div className="flex-1">
+                                <span className="font-medium">{item.description}</span>
+                                {item.quantity > 1 && (
+                                  <span className="text-gray-600 ml-2">
+                                    ({item.quantity} hrs)
+                                  </span>
+                                )}
+                              </div>
+                              <span className="font-medium">${item.total.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Parts Items */}
+                    {partItems.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-green-700 text-sm mb-2">Parts Used:</h6>
+                        <div className="space-y-2">
+                          {partItems.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm bg-green-50 px-3 py-2 rounded">
+                              <div className="flex-1">
+                                <div className="flex items-center">
+                                  <span className="font-medium">{item.description.replace('Part: ', '')}</span>
+                                  {item.partNumber && (
+                                    <span className="text-gray-500 text-xs ml-2 bg-gray-100 px-2 py-1 rounded">
+                                      #{item.partNumber}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-gray-600 text-xs">
+                                  {item.quantity} × ${item.unitPrice.toFixed(2)} each
+                                </span>
+                              </div>
+                              <span className="font-medium">${item.total.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Overhead Items */}
+                    {overheadItems.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-purple-700 text-sm mb-2">Service Overhead:</h6>
+                        <div className="space-y-2">
+                          {overheadItems.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm bg-purple-50 px-3 py-2 rounded">
+                              <span className="font-medium">{item.description}</span>
+                              <span className="font-medium">${item.total.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Other/Service Items */}
+                    {otherItems.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-gray-700 text-sm mb-2">Other Services:</h6>
+                        <div className="space-y-2">
+                          {otherItems.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded">
+                              <span className="font-medium">{item.description}</span>
+                              <span className="font-medium">${item.total.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="text-gray-500 text-sm mb-4">No detailed items available</div>
+          )}
+          
+          {/* Totals Summary */}
+          <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
               <span className="font-medium">${invoice.subtotal.toFixed(2)}</span>
             </div>
             {invoice.tax > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Tax:</span>
+                <span className="text-gray-600">Tax (8%):</span>
                 <span className="font-medium">${invoice.tax.toFixed(2)}</span>
+              </div>
+            )}
+            {invoice.discount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Discount:</span>
+                <span className="font-medium text-green-600">-${invoice.discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between border-t border-gray-200 pt-2">
@@ -138,6 +246,14 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({ invoice, onClose, o
               <div className="flex justify-between">
                 <span className="text-gray-600">Paid Amount:</span>
                 <span className="font-medium text-green-600">${invoice.paidAmount.toFixed(2)}</span>
+              </div>
+            )}
+            {invoice.paidAmount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Balance Due:</span>
+                <span className={`font-medium ${invoice.total - invoice.paidAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  ${(invoice.total - invoice.paidAmount).toFixed(2)}
+                </span>
               </div>
             )}
           </div>
