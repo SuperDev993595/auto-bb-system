@@ -13,7 +13,7 @@ const invoiceSchema = new mongoose.Schema(
     },
     workOrderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Service",
+      ref: "WorkOrder",
     },
     vehicleId: {
       type: mongoose.Schema.Types.ObjectId,

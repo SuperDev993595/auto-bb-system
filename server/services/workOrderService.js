@@ -272,11 +272,19 @@ class WorkOrderService {
 
       // Auto-complete if progress is 100%
       if (progress >= 100) {
+        console.log(
+          `Progress 100% reached for work order ${workOrderId}, updating status to completed`
+        );
         await workOrder.updateStatus("completed", "Work completed");
+        console.log(`Work order ${workOrderId} status updated to completed`);
 
         // Automatically generate invoice when work order is completed
         try {
-          await this.generateInvoiceFromWorkOrder(workOrderId);
+          console.log(`Auto-generating invoice for work order ${workOrderId}`);
+          const invoiceResult = await this.generateInvoiceFromWorkOrder(
+            workOrderId
+          );
+          console.log(`Auto-invoice generation result:`, invoiceResult);
         } catch (invoiceError) {
           console.error(
             "Failed to generate invoice automatically:",
@@ -422,10 +430,39 @@ class WorkOrderService {
         .skip((page - 1) * limit)
         .exec();
 
+      // Check for existing invoices for each work order
+      const Invoice = require("../models/Invoice");
+
+      // Debug: Check all invoices in the database
+      const allInvoices = await Invoice.find({});
+      console.log(`Total invoices in database: ${allInvoices.length}`);
+      allInvoices.forEach((inv) => {
+        console.log(
+          `Invoice ${inv.invoiceNumber}: workOrderId=${inv.workOrderId}, customerId=${inv.customerId}`
+        );
+      });
+
+      const workOrdersWithInvoices = await Promise.all(
+        workOrders.map(async (workOrder) => {
+          const invoice = await Invoice.findOne({ workOrderId: workOrder._id });
+          console.log(
+            `Work Order ${workOrder.workOrderNumber} (${
+              workOrder._id
+            }): Invoice check - Found: ${!!invoice}, Invoice ID: ${
+              invoice?._id
+            }`
+          );
+          const workOrderObj = workOrder.toObject();
+          workOrderObj.hasInvoice = !!invoice;
+          workOrderObj.invoiceId = invoice ? invoice._id : null;
+          return workOrderObj;
+        })
+      );
+
       const total = await WorkOrder.countDocuments(query);
 
       return {
-        workOrders,
+        workOrders: workOrdersWithInvoices,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(total / limit),
@@ -505,7 +542,20 @@ class WorkOrderService {
         createdBy: workOrder.technician || null,
       });
 
+      console.log(`About to save invoice for work order ${workOrderId}`);
+      console.log(`Invoice data:`, {
+        customerId: workOrder.customer._id,
+        workOrderId: workOrder._id,
+        invoiceNumber: invoiceNumber,
+        vehicleId: workOrder.vehicle._id,
+        subtotal,
+        tax,
+        total,
+      });
+
       await invoice.save();
+      console.log(`Invoice saved successfully with ID: ${invoice._id}`);
+
       await invoice.populate("customerId", "name email phone");
       await invoice.populate("vehicleId", "year make model");
 

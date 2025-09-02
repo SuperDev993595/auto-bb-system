@@ -63,6 +63,8 @@ export interface WorkOrder {
   };
   createdAt: string;
   updatedAt: string;
+  hasInvoice?: boolean;
+  invoiceId?: string;
 }
 
 export interface JobBoardFilters {

@@ -604,7 +604,23 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
       createdBy: req.user.id,
     });
 
+    console.log(`About to save invoice for work order ${workOrderId}`);
+    console.log(`Invoice data:`, {
+      customerId: workOrder.customer._id,
+      workOrderId: workOrder._id,
+      invoiceNumber: invoiceNumber,
+      vehicleId: workOrder.vehicle._id,
+      subtotal,
+      tax,
+      total,
+    });
+
     await invoice.save();
+    console.log(`Invoice saved successfully with ID: ${invoice._id}`);
+    console.log(
+      `Invoice saved with workOrderId: ${invoice.workOrderId}, Work Order ID: ${workOrderId}`
+    );
+
     await invoice.populate("customerId", "name email phone");
     await invoice.populate("vehicleId", "year make model");
 

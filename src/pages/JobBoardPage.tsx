@@ -152,10 +152,17 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
           </div>
           
           {/* Invoice indicator for completed work orders */}
-          {workOrder.status === 'completed' && (
+          {workOrder.status === 'completed' && workOrder.hasInvoice && (
             <div className="mt-3 flex items-center space-x-1 text-xs text-green-600">
               <DollarSign className="w-3 h-3" />
               <span>Invoice Generated</span>
+            </div>
+          )}
+          
+          {workOrder.status === 'completed' && !workOrder.hasInvoice && (
+            <div className="mt-3 flex items-center space-x-1 text-xs text-yellow-600">
+              <DollarSign className="w-3 h-3" />
+              <span>Invoice Pending</span>
             </div>
           )}
         </div>
@@ -201,7 +208,7 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
           </div>
         )}
         
-        {workOrder.status === 'completed' && (
+        {workOrder.status === 'completed' && !workOrder.hasInvoice && (
           <button
             onClick={() => onGenerateInvoice(workOrder._id)}
             className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center space-x-2"
@@ -209,6 +216,13 @@ const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
             <DollarSign className="w-4 h-4" />
             <span>Generate Invoice</span>
           </button>
+        )}
+        
+        {workOrder.status === 'completed' && workOrder.hasInvoice && (
+          <div className="w-full px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium flex items-center justify-center space-x-2">
+            <DollarSign className="w-4 h-4" />
+            <span>Invoice Generated</span>
+          </div>
         )}
         
         <button
