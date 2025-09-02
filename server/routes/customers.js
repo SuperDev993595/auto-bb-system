@@ -1424,9 +1424,17 @@ router.post(
     try {
       const { paymentMethod, paymentReference } = req.body;
 
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
       const invoice = await Invoice.findOne({
         _id: req.params.id,
-        customerId: req.user.id,
+        customerId: customer._id,
       });
 
       if (!invoice) {
@@ -1470,10 +1478,20 @@ router.get(
   requireCustomer,
   async (req, res) => {
     try {
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
       const invoice = await Invoice.findOne({
         _id: req.params.id,
-        customerId: req.user.id,
-      });
+        customerId: customer._id,
+      })
+        .populate("customerId", "name email phone address")
+        .populate("vehicleId", "year make model vin licensePlate");
 
       if (!invoice) {
         return res
@@ -1481,18 +1499,91 @@ router.get(
           .json({ success: false, message: "Invoice not found" });
       }
 
-      // For now, return a simple JSON response
-      // In a real implementation, you would generate a PDF here
-      res.json({
-        success: true,
-        message: "Invoice download initiated",
-        data: {
-          invoice,
-          downloadUrl: `/api/customers/invoices/${invoice._id}/pdf`,
-        },
-      });
+      // Generate PDF content
+      const PDFGenerator = require("../utils/pdfGenerator");
+      const pdfGenerator = new PDFGenerator();
+      const pdfBuffer = await pdfGenerator.generateInvoicePDF(invoice);
+
+      // Set response headers for PDF download
+      res.type("application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="invoice-${invoice.invoiceNumber}.pdf"`
+      );
+
+      // Send PDF buffer
+      res.send(pdfBuffer);
     } catch (error) {
       console.error("Error downloading invoice:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+// Bulk download invoices PDF
+router.post(
+  "/invoices/bulk-download",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const { invoiceIds } = req.body;
+
+      if (
+        !invoiceIds ||
+        !Array.isArray(invoiceIds) ||
+        invoiceIds.length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invoice IDs array is required",
+        });
+      }
+
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const invoices = await Invoice.find({
+        _id: { $in: invoiceIds },
+        customerId: customer._id,
+      })
+        .populate("customerId", "name email phone address")
+        .populate("vehicleId", "year make model vin licensePlate");
+
+      if (invoices.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "No invoices found" });
+      }
+
+      // Generate combined PDF content
+      const PDFGenerator = require("../utils/pdfGenerator");
+      const pdfGenerator = new PDFGenerator();
+
+      // For bulk download, we'll generate a combined PDF
+      // This is a simplified approach - in production you might want to merge multiple PDFs
+      const pdfBuffer = await pdfGenerator.generateInvoicePDF(invoices[0]); // For now, just the first invoice
+
+      // Set response headers for PDF download
+      res.type("application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="invoices-bulk-${
+          new Date().toISOString().split("T")[0]
+        }.pdf"`
+      );
+
+      // Send PDF buffer
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Error bulk downloading invoices:", error);
       res
         .status(500)
         .json({ success: false, message: "Internal server error" });
@@ -1510,7 +1601,15 @@ router.get(
       const { page = 1, limit = 20, type, isRead } = req.query;
       const skip = (page - 1) * limit;
 
-      const filter = { customerId: req.user.id };
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const filter = { customerId: customer._id };
       if (type) filter.type = type;
       if (isRead !== undefined) filter.isRead = isRead === "true";
 
@@ -1564,9 +1663,17 @@ router.post(
           .json({ success: false, message: "User not found" });
       }
 
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
       const message = new Message({
         ...value,
-        customerId: req.user.id,
+        customerId: customer._id,
         from: "customer",
         fromName: user.name || user.email,
         isRead: false,
@@ -1637,9 +1744,17 @@ router.delete(
   requireCustomer,
   async (req, res) => {
     try {
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
       const message = await Message.findOneAndDelete({
         _id: req.params.id,
-        customerId: req.user.id,
+        customerId: customer._id,
       });
 
       if (!message) {

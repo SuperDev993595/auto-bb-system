@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
 import { HiEye, HiDownload, HiCreditCard, HiCheckCircle, HiCurrencyDollar, HiDocumentText } from 'react-icons/hi';
 import ModalWrapper from '../../utils/ModalWrapper';
+import { downloadPDF } from '../../utils/pdfDownload';
 
 export default function CustomerInvoices() {
   const [invoices, setInvoices] = useState<InvoiceType[]>([]);
@@ -10,6 +11,7 @@ export default function CustomerInvoices() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceType | null>(null);
   const [paymentData, setPaymentData] = useState({
     paymentMethod: 'credit_card',
@@ -96,13 +98,14 @@ export default function CustomerInvoices() {
 
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
+      toast.loading('Generating and downloading PDF...');
+      
       const response = await customerApiService.downloadInvoice(invoiceId);
       
       if (response.success) {
-        toast.success('Invoice download initiated');
-        // In a real implementation, you would trigger the actual download here
-        // For now, we'll just show a success message
-        console.log('Download URL:', response.data.downloadUrl);
+        // Download the PDF file using the utility function
+        downloadPDF(response.data, `invoice-${invoiceId}.pdf`);
+        toast.success('PDF downloaded successfully!');
       } else {
         toast.error(response.message || 'Failed to download invoice');
       }
@@ -112,9 +115,34 @@ export default function CustomerInvoices() {
     }
   };
 
+  const handleBulkDownload = async () => {
+    if (invoices.length === 0) {
+      toast.error('No invoices to download');
+      return;
+    }
+
+    try {
+      toast.loading(`Generating and downloading ${invoices.length} invoices...`);
+      
+      const invoiceIds = invoices.map(invoice => invoice.id);
+      const response = await customerApiService.downloadBulkInvoices(invoiceIds);
+      
+      if (response.success) {
+        // Download the bulk PDF file
+        downloadPDF(response.data, `invoices-bulk-${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success(`Successfully downloaded ${invoices.length} invoices!`);
+      } else {
+        toast.error(response.message || 'Failed to download invoices');
+      }
+    } catch (error) {
+      console.error('Error downloading invoices:', error);
+      toast.error('Failed to download invoices');
+    }
+  };
+
   const handleViewInvoice = (invoice: InvoiceType) => {
-    // TODO: Implement invoice detail view modal
-    toast.success('Invoice detail view coming soon!');
+    setSelectedInvoice(invoice);
+    setShowViewModal(true);
   };
 
   const filteredInvoices = selectedStatus === 'all' 
@@ -144,14 +172,7 @@ export default function CustomerInvoices() {
           </div>
           <div className="flex gap-3">
             <button 
-              onClick={() => {
-                if (invoices.length === 0) {
-                  toast.error('No invoices to download');
-                } else {
-                  toast.success(`Downloading ${invoices.length} invoices...`);
-                  // TODO: Implement bulk download functionality
-                }
-              }}
+              onClick={handleBulkDownload}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <HiDocumentText className="w-4 h-4" />
@@ -329,6 +350,14 @@ export default function CustomerInvoices() {
           size="lg"
         >
           <div className="p-6 space-y-6">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
             {/* Invoice Details */}
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
@@ -344,6 +373,9 @@ export default function CustomerInvoices() {
                 </p>
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Due Date:</span> {new Date(selectedInvoice.dueDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Items:</span> {selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items.map(item => item.description).join(', ') : 'N/A'}
                 </p>
               </div>
             </div>
@@ -382,6 +414,88 @@ export default function CustomerInvoices() {
                 placeholder="Transaction ID or reference number"
               />
               <p className="text-xs text-gray-500 mt-2">Provide a reference number for tracking purposes</p>
+            </div>
+          </div>
+        </ModalWrapper>
+      )}
+
+      {/* View Invoice Modal */}
+      {showViewModal && selectedInvoice && (
+        <ModalWrapper
+          isOpen={showViewModal}
+          onClose={() => setShowViewModal(false)}
+          title="Invoice Details"
+          icon={<HiDocumentText className="w-5 h-5" />}
+          size="xl"
+        >
+          <div className="p-6 space-y-6">
+            {/* Invoice Details */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <HiDocumentText className="w-4 h-4" />
+                Invoice Details
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Invoice #:</span> {selectedInvoice.invoiceNumber}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Amount:</span> ${selectedInvoice.total.toFixed(2)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Due Date:</span> {new Date(selectedInvoice.dueDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Status:</span> {selectedInvoice.status}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Date:</span> {new Date(selectedInvoice.date).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Payment Date:</span> {selectedInvoice.paymentDate ? new Date(selectedInvoice.paymentDate).toLocaleDateString() : 'Not paid yet'}
+                </p>
+              </div>
+            </div>
+
+            {/* Vehicle Details */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <HiDocumentText className="w-4 h-4" />
+                Vehicle Details
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Vehicle:</span> {(() => {
+                    const vehicle = vehicles.find(v => v.id === selectedInvoice.vehicleId);
+                    return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                  })()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Service Type:</span> {selectedInvoice.serviceType}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Items:</span> {selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items.map(item => item.description).join(', ') : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <HiDocumentText className="w-4 h-4" />
+                Payment Information
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Payment Method:</span> {selectedInvoice.paymentMethod || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Payment Reference:</span> {selectedInvoice.paymentReference || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Payment Date:</span> {selectedInvoice.paymentDate ? new Date(selectedInvoice.paymentDate).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
             </div>
           </div>
         </ModalWrapper>

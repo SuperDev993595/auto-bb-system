@@ -251,9 +251,68 @@ class CustomerApiService {
     return response.data;
   }
 
-  async downloadInvoice(id: string): Promise<{ success: boolean; data: { downloadUrl: string }; message?: string }> {
-    const response = await api.get(`/customers/invoices/${id}/download`);
-    return response.data;
+  async downloadInvoice(id: string): Promise<{ success: boolean; data: ArrayBuffer; message?: string }> {
+    try {
+      const response = await api.get(`/customers/invoices/${id}/download`, {
+        responseType: 'arraybuffer'
+      });
+      
+      // Check if response is an error (JSON) or PDF data (ArrayBuffer)
+      if (response.headers['content-type']?.includes('application/json')) {
+        // This is an error response
+        const errorData = JSON.parse(new TextDecoder().decode(response.data));
+        return {
+          success: false,
+          data: new ArrayBuffer(0),
+          message: errorData.message || 'Failed to download invoice'
+        };
+      }
+      
+      // This is a successful PDF response
+      return {
+        success: true,
+        data: response.data,
+        message: 'PDF generated successfully'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: new ArrayBuffer(0),
+        message: error.response?.data?.message || 'Failed to download invoice'
+      };
+    }
+  }
+
+  async downloadBulkInvoices(invoiceIds: string[]): Promise<{ success: boolean; data: ArrayBuffer; message?: string }> {
+    try {
+      const response = await api.post(`/customers/invoices/bulk-download`, { invoiceIds }, {
+        responseType: 'arraybuffer'
+      });
+      
+      // Check if response is an error (JSON) or PDF data (ArrayBuffer)
+      if (response.headers['content-type']?.includes('application/json')) {
+        // This is an error response
+        const errorData = JSON.parse(new TextDecoder().decode(response.data));
+        return {
+          success: false,
+          data: new ArrayBuffer(0),
+          message: errorData.message || 'Failed to download invoices'
+        };
+      }
+      
+      // This is a successful PDF response
+      return {
+        success: true,
+        data: response.data,
+        message: 'PDF generated successfully'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: new ArrayBuffer(0),
+        message: error.response?.data?.message || 'Failed to download invoices'
+      };
+    }
   }
 
   // Messages
