@@ -621,6 +621,16 @@
     display: none;
   }
   
+  /* Hide scrollbar completely */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
   .scrollbar-primary {
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary-300) transparent;
@@ -674,6 +684,47 @@
   .sidebar-nav {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Collapsed sidebar improvements */
+  .sidebar-collapsed {
+    overflow: hidden;
+  }
+  
+  .sidebar-collapsed .nav-item {
+    justify-content: center;
+  }
+  
+  /* Hover effects for collapsed sidebar items */
+  .sidebar-collapsed a:hover {
+    background-color: #f3f4f6;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+  }
+  
+  .sidebar-collapsed a:active {
+    transform: scale(0.95);
+  }
+  
+  /* Tooltip positioning for collapsed sidebar */
+  .sidebar-tooltip {
+    position: absolute;
+    left: 100%;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: #1f2937;
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .sidebar-tooltip.show {
+    opacity: 1;
   }
 }
 

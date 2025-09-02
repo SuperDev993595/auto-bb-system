@@ -126,14 +126,14 @@ export default function CustomerLayout() {
         
         {/* Sidebar */}
         <nav className={`bg-white shadow-lg border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'w-16' : 'w-64'
+          sidebarCollapsed ? 'w-20 bg-gray-50 shadow-xl' : 'w-64'
         } lg:relative lg:translate-x-0 ${
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:static z-50 h-full`}>
           
           {/* Sidebar Header with Toggle */}
           <div className={`p-4 flex-shrink-0 border-b border-gray-200 ${
-            sidebarCollapsed ? 'px-2' : 'px-4'
+            sidebarCollapsed ? 'px-3' : 'px-4'
           }`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
               {!sidebarCollapsed && (
@@ -145,7 +145,7 @@ export default function CustomerLayout() {
               {/* Toggle Button */}
               <button
                 onClick={toggleSidebar}
-                className={`p-1.5 rounded-md transition-all duration-200 ${
+                className={`p-1.5 rounded-md transition-all duration-200 hover:scale-105 active:scale-95 ${
                   sidebarCollapsed 
                     ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
@@ -155,10 +155,19 @@ export default function CustomerLayout() {
                 {sidebarCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
               </button>
             </div>
+            
+            {/* Collapsed indicator */}
+            {sidebarCollapsed && (
+              <div className="mt-2 text-center">
+                <div className="w-1 h-1 bg-blue-400 rounded-full mx-auto"></div>
+              </div>
+            )}
           </div>
           
-          <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-            <nav className="space-y-6">
+          <div className={`flex-1 overflow-y-auto custom-scrollbar ${
+            sidebarCollapsed ? 'px-3' : 'px-6'
+          } ${sidebarCollapsed ? 'scrollbar-hide' : ''}`}>
+            <nav className={`space-y-6 ${sidebarCollapsed ? 'space-y-3' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
               
               {/* Main Dashboard */}
               <div>
@@ -174,10 +183,16 @@ export default function CustomerLayout() {
                       location.pathname === '/customer/dashboard' 
                         ? 'bg-blue-100 text-blue-700' 
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
+                    } ${sidebarCollapsed ? 'px-2 justify-center group relative' : ''}`}
+                    title={sidebarCollapsed ? "Dashboard" : ""}
                   >
                     <BarChart3 className="w-5 h-5" />
                     {!sidebarCollapsed && <span>Dashboard</span>}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        Dashboard
+                      </div>
+                    )}
                   </Link>
                 </div>
               </div>
