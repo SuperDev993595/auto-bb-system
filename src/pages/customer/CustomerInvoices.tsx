@@ -1,22 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { authService } from '../../services/auth';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
-import { FileText, X, CheckCircle, DollarSign, CreditCard, Hash } from '../../utils/icons';
+import { HiEye, HiDownload, HiCreditCard, HiCheckCircle, HiCurrencyDollar, HiDocumentText } from 'react-icons/hi';
 import ModalWrapper from '../../utils/ModalWrapper';
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  date: string;
-  dueDate: string;
-  vehicleInfo: string;
-  serviceType: string;
-  total: number;
-  status: 'paid' | 'pending' | 'overdue';
-  paymentMethod?: string;
-  paymentDate?: string;
-}
 
 export default function CustomerInvoices() {
   const [invoices, setInvoices] = useState<InvoiceType[]>([]);
@@ -41,6 +27,9 @@ export default function CustomerInvoices() {
         customerApiService.getInvoices(),
         customerApiService.getVehicles()
       ]);
+      
+      console.log('Invoices Response:', invoicesResponse);
+      console.log('Vehicles Response:', vehiclesResponse);
       
       if (invoicesResponse.success) {
         setInvoices(invoicesResponse.data.invoices);
@@ -123,6 +112,11 @@ export default function CustomerInvoices() {
     }
   };
 
+  const handleViewInvoice = (invoice: InvoiceType) => {
+    // TODO: Implement invoice detail view modal
+    toast.success('Invoice detail view coming soon!');
+  };
+
   const filteredInvoices = selectedStatus === 'all' 
     ? invoices 
     : invoices.filter(invoice => invoice.status === selectedStatus);
@@ -149,9 +143,19 @@ export default function CustomerInvoices() {
             <p className="text-gray-600">Manage your invoices and track payments</p>
           </div>
           <div className="flex gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <FileText className="w-4 h-4" />
-              Download All
+            <button 
+              onClick={() => {
+                if (invoices.length === 0) {
+                  toast.error('No invoices to download');
+                } else {
+                  toast.success(`Downloading ${invoices.length} invoices...`);
+                  // TODO: Implement bulk download functionality
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <HiDocumentText className="w-4 h-4" />
+              Download All ({invoices.length})
             </button>
           </div>
         </div>
@@ -161,7 +165,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-8 h-8 text-blue-600" />
+              <HiDocumentText className="w-8 h-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Invoiced</p>
@@ -172,7 +176,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <HiCheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Total Paid</p>
@@ -183,7 +187,7 @@ export default function CustomerInvoices() {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <DollarSign className="w-8 h-8 text-orange-600" />
+              <HiCurrencyDollar className="w-8 h-8 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-600">Outstanding</p>
@@ -201,10 +205,10 @@ export default function CustomerInvoices() {
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">All Status</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
-              <option value="overdue">Overdue</option>
+              <option value="all">All Status ({invoices.length})</option>
+              <option value="paid">Paid ({invoices.filter(inv => inv.status === 'paid').length})</option>
+              <option value="pending">Pending ({invoices.filter(inv => inv.status === 'pending').length})</option>
+              <option value="overdue">Overdue ({invoices.filter(inv => inv.status === 'overdue').length})</option>
             </select>
           </div>
 
@@ -264,20 +268,28 @@ export default function CustomerInvoices() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">View</button>
+                        <button 
+                          onClick={() => handleViewInvoice(invoice)}
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View Invoice"
+                        >
+                          <HiEye className="w-4 h-4" />
+                        </button>
                         {invoice.status === 'pending' && (
                           <button 
                             onClick={() => handlePayInvoice(invoice)}
-                            className="text-green-600 hover:text-green-900"
+                            className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Pay Invoice"
                           >
-                            Pay
+                            <HiCreditCard className="w-4 h-4" />
                           </button>
                         )}
                         <button 
                           onClick={() => handleDownloadInvoice(invoice.id)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                          title="Download Invoice"
                         >
-                          Download
+                          <HiDownload className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -290,10 +302,15 @@ export default function CustomerInvoices() {
           {filteredInvoices.length === 0 && (
             <div className="text-center py-12">
               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <FileText className="w-12 h-12 text-gray-600" />
+                <HiDocumentText className="w-12 h-12 text-gray-600" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices found</h3>
-              <p className="text-gray-600">Your invoices will appear here after service appointments.</p>
+              <p className="text-gray-600">
+                {selectedStatus === 'all' 
+                  ? 'Your invoices will appear here after service appointments.'
+                  : `No invoices found with status "${selectedStatus}".`
+                }
+              </p>
             </div>
           )}
         </div>
@@ -305,7 +322,7 @@ export default function CustomerInvoices() {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           title="Process Payment"
-          icon={<CreditCard className="w-5 h-5" />}
+          icon={<HiCreditCard className="w-5 h-5" />}
           submitText="Process Payment"
           onSubmit={handleProcessPayment}
           submitColor="bg-green-600"
@@ -315,7 +332,7 @@ export default function CustomerInvoices() {
             {/* Invoice Details */}
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+                <HiDocumentText className="w-4 h-4" />
                 Invoice Details
               </h4>
               <div className="space-y-2">
@@ -334,7 +351,7 @@ export default function CustomerInvoices() {
             {/* Payment Method */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
+                <HiCreditCard className="w-4 h-4" />
                 Payment Method *
               </label>
               <select
@@ -354,7 +371,7 @@ export default function CustomerInvoices() {
             {/* Payment Reference */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Hash className="w-4 h-4" />
+                <HiDocumentText className="w-4 h-4" />
                 Payment Reference (Optional)
               </label>
               <input

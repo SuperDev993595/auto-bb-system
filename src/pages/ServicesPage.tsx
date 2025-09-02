@@ -615,22 +615,22 @@ export default function ServicesPage() {
                             </div>
                             
                             <div className="flex items-center justify-end gap-2 pt-4 border-t border-secondary-100">
-                              <button
-                                onClick={() => handleEditService(service)}
-                                className="btn-ghost btn-sm text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100"
-                                title="Edit Service"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteServiceClick(service)}
-                                className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
-                                title="Delete Service"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleEditService(service)}
+                                    className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-all duration-200"
+                                    title="Edit Service"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteServiceClick(service)}
+                                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                    title="Delete Service"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                             </div>
                           </div>
                         ))}
@@ -657,17 +657,17 @@ export default function ServicesPage() {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => handleEditService(service)}
-                                    className="btn-ghost btn-sm text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100"
+                                    className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-all duration-200"
+                                    title="Edit Service"
                                   >
                                     <Edit className="w-4 h-4" />
-                                    Edit
                                   </button>
                                   <button
                                     onClick={() => handleDeleteServiceClick(service)}
-                                    className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                    title="Delete Service"
                                   >
                                     <Trash2 className="w-4 h-4" />
-                                    Delete
                                   </button>
                                 </div>
                               </div>
@@ -738,7 +738,7 @@ export default function ServicesPage() {
                                     setSelectedTechnician(technician)
                                     setShowEditTechnicianModal(true)
                                   }}
-                                  className="btn-ghost btn-sm text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100"
+                                  className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-all duration-200"
                                   title="Edit Technician"
                                 >
                                   <Edit className="w-4 h-4" />
@@ -748,7 +748,7 @@ export default function ServicesPage() {
                                     setSelectedTechnician(technician)
                                     setShowDeleteTechnicianModal(true)
                                   }}
-                                  className="btn-ghost btn-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
                                   title="Delete Technician"
                                 >
                                   <Trash2 className="w-4 h-4" />
