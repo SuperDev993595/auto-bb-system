@@ -110,6 +110,7 @@ const invoiceSchema = new mongoose.Schema(
         "check",
         "bank_transfer",
         "online",
+        "stripe",
       ],
       required: function () {
         return this.status === "paid";
@@ -143,6 +144,7 @@ const invoiceSchema = new mongoose.Schema(
             "check",
             "bank_transfer",
             "online",
+            "stripe",
           ],
         },
         reference: {

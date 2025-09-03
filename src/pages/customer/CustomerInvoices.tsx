@@ -426,16 +426,16 @@ export default function CustomerInvoices() {
                 {filteredInvoices.map((invoice) => (
                   <tr key={invoice.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</div>
-                      <div className="text-sm text-gray-500">Due: {new Date(invoice.dueDate).toLocaleDateString()}</div>
+                      <div className="text-xs font-medium text-gray-900">{invoice.invoiceNumber}</div>
+                      <div className="text-xs text-gray-500">Due: {new Date(invoice.dueDate).toLocaleDateString()}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                       {(() => {
                         const vehicle = vehicles.find(v => v.id === invoice.vehicleId);
                         return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
                       })()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                        {(() => {
                          // Try to get service type from work order or service data
                          // For now, we'll show a more descriptive service type
@@ -453,10 +453,10 @@ export default function CustomerInvoices() {
                          return 'General Service';
                        })()}
                      </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
                       {new Date(invoice.date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
                       ${invoice.total.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -464,7 +464,7 @@ export default function CustomerInvoices() {
                         {invoice.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs font-medium">
                       <div className="flex space-x-2">
                         <button 
                           onClick={() => handleViewInvoice(invoice)}
