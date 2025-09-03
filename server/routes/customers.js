@@ -1415,7 +1415,83 @@ router.get(
   }
 );
 
-// Process payment for invoice
+// Create Stripe payment intent for invoice
+router.post(
+  "/invoices/:id/payment-intent",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const { amount, currency, paymentReference } = req.body;
+
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const invoice = await Invoice.findOne({
+        _id: req.params.id,
+        customerId: customer._id,
+      });
+
+      if (!invoice) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Invoice not found" });
+      }
+
+      if (invoice.status === "paid") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invoice is already paid" });
+      }
+
+      // Import Stripe configuration
+      const stripe = require("../config/stripe");
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency || "usd",
+        metadata: {
+          invoiceId: req.params.id,
+          customerId: customer._id.toString(),
+          paymentReference: paymentReference || "",
+        },
+        description: `Payment for invoice ${invoice.invoiceNumber}`,
+      });
+
+      res.json({
+        success: true,
+        message: "Payment intent created successfully",
+        data: {
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+
+      // Check if it's a Stripe error
+      if (error.type && error.type.startsWith("stripe")) {
+        return res.status(400).json({
+          success: false,
+          message: `Payment error: ${error.message}`,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to create payment intent",
+      });
+    }
+  }
+);
+
+// Process payment for invoice (legacy method)
 router.post(
   "/invoices/:id/pay",
   authenticateToken,
@@ -1464,6 +1540,77 @@ router.post(
       });
     } catch (error) {
       console.error("Error processing payment:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+// Confirm Stripe payment and update invoice status
+router.post(
+  "/invoices/:id/confirm-payment",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const { paymentIntentId, paymentReference } = req.body;
+
+      // First find the customer using the user ID
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const invoice = await Invoice.findOne({
+        _id: req.params.id,
+        customerId: customer._id,
+      });
+
+      if (!invoice) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Invoice not found" });
+      }
+
+      if (invoice.status === "paid") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invoice is already paid" });
+      }
+
+      // Import Stripe configuration
+      const stripe = require("../config/stripe");
+
+      // Verify the payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        paymentIntentId
+      );
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({
+          success: false,
+          message: `Payment not completed. Status: ${paymentIntent.status}`,
+        });
+      }
+
+      // Update invoice with payment information
+      invoice.status = "paid";
+      invoice.paymentDate = new Date();
+      invoice.paymentMethod = "stripe";
+      invoice.paymentReference = paymentReference || paymentIntentId;
+
+      await invoice.save();
+
+      res.json({
+        success: true,
+        message: "Payment confirmed successfully",
+        data: { invoice },
+      });
+    } catch (error) {
+      console.error("Error confirming payment:", error);
       res
         .status(500)
         .json({ success: false, message: "Internal server error" });

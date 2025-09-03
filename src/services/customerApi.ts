@@ -373,6 +373,34 @@ class CustomerApiService {
     const response = await api.get('/services/catalog/public');
     return response.data;
   }
+
+  // Stripe Payment Intent
+  async createPaymentIntent(invoiceId: string, paymentData: { amount: number; currency: string; paymentReference?: string }): Promise<{ success: boolean; data: { clientSecret: string }; message?: string }> {
+    try {
+      const response = await api.post(`/customers/invoices/${invoiceId}/payment-intent`, paymentData);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        data: { clientSecret: '' },
+        message: error.response?.data?.message || 'Failed to create payment intent'
+      };
+    }
+  }
+
+  // Confirm Stripe Payment
+  async confirmPayment(invoiceId: string, paymentData: { paymentIntentId: string; paymentReference?: string }): Promise<{ success: boolean; data: { invoice: Invoice }; message?: string }> {
+    try {
+      const response = await api.post(`/customers/invoices/${invoiceId}/confirm-payment`, paymentData);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        data: {} as Invoice,
+        message: error.response?.data?.message || 'Failed to confirm payment'
+      };
+    }
+  }
 }
 
 export const customerApiService = new CustomerApiService();

@@ -98,3 +98,4 @@ dist/
 # Documentation files (keep README.md)
 *.md
 !README.md
+.env.backup

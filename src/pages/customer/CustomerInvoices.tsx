@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { customerApiService, Invoice as InvoiceType, Vehicle as VehicleType } from '../../services/customerApi';
-import { HiEye, HiDownload, HiCreditCard, HiCheckCircle, HiCurrencyDollar, HiDocumentText } from 'react-icons/hi';
+import { HiEye, HiDownload, HiCreditCard, HiCheckCircle, HiCurrencyDollar, HiDocumentText, HiLockClosed } from 'react-icons/hi';
 import ModalWrapper from '../../utils/ModalWrapper';
 import { downloadPDF } from '../../utils/pdfDownload';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { getStripePublishableKey } from '../../config/stripe';
+
+// Initialize Stripe
+const stripePromise = loadStripe(getStripePublishableKey());
 
 export default function CustomerInvoices() {
   const [invoices, setInvoices] = useState<InvoiceType[]>([]);
@@ -67,33 +73,189 @@ export default function CustomerInvoices() {
   };
 
   const handleProcessPayment = async () => {
-    if (!selectedInvoice) return;
+    // This will be handled by the Stripe payment form
+  };
 
-    try {
-      const response = await customerApiService.payInvoice(selectedInvoice.id, paymentData);
-      
-      if (!response.success) {
-        toast.error(response.message || 'Failed to process payment');
+  // Stripe Payment Form Component
+  const StripePaymentForm = ({ invoice, onSuccess, onClose }: { 
+    invoice: InvoiceType; 
+    onSuccess: () => void; 
+    onClose: () => void; 
+  }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentReference, setPaymentReference] = useState('');
+
+    const handleSubmit = async (event: React.FormEvent) => {
+      event.preventDefault();
+
+      if (!stripe || !elements) {
+        toast.error('Stripe is not loaded');
         return;
       }
-      
-      // Update local state
-      setInvoices(prev => 
-        prev.map(inv => 
-          inv.id === selectedInvoice.id 
-            ? { ...inv, status: 'paid', paymentDate: new Date().toISOString() }
-            : inv
-        )
-      );
-      
-      setShowPaymentModal(false);
-      setSelectedInvoice(null);
-      setPaymentData({ paymentMethod: 'credit_card', paymentReference: '' });
-      toast.success('Payment processed successfully!');
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      toast.error('Failed to process payment');
-    }
+
+      setIsProcessing(true);
+
+      try {
+        // Create payment intent on your backend
+        const response = await customerApiService.createPaymentIntent(invoice.id, {
+          amount: invoice.total,
+          currency: 'usd',
+          paymentReference
+        });
+
+        if (!response.success) {
+          toast.error(response.message || 'Failed to create payment intent');
+          return;
+        }
+
+        // Confirm the payment with Stripe
+        const { error, paymentIntent } = await stripe.confirmCardPayment(response.data.clientSecret, {
+          payment_method: {
+            card: elements.getElement(CardElement)!,
+            billing_details: {
+              name: 'Customer',
+              email: 'customer@example.com'
+            }
+          }
+        });
+
+        if (error) {
+          toast.error(error.message || 'Payment failed');
+        } else if (paymentIntent.status === 'succeeded') {
+          // Confirm payment with backend
+          try {
+            const confirmResponse = await customerApiService.confirmPayment(invoice.id, {
+              paymentIntentId: paymentIntent.id,
+              paymentReference
+            });
+
+            if (confirmResponse.success) {
+              // Update local state
+              setInvoices(prev => 
+                prev.map(inv => 
+                  inv.id === invoice.id 
+                    ? { ...inv, status: 'paid', paymentDate: new Date().toISOString() }
+                    : inv
+                )
+              );
+              
+              toast.success('Payment processed successfully!');
+              onSuccess();
+            } else {
+              toast.error(confirmResponse.message || 'Failed to confirm payment');
+            }
+          } catch (confirmError) {
+            console.error('Error confirming payment:', confirmError);
+            toast.error('Payment processed but failed to update invoice status');
+          }
+        }
+      } catch (error) {
+        console.error('Error processing payment:', error);
+        toast.error('Failed to process payment');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Invoice Details */}
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <HiDocumentText className="w-4 h-4" />
+            Invoice Details
+          </h4>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Invoice #:</span> {invoice.invoiceNumber}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Amount:</span> ${invoice.total.toFixed(2)}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Due Date:</span> {new Date(invoice.dueDate).toLocaleDateString()}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Items:</span> {invoice.items && invoice.items.length > 0 ? invoice.items.map(item => item.description).join(', ') : 'N/A'}
+            </p>
+          </div>
+        </div>
+        
+        {/* Payment Reference */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <HiDocumentText className="w-4 h-4" />
+            Payment Reference (Optional)
+          </label>
+          <input
+            type="text"
+            value={paymentReference}
+            onChange={(e) => setPaymentReference(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
+            placeholder="Transaction ID or reference number"
+          />
+          <p className="text-xs text-gray-500 mt-2">Provide a reference number for tracking purposes</p>
+        </div>
+
+        {/* Stripe Card Element */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <HiCreditCard className="w-4 h-4" />
+            Card Information *
+          </label>
+          <div className="p-4 border border-gray-200 rounded-lg bg-white">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#374151',
+                    '::placeholder': {
+                      color: '#9CA3AF',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <HiLockClosed className="w-3 h-3" />
+            <span>Your payment information is secure and encrypted</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            disabled={isProcessing}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!stripe || isProcessing}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isProcessing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <HiCreditCard className="w-4 h-4" />
+                Pay ${invoice.total.toFixed(2)}
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    );
   };
 
   const handleDownloadInvoice = async (invoiceId: string) => {
@@ -273,7 +435,7 @@ export default function CustomerInvoices() {
                         return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
                       })()}
                     </td>
-                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                        {(() => {
                          // Try to get service type from work order or service data
                          // For now, we'll show a more descriptive service type
@@ -311,7 +473,7 @@ export default function CustomerInvoices() {
                         >
                           <HiEye className="w-4 h-4" />
                         </button>
-                        {invoice.status === 'pending' && (
+                        {(invoice.status === 'pending' || invoice.status === 'sent' || invoice.status === 'overdue') && (
                           <button 
                             onClick={() => handlePayInvoice(invoice)}
                             className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
@@ -357,79 +519,22 @@ export default function CustomerInvoices() {
         <ModalWrapper
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
-          title="Process Payment"
+          title="Secure Payment with Stripe"
           icon={<HiCreditCard className="w-5 h-5" />}
-          submitText="Process Payment"
-          onSubmit={handleProcessPayment}
-          submitColor="bg-green-600"
           size="lg"
         >
-          <div className="p-6 space-y-6">
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-            {/* Invoice Details */}
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <HiDocumentText className="w-4 h-4" />
-                Invoice Details
-              </h4>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Invoice #:</span> {selectedInvoice.invoiceNumber}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Amount:</span> ${selectedInvoice.total.toFixed(2)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Due Date:</span> {new Date(selectedInvoice.dueDate).toLocaleDateString()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Items:</span> {selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items.map(item => item.description).join(', ') : 'N/A'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Payment Method */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <HiCreditCard className="w-4 h-4" />
-                Payment Method *
-              </label>
-              <select
-                value={paymentData.paymentMethod}
-                onChange={(e) => setPaymentData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
-                required
-              >
-                <option value="">Select payment method</option>
-                <option value="credit_card">Credit Card</option>
-                <option value="debit_card">Debit Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cash">Cash</option>
-              </select>
-            </div>
-
-            {/* Payment Reference */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <HiDocumentText className="w-4 h-4" />
-                Payment Reference (Optional)
-              </label>
-              <input
-                type="text"
-                value={paymentData.paymentReference}
-                onChange={(e) => setPaymentData(prev => ({ ...prev, paymentReference: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 hover:bg-white"
-                placeholder="Transaction ID or reference number"
+          <div className="p-6">
+            <Elements stripe={stripePromise}>
+              <StripePaymentForm
+                invoice={selectedInvoice}
+                onSuccess={() => {
+                  setShowPaymentModal(false);
+                  setSelectedInvoice(null);
+                  setPaymentData({ paymentMethod: 'credit_card', paymentReference: '' });
+                }}
+                onClose={() => setShowPaymentModal(false)}
               />
-              <p className="text-xs text-gray-500 mt-2">Provide a reference number for tracking purposes</p>
-            </div>
+            </Elements>
           </div>
         </ModalWrapper>
       )}
@@ -443,74 +548,226 @@ export default function CustomerInvoices() {
           icon={<HiDocumentText className="w-5 h-5" />}
           size="xl"
         >
-          <div className="p-6 space-y-6">
-            {/* Invoice Details */}
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <HiDocumentText className="w-4 h-4" />
-                Invoice Details
-              </h4>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Invoice #:</span> {selectedInvoice.invoiceNumber}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Amount:</span> ${selectedInvoice.total.toFixed(2)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Due Date:</span> {new Date(selectedInvoice.dueDate).toLocaleDateString()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Status:</span> {selectedInvoice.status}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Date:</span> {new Date(selectedInvoice.date).toLocaleDateString()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Payment Date:</span> {selectedInvoice.paymentDate ? new Date(selectedInvoice.paymentDate).toLocaleDateString() : 'Not paid yet'}
-                </p>
+          <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
+            {/* Invoice Header */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Invoice #{selectedInvoice.invoiceNumber}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Automotive Service
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedInvoice.status)}`}>
+                    <span className="capitalize">{selectedInvoice.status}</span>
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Vehicle Details */}
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <HiDocumentText className="w-4 h-4" />
-                Vehicle Details
-              </h4>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Vehicle:</span> {(() => {
+            {/* Customer & Vehicle Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <HiEye className="w-5 h-5 text-blue-600 mr-2" />
+                  <h6 className="font-semibold text-gray-900">Customer Information</h6>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p><span className="font-medium">Name:</span> You</p>
+                  <p><span className="font-medium">Type:</span> Customer</p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <HiDocumentText className="w-5 h-5 text-green-600 mr-2" />
+                  <h6 className="font-semibold text-gray-900">Vehicle Information</h6>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p><span className="font-medium">Vehicle:</span> {(() => {
                     const vehicle = vehicles.find(v => v.id === selectedInvoice.vehicleId);
                     return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
-                  })()}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Service Type:</span> {selectedInvoice.serviceType}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Items:</span> {selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items.map(item => item.description).join(', ') : 'N/A'}
-                </p>
+                  })()}</p>
+                </div>
               </div>
             </div>
 
-            {/* Payment Information */}
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <HiDocumentText className="w-4 h-4" />
-                Payment Information
-              </h4>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Payment Method:</span> {selectedInvoice.paymentMethod || 'N/A'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Payment Reference:</span> {selectedInvoice.paymentReference || 'N/A'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Payment Date:</span> {selectedInvoice.paymentDate ? new Date(selectedInvoice.paymentDate).toLocaleDateString() : 'N/A'}
-                </p>
+            {/* Dates */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <HiDocumentText className="w-5 h-5 text-purple-600 mr-2" />
+                <h6 className="font-semibold text-gray-900">Important Dates</h6>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="font-medium text-gray-700">Created Date</p>
+                  <p className="text-gray-900">{new Date(selectedInvoice.date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700">Due Date</p>
+                  <p className="text-gray-900">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+                </div>
+                {selectedInvoice.paymentDate && (
+                  <div>
+                    <p className="font-medium text-gray-700">Paid Date</p>
+                    <p className="text-green-600">{new Date(selectedInvoice.paymentDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Detailed Financial Summary */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <HiCurrencyDollar className="w-5 h-5 text-green-600 mr-2" />
+                <h6 className="font-semibold text-gray-900">Detailed Financial Summary</h6>
+              </div>
+              
+              {/* Invoice Items Breakdown */}
+              {selectedInvoice.items && selectedInvoice.items.length > 0 ? (
+                <div className="space-y-3 mb-4">
+                  <h6 className="font-medium text-gray-700 text-sm">Service Breakdown:</h6>
+                  
+                  {/* Group items by type for better organization */}
+                  {(() => {
+                    const laborItems = selectedInvoice.items.filter(item => item.type === 'labor');
+                    const partItems = selectedInvoice.items.filter(item => item.type === 'part');
+                    const overheadItems = selectedInvoice.items.filter(item => item.type === 'overhead');
+                    const otherItems = selectedInvoice.items.filter(item => !item.type || item.type === 'service');
+                    
+                    return (
+                      <div className="space-y-4">
+                        {/* Labor Items */}
+                        {laborItems.length > 0 && (
+                          <div>
+                            <h6 className="font-medium text-blue-700 text-sm mb-2">Labor Charges:</h6>
+                            <div className="space-y-2">
+                              {laborItems.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm bg-blue-50 px-3 py-2 rounded">
+                                  <div className="flex-1">
+                                    <span className="font-medium">{item.description}</span>
+                                    {item.quantity > 1 && (
+                                      <span className="text-gray-600 ml-2">
+                                        ({item.quantity} hrs)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="font-medium">${item.total.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Parts Items */}
+                        {partItems.length > 0 && (
+                          <div>
+                            <h6 className="font-medium text-green-700 text-sm mb-2">Parts Used:</h6>
+                            <div className="space-y-2">
+                              {partItems.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm bg-green-50 px-3 py-2 rounded">
+                                  <div className="flex-1">
+                                    <div className="flex items-center">
+                                      <span className="font-medium">{item.description.replace('Part: ', '')}</span>
+                                      {item.partNumber && (
+                                        <span className="text-gray-500 text-xs ml-2 bg-gray-100 px-2 py-1 rounded">
+                                          #{item.partNumber}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-gray-600 text-xs">
+                                      {item.quantity} × ${item.unitPrice.toFixed(2)} each
+                                    </span>
+                                  </div>
+                                  <span className="font-medium">${item.total.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Overhead Items */}
+                        {overheadItems.length > 0 && (
+                          <div>
+                            <h6 className="font-medium text-purple-700 text-sm mb-2">Service Overhead:</h6>
+                            <div className="space-y-2">
+                              {overheadItems.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm bg-purple-50 px-3 py-2 rounded">
+                                  <span className="font-medium">{item.description}</span>
+                                  <span className="font-medium">${item.total.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Other/Service Items */}
+                        {otherItems.length > 0 && (
+                          <div>
+                            <h6 className="font-medium text-gray-700 text-sm mb-2">Other Services:</h6>
+                            <div className="space-y-2">
+                              {otherItems.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded">
+                                  <span className="font-medium">{item.description}</span>
+                                  <span className="font-medium">${item.total.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="text-gray-500 text-sm mb-4">No detailed items available</div>
+              )}
+              
+              {/* Totals Summary */}
+              <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">${selectedInvoice.subtotal.toFixed(2)}</span>
+                </div>
+                {selectedInvoice.tax > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax:</span>
+                    <span className="font-medium">${selectedInvoice.tax.toFixed(2)}</span>
+                  </div>
+                )}
+                {selectedInvoice.discount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Discount:</span>
+                    <span className="font-medium text-green-600">-${selectedInvoice.discount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-gray-200 pt-2">
+                  <span className="font-semibold text-gray-900">Total:</span>
+                  <span className="font-bold text-lg text-gray-900">${selectedInvoice.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {selectedInvoice.notes && (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h6 className="font-semibold text-gray-900 mb-2">Notes</h6>
+                <p className="text-sm text-gray-700">{selectedInvoice.notes}</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => handleDownloadInvoice(selectedInvoice.id)}
+                className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <HiDownload className="w-4 h-4 mr-2" />
+                Download PDF
+              </button>
             </div>
           </div>
         </ModalWrapper>
