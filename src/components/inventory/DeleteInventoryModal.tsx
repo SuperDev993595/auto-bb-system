@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { InventoryItem } from '../../services/inventory'
+import { InventoryItem } from '../../utils/CustomerTypes'
 import {
   HiExclamation,
   HiCube
@@ -76,7 +76,7 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">SKU:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.sku}</span>
+              <span className="text-sm font-medium text-secondary-900">{item.partNumber || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Category:</span>
@@ -84,19 +84,26 @@ const DeleteInventoryModal: React.FC<DeleteInventoryModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Current Stock:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.quantity}</span>
+              <span className="text-sm font-medium text-secondary-900">{item.currentStock}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Unit Price:</span>
-              <span className="text-sm font-medium text-secondary-900">${item.unitPrice?.toFixed(2) || '0.00'}</span>
+              <span className="text-sm font-medium text-secondary-900">${item.costPrice?.toFixed(2) || '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Supplier:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.supplier?.name || 'N/A'}</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {typeof item.supplier === 'object' ? item.supplier.name : item.supplier || 'N/A'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Location:</span>
-              <span className="text-sm font-medium text-secondary-900">{item.location || 'N/A'}</span>
+              <span className="text-sm font-medium text-secondary-900">
+                {typeof item.location === 'object' 
+                  ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
+                  : item.location || 'N/A'
+                }
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-secondary-600">Created:</span>

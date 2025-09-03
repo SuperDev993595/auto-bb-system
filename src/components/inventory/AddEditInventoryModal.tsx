@@ -51,7 +51,9 @@ export default function AddEditInventoryModal({ isOpen, onClose, item, mode }: A
         brand: item.brand || '',
         model: item.model || '',
         year: item.year || '',
-        location: item.location,
+        location: typeof item.location === 'object' && item.location
+          ? `${item.location.warehouse || ''} ${item.location.shelf || ''} ${item.location.bin || ''}`.trim()
+          : (item.location as string) || '',
         quantityOnHand: item.quantityOnHand,
         minStockLevel: item.minStockLevel,
         maxStockLevel: item.maxStockLevel,

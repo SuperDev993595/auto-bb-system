@@ -1261,7 +1261,7 @@ export default function InventoryPage() {
       <AddEditInventoryModal
         isOpen={isAddEditModalOpen}
         onClose={handleCloseAddEditModal}
-        item={selectedItem}
+        item={selectedItem || undefined}
         mode={modalMode}
       />
 
