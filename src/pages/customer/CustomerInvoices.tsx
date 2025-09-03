@@ -273,9 +273,24 @@ export default function CustomerInvoices() {
                         return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
                       })()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {invoice.serviceType}
-                    </td>
+                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                       {(() => {
+                         // Try to get service type from work order or service data
+                         // For now, we'll show a more descriptive service type
+                         if (invoice.serviceType && invoice.serviceType !== 'Automotive Repair') {
+                           return invoice.serviceType;
+                         }
+                         // If it's the generic "Automotive Repair" or missing, show more specific info
+                         if (invoice.items && invoice.items.length > 0) {
+                           const serviceNames = invoice.items
+                             .filter(item => item.description && !item.description.includes('Part:'))
+                             .map(item => item.description)
+                             .slice(0, 2); // Show first 2 service descriptions
+                           return serviceNames.length > 0 ? serviceNames.join(', ') : 'General Service';
+                         }
+                         return 'General Service';
+                       })()}
+                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(invoice.date).toLocaleDateString()}
                     </td>
