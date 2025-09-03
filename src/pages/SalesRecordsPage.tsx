@@ -320,33 +320,33 @@ export default function SalesRecordsPage() {
                 salesRecords.map((record) => (
                   <tr key={record._id} className="hover:bg-gray-50">
                     <td className="table-cell">
-                      <div className="text-sm font-medium text-gray-900">{record.recordNumber}</div>
+                      <div className="text-xs font-medium text-gray-900">{record.recordNumber}</div>
                     </td>
                     <td className="table-cell">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-xs font-medium text-gray-900">
                           {record.customer?.businessName || record.customer?.contactPerson?.name || 'Unknown Customer'}
                         </div>
-                        <div className="text-sm text-gray-500">{record.customer?.email || 'No email'}</div>
+                        <div className="text-xs text-gray-500">{record.customer?.email || 'No email'}</div>
                       </div>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
                         {getSalesTypeIcon(record.salesType)}
-                        <span className="text-sm text-gray-900 capitalize">{record.salesType}</span>
+                        <span className="text-xs text-gray-900 capitalize">{record.salesType}</span>
                       </div>
                     </td>
                     <td className="table-cell">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-xs text-gray-900">
                         {record.items.length} item{record.items.length !== 1 ? 's' : ''}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs text-gray-500">
                         {record.items[0]?.name}
                         {record.items.length > 1 && ` +${record.items.length - 1} more`}
                       </div>
                     </td>
                     <td className="table-cell">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-xs font-medium text-gray-900">
                         {formatCurrency(record.total)}
                       </div>
                     </td>
@@ -360,10 +360,10 @@ export default function SalesRecordsPage() {
                         {record.paymentStatus}
                       </span>
                     </td>
-                    <td className="table-cell text-sm text-gray-500">
+                    <td className="table-cell text-xs text-gray-500">
                       {formatDate(record.saleDate)}
                     </td>
-                    <td className="table-cell text-right text-sm font-medium">
+                    <td className="table-cell text-right text-xs font-medium">
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleViewRecord(record)}

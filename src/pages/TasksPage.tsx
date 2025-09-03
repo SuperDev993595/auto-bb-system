@@ -11,18 +11,14 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  Filter,
   Search,
   Edit,
   Trash2,
   CheckSquare,
-  Square,
   TrendingUp,
   Loader2,
   RefreshCw,
-  Settings,
-  Grid3X3,
-  List
+  Settings
 } from '../utils/icons'
 import { fetchTasks, fetchTaskStats, createTask, updateTask, deleteTask } from '../redux/actions/tasks'
 import { toast } from 'react-hot-toast'
@@ -437,9 +433,10 @@ export default function TasksPage() {
       {/* Tasks List */}
       <div className="card">
         <div className="p-6 border-b border-secondary-200">
-          <div className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4 text-primary-600" />
-            <h3 className="text-base font-semibold text-secondary-900">Task List</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-primary-600" />
+              <h3 className="text-base font-semibold text-secondary-900">Task List</h3>
             </div>
             <div className="text-sm text-gray-500">
               {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
@@ -461,77 +458,77 @@ export default function TasksPage() {
                 try {
                   return (
                     <div key={task._id} className="group bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-200 p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1">
-                        {getCategoryIcon(task.type)}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{task.title || 'Untitled Task'}</h3>
-                        <p className="text-gray-600 text-sm mb-3">{task.description || 'No description provided'}</p>
-                        <div className="flex items-center gap-1 mb-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-500 text-sm">
-                            {task.customer ? (
-                              typeof task.customer === 'string' ? (
-                                `Customer ID: ${task.customer}`
-                              ) : (
-                                `Customer: ${task.customer.businessName || task.customer.name || 'Unknown'}`
-                              )
-                            ) : (
-                              'No customer assigned'
-                            )}
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-start gap-4">
+                          <div className="mt-1">
+                            {getCategoryIcon(task.type)}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">{task.title || 'Untitled Task'}</h3>
+                            <p className="text-gray-600 text-sm mb-3">{task.description || 'No description provided'}</p>
+                            <div className="flex items-center gap-1 mb-2">
+                              <User className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-500 text-sm">
+                                {task.customer ? (
+                                  typeof task.customer === 'string' ? (
+                                    `Customer ID: ${task.customer}`
+                                  ) : (
+                                    `Customer: ${task.customer.businessName || task.customer.name || 'Unknown'}`
+                                  )
+                                ) : (
+                                  'No customer assigned'
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>Assigned to: <strong className="text-gray-700">
+                                {getAssignedUserName(task.assignedTo)}
+                              </strong></span>
+                              <span className="capitalize">Type: <strong className="text-gray-700">{task.type ? task.type.replace('-', ' ') : 'Unknown'}</strong></span>
+                              {task.progress !== undefined && (
+                                <span>Progress: <strong className="text-gray-700">{task.progress}%</strong></span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
+                            {task.priority || 'medium'}
                           </span>
+                          <TaskStatusUpdate
+                            task={{
+                              ...task,
+                              status: task.status || 'pending'
+                            }}
+                            onStatusUpdate={handleStatusUpdate}
+                            isLoading={isSubmitting}
+                          />
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>Assigned to: <strong className="text-gray-700">
-                            {getAssignedUserName(task.assignedTo)}
-                          </strong></span>
-                          <span className="capitalize">Type: <strong className="text-gray-700">{task.type ? task.type.replace('-', ' ') : 'Unknown'}</strong></span>
-                          {task.progress !== undefined && (
-                            <span>Progress: <strong className="text-gray-700">{task.progress}%</strong></span>
-                          )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          <span>Due: {formatDate(task.dueDate)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditTask(task)}
+                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                            title="Edit task"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(task)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="Delete task"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
-                        {task.priority || 'medium'}
-                      </span>
-                                              <TaskStatusUpdate
-                          task={{
-                            ...task,
-                            status: task.status || 'pending'
-                          }}
-                          onStatusUpdate={handleStatusUpdate}
-                          isLoading={isSubmitting}
-                        />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Calendar className="w-4 h-4" />
-                      <span>Due: {formatDate(task.dueDate)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditTask(task)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                        title="Edit task"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(task)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                        title="Delete task"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
                   )
                 } catch (error) {
                   console.error('Error rendering task:', task._id, error)
@@ -565,32 +562,32 @@ export default function TasksPage() {
             </div>
           )}
         </div>
-        {/* Task Modal */}
-        <TaskModal
-          isOpen={showTaskModal}
-          onClose={() => {
-            setShowTaskModal(false)
-            setSelectedTask(null)
-          }}
-          onSave={handleSaveTask}
-          task={selectedTask}
-          isLoading={isSubmitting}
-        />
-
-        {/* Delete Confirmation Modal */}
-        {selectedTask && (
-          <DeleteTaskModal
-            isOpen={showDeleteModal}
-            onClose={() => {
-              setShowDeleteModal(false)
-              setSelectedTask(null)
-            }}
-            onDelete={handleDeleteTask}
-            task={selectedTask}
-          />
-        )}
       </div>
 
-      
+      {/* Task Modal */}
+      <TaskModal
+        isOpen={showTaskModal}
+        onClose={() => {
+          setShowTaskModal(false)
+          setSelectedTask(null)
+        }}
+        onSave={handleSaveTask}
+        task={selectedTask}
+        isLoading={isSubmitting}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {selectedTask && (
+        <DeleteTaskModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false)
+            setSelectedTask(null)
+          }}
+          onDelete={handleDeleteTask}
+          task={selectedTask}
+        />
+      )}
+    </div>
   )
 }
