@@ -141,7 +141,19 @@ export default function CustomerInvoices() {
                 )
               );
               
-              toast.success('Payment processed successfully!');
+              toast.success(
+                <div>
+                  <div className="font-semibold">Payment processed successfully!</div>
+                  <div className="text-sm mt-1">Your service history has been automatically updated.</div>
+                </div>, 
+                {
+                  duration: 6000,
+                  style: {
+                    background: '#10B981',
+                    color: '#fff',
+                  },
+                }
+              );
               onSuccess();
             } else {
               toast.error(confirmResponse.message || 'Failed to confirm payment');
@@ -548,7 +560,7 @@ export default function CustomerInvoices() {
           icon={<HiDocumentText className="w-5 h-5" />}
           size="xl"
         >
-          <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
+          <div className="p-6 space-y-6 max-h-100 overflow-y-auto">
             {/* Invoice Header */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
               <div className="flex justify-between items-start">
@@ -633,10 +645,25 @@ export default function CustomerInvoices() {
                   
                   {/* Group items by type for better organization */}
                   {(() => {
-                    const laborItems = selectedInvoice.items.filter(item => item.type === 'labor');
-                    const partItems = selectedInvoice.items.filter(item => item.type === 'part');
-                    const overheadItems = selectedInvoice.items.filter(item => item.type === 'overhead');
-                    const otherItems = selectedInvoice.items.filter(item => !item.type || item.type === 'service');
+                    // Since the invoice items don't have a type property, we'll categorize based on description
+                    const laborItems = selectedInvoice.items.filter(item => 
+                      item.description.toLowerCase().includes('labor') || 
+                      item.description.toLowerCase().includes('service') ||
+                      item.description.toLowerCase().includes('repair')
+                    );
+                    const partItems = selectedInvoice.items.filter(item => 
+                      item.description.toLowerCase().includes('part:') ||
+                      item.description.toLowerCase().includes('component')
+                    );
+                    const overheadItems = selectedInvoice.items.filter(item => 
+                      item.description.toLowerCase().includes('overhead') ||
+                      item.description.toLowerCase().includes('fee')
+                    );
+                    const otherItems = selectedInvoice.items.filter(item => 
+                      !laborItems.includes(item) && 
+                      !partItems.includes(item) && 
+                      !overheadItems.includes(item)
+                    );
                     
                     return (
                       <div className="space-y-4">
@@ -672,11 +699,7 @@ export default function CustomerInvoices() {
                                   <div className="flex-1">
                                     <div className="flex items-center">
                                       <span className="font-medium">{item.description.replace('Part: ', '')}</span>
-                                      {item.partNumber && (
-                                        <span className="text-gray-500 text-xs ml-2 bg-gray-100 px-2 py-1 rounded">
-                                          #{item.partNumber}
-                                        </span>
-                                      )}
+                                      {/* Note: partNumber property doesn't exist in the current invoice item type */}
                                     </div>
                                     <span className="text-gray-600 text-xs">
                                       {item.quantity} × ${item.unitPrice.toFixed(2)} each

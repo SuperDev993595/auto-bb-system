@@ -1533,6 +1533,94 @@ router.post(
 
       await invoice.save();
 
+      // Create service history record after successful payment
+      try {
+        console.log(
+          `Starting service history creation for invoice ${invoice.invoiceNumber} (legacy payment)`
+        );
+        console.log(`Invoice data:`, {
+          id: invoice._id,
+          customerId: invoice.customerId,
+          vehicleId: invoice.vehicleId,
+          total: invoice.total,
+          itemsCount: invoice.items ? invoice.items.length : 0,
+          serviceType: invoice.serviceType,
+        });
+
+        // Get vehicle information
+        const vehicle = await Vehicle.findById(invoice.vehicleId);
+        console.log(
+          `Vehicle found:`,
+          vehicle
+            ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+            : "No vehicle found"
+        );
+
+        // Prepare service record data
+        const serviceData = {
+          customerId: customer._id, // Use the customer ID for customerId
+          vehicleId: invoice.vehicleId,
+          appointmentId: invoice.appointmentId || null,
+          date: invoice.date,
+          serviceType: invoice.serviceType || "Automotive Repair",
+          description:
+            invoice.items && invoice.items.length > 0
+              ? invoice.items.map((item) => item.description).join(", ")
+              : "Service completed",
+          technician: "System Generated", // Default technician name
+          mileage: vehicle ? vehicle.mileage || 0 : 0,
+          cost: invoice.total,
+          parts: invoice.items
+            ? invoice.items.map((item) => ({
+                name: item.description,
+                partNumber: item.partNumber || "",
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.total,
+              }))
+            : [],
+          laborHours: 0, // Default value
+          laborRate: 0, // Default value
+          laborCost: 0, // Default value
+          subtotal: invoice.subtotal,
+          tax: invoice.tax,
+          discount: invoice.discount || 0,
+          total: invoice.total,
+          status: "completed",
+          notes: `Service completed and paid via invoice ${
+            invoice.invoiceNumber
+          }. Payment method: ${paymentMethod || "online"}`,
+          customerNotes: "Payment processed successfully",
+        };
+
+        console.log(`Service data prepared:`, {
+          customerId: serviceData.customerId,
+          vehicleId: serviceData.vehicleId,
+          serviceType: serviceData.serviceType,
+          total: serviceData.total,
+          partsCount: serviceData.parts.length,
+        });
+
+        // Create service history record
+        const serviceRecord = new Service(serviceData);
+        await serviceRecord.save();
+
+        console.log(
+          `✅ Service history record created successfully for invoice ${invoice.invoiceNumber} with ID: ${serviceRecord._id}`
+        );
+      } catch (serviceError) {
+        console.error(
+          "❌ Error creating service history record:",
+          serviceError
+        );
+        console.error("Service error details:", {
+          message: serviceError.message,
+          stack: serviceError.stack,
+          name: serviceError.name,
+        });
+        // Don't fail the payment if service history creation fails
+      }
+
       res.json({
         success: true,
         message: "Payment processed successfully",
@@ -1603,6 +1691,92 @@ router.post(
       invoice.paymentReference = paymentReference || paymentIntentId;
 
       await invoice.save();
+
+      // Create service history record after successful payment
+      try {
+        console.log(
+          `Starting service history creation for invoice ${invoice.invoiceNumber}`
+        );
+        console.log(`Invoice data:`, {
+          id: invoice._id,
+          customerId: invoice.customerId,
+          vehicleId: invoice.vehicleId,
+          total: invoice.total,
+          itemsCount: invoice.items ? invoice.items.length : 0,
+          serviceType: invoice.serviceType,
+        });
+
+        // Get vehicle information
+        const vehicle = await Vehicle.findById(invoice.vehicleId);
+        console.log(
+          `Vehicle found:`,
+          vehicle
+            ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+            : "No vehicle found"
+        );
+
+        // Prepare service record data
+        const serviceData = {
+          customerId: customer._id, // Use the customer ID for customerId
+          vehicleId: invoice.vehicleId,
+          appointmentId: invoice.appointmentId || null,
+          date: invoice.date,
+          serviceType: invoice.serviceType || "Automotive Repair",
+          description:
+            invoice.items && invoice.items.length > 0
+              ? invoice.items.map((item) => item.description).join(", ")
+              : "Service completed",
+          technician: "System Generated", // Default technician name
+          mileage: vehicle ? vehicle.mileage || 0 : 0,
+          cost: invoice.total,
+          parts: invoice.items
+            ? invoice.items.map((item) => ({
+                name: item.description,
+                partNumber: item.partNumber || "",
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.total,
+              }))
+            : [],
+          laborHours: 0, // Default value
+          laborRate: 0, // Default value
+          laborCost: 0, // Default value
+          subtotal: invoice.subtotal,
+          tax: invoice.tax,
+          discount: invoice.discount || 0,
+          total: invoice.total,
+          status: "completed",
+          notes: `Service completed and paid via invoice ${invoice.invoiceNumber}. Payment method: Stripe`,
+          customerNotes: "Payment processed successfully",
+        };
+
+        console.log(`Service data prepared:`, {
+          customerId: serviceData.customerId,
+          vehicleId: serviceData.vehicleId,
+          serviceType: serviceData.serviceType,
+          total: serviceData.total,
+          partsCount: serviceData.parts.length,
+        });
+
+        // Create service history record
+        const serviceRecord = new Service(serviceData);
+        await serviceRecord.save();
+
+        console.log(
+          `✅ Service history record created successfully for invoice ${invoice.invoiceNumber} with ID: ${serviceRecord._id}`
+        );
+      } catch (serviceError) {
+        console.error(
+          "❌ Error creating service history record:",
+          serviceError
+        );
+        console.error("Service error details:", {
+          message: serviceError.message,
+          stack: serviceError.stack,
+          name: serviceError.name,
+        });
+        // Don't fail the payment if service history creation fails
+      }
 
       res.json({
         success: true,
