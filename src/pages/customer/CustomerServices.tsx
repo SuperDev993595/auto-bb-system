@@ -83,6 +83,15 @@ export default function CustomerServices() {
           ...service,
           id: service._id, // Add id field for compatibility
         }));
+        
+        // Debug: Log technician information
+        console.log('Service records with technician info:', transformedServices.map(s => ({
+          id: s._id,
+          serviceType: s.serviceType,
+          technician: s.technician,
+          date: s.date
+        })));
+        
         setServiceRecords(transformedServices);
       } else {
         toast.error(servicesResponse.message || 'Failed to load services');
@@ -384,7 +393,13 @@ export default function CustomerServices() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Technician</p>
-                      <p className="font-medium">{record.technician}</p>
+                      <p className="font-medium">
+                        {record.technician && 
+                         record.technician.trim() !== '' && 
+                         record.technician !== 'System Generated' 
+                          ? record.technician 
+                          : 'Not specified'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Description</p>
