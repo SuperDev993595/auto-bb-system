@@ -17,6 +17,8 @@ const invoiceItemSchema = Joi.object({
 
 const invoiceSchema = Joi.object({
   customerId: Joi.string().required(),
+  appointmentId: Joi.string().optional(),
+  workOrderId: Joi.string().optional(),
   invoiceNumber: Joi.string().required(),
   dueDate: Joi.date().required(),
   vehicleId: Joi.string().required(),
@@ -73,6 +75,8 @@ router.get("/", authenticateToken, async (req, res) => {
     // Get invoices with pagination
     const invoices = await Invoice.find(filter)
       .populate("customerId", "name email phone")
+      .populate("appointmentId", "scheduledDate serviceType status")
+      .populate("workOrderId", "workOrderNumber status")
       .populate("vehicleId", "year make model")
       .sort({ date: -1 })
       .skip(skip)
@@ -455,6 +459,8 @@ router.get("/:id", authenticateToken, async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id)
       .populate("customerId", "name email phone address")
+      .populate("appointmentId", "scheduledDate serviceType status notes")
+      .populate("workOrderId", "workOrderNumber status priority")
       .populate("vehicleId", "year make model");
 
     if (!invoice) {
@@ -545,6 +551,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     // Find the work order with populated parts information
     const workOrder = await WorkOrder.findById(workOrderId)
       .populate("customer", "name email phone")
+      .populate("appointmentId", "scheduledDate serviceType status")
       .populate("services.service", "name description");
 
     if (!workOrder) {
@@ -632,6 +639,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     // Create the invoice
     const invoice = new Invoice({
       customerId: workOrder.customer._id,
+      appointmentId: workOrder.appointmentId || null, // Include appointmentId if work order has one
       workOrderId: workOrder._id,
       invoiceNumber: invoiceNumber,
       date: new Date(),
@@ -650,6 +658,7 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     console.log(`About to save invoice for work order ${workOrderId}`);
     console.log(`Invoice data:`, {
       customerId: workOrder.customer._id,
+      appointmentId: workOrder.appointmentId,
       workOrderId: workOrder._id,
       invoiceNumber: invoiceNumber,
       vehicleId: workOrder.vehicle._id,
@@ -662,10 +671,12 @@ router.post("/generate-from-workorder", authenticateToken, async (req, res) => {
     await invoice.save();
     console.log(`Invoice saved successfully with ID: ${invoice._id}`);
     console.log(
-      `Invoice saved with workOrderId: ${invoice.workOrderId}, Work Order ID: ${workOrderId}`
+      `Invoice saved with workOrderId: ${invoice.workOrderId}, appointmentId: ${invoice.appointmentId}, Work Order ID: ${workOrderId}`
     );
 
     await invoice.populate("customerId", "name email phone");
+    await invoice.populate("appointmentId", "scheduledDate serviceType status");
+    await invoice.populate("workOrderId", "workOrderNumber status");
     await invoice.populate("vehicleId", "year make model");
 
     res.status(201).json({

@@ -65,6 +65,7 @@ export interface WorkOrder {
   updatedAt: string;
   hasInvoice?: boolean;
   invoiceId?: string;
+  appointmentId?: string;
 }
 
 export interface JobBoardFilters {

@@ -224,6 +224,11 @@ const workOrderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    appointmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Appointment",
+      required: false, // Optional since work orders can be created manually
+    },
   },
   {
     timestamps: true,

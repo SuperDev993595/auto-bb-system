@@ -100,6 +100,7 @@ class WorkOrderService {
         customerNotes: appointment.customerNotes || "",
         partsAvailability: partsAvailability,
         createdBy: approvedBy,
+        appointmentId: appointment._id, // Save the appointment ID
       });
 
       // Calculate totals
