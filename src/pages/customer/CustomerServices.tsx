@@ -363,7 +363,7 @@ export default function CustomerServices() {
                       <div className="flex flex-wrap gap-2">
                         {record.parts.map((part, index) => (
                           <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                            {part}
+                            {typeof part === 'string' ? part : part.name}
                           </span>
                         ))}
                       </div>
