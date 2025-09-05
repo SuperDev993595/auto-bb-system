@@ -1,25 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { customerApiService, ServiceRecord as ServiceRecordType, Vehicle as VehicleType } from '../../services/customerApi';
+import { customerApiService, Vehicle as VehicleType } from '../../services/customerApi';
 import { Wrench, FileText, CheckCircle, AlertTriangle, DollarSign, Clipboard, Calendar, Clock } from '../../utils/icons';
 
 interface ServiceRecord {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   date: string;
-  vehicleId: string;
-  vehicleInfo: string;
+  vehicleId?: string;
+  vehicle?: {
+    make: string;
+    model: string;
+    year: number;
+    vin: string;
+  };
+  vehicleInfo?: string;
   serviceType: string;
   description: string;
   technician: string;
-  mileage: number;
+  mileage?: number;
   cost: number;
   nextServiceDate?: string;
   nextServiceMileage?: number;
-  status: 'completed' | 'in-progress' | 'scheduled';
-  parts?: string[];
+  status: 'completed' | 'in-progress' | 'scheduled' | 'cancelled';
+  parts?: Array<{
+    name: string;
+    partNumber?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
   notes?: string;
   warranty?: string;
+  createdAt: string;
 }
 
 interface MaintenanceSchedule {
@@ -37,7 +51,7 @@ interface MaintenanceSchedule {
 
 export default function CustomerServices() {
   const { user } = useAuth();
-  const [serviceRecords, setServiceRecords] = useState<ServiceRecordType[]>([]);
+  const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
   const [vehicles, setVehicles] = useState<VehicleType[]>([]);
   const [maintenanceSchedule, setMaintenanceSchedule] = useState<MaintenanceSchedule[]>([]);
   const [smartRecommendations, setSmartRecommendations] = useState<any[]>([]);
@@ -64,7 +78,12 @@ export default function CustomerServices() {
       ]);
       
       if (servicesResponse.success) {
-        setServiceRecords(servicesResponse.data.services);
+        // Transform the API response to match our interface
+        const transformedServices = servicesResponse.data.services.map((service: any) => ({
+          ...service,
+          id: service._id, // Add id field for compatibility
+        }));
+        setServiceRecords(transformedServices);
       } else {
         toast.error(servicesResponse.message || 'Failed to load services');
       }
@@ -77,7 +96,10 @@ export default function CustomerServices() {
       
       // Generate maintenance schedule from vehicles and services
       const vehicles = vehiclesResponse.success ? vehiclesResponse.data.vehicles : [];
-      const services = servicesResponse.success ? servicesResponse.data.services : [];
+      const services = servicesResponse.success ? servicesResponse.data.services.map((service: any) => ({
+        ...service,
+        id: service._id, // Add id field for compatibility
+      })) : [];
       const schedule = generateMaintenanceSchedule(vehicles, services);
       setMaintenanceSchedule(schedule);
     } catch (error) {
@@ -88,7 +110,7 @@ export default function CustomerServices() {
     }
   };
 
-  const generateMaintenanceSchedule = (vehicles: VehicleType[], services: ServiceRecordType[]): MaintenanceSchedule[] => {
+  const generateMaintenanceSchedule = (vehicles: VehicleType[], services: ServiceRecord[]): MaintenanceSchedule[] => {
     const schedule: MaintenanceSchedule[] = [];
     
     vehicles.forEach(vehicle => {
@@ -195,7 +217,20 @@ export default function CustomerServices() {
 
   const filteredServiceRecords = selectedVehicle === 'all' 
     ? serviceRecords 
-    : serviceRecords.filter(record => record.vehicleId === selectedVehicle);
+    : serviceRecords.filter(record => {
+        // Handle both vehicleId and vehicle object structures
+        if (record.vehicleId) {
+          return record.vehicleId === selectedVehicle;
+        }
+        if (record.vehicle) {
+          // Find matching vehicle by make/model/year
+          const vehicle = vehicles.find(v => v.id === selectedVehicle);
+          return vehicle && record.vehicle.make === vehicle.make && 
+                 record.vehicle.model === vehicle.model && 
+                 record.vehicle.year === vehicle.year;
+        }
+        return false;
+      });
 
   const filteredMaintenanceSchedule = selectedVehicle === 'all'
     ? maintenanceSchedule
@@ -324,15 +359,21 @@ export default function CustomerServices() {
                         <h3 className="text-lg font-semibold text-gray-900">{record.serviceType}</h3>
                         <p className="text-sm text-gray-600">
                           {(() => {
-                            const vehicle = vehicles.find(v => v.id === record.vehicleId);
-                            return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                            if (record.vehicle) {
+                              return `${record.vehicle.year} ${record.vehicle.make} ${record.vehicle.model}`;
+                            }
+                            if (record.vehicleId) {
+                              const vehicle = vehicles.find(v => v.id === record.vehicleId);
+                              return vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                            }
+                            return 'Unknown Vehicle';
                           })()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-gray-900">${record.cost.toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">{record.mileage} mi</div>
+                      <div className="text-sm text-gray-600">{record.mileage ? `${record.mileage} mi` : 'N/A'}</div>
                     </div>
                   </div>
 
@@ -360,11 +401,19 @@ export default function CustomerServices() {
                   {record.parts && record.parts.length > 0 && (
                     <div className="mb-4">
                       <p className="text-sm text-gray-600 mb-2">Parts Used:</p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="space-y-2">
                         {record.parts.map((part, index) => (
-                          <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                            {typeof part === 'string' ? part : part.name}
-                          </span>
+                          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <span className="font-medium text-gray-900">{part.name}</span>
+                              {part.partNumber && (
+                                <span className="text-xs text-gray-500 ml-2">({part.partNumber})</span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {part.quantity}x ${part.unitPrice.toFixed(2)} = ${part.totalPrice.toFixed(2)}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -380,8 +429,11 @@ export default function CustomerServices() {
 
                   <div className="flex justify-between items-center text-sm text-gray-600">
                     <div>
+                      {record.vehicle?.vin && (
+                        <span>VIN: {record.vehicle.vin}</span>
+                      )}
                       {record.warranty && (
-                        <span>Warranty: {record.warranty}</span>
+                        <span className="ml-4">Warranty: {record.warranty}</span>
                       )}
                     </div>
                     <div>
