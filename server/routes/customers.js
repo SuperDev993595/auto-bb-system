@@ -1385,6 +1385,8 @@ router.get(
       console.log("Found services for customer:", services.length);
       if (services.length > 0) {
         console.log("First service vehicle data:", services[0].vehicleId);
+        console.log("First service mileage:", services[0].mileage);
+        console.log("First service technician:", services[0].technician);
       }
 
       // Transform services to match frontend expectations
@@ -1394,6 +1396,7 @@ router.get(
         serviceType: service.serviceType,
         description: service.description,
         cost: service.cost,
+        mileage: service.mileage,
         vehicle: service.vehicleId
           ? {
               make: service.vehicleId.make,
@@ -1413,6 +1416,14 @@ router.get(
         console.log(
           "First transformed service vehicle:",
           transformedServices[0].vehicle
+        );
+        console.log(
+          "First transformed service mileage:",
+          transformedServices[0].mileage
+        );
+        console.log(
+          "First transformed service technician:",
+          transformedServices[0].technician
         );
       }
 
