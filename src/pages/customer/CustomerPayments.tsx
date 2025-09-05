@@ -117,6 +117,8 @@ export default function CustomerPayments() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [paymentMethodToDelete, setPaymentMethodToDelete] = useState<PaymentMethod | null>(null);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState<PaymentMethod | null>(null);
   const [formData, setFormData] = useState({
     type: 'credit_card' as 'credit_card' | 'debit_card' | 'bank_account' | 'paypal' | 'digital_wallet',
@@ -528,39 +530,53 @@ export default function CustomerPayments() {
     setFormErrors({});
   };
 
+  // Show delete confirmation modal
+  const showDeleteConfirmation = (paymentMethod: PaymentMethod) => {
+    setPaymentMethodToDelete(paymentMethod);
+    setShowDeleteModal(true);
+  };
+
   // Handle delete payment method with error handling
-  const handleDeletePaymentMethod = async (methodId: string) => {
-    if (window.confirm('Are you sure you want to delete this payment method?')) {
-      try {
-        const response = await customerService.deletePaymentMethod(methodId);
-        
-        if (response.success) {
-          // Reload payment methods to get updated list
-          await loadPaymentMethods();
-          toast.success('Payment method deleted successfully');
-        } else {
-          const errorMessage = response.message || 'Error deleting payment method';
-          toast.error(errorMessage);
-        }
-      } catch (error: any) {
-        console.error('Error deleting payment method:', error);
-        
-        let errorMessage = 'Error deleting payment method';
-        if (error.response?.status === 401) {
-          errorMessage = 'Authentication required. Please log in again.';
-        } else if (error.response?.status === 403) {
-          errorMessage = 'Access denied. You do not have permission to delete payment methods.';
-        } else if (error.response?.status === 404) {
-          errorMessage = 'Payment method not found.';
-        } else if (error.response?.status >= 500) {
-          errorMessage = 'Server error. Please try again later.';
-        } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
-          errorMessage = 'Network error. Please check your internet connection.';
-        }
-        
+  const handleDeletePaymentMethod = async () => {
+    if (!paymentMethodToDelete) return;
+
+    try {
+      const response = await customerService.deletePaymentMethod(paymentMethodToDelete.id);
+      
+      if (response.success) {
+        // Reload payment methods to get updated list
+        await loadPaymentMethods();
+        toast.success('Payment method deleted successfully');
+        setShowDeleteModal(false);
+        setPaymentMethodToDelete(null);
+      } else {
+        const errorMessage = response.message || 'Error deleting payment method';
         toast.error(errorMessage);
       }
+    } catch (error: any) {
+      console.error('Error deleting payment method:', error);
+      
+      let errorMessage = 'Error deleting payment method';
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to delete payment methods.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Payment method not found.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      toast.error(errorMessage);
     }
+  };
+
+  // Cancel delete operation
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setPaymentMethodToDelete(null);
   };
 
   // Handle set default payment method with error handling
@@ -809,7 +825,7 @@ export default function CustomerPayments() {
                       </button>
                       {!method.isDefault && (
                         <button 
-                          onClick={() => handleDeletePaymentMethod(method.id)}
+                          onClick={() => showDeleteConfirmation(method)}
                           className="p-1 text-gray-400 hover:text-red-600"
                           title="Delete"
                         >
@@ -1229,6 +1245,112 @@ export default function CustomerPayments() {
                   </div>
                 </div>
               </StripeElementsWrapper>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && paymentMethodToDelete && (
+        <div 
+          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              cancelDelete();
+            }
+          }}
+        >
+          <div 
+            className="relative bg-white rounded-lg shadow-xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-red-600" />
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-medium text-gray-900">Delete Payment Method</h3>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelDelete}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm text-gray-500 mb-4">
+                  Are you sure you want to delete this payment method? This action cannot be undone.
+                </p>
+                
+                {/* Payment Method Details */}
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {paymentMethodToDelete.brand?.toUpperCase()} •••• {paymentMethodToDelete.last4}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Expires {paymentMethodToDelete.expiryDate}
+                        </p>
+                      </div>
+                    </div>
+                    {paymentMethodToDelete.isDefault && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg mb-6">
+                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-red-800">
+                  <p className="font-medium">Warning</p>
+                  <p>If this is your default payment method, you'll need to set a new default after deletion.</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeletePaymentMethod}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Payment Method
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
