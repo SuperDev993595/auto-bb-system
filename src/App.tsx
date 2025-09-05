@@ -23,7 +23,6 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 
 
 // Enhanced Customer Features
-import CustomerServiceHistory from "./pages/customer/CustomerServiceHistory";
 import CustomerPayments from "./pages/customer/CustomerPayments";
 import CustomerRewards from "./pages/customer/CustomerRewards";
 import CustomerSupport from "./pages/customer/CustomerSupport";
@@ -181,7 +180,6 @@ export default function App() {
 
         
         {/* Enhanced Customer Features */}
-        <Route path="service-history" element={<CustomerServiceHistory />} />
         <Route path="payments" element={<CustomerPayments />} />
         <Route path="rewards" element={<CustomerRewards />} />
         <Route path="support" element={<CustomerSupport />} />

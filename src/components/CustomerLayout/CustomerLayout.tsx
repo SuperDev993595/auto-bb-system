@@ -217,17 +217,6 @@ export default function CustomerLayout() {
                     {!sidebarCollapsed && <span>My Vehicles</span>}
                   </Link>
                   
-                  <Link
-                    to="/customer/dashboard/service-history"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 ${
-                      location.pathname === '/customer/dashboard/service-history' 
-                        ? 'bg-purple-100 text-purple-700' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    <FileText className="w-5 h-5" />
-                    {!sidebarCollapsed && <span>Service History</span>}
-                  </Link>
                 </div>
               </div>
 
