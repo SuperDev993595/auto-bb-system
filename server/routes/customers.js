@@ -1390,42 +1390,45 @@ router.get(
       }
 
       // Transform services to match frontend expectations
-      const transformedServices = services.map((service) => ({
-        _id: service._id,
-        date: service.date,
-        serviceType: service.serviceType,
-        description: service.description,
-        cost: service.cost,
-        mileage: service.mileage,
-        vehicle: service.vehicleId
-          ? {
-              make: service.vehicleId.make,
-              model: service.vehicleId.model,
-              year: service.vehicleId.year,
-              vin: service.vehicleId.vin,
+      const transformedServices = await Promise.all(
+        services.map(async (service) => {
+          // Try to get technician information from appointment
+          let technicianName = service.technician || "Not specified";
+          
+          if (service.appointmentId) {
+            try {
+              const appointment = await Appointment.findById(service.appointmentId).populate('technician', 'name');
+              if (appointment && appointment.technician) {
+                technicianName = appointment.technician.name;
+                console.log(`Found technician from appointment for service ${service._id}: ${technicianName}`);
+              }
+            } catch (error) {
+              console.error(`Error fetching technician for appointment ${service.appointmentId}:`, error);
             }
-          : null,
-        technician: service.technician,
-        status: service.status,
-        notes: service.notes,
-        createdAt: service.createdAt,
-      }));
+          }
 
-      console.log("Transformed services count:", transformedServices.length);
-      if (transformedServices.length > 0) {
-        console.log(
-          "First transformed service vehicle:",
-          transformedServices[0].vehicle
-        );
-        console.log(
-          "First transformed service mileage:",
-          transformedServices[0].mileage
-        );
-        console.log(
-          "First transformed service technician:",
-          transformedServices[0].technician
-        );
-      }
+          return {
+            _id: service._id,
+            date: service.date,
+            serviceType: service.serviceType,
+            description: service.description,
+            cost: service.cost,
+            mileage: service.mileage,
+            vehicle: service.vehicleId
+              ? {
+                  make: service.vehicleId.make,
+                  model: service.vehicleId.model,
+                  year: service.vehicleId.year,
+                  vin: service.vehicleId.vin,
+                }
+              : null,
+            technician: technicianName,
+            status: service.status,
+            notes: service.notes,
+            createdAt: service.createdAt,
+          };
+        })
+      );
 
       res.json({
         success: true,
@@ -1620,10 +1623,12 @@ router.post(
 
         // Try to get technician information from appointment or work order
         let technicianName = "Not specified";
-        
+
         if (invoice.appointmentId) {
           // Try to get technician from appointment
-          const appointment = await Appointment.findById(invoice.appointmentId).populate('technician', 'name');
+          const appointment = await Appointment.findById(
+            invoice.appointmentId
+          ).populate("technician", "name");
           if (appointment && appointment.technician) {
             technicianName = appointment.technician.name;
             console.log(`Found technician from appointment: ${technicianName}`);
@@ -1631,7 +1636,9 @@ router.post(
         } else if (invoice.workOrderId) {
           // Try to get technician from work order
           const { WorkOrder } = require("../models/Service");
-          const workOrder = await WorkOrder.findById(invoice.workOrderId).populate('technician', 'name');
+          const workOrder = await WorkOrder.findById(
+            invoice.workOrderId
+          ).populate("technician", "name");
           if (workOrder && workOrder.technician) {
             technicianName = workOrder.technician.name;
             console.log(`Found technician from work order: ${technicianName}`);
@@ -1799,10 +1806,12 @@ router.post(
 
         // Try to get technician information from appointment or work order
         let technicianName = "Not specified";
-        
+
         if (invoice.appointmentId) {
           // Try to get technician from appointment
-          const appointment = await Appointment.findById(invoice.appointmentId).populate('technician', 'name');
+          const appointment = await Appointment.findById(
+            invoice.appointmentId
+          ).populate("technician", "name");
           if (appointment && appointment.technician) {
             technicianName = appointment.technician.name;
             console.log(`Found technician from appointment: ${technicianName}`);
@@ -1810,7 +1819,9 @@ router.post(
         } else if (invoice.workOrderId) {
           // Try to get technician from work order
           const { WorkOrder } = require("../models/Service");
-          const workOrder = await WorkOrder.findById(invoice.workOrderId).populate('technician', 'name');
+          const workOrder = await WorkOrder.findById(
+            invoice.workOrderId
+          ).populate("technician", "name");
           if (workOrder && workOrder.technician) {
             technicianName = workOrder.technician.name;
             console.log(`Found technician from work order: ${technicianName}`);
