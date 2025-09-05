@@ -257,8 +257,8 @@ export default function CustomerPayments() {
     setFilteredInvoices(filtered);
   };
 
-  // Load payment data
-  const loadPaymentData = async () => {
+  // Load payment data with retry logic
+  const loadPaymentData = async (retryCount = 0) => {
     setIsLoading(true);
     setError(null);
     
@@ -270,74 +270,130 @@ export default function CustomerPayments() {
         setFilteredInvoices(response.data.invoices);
         setStats(calculateStats(response.data.invoices));
       } else {
-        setError('Failed to load payment data');
-        toast.error('Failed to load payment data');
+        const errorMessage = 'Failed to load payment data';
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading payment data:', err);
-      setError('An error occurred while loading payment data');
-      toast.error('An error occurred while loading payment data');
+      
+      // Handle specific error types
+      let errorMessage = 'An error occurred while loading payment data';
+      if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to view this data.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Payment data not found.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      setError(errorMessage);
+      
+      // Retry logic for network errors
+      if (retryCount < 2 && (err.code === 'NETWORK_ERROR' || err.response?.status >= 500)) {
+        toast.error(`${errorMessage} Retrying... (${retryCount + 1}/2)`);
+        setTimeout(() => loadPaymentData(retryCount + 1), 2000 * (retryCount + 1));
+        return;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Load payment methods (mock data for now)
+  // Load payment methods from API with error handling
   const loadPaymentMethods = async () => {
     try {
-      // Mock payment methods - replace with actual API call
-      const mockPaymentMethods: PaymentMethod[] = [
-        {
-          id: '1',
-          type: 'credit_card',
-          name: 'Visa ending in 1234',
-          last4: '1234',
-          expiryDate: '12/25',
-          isDefault: true,
-          isActive: true,
-          brand: 'Visa'
-        },
-        {
-          id: '2',
-          type: 'bank_account',
-          name: 'Chase Bank Account',
-          last4: '5678',
-          isDefault: false,
-          isActive: true,
-          bankName: 'Chase Bank',
-          accountType: 'Checking'
-        }
-      ];
-      setPaymentMethods(mockPaymentMethods);
-    } catch (err) {
+      const response = await customerService.getCustomerPaymentMethods();
+      
+      if (response.success) {
+        // Transform API data to match our interface
+        const transformedMethods: PaymentMethod[] = response.data.paymentMethods.map((pm: any) => ({
+          id: pm.id,
+          type: pm.type === 'card' ? 'credit_card' : pm.type,
+          name: pm.card ? `${pm.card.brand} ending in ${pm.card.last4}` : 'Payment Method',
+          last4: pm.card?.last4 || '',
+          expiryDate: pm.card ? `${pm.card.expMonth.toString().padStart(2, '0')}/${pm.card.expYear.toString().slice(-2)}` : undefined,
+          isDefault: pm.isDefault || false,
+          isActive: pm.isActive !== false,
+          brand: pm.card?.brand,
+          bankName: pm.type === 'bank_account' ? 'Bank Account' : undefined,
+          accountType: pm.type === 'bank_account' ? 'Checking' : undefined
+        }));
+        setPaymentMethods(transformedMethods);
+      } else {
+        const errorMessage = 'Failed to load payment methods';
+        console.error('Failed to load payment methods:', response);
+        toast.error(errorMessage);
+      }
+    } catch (err: any) {
       console.error('Error loading payment methods:', err);
+      
+      let errorMessage = 'Error loading payment methods';
+      if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to view payment methods.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
-  // Load financing options (mock data for now)
+  // Load financing options from API with error handling
   const loadFinancingOptions = async () => {
     try {
-      // Mock financing options - replace with actual API call
-      const mockFinancingOptions: FinancingOption[] = [
-        {
-          id: '1',
-          name: 'Engine Rebuild Financing',
-          type: 'payment_plan',
-          amount: 2500,
-          term: 12,
-          interestRate: 0,
-          monthlyPayment: 208.33,
-          totalCost: 2500,
-          status: 'active',
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          remainingBalance: 1500,
-          nextPaymentDate: '2024-02-01'
-        }
-      ];
-      setFinancingOptions(mockFinancingOptions);
-    } catch (err) {
+      const response = await customerService.getCustomerArrangements();
+      
+      if (response.success) {
+        // Transform API data to match our interface
+        const transformedOptions: FinancingOption[] = response.data.arrangements.map((arrangement: any) => ({
+          id: arrangement._id,
+          name: arrangement.notes || `${arrangement.type.replace('_', ' ')} Plan`,
+          type: arrangement.type === 'payment_plan' ? 'payment_plan' : 
+                arrangement.type === 'installment' ? 'loan' : 'lease',
+          amount: arrangement.amount,
+          term: arrangement.term || 12,
+          interestRate: arrangement.interestRate || 0,
+          monthlyPayment: arrangement.monthlyPayment || (arrangement.amount / (arrangement.term || 12)),
+          totalCost: arrangement.totalCost || arrangement.amount,
+          status: arrangement.status === 'active' ? 'active' :
+                  arrangement.status === 'completed' ? 'completed' : 'defaulted',
+          startDate: arrangement.date || arrangement.createdAt,
+          endDate: arrangement.dueDate,
+          remainingBalance: arrangement.remainingBalance || arrangement.amount,
+          nextPaymentDate: arrangement.nextPaymentDate || arrangement.dueDate
+        }));
+        setFinancingOptions(transformedOptions);
+      } else {
+        const errorMessage = 'Failed to load financing options';
+        console.error('Failed to load financing options:', response);
+        toast.error(errorMessage);
+      }
+    } catch (err: any) {
       console.error('Error loading financing options:', err);
+      
+      let errorMessage = 'Error loading financing options';
+      if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to view financing options.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -362,10 +418,23 @@ export default function CustomerPayments() {
   // Process payment
   const processPayment = async (invoiceId: string, paymentMethod: string) => {
     try {
-      // In a real implementation, this would integrate with a payment processor
-      toast.success('Payment processed successfully');
-      await loadPaymentData(); // Refresh data
+      // Use the existing invoice payment endpoint
+      const response = await customerService.addPayment(user?.id || '', {
+        amount: 0, // Will be set by the invoice amount
+        method: paymentMethod as any,
+        reference: `INV-${invoiceId}`,
+        notes: `Payment for invoice ${invoiceId}`,
+        status: 'completed'
+      });
+      
+      if (response.success) {
+        toast.success('Payment processed successfully');
+        await loadPaymentData(); // Refresh data
+      } else {
+        toast.error(response.message || 'Failed to process payment');
+      }
     } catch (err) {
+      console.error('Error processing payment:', err);
       toast.error('Failed to process payment');
     }
   };
@@ -416,7 +485,7 @@ export default function CustomerPayments() {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle form submission
+  // Handle form submission with comprehensive error handling
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -426,33 +495,63 @@ export default function CustomerPayments() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newPaymentMethod: PaymentMethod = {
-        id: Date.now().toString(),
-        type: formData.type,
-        name: formData.name,
-        last4: formData.type === 'bank_account' 
-          ? formData.accountNumber.slice(-4)
-          : formData.cardNumber.replace(/\s/g, '').slice(-4),
-        expiryDate: formData.type === 'credit_card' || formData.type === 'debit_card' ? formData.expiryDate : undefined,
-        isDefault: formData.isDefault || paymentMethods.length === 0,
-        isActive: true
+      // Prepare payment method data for API
+      const paymentMethodData = {
+        type: 'card' as const,
+        card: {
+          number: formData.cardNumber.replace(/\s/g, ''),
+          exp_month: parseInt(formData.expiryDate.split('/')[0]),
+          exp_year: parseInt('20' + formData.expiryDate.split('/')[1]),
+          cvc: formData.cvv
+        },
+        billing_details: {
+          name: formData.name
+        }
       };
 
-      // If setting as default, remove default from other methods
-      if (formData.isDefault) {
-        setPaymentMethods(prev => prev.map(method => ({ ...method, isDefault: false })));
+      const response = await customerService.addPaymentMethod(paymentMethodData);
+      
+      if (response.success) {
+        // Reload payment methods to get updated list
+        await loadPaymentMethods();
+        
+        // If setting as default, set it as default
+        if (formData.isDefault && response.data.paymentMethod) {
+          try {
+            await customerService.setDefaultPaymentMethod(response.data.paymentMethod.id);
+            await loadPaymentMethods(); // Reload again to reflect default status
+          } catch (defaultError) {
+            console.warn('Failed to set default payment method:', defaultError);
+            toast.error('Payment method added but failed to set as default. You can set it as default later.');
+          }
+        }
+        
+        setShowAddPaymentMethod(false);
+        resetForm();
+        toast.success('Payment method added successfully!');
+      } else {
+        const errorMessage = response.message || 'Error adding payment method. Please try again.';
+        toast.error(errorMessage);
       }
-
-      setPaymentMethods(prev => [...prev, newPaymentMethod]);
-      setShowAddPaymentMethod(false);
-      resetForm();
-      toast.success('Payment method added successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding payment method:', error);
-      toast.error('Error adding payment method. Please try again.');
+      
+      let errorMessage = 'Error adding payment method. Please try again.';
+      if (error.response?.status === 400) {
+        errorMessage = 'Invalid payment method data. Please check your card details.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to add payment methods.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message?.includes('card')) {
+        errorMessage = 'Invalid card information. Please check your card details and try again.';
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -475,30 +574,71 @@ export default function CustomerPayments() {
     setFormErrors({});
   };
 
-  // Handle delete payment method
+  // Handle delete payment method with error handling
   const handleDeletePaymentMethod = async (methodId: string) => {
     if (window.confirm('Are you sure you want to delete this payment method?')) {
       try {
-        setPaymentMethods(prev => prev.filter(method => method.id !== methodId));
-        toast.success('Payment method deleted successfully');
-      } catch (error) {
+        const response = await customerService.deletePaymentMethod(methodId);
+        
+        if (response.success) {
+          // Reload payment methods to get updated list
+          await loadPaymentMethods();
+          toast.success('Payment method deleted successfully');
+        } else {
+          const errorMessage = response.message || 'Error deleting payment method';
+          toast.error(errorMessage);
+        }
+      } catch (error: any) {
         console.error('Error deleting payment method:', error);
-        toast.error('Error deleting payment method');
+        
+        let errorMessage = 'Error deleting payment method';
+        if (error.response?.status === 401) {
+          errorMessage = 'Authentication required. Please log in again.';
+        } else if (error.response?.status === 403) {
+          errorMessage = 'Access denied. You do not have permission to delete payment methods.';
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Payment method not found.';
+        } else if (error.response?.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        }
+        
+        toast.error(errorMessage);
       }
     }
   };
 
-  // Handle set default payment method
+  // Handle set default payment method with error handling
   const handleSetDefault = async (methodId: string) => {
     try {
-      setPaymentMethods(prev => prev.map(method => ({
-        ...method,
-        isDefault: method.id === methodId
-      })));
-      toast.success('Default payment method updated');
-    } catch (error) {
+      const response = await customerService.setDefaultPaymentMethod(methodId);
+      
+      if (response.success) {
+        // Reload payment methods to get updated list
+        await loadPaymentMethods();
+        toast.success('Default payment method updated');
+      } else {
+        const errorMessage = response.message || 'Error updating default payment method';
+        toast.error(errorMessage);
+      }
+    } catch (error: any) {
       console.error('Error setting default payment method:', error);
-      toast.error('Error updating default payment method');
+      
+      let errorMessage = 'Error updating default payment method';
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied. You do not have permission to update payment methods.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Payment method not found.';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -544,7 +684,7 @@ export default function CustomerPayments() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Payment Data</h3>
               <p className="text-gray-600 mb-4">{error}</p>
               <button
-                onClick={loadPaymentData}
+                onClick={() => loadPaymentData()}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -574,13 +714,13 @@ export default function CustomerPayments() {
               <Plus className="w-4 h-4" />
               Add Payment Method
             </button>
-            <button
-              onClick={loadPaymentData}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
+                          <button
+                onClick={() => loadPaymentData()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
           </div>
         </div>
       </div>

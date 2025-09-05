@@ -711,5 +711,159 @@ export const customerService = {
   }> {
     const response = await apiResponse(api.get(`/customers/${customerId}/vehicles`));
     return response;
+  },
+
+  // ==================== PAYMENT METHODS ====================
+
+  // Get customer's payment methods
+  async getCustomerPaymentMethods(): Promise<{
+    success: boolean;
+    data: {
+      paymentMethods: Array<{
+        id: string;
+        type: string;
+        card?: {
+          brand: string;
+          last4: string;
+          expMonth: number;
+          expYear: number;
+        };
+        isDefault?: boolean;
+        isActive?: boolean;
+      }>;
+    };
+  }> {
+    const response = await apiResponse(api.get('/payments/payment-methods'));
+    return response;
+  },
+
+  // Add payment method for customer
+  async addPaymentMethod(paymentMethodData: {
+    type: 'card';
+    card: {
+      number: string;
+      exp_month: number;
+      exp_year: number;
+      cvc: string;
+    };
+    billing_details?: {
+      name?: string;
+      email?: string;
+    };
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      paymentMethod: any;
+      paymentMethods: any[];
+    };
+  }> {
+    const response = await apiResponse(api.post('/payments/payment-methods', paymentMethodData));
+    return response;
+  },
+
+  // Delete payment method for customer
+  async deletePaymentMethod(paymentMethodId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await apiResponse(api.delete(`/payments/payment-methods/${paymentMethodId}`));
+    return response;
+  },
+
+  // Set default payment method for customer
+  async setDefaultPaymentMethod(paymentMethodId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await apiResponse(api.post(`/payments/payment-methods/${paymentMethodId}/default`));
+    return response;
+  },
+
+  // ==================== ARRANGEMENTS/FINANCING ====================
+
+  // Get customer's arrangements (financing options)
+  async getCustomerArrangements(): Promise<{
+    success: boolean;
+    data: {
+      arrangements: Array<{
+        _id: string;
+        date: string;
+        amount: number;
+        notes?: string;
+        status: 'pending' | 'active' | 'completed' | 'cancelled';
+        type: 'installment' | 'payment_plan' | 'deferred' | 'other';
+        dueDate: string;
+        createdAt: string;
+        // Additional fields for financing display
+        term?: number;
+        interestRate?: number;
+        monthlyPayment?: number;
+        totalCost?: number;
+        remainingBalance?: number;
+        nextPaymentDate?: string;
+      }>;
+    };
+  }> {
+    // For customer view, we'll get their own arrangements
+    const response = await apiResponse(api.get('/customers/me/arrangements'));
+    return response;
+  },
+
+  // Add arrangement for customer
+  async addArrangement(arrangementData: {
+    date?: string;
+    amount: number;
+    notes?: string;
+    status?: 'pending' | 'active' | 'completed' | 'cancelled';
+    type?: 'installment' | 'payment_plan' | 'deferred' | 'other';
+    dueDate: string;
+    term?: number;
+    interestRate?: number;
+    monthlyPayment?: number;
+    totalCost?: number;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      arrangement: any;
+      arrangements: any[];
+    };
+  }> {
+    const response = await apiResponse(api.post('/customers/me/arrangements', arrangementData));
+    return response;
+  },
+
+  // Update arrangement for customer
+  async updateArrangement(arrangementId: string, arrangementData: {
+    date?: string;
+    amount?: number;
+    notes?: string;
+    status?: 'pending' | 'active' | 'completed' | 'cancelled';
+    type?: 'installment' | 'payment_plan' | 'deferred' | 'other';
+    dueDate?: string;
+    term?: number;
+    interestRate?: number;
+    monthlyPayment?: number;
+    totalCost?: number;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      arrangement: any;
+      arrangements: any[];
+    };
+  }> {
+    const response = await apiResponse(api.put(`/customers/me/arrangements/${arrangementId}`, arrangementData));
+    return response;
+  },
+
+  // Delete arrangement for customer
+  async deleteArrangement(arrangementId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await apiResponse(api.delete(`/customers/me/arrangements/${arrangementId}`));
+    return response;
   }
 };

@@ -3193,6 +3193,229 @@ router.delete(
 
 // ==================== ARRANGEMENTS ROUTES ====================
 
+// Get customer's own arrangements (customer access)
+router.get(
+  "/me/arrangements",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const arrangements = await Arrangement.find({ customer: customer._id })
+        .sort({ date: -1 })
+        .exec();
+
+      res.json({
+        success: true,
+        data: {
+          arrangements,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching customer arrangements:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+// Add arrangement for customer (customer access)
+router.post(
+  "/me/arrangements",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const { error, value } = arrangementSchema.validate(req.body);
+      if (error) {
+        return res
+          .status(400)
+          .json({ success: false, message: error.details[0].message });
+      }
+
+      const arrangement = new Arrangement({
+        ...value,
+        customer: customer._id,
+        createdBy: req.user.id,
+        date: value.date || new Date(),
+      });
+
+      await arrangement.save();
+
+      const arrangements = await Arrangement.find({
+        customer: customer._id,
+      }).sort({ date: -1 });
+
+      res.status(201).json({
+        success: true,
+        message: "Arrangement added successfully",
+        data: { arrangement, arrangements },
+      });
+    } catch (error) {
+      console.error("Error adding arrangement:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+// Update arrangement for customer (customer access)
+router.put(
+  "/me/arrangements/:arrangementId",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const { arrangementId } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(arrangementId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid arrangement ID format" });
+      }
+
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const arrangement = await Arrangement.findById(arrangementId);
+      if (!arrangement) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Arrangement not found" });
+      }
+
+      if (arrangement.customer.toString() !== customer._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Arrangement does not belong to this customer",
+        });
+      }
+
+      const arrangementUpdateSchema = Joi.object({
+        date: Joi.date().max("now").optional(),
+        amount: Joi.number().positive().optional(),
+        notes: Joi.string().max(500).allow("").optional(),
+        status: Joi.string()
+          .valid("pending", "active", "completed", "cancelled")
+          .optional(),
+        type: Joi.string()
+          .valid("installment", "payment_plan", "deferred", "other")
+          .optional(),
+        dueDate: Joi.date().optional(),
+        term: Joi.number().positive().optional(),
+        interestRate: Joi.number().min(0).max(100).optional(),
+        monthlyPayment: Joi.number().positive().optional(),
+        totalCost: Joi.number().positive().optional(),
+        remainingBalance: Joi.number().min(0).optional(),
+        nextPaymentDate: Joi.date().optional(),
+      });
+
+      const { error, value } = arrangementUpdateSchema.validate(req.body);
+      if (error) {
+        return res
+          .status(400)
+          .json({ success: false, message: error.details[0].message });
+      }
+
+      const updatedArrangement = await Arrangement.findByIdAndUpdate(
+        arrangementId,
+        value,
+        { new: true }
+      );
+
+      const arrangements = await Arrangement.find({
+        customer: customer._id,
+      }).sort({ date: -1 });
+
+      res.json({
+        success: true,
+        message: "Arrangement updated successfully",
+        data: { arrangement: updatedArrangement, arrangements },
+      });
+    } catch (error) {
+      console.error("Error updating arrangement:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
+// Delete arrangement for customer (customer access)
+router.delete(
+  "/me/arrangements/:arrangementId",
+  authenticateToken,
+  requireCustomer,
+  async (req, res) => {
+    try {
+      const { arrangementId } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(arrangementId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid arrangement ID format" });
+      }
+
+      const customer = await Customer.findOne({ userId: req.user.id });
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Customer not found" });
+      }
+
+      const arrangement = await Arrangement.findById(arrangementId);
+      if (!arrangement) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Arrangement not found" });
+      }
+
+      if (arrangement.customer.toString() !== customer._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Arrangement does not belong to this customer",
+        });
+      }
+
+      await Arrangement.findByIdAndDelete(arrangementId);
+
+      const arrangements = await Arrangement.find({
+        customer: customer._id,
+      }).sort({ date: -1 });
+
+      res.json({
+        success: true,
+        message: "Arrangement deleted successfully",
+        data: { arrangements },
+      });
+    } catch (error) {
+      console.error("Error deleting arrangement:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+);
+
 // Get arrangements for specific customer (admin only)
 router.get(
   "/:customerId/arrangements",
