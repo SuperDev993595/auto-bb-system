@@ -1607,6 +1607,26 @@ router.post(
             : "No vehicle found"
         );
 
+        // Try to get technician information from appointment or work order
+        let technicianName = "Not specified";
+        
+        if (invoice.appointmentId) {
+          // Try to get technician from appointment
+          const appointment = await Appointment.findById(invoice.appointmentId).populate('technician', 'name');
+          if (appointment && appointment.technician) {
+            technicianName = appointment.technician.name;
+            console.log(`Found technician from appointment: ${technicianName}`);
+          }
+        } else if (invoice.workOrderId) {
+          // Try to get technician from work order
+          const { WorkOrder } = require("../models/Service");
+          const workOrder = await WorkOrder.findById(invoice.workOrderId).populate('technician', 'name');
+          if (workOrder && workOrder.technician) {
+            technicianName = workOrder.technician.name;
+            console.log(`Found technician from work order: ${technicianName}`);
+          }
+        }
+
         // Prepare service record data
         const serviceData = {
           customerId: customer._id, // Use the customer ID for customerId
@@ -1618,7 +1638,7 @@ router.post(
             invoice.items && invoice.items.length > 0
               ? invoice.items.map((item) => item.description).join(", ")
               : "Service completed",
-          technician: "System Generated", // Default technician name
+          technician: technicianName, // Use actual technician name or fallback
           mileage: vehicle ? vehicle.mileage || 0 : 0,
           cost: invoice.total,
           parts: invoice.items
@@ -1766,6 +1786,26 @@ router.post(
             : "No vehicle found"
         );
 
+        // Try to get technician information from appointment or work order
+        let technicianName = "Not specified";
+        
+        if (invoice.appointmentId) {
+          // Try to get technician from appointment
+          const appointment = await Appointment.findById(invoice.appointmentId).populate('technician', 'name');
+          if (appointment && appointment.technician) {
+            technicianName = appointment.technician.name;
+            console.log(`Found technician from appointment: ${technicianName}`);
+          }
+        } else if (invoice.workOrderId) {
+          // Try to get technician from work order
+          const { WorkOrder } = require("../models/Service");
+          const workOrder = await WorkOrder.findById(invoice.workOrderId).populate('technician', 'name');
+          if (workOrder && workOrder.technician) {
+            technicianName = workOrder.technician.name;
+            console.log(`Found technician from work order: ${technicianName}`);
+          }
+        }
+
         // Prepare service record data
         const serviceData = {
           customerId: customer._id, // Use the customer ID for customerId
@@ -1777,7 +1817,7 @@ router.post(
             invoice.items && invoice.items.length > 0
               ? invoice.items.map((item) => item.description).join(", ")
               : "Service completed",
-          technician: "System Generated", // Default technician name
+          technician: technicianName, // Use actual technician name or fallback
           mileage: vehicle ? vehicle.mileage || 0 : 0,
           cost: invoice.total,
           parts: invoice.items

@@ -84,7 +84,7 @@ export default function CustomerServices() {
           id: service._id, // Add id field for compatibility
         }));
         
-        // Debug: Log technician information
+        // Debug: Log technician information (can be removed in production)
         console.log('Service records with technician info:', transformedServices.map(s => ({
           id: s._id,
           serviceType: s.serviceType,
@@ -396,7 +396,8 @@ export default function CustomerServices() {
                       <p className="font-medium">
                         {record.technician && 
                          record.technician.trim() !== '' && 
-                         record.technician !== 'System Generated' 
+                         record.technician !== 'System Generated' &&
+                         record.technician !== 'Not specified'
                           ? record.technician 
                           : 'Not specified'}
                       </p>
