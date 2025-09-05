@@ -24,7 +24,12 @@ import {
   TrendingDown,
   Plus,
   Edit,
-  Trash2
+  Trash2,
+  X,
+  Save,
+  Shield,
+  Calculator,
+  Eye
 } from '../../utils/icons';
 
 interface Invoice {
@@ -60,12 +65,31 @@ interface PaymentStats {
 
 interface PaymentMethod {
   id: string;
-  type: 'credit_card' | 'debit_card' | 'bank_account' | 'paypal';
+  type: 'credit_card' | 'debit_card' | 'bank_account' | 'paypal' | 'digital_wallet';
   name: string;
   last4?: string;
   expiryDate?: string;
   isDefault: boolean;
   isActive: boolean;
+  brand?: string;
+  bankName?: string;
+  accountType?: string;
+}
+
+interface FinancingOption {
+  id: string;
+  name: string;
+  type: 'loan' | 'lease' | 'payment_plan';
+  amount: number;
+  term: number;
+  interestRate: number;
+  monthlyPayment: number;
+  totalCost: number;
+  status: 'active' | 'completed' | 'defaulted';
+  startDate: string;
+  endDate: string;
+  remainingBalance: number;
+  nextPaymentDate: string;
 }
 
 export default function CustomerPayments() {
@@ -80,8 +104,10 @@ export default function CustomerPayments() {
     averageInvoiceAmount: 0
   });
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [financingOptions, setFinancingOptions] = useState<FinancingOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'payment-methods' | 'invoices' | 'financing'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
@@ -89,6 +115,21 @@ export default function CustomerPayments() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
+  const [editingPaymentMethod, setEditingPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [formData, setFormData] = useState({
+    type: 'credit_card' as 'credit_card' | 'debit_card' | 'bank_account' | 'paypal' | 'digital_wallet',
+    name: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    bankName: '',
+    accountNumber: '',
+    routingNumber: '',
+    accountType: 'checking' as 'checking' | 'savings',
+    isDefault: false
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -241,6 +282,65 @@ export default function CustomerPayments() {
     }
   };
 
+  // Load payment methods (mock data for now)
+  const loadPaymentMethods = async () => {
+    try {
+      // Mock payment methods - replace with actual API call
+      const mockPaymentMethods: PaymentMethod[] = [
+        {
+          id: '1',
+          type: 'credit_card',
+          name: 'Visa ending in 1234',
+          last4: '1234',
+          expiryDate: '12/25',
+          isDefault: true,
+          isActive: true,
+          brand: 'Visa'
+        },
+        {
+          id: '2',
+          type: 'bank_account',
+          name: 'Chase Bank Account',
+          last4: '5678',
+          isDefault: false,
+          isActive: true,
+          bankName: 'Chase Bank',
+          accountType: 'Checking'
+        }
+      ];
+      setPaymentMethods(mockPaymentMethods);
+    } catch (err) {
+      console.error('Error loading payment methods:', err);
+    }
+  };
+
+  // Load financing options (mock data for now)
+  const loadFinancingOptions = async () => {
+    try {
+      // Mock financing options - replace with actual API call
+      const mockFinancingOptions: FinancingOption[] = [
+        {
+          id: '1',
+          name: 'Engine Rebuild Financing',
+          type: 'payment_plan',
+          amount: 2500,
+          term: 12,
+          interestRate: 0,
+          monthlyPayment: 208.33,
+          totalCost: 2500,
+          status: 'active',
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          remainingBalance: 1500,
+          nextPaymentDate: '2024-02-01'
+        }
+      ];
+      setFinancingOptions(mockFinancingOptions);
+    } catch (err) {
+      console.error('Error loading financing options:', err);
+    }
+  };
+
   // Get unique years from invoices
   const getUniqueYears = () => {
     const years = [...new Set(invoices.map(invoice => 
@@ -270,9 +370,143 @@ export default function CustomerPayments() {
     }
   };
 
+  // Form validation
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+
+    if (formData.type === 'credit_card' || formData.type === 'debit_card') {
+      if (!formData.cardNumber.trim()) {
+        errors.cardNumber = 'Card number is required';
+      } else if (!/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(formData.cardNumber.replace(/\s/g, ''))) {
+        errors.cardNumber = 'Please enter a valid 16-digit card number';
+      }
+
+      if (!formData.expiryDate.trim()) {
+        errors.expiryDate = 'Expiry date is required';
+      } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) {
+        errors.expiryDate = 'Please enter expiry date in MM/YY format';
+      }
+
+      if (!formData.cvv.trim()) {
+        errors.cvv = 'CVV is required';
+      } else if (!/^\d{3,4}$/.test(formData.cvv)) {
+        errors.cvv = 'Please enter a valid CVV';
+      }
+    }
+
+    if (formData.type === 'bank_account') {
+      if (!formData.bankName.trim()) {
+        errors.bankName = 'Bank name is required';
+      }
+      if (!formData.accountNumber.trim()) {
+        errors.accountNumber = 'Account number is required';
+      }
+      if (!formData.routingNumber.trim()) {
+        errors.routingNumber = 'Routing number is required';
+      } else if (!/^\d{9}$/.test(formData.routingNumber)) {
+        errors.routingNumber = 'Please enter a valid 9-digit routing number';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form submission
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newPaymentMethod: PaymentMethod = {
+        id: Date.now().toString(),
+        type: formData.type,
+        name: formData.name,
+        last4: formData.type === 'bank_account' 
+          ? formData.accountNumber.slice(-4)
+          : formData.cardNumber.replace(/\s/g, '').slice(-4),
+        expiryDate: formData.type === 'credit_card' || formData.type === 'debit_card' ? formData.expiryDate : undefined,
+        isDefault: formData.isDefault || paymentMethods.length === 0,
+        isActive: true
+      };
+
+      // If setting as default, remove default from other methods
+      if (formData.isDefault) {
+        setPaymentMethods(prev => prev.map(method => ({ ...method, isDefault: false })));
+      }
+
+      setPaymentMethods(prev => [...prev, newPaymentMethod]);
+      setShowAddPaymentMethod(false);
+      resetForm();
+      toast.success('Payment method added successfully!');
+    } catch (error) {
+      console.error('Error adding payment method:', error);
+      toast.error('Error adding payment method. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      type: 'credit_card',
+      name: '',
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      bankName: '',
+      accountNumber: '',
+      routingNumber: '',
+      accountType: 'checking',
+      isDefault: false
+    });
+    setFormErrors({});
+  };
+
+  // Handle delete payment method
+  const handleDeletePaymentMethod = async (methodId: string) => {
+    if (window.confirm('Are you sure you want to delete this payment method?')) {
+      try {
+        setPaymentMethods(prev => prev.filter(method => method.id !== methodId));
+        toast.success('Payment method deleted successfully');
+      } catch (error) {
+        console.error('Error deleting payment method:', error);
+        toast.error('Error deleting payment method');
+      }
+    }
+  };
+
+  // Handle set default payment method
+  const handleSetDefault = async (methodId: string) => {
+    try {
+      setPaymentMethods(prev => prev.map(method => ({
+        ...method,
+        isDefault: method.id === methodId
+      })));
+      toast.success('Default payment method updated');
+    } catch (error) {
+      console.error('Error setting default payment method:', error);
+      toast.error('Error updating default payment method');
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     loadPaymentData();
+    loadPaymentMethods();
+    loadFinancingOptions();
   }, []);
 
   // Filter and sort when filters change
@@ -351,9 +585,39 @@ export default function CustomerPayments() {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6">
+            {[
+              { id: 'overview', name: 'Overview', icon: TrendingUp },
+              { id: 'payment-methods', name: 'Payment Methods', icon: CreditCard },
+              { id: 'invoices', name: 'Invoices', icon: FileText },
+              { id: 'financing', name: 'Financing', icon: Calculator }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <tab.icon className="w-4 h-4 mr-2" />
+                {tab.name}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
       <div className="space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -402,8 +666,11 @@ export default function CustomerPayments() {
               </div>
             </div>
           </div>
+          </>
+        )}
 
-          {/* Payment Methods Section */}
+        {/* Payment Methods Tab */}
+        {activeTab === 'payment-methods' && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Payment Methods</h2>
@@ -439,12 +706,31 @@ export default function CustomerPayments() {
                       <span className="font-medium text-gray-900">{method.name}</span>
                     </div>
                     <div className="flex gap-2">
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <button 
+                        onClick={() => setEditingPaymentMethod(method)}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                        title="Edit"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-gray-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {!method.isDefault && (
+                        <button 
+                          onClick={() => handleDeletePaymentMethod(method.id)}
+                          className="p-1 text-gray-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {!method.isDefault && (
+                        <button 
+                          onClick={() => handleSetDefault(method.id)}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          title="Set as Default"
+                        >
+                          Set Default
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-1 text-sm text-gray-600">
@@ -468,8 +754,12 @@ export default function CustomerPayments() {
             </div>
           )}
         </div>
+        )}
 
-        {/* Filters */}
+        {/* Invoices Tab */}
+        {activeTab === 'invoices' && (
+          <>
+            {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
@@ -670,7 +960,339 @@ export default function CustomerPayments() {
             </div>
           )}
         </div>
+          </>
+        )}
+
+        {/* Financing Tab */}
+        {activeTab === 'financing' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Financing Options</h2>
+              <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <Plus className="w-4 h-4" />
+                Apply for Financing
+              </button>
+            </div>
+
+            <div className="grid gap-6">
+              {financingOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900">{option.name}</h3>
+                      <p className="text-sm text-gray-500 capitalize">{option.type.replace('_', ' ')}</p>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      option.status === 'active' ? 'bg-green-100 text-green-800' :
+                      option.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {option.status.charAt(0).toUpperCase() + option.status.slice(1)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Original Amount</p>
+                      <p className="text-lg font-semibold text-gray-900">{formatCurrency(option.amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Remaining Balance</p>
+                      <p className="text-lg font-semibold text-gray-900">{formatCurrency(option.remainingBalance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Monthly Payment</p>
+                      <p className="text-lg font-semibold text-gray-900">{formatCurrency(option.monthlyPayment)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Next Payment</p>
+                      <p className="text-lg font-semibold text-gray-900">{formatDate(option.nextPaymentDate)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-4">
+                      <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </button>
+                      <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Statement
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">Term: {option.term} months</p>
+                      <p className="text-sm text-gray-500">Rate: {option.interestRate}%</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Add Payment Method Modal */}
+      {showAddPaymentMethod && (
+        <div 
+          className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddPaymentMethod(false);
+              resetForm();
+            }
+          }}
+        >
+          <div 
+            className="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Add Payment Method</h3>
+                <button
+                  onClick={() => {
+                    setShowAddPaymentMethod(false);
+                    resetForm();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                {/* Payment Method Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Payment Method Type
+                  </label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="credit_card">Credit Card</option>
+                    <option value="debit_card">Debit Card</option>
+                    <option value="bank_account">Bank Account</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="digital_wallet">Digital Wallet</option>
+                  </select>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name on Card/Account
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter full name"
+                  />
+                  {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+                </div>
+
+                {/* Credit/Debit Card Fields */}
+                {(formData.type === 'credit_card' || formData.type === 'debit_card') && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Card Number
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.cardNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                          setFormData({ ...formData, cardNumber: value });
+                        }}
+                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                      />
+                      {formErrors.cardNumber && <p className="text-red-500 text-xs mt-1">{formErrors.cardNumber}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Expiry Date
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.expiryDate}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').replace(/(.{2})/, '$1/');
+                            setFormData({ ...formData, expiryDate: value });
+                          }}
+                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.expiryDate ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          placeholder="MM/YY"
+                          maxLength={5}
+                        />
+                        {formErrors.expiryDate && <p className="text-red-500 text-xs mt-1">{formErrors.expiryDate}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          CVV
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.cvv}
+                          onChange={(e) => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
+                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.cvv ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          placeholder="123"
+                          maxLength={4}
+                        />
+                        {formErrors.cvv && <p className="text-red-500 text-xs mt-1">{formErrors.cvv}</p>}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Bank Account Fields */}
+                {formData.type === 'bank_account' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Bank Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.bankName}
+                        onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.bankName ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter bank name"
+                      />
+                      {formErrors.bankName && <p className="text-red-500 text-xs mt-1">{formErrors.bankName}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Account Number
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.accountNumber}
+                        onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.accountNumber ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter account number"
+                      />
+                      {formErrors.accountNumber && <p className="text-red-500 text-xs mt-1">{formErrors.accountNumber}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Routing Number
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.routingNumber}
+                          onChange={(e) => setFormData({ ...formData, routingNumber: e.target.value.replace(/\D/g, '') })}
+                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.routingNumber ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          placeholder="123456789"
+                          maxLength={9}
+                        />
+                        {formErrors.routingNumber && <p className="text-red-500 text-xs mt-1">{formErrors.routingNumber}</p>}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Account Type
+                        </label>
+                        <select
+                          value={formData.accountType}
+                          onChange={(e) => setFormData({ ...formData, accountType: e.target.value as 'checking' | 'savings' })}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="checking">Checking</option>
+                          <option value="savings">Savings</option>
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Default Payment Method */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    checked={formData.isDefault}
+                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
+                    Set as default payment method
+                  </label>
+                </div>
+
+                {/* Security Notice */}
+                <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium">Secure Payment Processing</p>
+                    <p>Your payment information is encrypted and secure. We never store your full card details.</p>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddPaymentMethod(false);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Add Payment Method
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
