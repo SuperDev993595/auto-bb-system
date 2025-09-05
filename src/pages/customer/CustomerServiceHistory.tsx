@@ -27,18 +27,18 @@ import {
 
 interface ServiceRecord {
   _id: string;
-  date: string;
-  serviceType: string;
-  description: string;
-  cost: number;
+  date: string | null;
+  serviceType: string | null;
+  description: string | null;
+  cost: number | null;
   vehicle: {
     make: string;
     model: string;
     year: number;
     vin: string;
   } | null;
-  technician: string;
-  status: string;
+  technician: string | null;
+  status: string | null;
   notes?: string;
   createdAt: string;
 }
@@ -47,7 +47,7 @@ interface ServiceStats {
   totalServices: number;
   totalSpent: number;
   averageCost: number;
-  lastServiceDate?: string;
+  lastServiceDate?: string | null;
   nextServiceDue?: string;
   mostCommonService: string;
 }
@@ -72,7 +72,8 @@ export default function CustomerServiceHistory() {
   const [expandedService, setExpandedService] = useState<string | null>(null);
 
   // Get service icon based on service type
-  const getServiceIcon = (serviceType: string) => {
+  const getServiceIcon = (serviceType: string | null) => {
+    if (!serviceType) return <Wrench className="w-5 h-5" />;
     const type = serviceType.toLowerCase();
     if (type.includes('oil')) return <Droplets className="w-5 h-5" />;
     if (type.includes('battery')) return <Battery className="w-5 h-5" />;
@@ -83,15 +84,18 @@ export default function CustomerServiceHistory() {
   };
 
   // Get status badge
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
+    if (!status) status = 'unknown';
+    
     const statusConfig = {
       completed: { color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-4 h-4" /> },
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-4 h-4" /> },
       cancelled: { color: 'bg-red-100 text-red-800', icon: <XCircle className="w-4 h-4" /> },
-      in_progress: { color: 'bg-blue-100 text-blue-800', icon: <Clock className="w-4 h-4" /> }
+      in_progress: { color: 'bg-blue-100 text-blue-800', icon: <Clock className="w-4 h-4" /> },
+      unknown: { color: 'bg-gray-100 text-gray-800', icon: <AlertCircle className="w-4 h-4" /> }
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.completed;
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.unknown;
     
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
@@ -102,7 +106,8 @@ export default function CustomerServiceHistory() {
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -111,7 +116,8 @@ export default function CustomerServiceHistory() {
   };
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined) return '$0.00';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
@@ -122,12 +128,13 @@ export default function CustomerServiceHistory() {
   const calculateStats = (services: ServiceRecord[]) => {
     if (services.length === 0) return stats;
 
-    const totalSpent = services.reduce((sum, service) => sum + service.cost, 0);
+    const totalSpent = services.reduce((sum, service) => sum + (service.cost || 0), 0);
     const averageCost = totalSpent / services.length;
     
     // Find most common service type
     const serviceCounts = services.reduce((acc, service) => {
-      acc[service.serviceType] = (acc[service.serviceType] || 0) + 1;
+      const serviceType = service.serviceType || 'Unknown';
+      acc[serviceType] = (acc[serviceType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     
@@ -136,7 +143,8 @@ export default function CustomerServiceHistory() {
 
     // Find last service date
     const lastServiceDate = services
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.date;
+      .filter(service => service.date) // Filter out services with null dates
+      .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime())[0]?.date;
 
     return {
       totalServices: services.length,
@@ -150,16 +158,16 @@ export default function CustomerServiceHistory() {
   // Filter and sort services
   const filterAndSortServices = () => {
     let filtered = services.filter(service => {
-      const matchesSearch = service.serviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = (service.serviceType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (service.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (service.vehicle?.make || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (service.vehicle?.model || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesYear = selectedYear === 'all' || 
-                         new Date(service.date).getFullYear().toString() === selectedYear;
+                         (service.date && new Date(service.date).getFullYear().toString() === selectedYear);
       
       const matchesServiceType = selectedServiceType === 'all' || 
-                                service.serviceType === selectedServiceType;
+                                (service.serviceType && service.serviceType === selectedServiceType);
       
       return matchesSearch && matchesYear && matchesServiceType;
     });
@@ -170,20 +178,20 @@ export default function CustomerServiceHistory() {
       
       switch (sortBy) {
         case 'date':
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
+          aValue = a.date ? new Date(a.date).getTime() : 0;
+          bValue = b.date ? new Date(b.date).getTime() : 0;
           break;
         case 'cost':
-          aValue = a.cost;
-          bValue = b.cost;
+          aValue = a.cost || 0;
+          bValue = b.cost || 0;
           break;
         case 'serviceType':
-          aValue = a.serviceType.toLowerCase();
-          bValue = b.serviceType.toLowerCase();
+          aValue = (a.serviceType || '').toLowerCase();
+          bValue = (b.serviceType || '').toLowerCase();
           break;
         default:
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
+          aValue = a.date ? new Date(a.date).getTime() : 0;
+          bValue = b.date ? new Date(b.date).getTime() : 0;
       }
       
       if (sortOrder === 'asc') {
@@ -227,15 +235,17 @@ export default function CustomerServiceHistory() {
 
   // Get unique years from services
   const getUniqueYears = () => {
-    const years = [...new Set(services.map(service => 
-      new Date(service.date).getFullYear().toString()
-    ))];
+    const years = [...new Set(services
+      .filter(service => service.date) // Filter out services with null dates
+      .map(service => 
+        new Date(service.date!).getFullYear().toString()
+      ))];
     return years.sort((a, b) => parseInt(b) - parseInt(a));
   };
 
   // Get unique service types
   const getUniqueServiceTypes = () => {
-    return [...new Set(services.map(service => service.serviceType))].sort();
+    return [...new Set(services.map(service => service.serviceType || 'Unknown'))].sort();
   };
 
   // Export service history
@@ -244,14 +254,14 @@ export default function CustomerServiceHistory() {
       ['Date', 'Service Type', 'Description', 'Cost', 'Vehicle', 'Technician', 'Status'],
       ...filteredServices.map(service => [
         formatDate(service.date),
-        service.serviceType,
-        service.description,
+        service.serviceType || 'Unknown',
+        service.description || 'No description',
         formatCurrency(service.cost),
         service.vehicle ? 
           `${service.vehicle.year || ''} ${service.vehicle.make || ''} ${service.vehicle.model || ''}`.trim() :
           'Vehicle info not available',
-        service.technician,
-        service.status
+        service.technician || 'Unknown',
+        service.status || 'Unknown'
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -504,11 +514,11 @@ export default function CustomerServiceHistory() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-lg font-semibold text-gray-900">{service.serviceType}</h4>
-                          {getStatusBadge(service.status)}
+                          <h4 className="text-lg font-semibold text-gray-900">{service.serviceType || 'Unknown Service'}</h4>
+                          {getStatusBadge(service.status || 'unknown')}
                         </div>
                         
-                        <p className="text-gray-600 mb-3">{service.description}</p>
+                        <p className="text-gray-600 mb-3">{service.description || 'No description available'}</p>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div className="flex items-center gap-2">
@@ -537,7 +547,7 @@ export default function CustomerServiceHistory() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">Technician</p>
-                                <p className="text-gray-600">{service.technician}</p>
+                                <p className="text-gray-600">{service.technician || 'Unknown'}</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">VIN</p>

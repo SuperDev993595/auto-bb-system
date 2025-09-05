@@ -332,7 +332,7 @@ export default function CustomerServices() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-gray-900">${record.cost.toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">{record.mileage.toLocaleString()} mi</div>
+                      <div className="text-sm text-gray-600">{record.mileage} mi</div>
                     </div>
                   </div>
 
