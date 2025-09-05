@@ -152,8 +152,8 @@ export default function CustomerServiceHistory() {
     let filtered = services.filter(service => {
       const matchesSearch = service.serviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           service.vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           service.vehicle.model.toLowerCase().includes(searchTerm.toLowerCase());
+                           (service.vehicleId?.make || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (service.vehicleId?.model || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesYear = selectedYear === 'all' || 
                          new Date(service.date).getFullYear().toString() === selectedYear;
@@ -243,7 +243,9 @@ export default function CustomerServiceHistory() {
         service.serviceType,
         service.description,
         formatCurrency(service.cost),
-        `${service.vehicle.year} ${service.vehicle.make} ${service.vehicle.model}`,
+        service.vehicleId ? 
+          `${service.vehicleId.year || ''} ${service.vehicleId.make || ''} ${service.vehicleId.model || ''}`.trim() :
+          'Vehicle info not available',
         service.technician,
         service.status
       ])
@@ -513,7 +515,10 @@ export default function CustomerServiceHistory() {
                           <div className="flex items-center gap-2">
                             <Car className="w-4 h-4 text-gray-400" />
                             <span className="text-gray-600">
-                              {service.vehicle.year} {service.vehicle.make} {service.vehicle.model}
+                              {service.vehicleId ? 
+                                `${service.vehicleId.year || ''} ${service.vehicleId.make || ''} ${service.vehicleId.model || ''}`.trim() :
+                                'Vehicle info not available'
+                              }
                             </span>
                           </div>
                           
@@ -532,7 +537,7 @@ export default function CustomerServiceHistory() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">VIN</p>
-                                <p className="text-gray-600 font-mono">{service.vehicle.vin}</p>
+                                <p className="text-gray-600 font-mono">{service.vehicleId?.vin || 'N/A'}</p>
                               </div>
                               {service.notes && (
                                 <div className="md:col-span-2">

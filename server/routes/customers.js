@@ -1368,9 +1368,19 @@ router.get(
         });
       }
 
+      // Get service history from Service model
+      const { Service } = require("../models/Service");
+      const services = await Service.find({ customerId: customer._id })
+        .populate("vehicleId", "year make model licensePlate")
+        .populate("appointmentId", "scheduledDate serviceType status")
+        .sort({ date: -1 }); // Most recent first
+
       res.json({
         success: true,
-        data: { services: customer.serviceHistory || [] },
+        data: {
+          services: services,
+          total: services.length,
+        },
       });
     } catch (error) {
       console.error("Error fetching customer services:", error);
