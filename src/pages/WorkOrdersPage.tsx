@@ -162,14 +162,14 @@ const WorkOrdersPage: React.FC = () => {
             >
               {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3X3 className="w-5 h-5" />}
             </button>
-                         <button
+            {/* <button
                onClick={() => setShowAddModal(true)}
                className="btn-primary flex items-center gap-2"
                title="Add New Work Order"
              >
                <Plus className="w-5 h-5" />
                New Work Order
-             </button>
+             </button> */}
           </div>
         </div>
       </div>
@@ -375,83 +375,210 @@ const WorkOrdersPage: React.FC = () => {
                )}
             </div>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-              {filteredWorkOrders.map((workOrder) => (
+            <>
+              {/* List View Header */}
+              {viewMode === 'list' && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                      <div className="md:col-span-1">
+                        <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Work Order
+                        </h6>
+                      </div>
+                      <div className="md:col-span-1">
+                        <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Vehicle
+                        </h6>
+                      </div>
+                      <div className="md:col-span-1">
+                        <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Status & Priority
+                        </h6>
+                      </div>
+                      <div className="md:col-span-1">
+                        <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Services & Cost
+                        </h6>
+                      </div>
+                      <div className="md:col-span-1">
+                        <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Dates
+                        </h6>
+                      </div>
+                    </div>
+                    <div className="ml-4 w-20">
+                      <h6 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Actions
+                      </h6>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
+                {filteredWorkOrders.map((workOrder) => (
                 <div
                   key={workOrder._id}
                   className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${
                     viewMode === 'list' ? 'p-4' : 'p-6'
                   }`}
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h6 className="font-semibold text-gray-900 mb-1">
-                        {workOrder.workOrderNumber}
-                      </h6>
-                      <p className="text-sm text-gray-600">
-                        {workOrder.customer?.name}
-                      </p>
+                  {viewMode === 'list' ? (
+                    // List View Layout
+                    <div className="flex items-center justify-between">
+                      {/* Left Section - Main Info */}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                        {/* Work Order Number & Customer */}
+                        <div className="md:col-span-1">
+                          <h6 className="font-semibold text-gray-900 text-sm">
+                            {workOrder.workOrderNumber}
+                          </h6>
+                          <p className="text-xs text-gray-600 truncate">
+                            {workOrder.customer?.name}
+                          </p>
+                        </div>
+
+                        {/* Vehicle Info */}
+                        <div className="md:col-span-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {workOrder.vehicle?.year} {workOrder.vehicle?.make} {workOrder.vehicle?.model}
+                          </p>
+                          {workOrder.vehicle?.licensePlate && (
+                            <p className="text-xs text-gray-500">
+                              {workOrder.vehicle.licensePlate}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Status and Priority */}
+                        <div className="md:col-span-1">
+                          <div className="flex flex-col gap-1">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full w-fit ${getStatusColor(workOrder.status)}`}>
+                              {workOrder.status?.replace('_', ' ')}
+                            </span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full w-fit ${getPriorityColor(workOrder.priority)}`}>
+                              {workOrder.priority}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Services & Cost */}
+                        <div className="md:col-span-1">
+                          <p className="text-sm text-gray-600">
+                            {workOrder.services?.length || 0} service{workOrder.services?.length !== 1 ? 's' : ''}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            ${workOrder.totalCost?.toFixed(2) || '0.00'}
+                          </p>
+                        </div>
+
+                        {/* Dates */}
+                        <div className="md:col-span-1">
+                          {workOrder.estimatedStartDate && (
+                            <div className="text-xs text-gray-500">
+                              <div>Start: {new Date(workOrder.estimatedStartDate).toLocaleDateString()}</div>
+                              {workOrder.estimatedCompletionDate && (
+                                <div>Due: {new Date(workOrder.estimatedCompletionDate).toLocaleDateString()}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Section - Actions */}
+                      <div className="flex gap-1 ml-4">
+                        <button
+                          onClick={() => openEditModal(workOrder)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(workOrder)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openEditModal(workOrder)}
-                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(workOrder)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  ) : (
+                    // Grid View Layout (existing)
+                    <>
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h6 className="font-semibold text-gray-900 mb-1">
+                            {workOrder.workOrderNumber}
+                          </h6>
+                          <p className="text-sm text-gray-600">
+                            {workOrder.customer?.name}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEditModal(workOrder)}
+                            className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(workOrder)}
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
 
-                  {/* Vehicle Info */}
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      {workOrder.vehicle?.year} {workOrder.vehicle?.make} {workOrder.vehicle?.model}
-                    </p>
-                    {workOrder.vehicle?.licensePlate && (
-                      <p className="text-xs text-gray-500">
-                        {workOrder.vehicle.licensePlate}
-                      </p>
-                    )}
-                  </div>
+                      {/* Vehicle Info */}
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-900">
+                          {workOrder.vehicle?.year} {workOrder.vehicle?.make} {workOrder.vehicle?.model}
+                        </p>
+                        {workOrder.vehicle?.licensePlate && (
+                          <p className="text-xs text-gray-500">
+                            {workOrder.vehicle.licensePlate}
+                          </p>
+                        )}
+                      </div>
 
-                  {/* Status and Priority */}
-                  <div className="flex gap-2 mb-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(workOrder.status)}`}>
-                      {workOrder.status?.replace('_', ' ')}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(workOrder.priority)}`}>
-                      {workOrder.priority}
-                    </span>
-                  </div>
+                      {/* Status and Priority */}
+                      <div className="flex gap-2 mb-4">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(workOrder.status)}`}>
+                          {workOrder.status?.replace('_', ' ')}
+                        </span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(workOrder.priority)}`}>
+                          {workOrder.priority}
+                        </span>
+                      </div>
 
-                  {/* Services Summary */}
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-1">
-                      {workOrder.services?.length || 0} service{workOrder.services?.length !== 1 ? 's' : ''}
-                    </p>
-                    <p className="text-sm font-medium text-gray-900">
-                      Total: ${workOrder.totalCost?.toFixed(2) || '0.00'}
-                    </p>
-                  </div>
+                      {/* Services Summary */}
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600 mb-1">
+                          {workOrder.services?.length || 0} service{workOrder.services?.length !== 1 ? 's' : ''}
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                          Total: ${workOrder.totalCost?.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
 
-                  {/* Dates */}
-                  {workOrder.estimatedStartDate && (
-                    <div className="text-xs text-gray-500">
-                      Start: {new Date(workOrder.estimatedStartDate).toLocaleDateString()}
-                    </div>
+                      {/* Dates */}
+                      {workOrder.estimatedStartDate && (
+                        <div className="text-xs text-gray-500">
+                          Start: {new Date(workOrder.estimatedStartDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
