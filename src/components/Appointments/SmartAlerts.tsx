@@ -34,21 +34,33 @@ const SmartAlerts: React.FC = () => {
     try {
       setLoading(true);
       
+      // Get auth token
+      const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      if (!authToken) {
+        console.warn('No auth token found, skipping alerts fetch');
+        setAlerts([]);
+        return;
+      }
+      
       // Fetch real alerts from backend
       const response = await fetch('/api/appointments/alerts', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
       
+      console.log('Alerts API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch alerts');
+        console.warn('Alerts API failed, falling back to dynamic alerts');
+        throw new Error(`Failed to fetch alerts: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Alerts API data:', data);
       
-      if (data.success && data.data) {
+      if (data.success && data.data && data.data.length > 0) {
         // Transform backend data to frontend Alert format
         const realAlerts: Alert[] = data.data.map((alert: any) => ({
           id: alert._id || alert.id,
@@ -61,8 +73,10 @@ const SmartAlerts: React.FC = () => {
           dismissed: alert.dismissed || false
         }));
         
+        console.log('Transformed alerts:', realAlerts);
         setAlerts(realAlerts);
       } else {
+        console.log('No alerts from API, creating dynamic alerts');
         // If no alerts endpoint exists yet, create dynamic alerts based on appointment data
         await createDynamicAlerts();
       }
@@ -77,18 +91,30 @@ const SmartAlerts: React.FC = () => {
 
   const createDynamicAlerts = async () => {
     try {
+      const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      if (!authToken) {
+        console.warn('No auth token for dynamic alerts');
+        setAlerts([]);
+        return;
+      }
+
       // Fetch pending approvals to create dynamic alerts
       const response = await fetch('/api/appointments/pending-approval?page=1&limit=10', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || sessionStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
       
+      console.log('Pending approvals API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data && data.data.length > 0) {
-          const pendingAppointments = data.data;
+        console.log('Pending approvals data:', data);
+        
+        if (data.success && data.data && data.data.appointments && data.data.appointments.length > 0) {
+          const pendingAppointments = data.data.appointments;
+          console.log('Found pending appointments:', pendingAppointments.length);
           
           // Create dynamic alerts based on real data
           const dynamicAlerts: Alert[] = [];
@@ -98,6 +124,8 @@ const SmartAlerts: React.FC = () => {
             apt.estimatedCost?.total > 1000 || 
             (new Date().getTime() - new Date(apt.createdAt).getTime()) > 24 * 60 * 60 * 1000
           );
+          
+          console.log('Urgent appointments found:', urgentAppointments.length);
           
           if (urgentAppointments.length > 0) {
             dynamicAlerts.push({
@@ -126,11 +154,14 @@ const SmartAlerts: React.FC = () => {
             });
           }
           
+          console.log('Created dynamic alerts:', dynamicAlerts);
           setAlerts(dynamicAlerts);
         } else {
+          console.log('No pending appointments found');
           setAlerts([]);
         }
       } else {
+        console.warn('Failed to fetch pending approvals:', response.status);
         setAlerts([]);
       }
     } catch (error) {
@@ -197,7 +228,36 @@ const SmartAlerts: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6 text-center">
         <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">All Clear!</h3>
-        <p className="text-gray-500">No urgent alerts at this time</p>
+        <p className="text-gray-500 mb-4">No urgent alerts at this time</p>
+        
+        {/* Debug information */}
+        <div className="text-xs text-gray-400 space-y-1">
+          <p>Alerts will show when:</p>
+          <p>• Appointments need approval (status: pending_approval)</p>
+          <p>• High-value services (&gt;$1000) require approval</p>
+          <p>• Appointments are overdue (&gt;24h waiting)</p>
+          <p>• Upcoming appointments in next 2 hours</p>
+          
+          {/* Test button for debugging */}
+          <button
+            onClick={() => {
+              const testAlert: Alert = {
+                id: 'test-alert',
+                type: 'info',
+                title: 'Test Alert',
+                message: 'This is a test alert to verify the component works',
+                priority: 'medium',
+                timestamp: new Date(),
+                actionUrl: '/admin/dashboard/approvals',
+                dismissed: false
+              };
+              setAlerts([testAlert]);
+            }}
+            className="mt-2 px-3 py-1 bg-blue-100 text-blue-600 rounded text-xs hover:bg-blue-200"
+          >
+            Test Alert
+          </button>
+        </div>
       </div>
     );
   }
