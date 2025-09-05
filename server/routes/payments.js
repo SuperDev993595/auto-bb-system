@@ -272,7 +272,14 @@ router.post(
         });
       }
 
-      const { type, card, billing_details } = req.body;
+      const { paymentMethodId } = req.body;
+
+      if (!paymentMethodId) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment method ID is required",
+        });
+      }
 
       // Get or create Stripe customer
       let stripeCustomerId = customer.stripeCustomerId;
@@ -292,15 +299,8 @@ router.post(
         stripeCustomerId = stripeCustomer.id;
       }
 
-      // Create payment method
-      const paymentMethod = await stripe.paymentMethods.create({
-        type: type,
-        card: card,
-        billing_details: billing_details,
-      });
-
-      // Attach to customer
-      await stripe.paymentMethods.attach(paymentMethod.id, {
+      // Attach the payment method to the customer
+      const paymentMethod = await stripe.paymentMethods.attach(paymentMethodId, {
         customer: stripeCustomerId,
       });
 
@@ -323,9 +323,19 @@ router.post(
       });
     } catch (error) {
       console.error("Error adding payment method:", error);
+      
+      let errorMessage = "Failed to add payment method";
+      if (error.type === 'StripeInvalidRequestError') {
+        if (error.message.includes('already been attached')) {
+          errorMessage = "This payment method is already added to your account";
+        } else if (error.message.includes('No such payment_method')) {
+          errorMessage = "Invalid payment method. Please try again.";
+        }
+      }
+      
       res.status(500).json({
         success: false,
-        message: "Failed to add payment method",
+        message: errorMessage,
       });
     }
   }

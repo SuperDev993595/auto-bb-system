@@ -738,19 +738,7 @@ export const customerService = {
   },
 
   // Add payment method for customer
-  async addPaymentMethod(paymentMethodData: {
-    type: 'card';
-    card: {
-      number: string;
-      exp_month: number;
-      exp_year: number;
-      cvc: string;
-    };
-    billing_details?: {
-      name?: string;
-      email?: string;
-    };
-  }): Promise<{
+  async addPaymentMethod(paymentMethodId: string): Promise<{
     success: boolean;
     message: string;
     data: {
@@ -758,7 +746,7 @@ export const customerService = {
       paymentMethods: any[];
     };
   }> {
-    const response = await apiResponse(api.post('/payments/payment-methods', paymentMethodData));
+    const response = await apiResponse(api.post('/payments/payment-methods', { paymentMethodId }));
     return response;
   },
 

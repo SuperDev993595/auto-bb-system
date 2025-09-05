@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { customerService } from '../../services/customers';
 import { toast } from 'react-hot-toast';
+import { StripeElementsWrapper } from '../../components/Stripe/StripeElementsWrapper';
+import { StripeCardElement } from '../../components/Stripe/StripeCardElement';
 import { 
   CreditCard, 
   DollarSign, 
@@ -447,69 +449,14 @@ export default function CustomerPayments() {
       errors.name = 'Name is required';
     }
 
-    if (formData.type === 'credit_card' || formData.type === 'debit_card') {
-      if (!formData.cardNumber.trim()) {
-        errors.cardNumber = 'Card number is required';
-      } else if (!/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(formData.cardNumber.replace(/\s/g, ''))) {
-        errors.cardNumber = 'Please enter a valid 16-digit card number';
-      }
-
-      if (!formData.expiryDate.trim()) {
-        errors.expiryDate = 'Expiry date is required';
-      } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) {
-        errors.expiryDate = 'Please enter expiry date in MM/YY format';
-      }
-
-      if (!formData.cvv.trim()) {
-        errors.cvv = 'CVV is required';
-      } else if (!/^\d{3,4}$/.test(formData.cvv)) {
-        errors.cvv = 'Please enter a valid CVV';
-      }
-    }
-
-    if (formData.type === 'bank_account') {
-      if (!formData.bankName.trim()) {
-        errors.bankName = 'Bank name is required';
-      }
-      if (!formData.accountNumber.trim()) {
-        errors.accountNumber = 'Account number is required';
-      }
-      if (!formData.routingNumber.trim()) {
-        errors.routingNumber = 'Routing number is required';
-      } else if (!/^\d{9}$/.test(formData.routingNumber)) {
-        errors.routingNumber = 'Please enter a valid 9-digit routing number';
-      }
-    }
-
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Handle form submission with comprehensive error handling
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
+  // Handle Stripe payment method success
+  const handleStripeSuccess = async (paymentMethodId: string) => {
     try {
-      // Prepare payment method data for API
-      const paymentMethodData = {
-        type: 'card' as const,
-        card: {
-          number: formData.cardNumber.replace(/\s/g, ''),
-          exp_month: parseInt(formData.expiryDate.split('/')[0]),
-          exp_year: parseInt('20' + formData.expiryDate.split('/')[1]),
-          cvc: formData.cvv
-        },
-        billing_details: {
-          name: formData.name
-        }
-      };
-
-      const response = await customerService.addPaymentMethod(paymentMethodData);
+      const response = await customerService.addPaymentMethod(paymentMethodId);
       
       if (response.success) {
         // Reload payment methods to get updated list
@@ -555,6 +502,13 @@ export default function CustomerPayments() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle Stripe payment method error
+  const handleStripeError = (error: string) => {
+    console.error('Stripe error:', error);
+    toast.error(error);
+    setIsSubmitting(false);
   };
 
   // Reset form
@@ -1205,230 +1159,76 @@ export default function CustomerPayments() {
                 </button>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                {/* Payment Method Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Payment Method Type
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="credit_card">Credit Card</option>
-                    <option value="debit_card">Debit Card</option>
-                    <option value="bank_account">Bank Account</option>
-                    <option value="paypal">PayPal</option>
-                    <option value="digital_wallet">Digital Wallet</option>
-                  </select>
-                </div>
+              <StripeElementsWrapper>
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name on Card
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter full name"
+                    />
+                    {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+                  </div>
 
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name on Card/Account
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      formErrors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter full name"
-                  />
-                  {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
-                </div>
+                  {/* Stripe Card Element */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Card Information
+                    </label>
+                    <StripeCardElement
+                      onSuccess={handleStripeSuccess}
+                      onError={handleStripeError}
+                      isSubmitting={isSubmitting}
+                      setIsSubmitting={setIsSubmitting}
+                    />
+                  </div>
 
-                {/* Credit/Debit Card Fields */}
-                {(formData.type === 'credit_card' || formData.type === 'debit_card') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.cardNumber}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-                          setFormData({ ...formData, cardNumber: value });
-                        }}
-                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                      />
-                      {formErrors.cardNumber && <p className="text-red-500 text-xs mt-1">{formErrors.cardNumber}</p>}
+                  {/* Default Payment Method */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isDefault"
+                      checked={formData.isDefault}
+                      onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
+                      Set as default payment method
+                    </label>
+                  </div>
+
+                  {/* Security Notice */}
+                  <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                    <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Secure Payment Processing</p>
+                      <p>Your payment information is encrypted and secure. We never store your full card details.</p>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.expiryDate}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '').replace(/(.{2})/, '$1/');
-                            setFormData({ ...formData, expiryDate: value });
-                          }}
-                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            formErrors.expiryDate ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          placeholder="MM/YY"
-                          maxLength={5}
-                        />
-                        {formErrors.expiryDate && <p className="text-red-500 text-xs mt-1">{formErrors.expiryDate}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.cvv}
-                          onChange={(e) => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
-                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            formErrors.cvv ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          placeholder="123"
-                          maxLength={4}
-                        />
-                        {formErrors.cvv && <p className="text-red-500 text-xs mt-1">{formErrors.cvv}</p>}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Bank Account Fields */}
-                {formData.type === 'bank_account' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bank Name
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.bankName}
-                        onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          formErrors.bankName ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter bank name"
-                      />
-                      {formErrors.bankName && <p className="text-red-500 text-xs mt-1">{formErrors.bankName}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Account Number
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.accountNumber}
-                        onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                        className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          formErrors.accountNumber ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter account number"
-                      />
-                      {formErrors.accountNumber && <p className="text-red-500 text-xs mt-1">{formErrors.accountNumber}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Routing Number
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.routingNumber}
-                          onChange={(e) => setFormData({ ...formData, routingNumber: e.target.value.replace(/\D/g, '') })}
-                          className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            formErrors.routingNumber ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          placeholder="123456789"
-                          maxLength={9}
-                        />
-                        {formErrors.routingNumber && <p className="text-red-500 text-xs mt-1">{formErrors.routingNumber}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Account Type
-                        </label>
-                        <select
-                          value={formData.accountType}
-                          onChange={(e) => setFormData({ ...formData, accountType: e.target.value as 'checking' | 'savings' })}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="checking">Checking</option>
-                          <option value="savings">Savings</option>
-                        </select>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Default Payment Method */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isDefault"
-                    checked={formData.isDefault}
-                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
-                    Set as default payment method
-                  </label>
-                </div>
-
-                {/* Security Notice */}
-                <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
-                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium">Secure Payment Processing</p>
-                    <p>Your payment information is encrypted and secure. We never store your full card details.</p>
+                  {/* Form Actions */}
+                  <div className="flex items-center justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPaymentMethod(false);
+                        resetForm();
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
-
-                {/* Form Actions */}
-                <div className="flex items-center justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAddPaymentMethod(false);
-                      resetForm();
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Add Payment Method
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+              </StripeElementsWrapper>
             </div>
           </div>
         </div>
