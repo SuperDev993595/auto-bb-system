@@ -1382,28 +1382,28 @@ router.get(
         .populate("appointmentId", "scheduledDate serviceType status")
         .sort({ date: -1 }); // Most recent first
 
-      console.log("Found services for customer:", services.length);
-      if (services.length > 0) {
-        console.log("First service vehicle data:", services[0].vehicleId);
-        console.log("First service mileage:", services[0].mileage);
-        console.log("First service technician:", services[0].technician);
-      }
-
       // Transform services to match frontend expectations
       const transformedServices = await Promise.all(
         services.map(async (service) => {
           // Try to get technician information from appointment
           let technicianName = service.technician || "Not specified";
-          
+
           if (service.appointmentId) {
             try {
-              const appointment = await Appointment.findById(service.appointmentId).populate('technician', 'name');
+              const appointment = await Appointment.findById(
+                service.appointmentId
+              ).populate("technician", "name");
               if (appointment && appointment.technician) {
                 technicianName = appointment.technician.name;
-                console.log(`Found technician from appointment for service ${service._id}: ${technicianName}`);
+                console.log(
+                  `Found technician from appointment for service ${service._id}: ${technicianName}`
+                );
               }
             } catch (error) {
-              console.error(`Error fetching technician for appointment ${service.appointmentId}:`, error);
+              console.error(
+                `Error fetching technician for appointment ${service.appointmentId}:`,
+                error
+              );
             }
           }
 
