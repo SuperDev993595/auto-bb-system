@@ -494,13 +494,6 @@ export default function LiveChatPage() {
                 <h3 className="text-lg font-semibold text-gray-900">Customers</h3>
                 <p className="text-sm text-gray-600">{customers.length} active customers</p>
               </div>
-              <button
-                onClick={refreshUnreadCounts}
-                className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                title="Refresh unread counts"
-              >
-                🔄
-              </button>
             </div>
           </div>
           
