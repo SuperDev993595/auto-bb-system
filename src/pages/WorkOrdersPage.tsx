@@ -176,46 +176,6 @@ const WorkOrdersPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        {/* Controls Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Header Section */}
-                         <div className="flex items-center gap-2">
-               <ClipboardList className="w-5 h-5 text-primary-600" />
-               <h3 className="text-lg font-semibold text-gray-900">Work Order Management</h3>
-             </div>
-            
-            {/* Controls Section */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              {/* View Toggle */}
-                             <div className="flex bg-gray-100 rounded-lg p-1">
-                 <button
-                   onClick={() => setViewMode('grid')}
-                   className={`p-1.5 rounded-md transition-all duration-200 ${
-                     viewMode === 'grid' 
-                       ? 'bg-primary-600 text-white' 
-                       : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                   }`}
-                   title="Grid View"
-                 >
-                   <Grid3X3 className="w-4 h-4" />
-                 </button>
-                 <button
-                   onClick={() => setViewMode('list')}
-                   className={`p-1.5 rounded-md transition-all duration-200 ${
-                     viewMode === 'list' 
-                       ? 'bg-primary-600 text-white' 
-                       : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                   }`}
-                   title="List View"
-                 >
-                   <List className="w-4 h-4" />
-                 </button>
-               </div>
-            </div>
-          </div>
-        </div>
-        
         <div className="p-6">
           {/* Search and Filters */}
           <div className="bg-white rounded-xl mb-6">

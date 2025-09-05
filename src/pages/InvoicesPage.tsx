@@ -83,7 +83,8 @@ export default function InvoicesPage() {
 
   // Filter invoices with safety check
   const filteredInvoices = (invoices || []).filter(invoice => {
-    const customerName = typeof invoice.customerId === 'object' ? invoice.customerId.name : 
+    const customerName = typeof invoice.customerId === 'object' ? 
+                        (invoice.customerId as any)?.name || '' : 
                         invoice.customer?.name || invoice.customerName || ''
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (invoice._id || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -199,15 +200,15 @@ export default function InvoicesPage() {
         customerId: customer._id,
         customerName: customer.name,
         workOrderId: workOrder._id,
-        items: workOrder.services.map(service => ({
+        items: (workOrder.services || []).map(service => ({
           description: service.service?.name || service.description || 'Service',
           quantity: 1,
-          unitPrice: service.laborRate,
-          total: service.totalCost
+          unitPrice: service.laborRate || 0,
+          total: service.totalCost || 0
         })),
-        subtotal: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
+        subtotal: (workOrder.services || []).reduce((sum, service) => sum + (service.totalCost || 0), 0),
         tax: 0,
-        total: workOrder.services.reduce((sum, service) => sum + service.totalCost, 0),
+        total: (workOrder.services || []).reduce((sum, service) => sum + (service.totalCost || 0), 0),
         status: 'draft' as const
       }
       
@@ -251,17 +252,17 @@ export default function InvoicesPage() {
         partNumber?: string | null;
       }> = [];
       
-      workOrder.services.forEach(service => {
+      (workOrder.services || []).forEach(service => {
         // Add service as an item (labor + overhead)
-        const laborCost = service.laborHours * service.laborRate;
-        const partsCost = service.parts ? service.parts.reduce((sum, part) => sum + part.totalPrice, 0) : 0;
-        const serviceOverhead = service.totalCost - laborCost - partsCost;
+        const laborCost = (service.laborHours || 0) * (service.laborRate || 0);
+        const partsCost = service.parts ? service.parts.reduce((sum, part) => sum + (part.totalPrice || 0), 0) : 0;
+        const serviceOverhead = (service.totalCost || 0) - laborCost - partsCost;
         
         if (laborCost > 0) {
           items.push({
             description: `${service.service?.name || service.description || 'Service'} - Labor`,
-            quantity: service.laborHours,
-            unitPrice: service.laborRate,
+            quantity: service.laborHours || 0,
+            unitPrice: service.laborRate || 0,
             total: laborCost,
             type: 'labor'
           });
@@ -271,10 +272,10 @@ export default function InvoicesPage() {
         if (service.parts && service.parts.length > 0) {
           service.parts.forEach(part => {
             items.push({
-              description: `Part: ${part.name}`,
-              quantity: part.quantity,
-              unitPrice: part.unitPrice,
-              total: part.totalPrice,
+              description: `Part: ${part.name || 'Unknown Part'}`,
+              quantity: part.quantity || 1,
+              unitPrice: part.unitPrice || 0,
+              total: part.totalPrice || 0,
               type: 'part',
               partNumber: part.partNumber || null
             });
@@ -473,11 +474,11 @@ export default function InvoicesPage() {
                 <tr key={invoice._id} className="table-row hover:bg-secondary-50">
                   <td className="table-cell">
                      <div>
-                       <div className="text-xs font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
+                       <div className="text-xs font-medium text-secondary-900">#{invoice.invoiceNumber || String(invoice._id)}</div>
                        <div className="text-xs text-secondary-600">
                          WO: {(() => {
                            const workOrder = workOrders.find(wo => wo._id === invoice.workOrderId);
-                           return workOrder ? workOrder.workOrderNumber : (invoice.workOrderId || 'N/A');
+                           return workOrder?.workOrderNumber || String(invoice.workOrderId || 'N/A');
                          })()}
                        </div>
                      </div>
@@ -485,11 +486,14 @@ export default function InvoicesPage() {
                   <td className="table-cell">
                     <div>
                       <div className="text-xs font-medium text-secondary-900">
-                        {typeof invoice.customerId === 'object' ? invoice.customerId.name : 
+                        {typeof invoice.customerId === 'object' ? 
+                          (invoice.customerId as any)?.name || 'Customer not available' : 
                          invoice.customer?.name || invoice.customerName || 'Customer not available'}
                       </div>
                       <div className="text-xs text-secondary-600">
-                        {typeof invoice.vehicleId === 'object' ? invoice.vehicleId.fullName :
+                        {typeof invoice.vehicleId === 'object' ? 
+                          (invoice.vehicleId as any)?.fullName || 
+                          `${(invoice.vehicleId as any)?.year || ''} ${(invoice.vehicleId as any)?.make || ''} ${(invoice.vehicleId as any)?.model || ''}`.trim() :
                          invoice.vehicle?.fullName || invoice.vehicleInfo || 'Vehicle info not available'}
                       </div>
                     </div>
@@ -497,10 +501,10 @@ export default function InvoicesPage() {
                   <td className="table-cell">
                     <div>
                       <div className="text-xs text-secondary-900">
-                        Created: {new Date(invoice.date).toLocaleDateString()}
+                        Created: {invoice.date ? new Date(invoice.date).toLocaleDateString() : 'N/A'}
                       </div>
                       <div className="text-xs text-secondary-600">
-                        Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                        Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}
                       </div>
                       {invoice.paidDate && (
                         <div className="text-sm text-green-600">
@@ -512,16 +516,16 @@ export default function InvoicesPage() {
                   <td className="table-cell">
                     <div>
                       <div className="text-sm font-medium text-secondary-900">
-                        ${invoice.total.toFixed(2)}
+                        ${(invoice.total || 0).toFixed(2)}
                       </div>
-                      {invoice.paidAmount > 0 && invoice.paidAmount < invoice.total && (
+                      {(invoice.paidAmount || 0) > 0 && (invoice.paidAmount || 0) < (invoice.total || 0) && (
                         <div className="text-sm text-blue-600">
-                          Paid: ${invoice.paidAmount.toFixed(2)}
+                          Paid: ${(invoice.paidAmount || 0).toFixed(2)}
                         </div>
                       )}
                       {invoice.status === 'paid' && (
                         <div className="text-xs text-green-600 font-medium">
-                          {invoice.paymentMethod}
+                          {invoice.paymentMethod || 'N/A'}
                         </div>
                       )}
                     </div>
@@ -649,19 +653,23 @@ export default function InvoicesPage() {
                       </div>
                     </td>
                                          <td className="table-cell whitespace-nowrap">
-                       <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber || invoice._id}</div>
+                       <div className="text-sm font-medium text-secondary-900">#{invoice.invoiceNumber || String(invoice._id)}</div>
                      </td>
                     <td className="table-cell whitespace-nowrap">
-                      <div className="text-sm text-secondary-900">{invoice.customerName}</div>
+                      <div className="text-sm text-secondary-900">
+                        {typeof invoice.customerId === 'object' ? 
+                          (invoice.customerId as any)?.name || 'Customer not available' : 
+                          invoice.customerName || 'Customer not available'}
+                      </div>
                     </td>
                     <td className="table-cell whitespace-nowrap">
                       <div className="text-sm font-medium text-green-600">
-                        ${invoice.paidAmount.toFixed(2)}
+                        ${(invoice.paidAmount || 0).toFixed(2)}
                       </div>
                     </td>
                     <td className="table-cell whitespace-nowrap">
                       <span className="status-badge status-secondary capitalize">
-                        {invoice.paymentMethod}
+                        {invoice.paymentMethod || 'N/A'}
                       </span>
                     </td>
                     <td className="table-cell whitespace-nowrap text-sm font-medium">
