@@ -1361,6 +1361,13 @@ router.get(
   async (req, res) => {
     try {
       const customer = await Customer.findOne({ userId: req.user.id });
+      console.log(
+        "Customer lookup for userId:",
+        req.user.id,
+        "Found:",
+        customer ? customer._id : "Not found"
+      );
+
       if (!customer) {
         return res.json({
           success: true,
@@ -1371,15 +1378,49 @@ router.get(
       // Get service history from Service model
       const { Service } = require("../models/Service");
       const services = await Service.find({ customerId: customer._id })
-        .populate("vehicleId", "year make model licensePlate")
+        .populate("vehicleId", "year make model vin licensePlate")
         .populate("appointmentId", "scheduledDate serviceType status")
         .sort({ date: -1 }); // Most recent first
+
+      console.log("Found services for customer:", services.length);
+      if (services.length > 0) {
+        console.log("First service vehicle data:", services[0].vehicleId);
+      }
+
+      // Transform services to match frontend expectations
+      const transformedServices = services.map((service) => ({
+        _id: service._id,
+        date: service.date,
+        serviceType: service.serviceType,
+        description: service.description,
+        cost: service.cost,
+        vehicle: service.vehicleId
+          ? {
+              make: service.vehicleId.make,
+              model: service.vehicleId.model,
+              year: service.vehicleId.year,
+              vin: service.vehicleId.vin,
+            }
+          : null,
+        technician: service.technician,
+        status: service.status,
+        notes: service.notes,
+        createdAt: service.createdAt,
+      }));
+
+      console.log("Transformed services count:", transformedServices.length);
+      if (transformedServices.length > 0) {
+        console.log(
+          "First transformed service vehicle:",
+          transformedServices[0].vehicle
+        );
+      }
 
       res.json({
         success: true,
         data: {
-          services: services,
-          total: services.length,
+          services: transformedServices,
+          total: transformedServices.length,
         },
       });
     } catch (error) {

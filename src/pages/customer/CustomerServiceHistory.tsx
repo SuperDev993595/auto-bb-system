@@ -36,7 +36,7 @@ interface ServiceRecord {
     model: string;
     year: number;
     vin: string;
-  };
+  } | null;
   technician: string;
   status: string;
   notes?: string;
@@ -152,8 +152,8 @@ export default function CustomerServiceHistory() {
     let filtered = services.filter(service => {
       const matchesSearch = service.serviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (service.vehicleId?.make || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (service.vehicleId?.model || '').toLowerCase().includes(searchTerm.toLowerCase());
+                           (service.vehicle?.make || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (service.vehicle?.model || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesYear = selectedYear === 'all' || 
                          new Date(service.date).getFullYear().toString() === selectedYear;
@@ -205,6 +205,10 @@ export default function CustomerServiceHistory() {
       const response = await customerService.getCustomerServiceHistory();
       
       if (response.success) {
+        // Debug logging to see what we're receiving
+        console.log('Service history response:', response.data.services);
+        console.log('First service vehicle data:', response.data.services[0]?.vehicle);
+        
         setServices(response.data.services);
         setFilteredServices(response.data.services);
         setStats(calculateStats(response.data.services));
@@ -243,8 +247,8 @@ export default function CustomerServiceHistory() {
         service.serviceType,
         service.description,
         formatCurrency(service.cost),
-        service.vehicleId ? 
-          `${service.vehicleId.year || ''} ${service.vehicleId.make || ''} ${service.vehicleId.model || ''}`.trim() :
+        service.vehicle ? 
+          `${service.vehicle.year || ''} ${service.vehicle.make || ''} ${service.vehicle.model || ''}`.trim() :
           'Vehicle info not available',
         service.technician,
         service.status
@@ -352,7 +356,7 @@ export default function CustomerServiceHistory() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Services</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalServices}</p>
+                <p className="text-xl font-bold text-gray-900">{stats.totalServices}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Wrench className="w-6 h-6 text-blue-600" />
@@ -364,7 +368,7 @@ export default function CustomerServiceHistory() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalSpent)}</p>
+                <p className="text-xl font-bold text-gray-900">{formatCurrency(stats.totalSpent)}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-green-600" />
@@ -376,7 +380,7 @@ export default function CustomerServiceHistory() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Average Cost</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.averageCost)}</p>
+                <p className="text-xl font-bold text-gray-900">{formatCurrency(stats.averageCost)}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Star className="w-6 h-6 text-purple-600" />
@@ -388,7 +392,7 @@ export default function CustomerServiceHistory() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Last Service</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-gray-900">
                   {stats.lastServiceDate ? formatDate(stats.lastServiceDate) : 'N/A'}
                 </p>
               </div>
@@ -515,8 +519,8 @@ export default function CustomerServiceHistory() {
                           <div className="flex items-center gap-2">
                             <Car className="w-4 h-4 text-gray-400" />
                             <span className="text-gray-600">
-                              {service.vehicleId ? 
-                                `${service.vehicleId.year || ''} ${service.vehicleId.make || ''} ${service.vehicleId.model || ''}`.trim() :
+                              {service.vehicle ? 
+                                `${service.vehicle.year || ''} ${service.vehicle.make || ''} ${service.vehicle.model || ''}`.trim() :
                                 'Vehicle info not available'
                               }
                             </span>
@@ -537,7 +541,7 @@ export default function CustomerServiceHistory() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-700 mb-1">VIN</p>
-                                <p className="text-gray-600 font-mono">{service.vehicleId?.vin || 'N/A'}</p>
+                                <p className="text-gray-600 font-mono">{service.vehicle?.vin || 'N/A'}</p>
                               </div>
                               {service.notes && (
                                 <div className="md:col-span-2">

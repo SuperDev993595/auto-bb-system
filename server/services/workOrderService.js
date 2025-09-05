@@ -572,6 +572,7 @@ class WorkOrderService {
       const invoice = new Invoice({
         customerId: workOrder.customer._id,
         workOrderId: workOrder._id,
+        appointmentId: workOrder.appointmentId || null, // Save appointmentId from work order
         invoiceNumber: invoiceNumber,
         date: new Date(),
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -590,6 +591,7 @@ class WorkOrderService {
       console.log(`Invoice data:`, {
         customerId: workOrder.customer._id,
         workOrderId: workOrder._id,
+        appointmentId: workOrder.appointmentId,
         invoiceNumber: invoiceNumber,
         vehicleId: workOrder.vehicle._id,
         subtotal,
@@ -603,6 +605,10 @@ class WorkOrderService {
 
       await invoice.populate("customerId", "name email phone");
       await invoice.populate("vehicleId", "year make model");
+      await invoice.populate(
+        "appointmentId",
+        "scheduledDate serviceType status"
+      );
 
       return {
         success: true,
