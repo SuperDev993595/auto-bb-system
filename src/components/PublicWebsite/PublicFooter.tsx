@@ -73,7 +73,7 @@ const PublicFooter: React.FC = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">Quick Links</h3>
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
@@ -91,7 +91,7 @@ const PublicFooter: React.FC = () => {
 
           {/* Services */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Our Services</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">Our Services</h3>
             <ul className="space-y-2">
               {services.map((service, index) => (
                 <li key={index}>
@@ -109,7 +109,7 @@ const PublicFooter: React.FC = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">Contact Info</h3>
             <div className="space-y-3">
               <div className="flex items-start">
                 <Phone className="text-blue-500 mr-3 mt-1 w-4 h-4" />
@@ -152,7 +152,7 @@ const PublicFooter: React.FC = () => {
       <div className="bg-gray-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h3 className="text-xl font-semibold mb-2">Stay Updated</h3>
+            <h3 className="text-xl font-semibold mb-2 text-white">Stay Updated</h3>
             <p className="text-gray-400 mb-4">
               Subscribe to our newsletter for maintenance tips and special offers.
             </p>
